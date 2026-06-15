@@ -1,0 +1,4 @@
+[rules]
+unresolved-attribute = "ignore"
+not-iterable = "ignore"
+call-non-callable = "ignore"

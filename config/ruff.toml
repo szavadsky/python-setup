@@ -1,0 +1,34 @@
+line-length = 130
+target-version = "py311"
+exclude = [".venv", "tests/data"]
+
+[format]
+quote-style = "double"
+
+[lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "TID"]
+extend-select = [
+    "N",       # naming
+    "W",       # whitespace
+    "C4",      # comprehensions
+    "A",       # builtin-shadow
+    "RET",     # return
+    "PIE",     # pie
+    "FLY",     # flynt
+    "PERF",    # performance
+    "PYI",     # pyi stub rules
+    "RUF022", "RUF023", "RUF100", "RUF010", "RUF019",  # auto-fixable RUF
+    "PLC0206", "PLR1714", "PLR5501", "PLW0108", "PLW1510", "PLR0402", "PLR1730",  # low-effort PL
+    "PT001", "PT006", "PT011", "PT012", "PT017", "PT018",  # pytest quality
+    "S108", "S110", "S112", "S603", "S607", "S608", "S311",  # security (excl S101)
+    "ARG",     # unused args
+    "ANN",     # annotations
+    "TCH",     # TYPE_CHECKING guard
+]
+ignore = [
+    "E501",    # line-too-long
+    "E741",    # ambiguous-variable-name
+    "TID251",  # banned-api — project-specific
+    "E402",    # module-import-not-at-top-of-file
+    "B023",    # function-uses-loop-variable
+]
