@@ -1,0 +1,17 @@
+{
+    "venvPath": ".",
+    "venv": ".venv",
+    "reportAttributeAccessIssue": "none",
+    "reportReturnType": "none",
+    "reportAssignmentType": "none",
+    "reportGeneralTypeIssues": "none",
+    "reportOptionalMemberAccess": "none",
+    "exclude": [
+        ".venv",
+        "**/__pycache__",
+        "**/node_modules",
+        "**/.*",
+        "build/",
+        "tests/data/"
+    ]
+}

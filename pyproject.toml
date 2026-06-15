@@ -1,12 +1,16 @@
 [project]
 name = "python-setup"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 description = "Shared linting, formatting, and dev tooling for Python projects."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Vyacheslav Zavadsky" }]
-dependencies = []
+dependencies = [
+    "astroid>=4.0.4",
+    "pylint>=4.0.6",
+    "pytest>=9.1.0",
+]
 
 [project.scripts]
 lint = "python_setup_lint.runner:main"
@@ -18,3 +22,42 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/python_setup_lint"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"config/" = "python_setup_lint/config/"
+"CodingRules.md" = "python_setup_lint/CodingRules.md"
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.5",
+    "mypy>=1.10",
+    "pylint>=4.0.5",
+    "pyright>=1.1.410",
+    "ty>=0.0.49",
+    "rumdl>=0.2.15",
+    "detect-secrets>=1.5.0",
+    "yamllint>=1.35",
+    "tach>=0.15",
+    "pre-commit>=4.6.0",
+    "typeguard>=4.5.2",
+    "tomli-w>=1.0",
+    "types-requests>=2.33.0.20260518",
+    "pandas-stubs>=3.0.3.260530",
+    "types-pysocks>=1.7.1.20260518",
+    "types-pyyaml>=6.0.12.20260518",
+    "types-pygments>=2.20.0.20260518",
+    "types-defusedxml>=0.7.0.20260504",
+    "types-gunicorn>=26.0.0.20260518",
+    "types-jsonschema>=4.26.0.20260518",
+    "types-objgraph>=3.6.0.20260508",
+    "types-pexpect>=4.9.0.20260518",
+    "types-psutil>=7.2.2.20260518",
+    "types-regex>=2026.5.9.20260518",
+    "types-simplejson>=3.20.0.20260518",
+    "types-tqdm>=4.68.0.20260608",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.0",
+]

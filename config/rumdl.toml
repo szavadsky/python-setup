@@ -1,0 +1,25 @@
+respect_gitignore = true
+
+disable = [
+    "MD013",  # line-length
+    "MD033",  # no-inline-html
+    "MD040",  # fenced-code-language
+    "MD041",  # first-line-heading
+    "MD046",  # code-block-style
+    "MD060",  # table-column-style
+    "MD024",  # no-duplicate-heading
+    "MD025",  # single-title
+]
+
+enable = [
+    "MD012",  # no-multiple-blanks
+    "MD022",  # blanks-around-headings
+    "MD031",  # blanks-around-fences
+    "MD032",  # blanks-around-lists
+    "MD034",  # no-bare-urls
+    "MD047",  # single-trailing-newline
+    "MD009",  # no-trailing-spaces
+]
+
+[MD007]
+indent = 2
