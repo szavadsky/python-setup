@@ -1,0 +1,20 @@
+[project]
+name = "python-setup"
+version = "0.1.0"
+requires-python = ">=3.11"
+description = "Shared linting, formatting, and dev tooling for Python projects."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Vyacheslav Zavadsky" }]
+dependencies = []
+
+[project.scripts]
+lint = "python_setup_lint.runner:main"
+install = "python_setup_lint.setup:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/python_setup_lint"]
