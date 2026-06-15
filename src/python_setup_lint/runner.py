@@ -694,6 +694,9 @@ def _capture_baseline(results: list[LintResult]) -> list[dict[str, Any]]:
                 entry["diagnostics"] = json.loads(r.stdout)
             except (json.JSONDecodeError, ValueError):
                 entry["output"] = _re.sub(r"\(\d+ms\)", "(XXXms)", r.stdout)
+        elif r.tool_name == "ruff check" and r.stdout:
+            # Sort ruff violations to make baseline stable across runs
+            entry["output"] = "\n".join(sorted(r.stdout.splitlines()))
         else:
             entry["output"] = r.stdout
         baseline.append(entry)
@@ -757,17 +760,19 @@ def _diff_baseline(
                     current_summary.pop("timeInSec", None)
             if current_diag != saved_diag:
                 violations.append(f"[{r.tool_name}] Diagnostics changed (new/different violations)")
-        # Rumdl timing changes per run — strip before comparing
-        elif r.tool_name == "rumdl check":
-            import re as _re
-
-            saved_output = _re.sub(r"\(\d+ms\)", "(XXXms)", saved_entry.get("output") or "")
-            current_output = _re.sub(r"\(\d+ms\)", "(XXXms)", r.stdout or "")
-            if current_output != saved_output:
-                violations.append(f"[{r.tool_name}] Output changed (new/different violations)")
         else:
             saved_output = saved_entry.get("output") or ""
-            if r.stdout != saved_output:
+            if r.tool_name == "ruff check":
+                current_output = "\n".join(sorted((r.stdout or "").splitlines()))
+                saved_output = "\n".join(sorted(saved_output.splitlines()))
+            elif r.tool_name == "rumdl check":
+                import re as _re
+
+                current_output = _re.sub(r"\(\d+ms\)", "(XXXms)", r.stdout or "")
+                saved_output = _re.sub(r"\(\d+ms\)", "(XXXms)", saved_output)
+            else:
+                current_output = r.stdout or ""
+            if current_output != saved_output:
                 violations.append(f"[{r.tool_name}] Output changed (new/different violations)")
     return violations
 
