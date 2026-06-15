@@ -227,7 +227,6 @@ def _config_flag_for(spec_name: str, config_path: Path | None) -> list[str]:
     }
     return flags.get(spec_name, [])
 
-
 def _build_command(
     spec: ToolSpec,
     *,
