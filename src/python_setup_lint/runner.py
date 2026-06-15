@@ -877,6 +877,7 @@ def run_lint(
             with open(base_path, "w") as f:
                 json.dump(base_data, f, indent=2, sort_keys=True)
             print(f"[baseline] Baseline saved ({len(base_data)} tool entries)")
+            overall_rc = 0
 
     return overall_rc
 
