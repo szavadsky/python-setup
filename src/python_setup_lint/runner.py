@@ -770,6 +770,32 @@ def _diff_baseline(
 
                 current_output = _re.sub(r"\(\d+ms\)", "(XXXms)", r.stdout or "")
                 saved_output = _re.sub(r"\(\d+ms\)", "(XXXms)", saved_output)
+            elif r.tool_name == "pylint":
+                import re as _re
+
+                def _pylint_signature(line: str) -> str | None:
+                    dup = _re.search(r"Similar lines in 2 files\s*==(\S+):\[(\d+):(\d+)\]\s*==(\S+):\[(\d+):(\d+)\]", line)
+                    if dup:
+                        parts = sorted([f"{dup.group(1)}:{dup.group(2)}-{dup.group(3)}", f"{dup.group(4)}:{dup.group(5)}-{dup.group(6)}"])
+                        return f"R0801:{parts[0]}<->{parts[1]}"
+                    cyc = _re.search(r"Cyclic import \(([^)]+)\)", line)
+                    if cyc:
+                        return f"R0401:{cyc.group(1)}"
+                    msg = _re.search(r"(\S+\.py:\d+:\d+:\s*[A-Z]\d+:)", line)
+                    if msg:
+                        return msg.group(1)
+                    return None
+
+                def _pylint_inventory(output: str) -> str:
+                    sigs = {}
+                    for line in output.splitlines():
+                        sig = _pylint_signature(line)
+                        if sig is not None:
+                            sigs[sig] = sigs.get(sig, 0) + 1
+                    return "\n".join(sorted(f"{count} {sig}" for sig, count in sigs.items()))
+
+                current_output = _pylint_inventory(r.stdout or "")
+                saved_output = _pylint_inventory(saved_output)
             else:
                 current_output = r.stdout or ""
             if current_output != saved_output:
