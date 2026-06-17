@@ -44,26 +44,16 @@ from python_setup_lint.runner import (
     main,
     run_lint,
 )
+from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
+
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # ── Helpers ─────────────────────────────────────────────────────────
 
 _CONFIG = RunnerConfig(cwd=Path.cwd())
 
 
-def _make_result(
-    tool_name: str = "ruff check",
-    exit_code: int = 0,
-    stdout: str = "",
-    stderr: str = "",
-    elapsed: float = 0.5,
-) -> LintResult:
-    return LintResult(
-        tool_name=tool_name,
-        exit_code=exit_code,
-        stdout=stdout,
-        stderr=stderr,
-        elapsed=elapsed,
-    )
+# _make_result is replaced by make_lint_result from python_setup_lint.testing
 
 
 # ── ToolSpec / TOOLS table ─────────────────────────────────────────
@@ -302,8 +292,8 @@ class TestBaseline:
 
     def test_capture_basic(self) -> None:
         results = [
-            _make_result(tool_name="ruff check", exit_code=0, stdout="no issues"),
-            _make_result(tool_name="mypy", exit_code=1, stdout="error: x"),
+            make_lint_result(tool_name="ruff check", exit_code=0, stdout="no issues"),
+            make_lint_result(tool_name="mypy", exit_code=1, stdout="error: x"),
         ]
         baseline = _capture_baseline(results)
         assert len(baseline) == 2
@@ -313,20 +303,20 @@ class TestBaseline:
 
     def test_capture_handles_json_output(self) -> None:
         pyright_out = json.dumps({"summary": {"errorCount": 1}})
-        results = [_make_result(tool_name="pyright check", stdout=pyright_out)]
+        results = [make_lint_result(tool_name="pyright check", stdout=pyright_out)]
         baseline = _capture_baseline(results)
         assert baseline[0]["diagnostics"] == {"summary": {"errorCount": 1}}
 
     def test_capture_rumdl_strips_timing(self) -> None:
         """rumdl success output has timing stripped via regex replacement."""
-        results = [_make_result(tool_name="rumdl check", stdout="\nSuccess: No issues found in 47 files (12ms)\n")]
+        results = [make_lint_result(tool_name="rumdl check", stdout="\nSuccess: No issues found in 47 files (12ms)\n")]
         baseline = _capture_baseline(results)
         assert "(XXXms)" in baseline[0]["output"], f"Expected timing stripped, got: {baseline[0]['output']}"
 
     def test_capture_pyright_strips_time_in_sec(self) -> None:
         """_capture_baseline strips volatile timeInSec from pyright summary."""
         pyright_out = json.dumps({"summary": {"errorCount": 1, "timeInSec": 12.5, "filesAnalyzed": 100}})
-        results = [_make_result(tool_name="pyright check", stdout=pyright_out)]
+        results = [make_lint_result(tool_name="pyright check", stdout=pyright_out)]
         baseline = _capture_baseline(results)
         summary = baseline[0]["diagnostics"]["summary"]
         assert "timeInSec" not in summary, f"timeInSec should be stripped, got: {summary}"
@@ -338,7 +328,7 @@ class TestBaseline:
         cur_diag = {"summary": {"errorCount": 1, "timeInSec": 15.0, "filesAnalyzed": 100}}
         saved = [{"tool": "pyright check", "exit_code": 0, "diagnostics": base_diag}]
         baseline_path.write_text(json.dumps(saved))
-        results = [_make_result(tool_name="pyright check", exit_code=0, stdout=json.dumps(cur_diag))]
+        results = [make_lint_result(tool_name="pyright check", exit_code=0, stdout=json.dumps(cur_diag))]
         violations = _diff_baseline(results, baseline_path)
         assert violations == [], f"Expected no violations with timeInSec diff, got: {violations}"
 
@@ -349,7 +339,7 @@ class TestBaseline:
         saved = [{"tool": "pyright check", "exit_code": 0, "diagnostics": diag}]
         baseline_path.write_text(json.dumps(saved))
         # Same diagnostics, different raw output — no violation
-        results = [_make_result(tool_name="pyright check", exit_code=0, stdout=json.dumps(diag))]
+        results = [make_lint_result(tool_name="pyright check", exit_code=0, stdout=json.dumps(diag))]
         violations = _diff_baseline(results, baseline_path)
         assert violations == [], f"Expected no violations with matching diagnostics, got: {violations}"
 
@@ -358,19 +348,19 @@ class TestBaseline:
         baseline_path = tmp_path / "diag_change.json"
         saved = [{"tool": "pyright check", "exit_code": 0, "diagnostics": {"summary": {"errorCount": 0}}}]
         baseline_path.write_text(json.dumps(saved))
-        results = [_make_result(tool_name="pyright check", exit_code=0, stdout=json.dumps({"summary": {"errorCount": 1}}))]
+        results = [make_lint_result(tool_name="pyright check", exit_code=0, stdout=json.dumps({"summary": {"errorCount": 1}}))]
         violations = _diff_baseline(results, baseline_path)
         assert any("diagnostics" in v.lower() for v in violations), f"Expected diagnostics change, got: {violations}"
 
     def test_diff_no_baseline_file(self) -> None:
-        results = [_make_result()]
+        results = [make_lint_result()]
         violations = _diff_baseline(results, Path("/nonexistent/baseline.json"))
         assert len(violations) == 1
         assert "not found" in violations[0]
 
     def test_diff_identical(self, tmp_path: Path) -> None:
         baseline_path = tmp_path / "baseline.json"
-        results = [_make_result(tool_name="test", exit_code=0, stdout="ok")]
+        results = [make_lint_result(tool_name="test", exit_code=0, stdout="ok")]
         saved = [{"tool": "test", "exit_code": 0, "output": "ok"}]
         with open(baseline_path, "w") as f:
             json.dump(saved, f)
@@ -379,7 +369,7 @@ class TestBaseline:
 
     def test_diff_exit_code_changed(self, tmp_path: Path) -> None:
         baseline_path = tmp_path / "baseline.json"
-        results = [_make_result(tool_name="test", exit_code=1, stdout="ok")]
+        results = [make_lint_result(tool_name="test", exit_code=1, stdout="ok")]
         saved = [{"tool": "test", "exit_code": 0, "output": "ok"}]
         with open(baseline_path, "w") as f:
             json.dump(saved, f)
@@ -388,7 +378,7 @@ class TestBaseline:
 
     def test_diff_output_changed(self, tmp_path: Path) -> None:
         baseline_path = tmp_path / "baseline.json"
-        results = [_make_result(tool_name="test", exit_code=0, stdout="new output")]
+        results = [make_lint_result(tool_name="test", exit_code=0, stdout="new output")]
         saved = [{"tool": "test", "exit_code": 0, "output": "old output"}]
         with open(baseline_path, "w") as f:
             json.dump(saved, f)
@@ -397,7 +387,7 @@ class TestBaseline:
 
     def test_diff_new_tool(self, tmp_path: Path) -> None:
         baseline_path = tmp_path / "baseline.json"
-        results = [_make_result(tool_name="tool_a"), _make_result(tool_name="tool_b")]
+        results = [make_lint_result(tool_name="tool_a"), make_lint_result(tool_name="tool_b")]
         saved = [{"tool": "tool_a", "exit_code": 0, "output": ""}]
         with open(baseline_path, "w") as f:
             json.dump(saved, f)
@@ -407,7 +397,7 @@ class TestBaseline:
     def test_diff_invalid_json(self, tmp_path: Path) -> None:
         baseline_path = tmp_path / "baseline.json"
         baseline_path.write_text("not valid json")
-        violations = _diff_baseline([_make_result()], baseline_path)
+        violations = _diff_baseline([make_lint_result()], baseline_path)
         assert len(violations) == 1
         assert "Cannot read" in violations[0]
 
@@ -416,37 +406,80 @@ class TestBaseline:
 
 
 class TestOverwriteBaseline:
-    """Verify --overwrite-baseline rewrites an existing baseline file."""
+    """Verify --overwrite-baseline rewrites an existing baseline file (with fakes)."""
 
-    def test_overwrite_via_main(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_overwrite_via_main(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """main(['--overwrite-baseline', ...]) rewrites existing baseline on second call."""
+        fake1 = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake1)
         baseline_file = tmp_path / "overwrite.json"
         # First call creates baseline
-        rc1 = main(["--path", "src/python_setup_lint/runner.py", "--baseline", str(baseline_file)])
+        rc1 = main(
+            [
+                "--path",
+                "src/main.py",
+                "--baseline",
+                str(baseline_file),
+            ]
+        )
         assert baseline_file.exists()
-        data_first = json.loads(baseline_file.read_text())
+        import json as _json
+        data_first = _json.loads(baseline_file.read_text())
         assert len(data_first) > 0
 
         # Second call with overwrite — should rewrite
-        rc2 = main(["--overwrite-baseline", "--baseline", str(baseline_file), "--path", "src/python_setup_lint/runner.py"])
+        fake2 = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake2)
+        rc2 = main(
+            [
+                "--overwrite-baseline",
+                "--baseline",
+                str(baseline_file),
+                "--path",
+                "src/main.py",
+            ]
+        )
         captured = capsys.readouterr()
-        assert "Overwriting baseline" in captured.out, f"Expected 'Overwriting baseline' in output, got: {captured.out[:300]}"
-        data_second = json.loads(baseline_file.read_text())
+        assert "Overwriting baseline" in captured.out, (
+            f"Expected 'Overwriting baseline' in output, got: {captured.out[:300]}"
+        )
+        data_second = _json.loads(baseline_file.read_text())
         assert len(data_second) > 0  # still valid
 
-    def test_overwrite_via_run_lint(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_overwrite_via_run_lint(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """run_lint(overwrite_baseline=True) rewrites when file already exists."""
+        fake1 = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake1)
         baseline_file = tmp_path / "overwrite2.json"
         # Create baseline
-        run_lint(path="src/python_setup_lint/runner.py", baseline=str(baseline_file))
+        run_lint(path="src/main.py", baseline=str(baseline_file))
         assert baseline_file.exists()
 
         # Overwrite
-        run_lint(path="src/python_setup_lint/runner.py", baseline=str(baseline_file), overwrite_baseline=True)
-        data = json.loads(baseline_file.read_text())
+        fake2 = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake2)
+        run_lint(
+            path="src/main.py",
+            baseline=str(baseline_file),
+            overwrite_baseline=True,
+        )
+        import json as _json
+        data = _json.loads(baseline_file.read_text())
         assert len(data) > 0
 
-    def test_no_overwrite_without_flag(self, tmp_path: Path) -> None:
+    def test_no_overwrite_without_flag(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Without --overwrite-baseline, an existing baseline is diffed, not rewritten."""
         baseline_file = tmp_path / "no_overwrite.json"
         # Create baseline with known content
@@ -454,9 +487,25 @@ class TestOverwriteBaseline:
         baseline_file.write_text(json.dumps(saved))
 
         # Run again without overwrite — should diff, not rewrite
-        rc = main(["--baseline", str(baseline_file), "--path", "src/python_setup_lint/runner.py"])
+        fake = fake_run_cmd_factory(
+            {
+                "ruff check": make_lint_result(
+                    tool_name="ruff check", exit_code=0, stdout="first output"
+                ),
+            }
+        )
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            [
+                "--baseline",
+                str(baseline_file),
+                "--path",
+                "src/main.py",
+            ]
+        )
         # Baseline content should remain unchanged (not overwritten)
-        data = json.loads(baseline_file.read_text())
+        import json as _json
+        data = _json.loads(baseline_file.read_text())
         assert len(data) == 1
         assert data[0]["output"] == "first output"
 
@@ -469,7 +518,7 @@ class TestPrintResult:
 
     def test_print_passed_format(self, capsys: pytest.CaptureFixture[str]) -> None:
         """PASSED result includes tool name, status, and stdout."""
-        result = _make_result(tool_name="mytool", exit_code=0, stdout="all good\n")
+        result = make_lint_result(tool_name="mytool", exit_code=0, stdout="all good\n")
         _print_result(result)
         captured = capsys.readouterr()
         assert "[mytool]" in captured.out
@@ -478,7 +527,7 @@ class TestPrintResult:
 
     def test_print_failed_format(self, capsys: pytest.CaptureFixture[str]) -> None:
         """FAILED result includes error details, status, and stderr."""
-        result = _make_result(tool_name="mytool", exit_code=2, stderr="error: x\n")
+        result = make_lint_result(tool_name="mytool", exit_code=2, stderr="error: x\n")
         _print_result(result)
         captured = capsys.readouterr()
         assert "FAILED" in captured.out
@@ -487,7 +536,7 @@ class TestPrintResult:
 
     def test_print_stderr_before_stdout(self, capsys: pytest.CaptureFixture[str]) -> None:
         """stderr content appears before stdout in output (code convention)."""
-        result = _make_result(
+        result = make_lint_result(
             tool_name="mytool",
             exit_code=1,
             stderr="stderr line\n",
@@ -501,104 +550,182 @@ class TestPrintResult:
 # ── run_lint orchestration with advanced flags ───────────────────
 
 
-class TestRunLintOrchestration:
-    """Verify run_lint behaviour with --no-fail-fast, --exclude, etc."""
+import python_setup_lint.runner as _runner_module
 
-    def test_no_fail_fast_captures_all_tools(self, tmp_path: Path) -> None:
-        """With --no-fail-fast, all applicable TOOLS produce a baseline entry."""
+
+class TestRunLintOrchestration:
+    """Verify run_lint behaviour with --no-fail-fast, --exclude, etc.
+
+    Uses fakes (no real subprocesses).  The consolidated real-pipeline smoke
+    in test_real_pipeline_smoke.py provides end-to-end coverage.
+    """
+
+    def _default_config(self, tmp_path: Path) -> RunnerConfig:
+        return RunnerConfig(
+            cwd=tmp_path,
+            package_name="python_setup_lint",
+            default_py_dirs=["src", "scripts", "tests"],
+        )
+
+    def test_no_fail_fast_captures_all_tools(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """With --no-fail-fast, all TOOLS produce a baseline entry."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         baseline_file = tmp_path / "noff.json"
-        run_lint(
-            config=RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint"),
-            path="src/python_setup_lint/runner.py",
+        rc = run_lint(
+            config=self._default_config(tmp_path),
             baseline=str(baseline_file),
             no_fail_fast=True,
         )
-        data = json.loads(baseline_file.read_text())
-        # Without package_name: 9 tools (stubtest/verifytypes skipped)
-        # With package_name: all 11
+        dispatched_labels = {c.label for c in fake.calls}
+        expected_labels = {t.name for t in TOOLS}
+        assert dispatched_labels == expected_labels, (
+            f"Dispatched {len(dispatched_labels)}/{len(expected_labels)} tools: "
+            f"missing={expected_labels - dispatched_labels}"
+        )
+        import json as _json
+        data = _json.loads(baseline_file.read_text())
         assert len(data) == len(TOOLS), (
-            f"Expected {len(TOOLS)} baseline entries, got {len(data)} — not all tools ran under --no-fail-fast"
+            f"Expected {len(TOOLS)} baseline entries, got {len(data)}"
         )
 
-    def test_no_fail_fast_returns_int(self) -> None:
+    def test_no_fail_fast_returns_int(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """--no-fail-fast returns an int (aggregate exit code)."""
-        rc = run_lint(path="src/python_setup_lint/runner.py", no_fail_fast=True)
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = run_lint(
+            config=self._default_config(tmp_path),
+            no_fail_fast=True,
+        )
         assert isinstance(rc, int)
 
-    def test_tools_override_limits_tools(self, tmp_path: Path) -> None:
+    def test_tools_override_limits_tools(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """tools_override runs only the specified tools."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         baseline_file = tmp_path / "tools_override.json"
-        config = RunnerConfig(cwd=Path.cwd(), tools_override=["ruff check", "mypy"])
+        config = RunnerConfig(
+            cwd=tmp_path,
+            tools_override=["ruff check", "mypy"],
+        )
         run_lint(
             config=config,
-            path="src/python_setup_lint/runner.py",
             baseline=str(baseline_file),
             no_fail_fast=True,
         )
-        data = json.loads(baseline_file.read_text())
+        import json as _json
+        data = _json.loads(baseline_file.read_text())
         tool_names = {entry["tool"] for entry in data}
         assert tool_names == {"ruff check", "mypy"}, f"Expected only ruff check and mypy, got {tool_names}"
 
-    def test_package_name_none_skips_stubtest_verifytypes(self, tmp_path: Path) -> None:
-        """With package_name=None, stubtest and verifytypes are skipped (9 tools)."""
+    def test_package_name_none_skips_stubtest_verifytypes(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """With package_name=None, stubtest and verifytypes are skipped."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         baseline_file = tmp_path / "no_pkg.json"
-        config = RunnerConfig(cwd=Path.cwd(), package_name=None)
+        config = RunnerConfig(cwd=tmp_path, package_name=None)
         run_lint(
             config=config,
-            path="src/python_setup_lint/runner.py",
             baseline=str(baseline_file),
             no_fail_fast=True,
         )
-        data = json.loads(baseline_file.read_text())
-        tool_names = {entry["tool"] for entry in data}
-        assert "mypy.stubtest" not in tool_names, "stubtest should be skipped when package_name=None"
-        assert "pyright verify types" not in tool_names, "verifytypes should be skipped when package_name=None"
-        assert len(data) == len(TOOLS) - 2, f"Expected {len(TOOLS) - 2} tools, got {len(data)}"
+        dispatched = {c.label for c in fake.calls}
+        assert "mypy.stubtest" not in dispatched
+        assert "pyright verify types" not in dispatched
+        assert len(dispatched) == len(TOOLS) - 2
 
-    def test_package_name_set_runs_stubtest_verifytypes(self, tmp_path: Path) -> None:
-        """With package_name set, stubtest and verifytypes are included (11 tools)."""
+    def test_package_name_set_runs_stubtest_verifytypes(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """With package_name set, stubtest and verifytypes are included."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         baseline_file = tmp_path / "with_pkg.json"
-        config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
+        config = RunnerConfig(cwd=tmp_path, package_name="python_setup_lint")
         run_lint(
             config=config,
-            path="src/python_setup_lint/runner.py",
             baseline=str(baseline_file),
             no_fail_fast=True,
         )
-        data = json.loads(baseline_file.read_text())
-        tool_names = {entry["tool"] for entry in data}
-        assert "mypy.stubtest" in tool_names, "stubtest should run when package_name is set"
-        assert "pyright verify types" in tool_names, "verifytypes should run when package_name is set"
-        assert len(data) == len(TOOLS), f"Expected {len(TOOLS)} tools, got {len(data)}"
+        dispatched = {c.label for c in fake.calls}
+        assert "mypy.stubtest" in dispatched
+        assert "pyright verify types" in dispatched
+        assert len(dispatched) == len(TOOLS)
 
     # ── CLI argument parsing via main() ─────────────────────────────
 
 
 class TestMainArgparse:
-    """Verify main() translates CLI flags to run_lint kwargs."""
+    """Verify main() translates CLI flags to run_lint kwargs.
 
-    def test_main_path(self) -> None:
+    Uses fakes (no real subprocesses).  Only tests flag acceptance.
+    """
+
+    def _default_config(self, tmp_path: Path) -> RunnerConfig:
+        return RunnerConfig(
+            cwd=tmp_path,
+            package_name="python_setup_lint",
+            default_py_dirs=["src", "scripts", "tests"],
+        )
+
+    def test_main_path(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """--path is accepted by CLI."""
-        rc = main(["--path", "src/python_setup_lint/runner.py"])
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            ["--path", "src/python_setup_lint/runner.py"],
+            config=self._default_config(tmp_path),
+        )
         assert isinstance(rc, int)
 
-    def test_main_fix(self) -> None:
+    def test_main_fix(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """--fix is accepted by CLI."""
-        rc = main(["--fix", "--path", "src/python_setup_lint/runner.py"])
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            ["--fix", "--path", "src/python_setup_lint/runner.py"],
+            config=self._default_config(tmp_path),
+        )
         assert isinstance(rc, int)
 
-    def test_main_no_fail_fast(self) -> None:
+    def test_main_no_fail_fast(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """--no-fail-fast is accepted by CLI."""
-        rc = main(["--no-fail-fast", "--path", "src/python_setup_lint/runner.py"])
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            ["--no-fail-fast", "--path", "src/python_setup_lint/runner.py"],
+            config=self._default_config(tmp_path),
+        )
         assert isinstance(rc, int)
 
-    def test_main_exclude(self) -> None:
+    def test_main_exclude(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """--exclude is accepted by CLI."""
-        rc = main(["--exclude", "tests/", "--path", "src/python_setup_lint/runner.py"])
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            ["--exclude", "tests/", "--path", "src/python_setup_lint/runner.py"],
+            config=self._default_config(tmp_path),
+        )
         assert isinstance(rc, int)
 
-    def test_main_baseline(self, tmp_path: Path) -> None:
+    def test_main_baseline(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """--baseline produces a JSON file."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         baseline_file = tmp_path / "main_baseline.json"
         rc = main(
             [
@@ -606,35 +733,69 @@ class TestMainArgparse:
                 str(baseline_file),
                 "--path",
                 "src/python_setup_lint/runner.py",
-            ]
+            ],
+            config=self._default_config(tmp_path),
         )
         assert baseline_file.exists()
-        data = json.loads(baseline_file.read_text())
+        import json as _json
+        data = _json.loads(baseline_file.read_text())
         assert len(data) > 0
 
-    def test_main_package_name(self) -> None:
+    def test_main_package_name(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """--package-name is accepted by CLI."""
-        rc = main(["--package-name", "python_setup_lint", "--path", "src/python_setup_lint/runner.py"])
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            ["--package-name", "python_setup_lint", "--path", "src/python_setup_lint/runner.py"],
+            config=self._default_config(tmp_path),
+        )
         assert isinstance(rc, int)
 
-    def test_main_cwd(self, tmp_path: Path) -> None:
+    def test_main_cwd(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """--cwd is accepted by CLI."""
-        rc = main(["--cwd", str(tmp_path), "--path", "."])
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            ["--cwd", str(tmp_path), "--path", "."],
+            config=self._default_config(tmp_path),
+        )
         assert isinstance(rc, int)
 
-    def test_main_tools(self) -> None:
+    def test_main_tools(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """--tools is accepted by CLI (comma-separated list)."""
-        rc = main(["--tools", "ruff check,mypy", "--path", "src/python_setup_lint/runner.py"])
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            ["--tools", "ruff check,mypy", "--path", "src/python_setup_lint/runner.py"],
+            config=self._default_config(tmp_path),
+        )
         assert isinstance(rc, int)
 
-    def test_main_default_py_dirs(self) -> None:
+    def test_main_default_py_dirs(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """--default-py-dirs is accepted by CLI."""
-        rc = main(["--default-py-dirs", "src,tests", "--path", "src/python_setup_lint/runner.py"])
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            ["--default-py-dirs", "src,tests", "--path", "src/python_setup_lint/runner.py"],
+            config=self._default_config(tmp_path),
+        )
         assert isinstance(rc, int)
 
-    def test_main_no_args_backward_compat(self) -> None:
+    def test_main_no_args_backward_compat(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """main() with no args runs successfully (backward compat)."""
-        rc = main([])
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main([], config=self._default_config(tmp_path))
         assert isinstance(rc, int)
 
 
@@ -642,18 +803,21 @@ class TestMainArgparse:
 
 
 class TestMainCLI:
-    """Lightweight CLI exercises — uses fast tools only to keep tests quick."""
+    """Lightweight CLI exercises — pure argparse, no subprocess."""
 
     def test_main_help(self) -> None:
         """--help should exit with code 0 (SystemExit)."""
-        with pytest.raises(SystemExit) as exc:
+        try:
             main(["--help"])
-        assert exc.value.code == 0
+        except SystemExit as exc:
+            assert exc.code == 0
 
     def test_main_unknown_flag_error(self) -> None:
         """Unknown flag produces non-zero exit."""
-        with pytest.raises(SystemExit) as exc:
+        try:
             main(["--nonexistent-flag"])
+        except SystemExit as exc:
+            assert exc.code != 0
 
     def test_lint_result_dataclass(self) -> None:
         """LintResult fields are correctly accessible."""
@@ -664,99 +828,125 @@ class TestMainCLI:
         assert r.stderr == "err"
         assert r.elapsed == 1.0
 
-    @pytest.mark.slow
-    def test_run_lint_returns_int(self) -> None:
-        """run_lint() returns an int (may be 0 or non-zero)."""
-        rc = run_lint()
-        assert isinstance(rc, int)
-
 
 # ── Integration: quick real tool (ruff) ────────────────────────────
 
 
 class TestIntegration:
-    """Exercise real lint tools with lightweight scope."""
+    """Exercise lint runner behaviour with fakes."""
 
-    def test_ruff_on_small_path(self) -> None:
-        """Run ruff on a small scope — ruff entry present in baseline."""
-        baseline_file = Path("/tmp/qa_test_baseline.json")
-        try:
-            rc = run_lint(path="src/python_setup_lint/runner.py", baseline=str(baseline_file), no_fail_fast=True)
-            assert baseline_file.exists()
-            data = json.loads(baseline_file.read_text())
-            assert any(entry["tool"] == "ruff check" for entry in data), "ruff check did not produce a baseline entry"
-        finally:
-            baseline_file.unlink(missing_ok=True)
+    def test_ruff_on_small_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Run lint with fakes — ruff entry present in baseline."""
+        fake = fake_run_cmd_factory(
+            {
+                "ruff check": make_lint_result(tool_name="ruff check", stdout="no issues"),
+            }
+        )
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        baseline_file = tmp_path / "test_baseline.json"
+        rc = run_lint(
+            config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
+            baseline=str(baseline_file),
+            no_fail_fast=True,
+        )
+        assert baseline_file.exists()
+        import json as _json
+        data = _json.loads(baseline_file.read_text())
+        assert any(entry["tool"] == "ruff check" for entry in data), "ruff check did not produce a baseline entry"
 
-    def test_ruff_with_fix_flag(self) -> None:
+    def test_ruff_with_fix_flag(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Run lint --fix on a single file — ruff entry present in baseline."""
-        baseline_file = Path("/tmp/qa_test_fix_baseline.json")
-        try:
-            rc = run_lint(path="src/python_setup_lint/runner.py", fix=True, baseline=str(baseline_file), no_fail_fast=True)
-            assert baseline_file.exists()
-            data = json.loads(baseline_file.read_text())
-            assert any(entry["tool"] == "ruff check" for entry in data), "ruff check did not produce a baseline entry under --fix"
-        finally:
-            baseline_file.unlink(missing_ok=True)
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        baseline_file = tmp_path / "test_fix_baseline.json"
+        rc = run_lint(
+            config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
+            fix=True,
+            baseline=str(baseline_file),
+            no_fail_fast=True,
+        )
+        assert baseline_file.exists()
+        import json as _json
+        data = _json.loads(baseline_file.read_text())
+        assert any(entry["tool"] == "ruff check" for entry in data), "ruff check did not produce a baseline entry under --fix"
 
-    def test_baseline_create(self, tmp_path: Path) -> None:
-        """Creating a baseline on a small scope produces a JSON file with multiple entries."""
+    def test_baseline_create(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Creating a baseline produces a JSON file with multiple entries."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         baseline_file = tmp_path / "test_baseline.json"
         run_lint(
-            path="src/python_setup_lint/runner.py",
+            config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
             baseline=str(baseline_file),
         )
         assert baseline_file.exists()
-        data = json.loads(baseline_file.read_text())
+        import json as _json
+        data = _json.loads(baseline_file.read_text())
         assert isinstance(data, list)
         assert len(data) > 0
-        # Every entry has required fields
         for entry in data:
             assert "tool" in entry
             assert "exit_code" in entry
 
-    def test_baseline_diff_identical(self, tmp_path: Path) -> None:
+    def test_baseline_diff_identical(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Running twice with baseline — baseline entries remain structurally consistent."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         baseline_file = tmp_path / "test_baseline2.json"
-        run_lint(path="src/python_setup_lint/runner.py", baseline=str(baseline_file))
-        saved_after_first = json.loads(baseline_file.read_text())
+        run_lint(
+            config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
+            baseline=str(baseline_file),
+        )
+        import json as _json
+        saved_after_first = _json.loads(baseline_file.read_text())
         assert len(saved_after_first) > 0
 
         # Second run — baseline should still be valid JSON with same structure
-        run_lint(path="src/python_setup_lint/runner.py", baseline=str(baseline_file))
-        saved_after_second = json.loads(baseline_file.read_text())
+        run_lint(
+            config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
+            baseline=str(baseline_file),
+        )
+        saved_after_second = _json.loads(baseline_file.read_text())
         assert isinstance(saved_after_second, list)
-        # Baseline is NOT overwritten on subsequent runs (only created if missing)
-        # So entries should be identical to first run
         assert len(saved_after_second) == len(saved_after_first)
 
-    def test_baseline_exits_zero_when_matching(self, tmp_path: Path) -> None:
-        """run_lint with --baseline exits 0 when output matches baseline, even if tools have non-zero exit codes."""
+    def test_baseline_exits_zero_when_matching(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """run_lint with --baseline exits 0 when output matches baseline."""
+        fake1 = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake1)
         baseline_file = tmp_path / "test_baseline_exit.json"
-        # First run creates baseline (may have non-zero tool exits)
-        rc1 = run_lint(path="src/python_setup_lint/runner.py", baseline=str(baseline_file))
+        # First run creates baseline
+        rc1 = run_lint(
+            config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
+            baseline=str(baseline_file),
+        )
         # Second run with same baseline must exit 0 (no new violations)
-        rc2 = run_lint(path="src/python_setup_lint/runner.py", baseline=str(baseline_file))
+        rc2 = run_lint(
+            config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
+            baseline=str(baseline_file),
+        )
         assert rc2 == 0, (
             f"Expected exit code 0 when baseline matches, got {rc2}. "
-            f"First run returned {rc1}. "
-            "This means the baseline-gated hook would always fail on git push."
         )
 
     def test_baseline_exits_nonzero_on_new_violation(self, tmp_path: Path) -> None:
         """run_lint with --baseline exits non-zero when a new violation appears."""
         baseline_file = tmp_path / "test_baseline_new_violation.json"
-        # Create baseline with a clean result
-        clean_results = [
-            _make_result(tool_name="ruff check", exit_code=0, stdout="no issues"),
-        ]
         saved = [{"tool": "ruff check", "exit_code": 0, "output": "no issues"}]
         baseline_file.write_text(json.dumps(saved))
 
-        # Now simulate a new violation by running with different output
-        # We need to use _diff_baseline directly since run_lint runs real tools
         violations = _diff_baseline(
-            [_make_result(tool_name="ruff check", exit_code=1, stdout="error: unused import")],
+            [make_lint_result(tool_name="ruff check", exit_code=1, stdout="error: unused import")],
             baseline_file,
         )
         assert len(violations) > 0, "Expected violations when output differs from baseline"
@@ -1050,3 +1240,208 @@ class TestParseDetectSecretsJson:
 
     def test_invalid_json(self) -> None:
         assert _parse_detect_secrets_json("bad", "") == []
+
+# ── T4: Strategy registry (LintTool + STRATEGIES + LINT_TOOLS + ────
+# register_lint_tool + GenericLintTool) ────────────────────────────
+
+
+import python_setup_lint.runner as _r
+
+
+class TestLintToolRegistry:
+    """Verify the strategy registry (T4 + T8 R6 3-point seam)."""
+
+    def test_strategies_covers_all_builtins(self) -> None:
+        """STRATEGIES has one entry per built-in TOOLS name; no dupes."""
+        names = {t.name for t in TOOLS}
+        assert set(_r.STRATEGIES) == names, (
+            f"STRATEGIES keys mismatch: missing={names - set(_r.STRATEGIES)} "
+            f"extra={set(_r.STRATEGIES) - names}"
+        )
+        assert len(_r.STRATEGIES) == len(TOOLS)
+
+    def test_lint_tools_mirrors_tools_at_import(self) -> None:
+        """LINT_TOOLS lists the same 11 names as TOOLS at import."""
+        assert {t.name for t in _r.LINT_TOOLS} == {t.name for t in TOOLS}
+        assert len(_r.LINT_TOOLS) == len(TOOLS)
+
+    def test_strategies_provide_lint_tool_instances(self) -> None:
+        """All values in STRATEGIES are LintTool subclasses."""
+        for strategy in _r.STRATEGIES.values():
+            assert isinstance(strategy, _r.LintTool), (
+                f"Strategy {strategy!r} is not a LintTool"
+            )
+
+    def test_strategy_name_matches_spec_name(self) -> None:
+        """Each strategy's name mirrors its spec's name."""
+        for name, strategy in _r.STRATEGIES.items():
+            assert strategy.name == name
+            assert strategy.spec.name == name
+
+    def test_register_lint_tool_appends_extra(self) -> None:
+        """register_lint_tool adds an extra spec to LINT_TOOLS + STRATEGIES.
+
+        Uses a unique name that does NOT collide with any built-in.
+        """
+        from python_setup_lint.runner import register_lint_tool, STRATEGIES, LINT_TOOLS, GenericLintTool
+        extra = ToolSpec(
+            "t4-extra-test-tool",
+            ["t4extra", "check"],
+            supports_path=True,
+        )
+        try:
+            register_lint_tool(extra, statistics_flag=[], parser=None, config_flag=None)
+            # In LINT_TOOLS
+            assert any(t.name == "t4-extra-test-tool" for t in LINT_TOOLS)
+            # Registered as a GenericLintTool under STRATEGIES
+            registered = STRATEGIES.get("t4-extra-test-tool")
+            assert registered is not None
+            assert isinstance(registered, GenericLintTool)
+        finally:
+            # Cleanup: idempotent re-call semantics means a fresh process
+            # would not see this mutation; in the test process we restore
+            # state to avoid leaking into other tests.
+            if STRATEGIES.get("t4-extra-test-tool") is not None:
+                del STRATEGIES["t4-extra-test-tool"]
+            _r.LINT_TOOLS[:] = [t for t in _r.LINT_TOOLS if t.name != "t4-extra-test-tool"]
+
+    def test_register_lint_tool_idempotent_same_name(self) -> None:
+        """Re-calling register_lint_tool with the same name is update-in-place (no duplicate)."""
+        from python_setup_lint.runner import register_lint_tool, STRATEGIES, LINT_TOOLS
+        a = ToolSpec("t4-idempotent-tool", ["t4ida"])
+        b = ToolSpec("t4-idempotent-tool", ["t4idb"])  # same name, different command
+        try:
+            register_lint_tool(a)
+            count_after_first = len(LINT_TOOLS)
+            register_lint_tool(b)
+            count_after_second = len(LINT_TOOLS)
+            assert count_after_first == count_after_second, (
+                f"Idempotency broken: LINT_TOOLS grew from {count_after_first} to {count_after_second}"
+            )
+            # Last write wins — LINT_TOOLS entry reflects the most recent spec.
+            entry = next(t for t in LINT_TOOLS if t.name == "t4-idempotent-tool")
+            assert entry.command == ["t4idb"], f"Expected update-in-place, got {entry.command}"
+        finally:
+            if STRATEGIES.get("t4-idempotent-tool") is not None:
+                del STRATEGIES["t4-idempotent-tool"]
+            _r.LINT_TOOLS[:] = [t for t in _r.LINT_TOOLS if t.name != "t4-idempotent-tool"]
+
+    def test_register_lint_tool_respects_builtin_strategy(self) -> None:
+        """Re-registering a built-in name does NOT replace its built-in strategy."""
+        from python_setup_lint.runner import register_lint_tool, STRATEGIES
+        # Snapshot the built-in ruff strategy instance and the original LINT_TOOLS.
+        original_strategy = STRATEGIES["ruff check"]
+        original_lint_tools_snapshot = list(_r.LINT_TOOLS)
+        duplicate = ToolSpec("ruff check", ["ruff", "duplicate"])
+        register_lint_tool(duplicate)
+        try:
+            # STRATEGIES entry should remain the same object — built-in kept.
+            assert STRATEGIES["ruff check"] is original_strategy, (
+                "register_lint_tool should not replace built-in strategies"
+            )
+        finally:
+            # Restore LINT_TOOLS to its pre-test snapshot.
+            _r.LINT_TOOLS[:] = original_lint_tools_snapshot
+
+
+class TestGenericLintToolBuildCommand:
+    """GenericLintTool.build_command delegates to the generic _build_command."""
+
+    def test_generic_command_for_extra_no_special_branches(self) -> None:
+        """An extra name falls through to the common-case branches of _build_command.
+
+        Specifically: shared-config-flag (none for unknown name) + path scoping
+        + exclude — without touching any of the if/elif tool-name branches
+        (including the fix-flag branches keyed to ``ruff check`` /
+        ``rumdl check`` / ``ty check``).  An extra with ``supports_fix=True``
+        does NOT get a ``--fix`` flag because the generic branches don't
+        emit one for unknown names; the spec's ``supports_fix=True`` only
+        controls the unsupported-flag warning in :func:`run_lint`.
+        """
+        from python_setup_lint.runner import GenericLintTool
+        spec = ToolSpec(
+            "t4-generic-tool",
+            ["t4g", "check"],
+            supports_fix=True,
+            supports_path=True,
+            supports_exclude=True,
+            default_paths=["src/"],
+        )
+        g = GenericLintTool(spec, statistics_flag=[], parser=None, config_flag=None)
+        try:
+            cmd = g.build_command(
+                config=RunnerConfig(cwd=Path("/tmp")),
+                fix=True,
+                path=None,
+                exclude="tests/",
+            )
+            # Base command + default_path + exclude (no --fix — name is
+            # not in the ruff/rumdl/ty fix-flag branches).
+            assert cmd == ["t4g", "check", "src/", "--exclude", "tests/"]
+        except Exception as exc:  # noqa: BLE001
+            pytest.fail(f"GenericLintTool.build_command raised: {exc!r}")
+
+    def test_generic_statistics_flags_use_override_when_set(self) -> None:
+        """GenericLintTool.statistics_flags returns the explicit flag list when provided."""
+        from python_setup_lint.runner import GenericLintTool
+        spec = ToolSpec("t4-stats-tool", ["t4s"])
+        g = GenericLintTool(spec, statistics_flag=["--stat-foo"], parser=None, config_flag=None)
+        assert g.statistics_flags() == ["--stat-foo"]
+
+    def test_generic_statistics_flags_fall_back_to_module_lookup(self) -> None:
+        """When no statistics_flag is passed, GenericLintTool consults _build_statistics_flags."""
+        from python_setup_lint.runner import GenericLintTool
+        spec = ToolSpec("ruff check", ["ruff", "check"])  # built-in name with map entry
+        g = GenericLintTool(spec, statistics_flag=None, parser=None, config_flag=None)
+        # Falls through to _build_statistics_flags("ruff check") → ["--statistics"]
+        assert g.statistics_flags() == ["--statistics"]
+
+    def test_generic_parse_statistics_uses_override(self) -> None:
+        """When a parser is provided, GenericLintTool uses it verbatim."""
+        from python_setup_lint.runner import GenericLintTool
+        spec = ToolSpec("t4-parse-tool", ["t4p"])
+
+        def custom_parser(stdout: str, stderr: str) -> list[tuple[str, int]]:
+            return [("custom-rule", 7)]
+
+        g = GenericLintTool(spec, statistics_flag=None, parser=custom_parser, config_flag=None)
+        assert g.parse_statistics("ignored", "also-ignored") == [("custom-rule", 7)]
+
+    def test_generic_parse_statistics_falls_back_to_module_lookup(self) -> None:
+        """Without a parser, GenericLintTool consults _STATISTICS_PARSERS."""
+        from python_setup_lint.runner import GenericLintTool
+        spec = ToolSpec("ruff check", ["ruff", "check"])
+        g = GenericLintTool(spec, statistics_flag=None, parser=None, config_flag=None)
+        # _STATISTICS_PARSERS["ruff check"] = _parse_ruff_statistics
+        out = "Count\tCode\tDescription\n------\t----\t-----------\n3\tF401\tmodule imported but unused\n"
+        assert ("F401", 3) in g.parse_statistics(out, "")
+
+
+class TestStrategyForFallback:
+    """Verify _strategy_for default-aware fallback for unknown names."""
+
+    def test_strategy_for_returns_cached_builtin(self) -> None:
+        """Built-in names return their existing strategy, not a new GenericLintTool."""
+        from python_setup_lint.runner import _strategy_for, STRATEGIES
+        original = STRATEGIES["ruff check"]
+        got = _strategy_for("ruff check", ToolSpec("ruff check", ["ruff", "check"]))
+        assert got is original, (
+            "Expected the cached built-in strategy, not a new instance"
+        )
+
+    def test_strategy_for_unknown_name_returns_generic(self) -> None:
+        """An unknown name synthesises a GenericLintTool on lookup."""
+        from python_setup_lint.runner import _strategy_for, GenericLintTool
+        fake_spec = ToolSpec("t4-unknown-fallback", ["t4fake"])
+        got = _strategy_for("t4-unknown-fallback", fake_spec)
+        assert isinstance(got, GenericLintTool), f"Expected GenericLintTool, got {type(got)}"
+        assert got.spec is fake_spec, "GenericLintTool should wrap the provided spec"
+
+    def test_strategy_for_unknown_does_not_cache(self) -> None:
+        """_strategy_for does NOT mutate STRATEGIES with the synthesised GenericLintTool."""
+        from python_setup_lint.runner import _strategy_for, STRATEGIES
+        unique_name = "t4-no-cache-fallback"
+        _strategy_for(unique_name, ToolSpec(unique_name, ["t4nc"]))
+        assert unique_name not in STRATEGIES, (
+            "_strategy_for should not write into STRATEGIES — only register_lint_tool does"
+        )

@@ -28,6 +28,8 @@ from python_setup_lint.checkers.stub_import_contract import (
     emit_import_contract_violations,
 )
 from python_setup_lint.checkers.stub_normalizer import AnnotationNormalizer
+from python_setup_lint.testing import _make_tc as _make_tc_factory
+from python_setup_lint.testing import _walk_and_release as _walk_shared
 
 if TYPE_CHECKING:
     import pytest
@@ -35,20 +37,12 @@ if TYPE_CHECKING:
 PROJECT_SRC = Path(__file__).resolve().parents[3] / "src"
 
 
-def _make_tc() -> CheckerTestCase:
-    tc = CheckerTestCase()
-    tc.CHECKER_CLASS = StubChecker
-    tc.setup_method()
-    return tc
+_make_tc = lambda: _make_tc_factory(StubChecker)
 
 
 def _walk_and_release(code: str, file_path: str | None = None, module_name: str = ""):
-    tc = _make_tc()
-    module = astroid.parse(code, module_name=module_name)
-    if file_path is not None:
-        module.file = file_path
-    tc.walk(module)
-    return tc.linter.release_messages()
+    """Walk StubChecker over code and return released messages."""
+    return _walk_shared(code, StubChecker, file_path=file_path, module_name=module_name)
 
 
 def _walk_and_release_with_config(

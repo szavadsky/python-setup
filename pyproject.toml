@@ -57,6 +57,11 @@ dev = [
     "types-tqdm>=4.68.0.20260608",
 ]
 
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests that are intentionally slow (benchmarks or full pipeline runs); use '-m slow' to include, '-m \"not slow\"' to exclude",
+]
+
 [dependency-groups]
 dev = [
     "pytest>=9.1.0",

@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import astroid
-from pylint.testutils import CheckerTestCase
 
 from python_setup_lint.checkers.stub_checker import StubChecker
 from python_setup_lint.checkers.stub_fidelity import (
@@ -21,18 +20,11 @@ from python_setup_lint.checkers.stub_fidelity import (
     _is_public_method,
     _normalize_bases,
 )
+from python_setup_lint.testing import _make_tc as _make_tc_factory
 
-if TYPE_CHECKING:
-    import pytest
+_make_tc = lambda: _make_tc_factory(StubChecker)
 
 PROJECT_SRC = Path(__file__).resolve().parents[3] / "src"
-
-
-def _make_tc() -> CheckerTestCase:
-    tc = CheckerTestCase()
-    tc.CHECKER_CLASS = StubChecker
-    tc.setup_method()
-    return tc
 
 
 class TestNormalizeBases:

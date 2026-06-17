@@ -9,21 +9,17 @@ from __future__ import annotations
 from pathlib import Path
 
 import astroid
-from pylint.testutils import CheckerTestCase
 
 from python_setup_lint.checkers.beartype_checker import BeartypeCoverageChecker
+from python_setup_lint.testing import _make_tc as _make_tc_factory, _walk_and_release as _walk_shared
 
 
-def _make_tc() -> CheckerTestCase:
-    tc = CheckerTestCase()
-    tc.CHECKER_CLASS = BeartypeCoverageChecker
-    tc.setup_method()
-    tc.checker.open()
-    return tc
+_make_tc = lambda: _make_tc_factory(BeartypeCoverageChecker)
 
 
 def _walk_and_release(code: str, *, file_path: str = "src/test_mod.py") -> list:
     tc = _make_tc()
+    tc.checker.open()
     module = astroid.parse(code)
     module.file = file_path
     tc.walk(module)
