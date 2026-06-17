@@ -22,15 +22,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, NamedTuple
 
+logger = logging.getLogger(__name__)
+
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Sequence
 
 class ToolSpec(NamedTuple):
     """Specification for a single lint tool.
@@ -176,6 +180,189 @@ TOOLS: list[ToolSpec] = [
 ]
 
 TOOLS_BY_NAME: dict[str, ToolSpec] = {t.name: t for t in TOOLS}
+
+# ── Strategy registry ──────────────────────────────────────────────
+#
+# A per-tool ``LintTool`` strategy wraps command construction, statistics
+# flags, and statistics parsing.  Built-ins reuse the existing
+# module-level helpers (``_build_command``, ``_build_statistics_flags``,
+# ``_STATISTICS_PARSERS``) so behaviour stays byte-equivalent.  Extras
+# registered via :func:`register_lint_tool` land on :class:`GenericLintTool`,
+# which composes the same generic flag logic via the spec's ``supports_*``
+# booleans (the common-case branches of ``_build_command``).
+#
+# The dispatch is DEFAULT-aware: ``STRATEGIES.get(name)`` returns ``None``
+# for unknown names, and :func:`_strategy_for` synthesises a
+# :class:`GenericLintTool` on lookup so T11 extras never ``KeyError``.
+
+
+class LintTool:
+    """Strategy for a single lint tool.
+
+    Implementations encapsulate per-tool command construction, statistics
+    flags, and statistics parsing.  Config-agnostic: the
+    ``package_name is None`` skip for ``mypy.stubtest`` /
+    ``pyright verify types`` stays in :func:`run_lint`, not here.
+
+    Subclasses override :meth:`build_command` / :meth:`statistics_flags`
+    / :meth:`parse_statistics` to specialise per-tool behaviour.  The
+    default implementations consult the module-level dispatch tables
+    (``_build_command`` / ``_build_statistics_flags`` /
+    ``_STATISTICS_PARSERS``) so built-in behaviour stays verbatim.
+    """
+
+    spec: ToolSpec
+
+    def __init__(self, spec: ToolSpec) -> None:
+        self.spec = spec
+
+    @property
+    def name(self) -> str:
+        """Tool label — mirrors the spec's name."""
+        return self.spec.name
+
+    def build_command(
+        self,
+        *,
+        config: RunnerConfig,
+        fix: bool = False,
+        path: str | None = None,
+        exclude: str | None = None,
+    ) -> list[str]:
+        """Build the full command list for this tool given runtime flags.
+
+        Default: delegates to the module-level :func:`_build_command`,
+        which is the authoritative literal specification of each built-in
+        tool's command shape.
+        """
+        return _build_command(self.spec, config=config, fix=fix, path=path, exclude=exclude)
+
+    def statistics_flags(self) -> list[str]:
+        """Extra CLI flags for statistics output mode.
+
+        Default: delegates to :func:`_build_statistics_flags`.
+        """
+        return _build_statistics_flags(self.spec)
+
+    def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]:
+        """Parse this tool's stdout/stderr into ``(rule, count)`` pairs.
+
+        Default: looks up the parser in :data:`_STATISTICS_PARSERS`.
+        Returns an empty list when no parser is registered.
+        """
+        parser = _STATISTICS_PARSERS.get(self.spec.name)
+        if parser is None:
+            return []
+        return parser(stdout, stderr)
+
+
+# Populate the strategy registry from the 11 built-ins.
+STRATEGIES: dict[str, LintTool] = {spec.name: LintTool(spec) for spec in TOOLS}
+
+
+class GenericLintTool(LintTool):
+    """Minimal strategy for extras registered via :func:`register_lint_tool`.
+
+    Carries three optional declarative fields supplied at registration:
+
+    * ``statistics_flag`` — explicit CLI flag(s) for statistics output.
+    * ``parser`` — callable returning ``list[tuple[str, int]]`` for stats.
+    * ``config_flag`` — explicit CLI flag(s) for external config file.
+
+    Unset fields fall back to the generic ``_build_command`` /
+    ``_build_statistics_flags`` / ``_STATISTICS_PARSERS`` lookups, mirroring
+    the common-case branches of :func:`_build_command`.  The 11 built-ins
+    keep their own strategies; only extras land on :class:`GenericLintTool`.
+    """
+
+    def __init__(
+        self,
+        spec: ToolSpec,
+        *,
+        statistics_flag: list[str] | None = None,
+        parser: Callable[..., list[tuple[str, int]]] | None = None,
+        config_flag: list[str] | None = None,
+    ) -> None:
+        super().__init__(spec)
+        self._statistics_flag = statistics_flag
+        self._parser = parser
+        self._config_flag = config_flag
+
+    def statistics_flags(self) -> list[str]:
+        """Return the explicit statistics flag(s) when set; else module-level lookup."""
+        if self._statistics_flag is not None:
+            return list(self._statistics_flag)
+        return _build_statistics_flags(self.spec)
+
+    def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]:
+        """Use the explicit parser when set; else module-level lookup."""
+        if self._parser is not None:
+            return self._parser(stdout, stderr)
+        parser = _STATISTICS_PARSERS.get(self.spec.name)
+        if parser is None:
+            return []
+        return parser(stdout, stderr)
+
+
+# Live registry of declared ``ToolSpec`` instances.
+# At import time it mirrors the 11 built-ins from :data:`TOOLS`; extras
+# registered via :func:`register_lint_tool` append to it.  :data:`TOOLS`
+# stays the frozen built-in list and is kept as a legacy-compat alias.
+LINT_TOOLS: list[ToolSpec] = list(TOOLS)
+
+
+def _strategy_for(name: str, spec: ToolSpec) -> LintTool:
+    """Resolve a strategy for *name*, default-aware.
+
+    Lookup uses :data:`STRATEGIES` first.  Unknown names synthesise a
+    :class:`GenericLintTool` for *spec* — this is the default-aware
+    dispatch seam that lets T11 extras reach the pipeline without
+    ``KeyError``.  A cached strategy under :data:`STRATEGIES` (the built-ins
+    or any previously-registered extra) is returned as-is.
+    """
+    cached = STRATEGIES.get(name)
+    if cached is not None:
+        return cached
+    return GenericLintTool(spec)
+
+
+def register_lint_tool(
+    tool: ToolSpec,
+    *,
+    statistics_flag: list[str] | None = None,
+    parser: Callable[..., list[tuple[str, int]]] | None = None,
+    config_flag: list[str] | None = None,
+) -> None:
+    """Append *tool* to the live registry and register its strategy.
+
+    For names not already in :data:`STRATEGIES`, a :class:`GenericLintTool`
+    is synthesised from ``tool`` + the three optional declarative fields
+    and registered under ``STRATEGIES[tool.name]``.  For built-in names
+    (already present in :data:`STRATEGIES`), the existing strategy is kept
+    and only :data:`LINT_TOOLS`'s entry for that name is updated.
+
+    Idempotent per ``tool.name`` — a re-call with the same name is an
+    update-in-place (no duplicate append).  This protects against T11's
+    re-merge on repeated ``run_lint`` calls accumulating duplicate entries.
+    """
+    # Idempotent: replace any existing LINT_TOOLS entry with the same name;
+    # otherwise append.
+    for i, existing in enumerate(LINT_TOOLS):
+        if existing.name == tool.name:
+            LINT_TOOLS[i] = tool
+            break
+    else:
+        LINT_TOOLS.append(tool)
+
+    # Register strategy only when no per-tool class already exists (built-ins
+    # keep their strategies; non-builtin names get a GenericLintTool).
+    if tool.name not in STRATEGIES:
+        STRATEGIES[tool.name] = GenericLintTool(
+            tool,
+            statistics_flag=statistics_flag,
+            parser=parser,
+            config_flag=config_flag,
+        )
 
 ## ── Path helpers ────────────────────────────────────────────────────
 
@@ -588,12 +775,22 @@ def _aggregate_statistics(results: list[LintResult]) -> list[ViolationCount]:
 
     counts: list[ViolationCount] = []
     for result in results:
-        parser = _STATISTICS_PARSERS.get(result.tool_name)
-        if parser is None:
-            continue
+        # Default-aware dispatch: prefer the strategy registered for this
+        # tool name; fall back to the module-level parser table.  The
+        # fallback keeps older tool-name consumers (which may not yet have
+        # a strategy entry) working without behaviour drift.  Both paths
+        # swallow parser exceptions, matching the legacy behaviour.
         try:
-            violations = parser(result.stdout, result.stderr)
-        except Exception:
+            strategy = STRATEGIES.get(result.tool_name)
+            if strategy is not None:
+                violations = strategy.parse_statistics(result.stdout, result.stderr)
+            else:
+                parser = _STATISTICS_PARSERS.get(result.tool_name)
+                if parser is None:
+                    continue
+                violations = parser(result.stdout, result.stderr)
+        except Exception as e:
+            logger.warning("stats parser %s failed: %s", result.tool_name, e)
             continue
         for rule, count in violations:
             counts.append(
@@ -824,22 +1021,30 @@ def run_lint(
     if config is None:
         config = RunnerConfig(cwd=Path.cwd())
 
-    # Resolve which tools to run
+    # Resolve which tools to run.
+    # When ``tools_override`` is None, iterate the live registry
+    # (:data:`LINT_TOOLS`) — built-ins + any extras registered via
+    # :func:`register_lint_tool`.  When a name list is supplied, resolve
+    # against :data:`TOOLS_BY_NAME` (built-ins only); extras declared only
+    # in :data:`LINT_TOOLS` are still discoverable from the live registry.
     if config.tools_override is not None:
         selected: list[ToolSpec] = []
+        lint_tools_by_name = {t.name: t for t in LINT_TOOLS}
         for name in config.tools_override:
-            spec = TOOLS_BY_NAME.get(name.strip())
+            spec = lint_tools_by_name.get(name.strip())
             if spec is not None:
                 selected.append(spec)
     else:
-        selected = list(TOOLS)
+        selected = list(LINT_TOOLS)
 
     results: list[LintResult] = []
     overall_rc = 0
     cwd = config.cwd
 
     for spec in selected:
-        # Skip tools that require package_name when none configured
+        # Skip tools that require package_name when none configured.
+        # Per DESIGN-0 D14: this skip stays in run_lint (NOT inside
+        # strategies) so strategies stay config-agnostic.
         if spec.name in ("mypy.stubtest", "pyright verify types") and config.package_name is None:
             print(f"  [{spec.name}] SKIPPED: --package-name not set", file=sys.stderr)
             continue
@@ -852,9 +1057,11 @@ def run_lint(
         if exclude is not None and not spec.supports_exclude:
             print(f"  [{spec.name}] --exclude: N/A (tool does not support exclude)", file=sys.stderr)
 
-        cmd = _build_command(spec, config=config, fix=fix, path=path, exclude=exclude)
+        # Default-aware dispatch — unknown names synthesise a GenericLintTool.
+        strategy = _strategy_for(spec.name, spec)
+        cmd = strategy.build_command(config=config, fix=fix, path=path, exclude=exclude)
         if statistics:
-            cmd.extend(_build_statistics_flags(spec))
+            cmd.extend(strategy.statistics_flags())
         result = _run_cmd(cmd, cwd=cwd, label=spec.name)
         results.append(result)
         if not statistics:

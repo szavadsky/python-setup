@@ -9,19 +9,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import astroid
-from pylint.testutils import CheckerTestCase
 
 if TYPE_CHECKING:
     import pytest
 
 from python_setup_lint.checkers.stub_docstring_checker import StubDocstringChecker
+from python_setup_lint.testing import _make_tc as _make_tc_factory
 
-
-def _make_tc() -> CheckerTestCase:
-    tc = CheckerTestCase()
-    tc.CHECKER_CLASS = StubDocstringChecker
-    tc.setup_method()
-    return tc
+_make_tc = lambda: _make_tc_factory(StubDocstringChecker)
 
 
 def _walk_and_release(code: str, file_path: str = "/workspace/src/mod.py"):

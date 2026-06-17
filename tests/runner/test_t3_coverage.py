@@ -6,9 +6,11 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
+import python_setup_lint.runner as _runner_module
 from python_setup_lint.runner import (
     TOOLS,
     LintResult,
+    RunnerConfig,
     ViolationCount,
     _aggregate_statistics,
     _build_statistics_flags,
@@ -20,6 +22,7 @@ from python_setup_lint.runner import (
     _print_statistics_table,
     run_lint,
 )
+from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 
 if TYPE_CHECKING:
     import pytest
@@ -112,9 +115,9 @@ class TestParserEdgeCases:
 
     def test_ty_concise_no_error_code(self) -> None:
         """Line without recognizable error code is ignored."""
-        out = "file.py:1:1: some random text\n"
+        out = "just a line without colons\n"
         result = _parse_ty_concise(out, "")
-        assert len(result) >= 0  # may or may not match depending on format
+        assert result == []
 
     # ── yamllint parsable ───────────────────────────────────────
     def test_yamllint_parsable_extra_colons(self) -> None:
@@ -258,33 +261,50 @@ class TestAggregateStatisticsEdgeCases:
 class TestStatisticsObservability:
     """Verify statistics output is structurally inspectable."""
 
-    def test_statistics_json_structure(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_statistics_json_structure(self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch) -> None:
         """--statistics --format json produces parseable structured array."""
+        fake = fake_run_cmd_factory(
+            {
+                "ruff check": make_lint_result(
+                    tool_name="ruff check",
+                    stdout="Count\tCode\n-----\t----\n1\tF401\n",
+                ),
+            }
+        )
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         rc = run_lint(
-            path="src/python_setup_lint/runner.py",
+            path="src/main.py",
             statistics=True,
             statistics_format="json",
             no_fail_fast=True,
         )
         captured = capsys.readouterr()
         assert isinstance(rc, int)
-        # Output must be non-empty parseable JSON
         out = captured.out.strip()
         assert out, "JSON statistics output should not be empty"
         data = json.loads(out)
         assert isinstance(data, list), "JSON output should be a list"
-        if data:
-            entry = data[0]
-            assert isinstance(entry, dict), "Each entry should be a dict"
-            assert "tool" in entry, "Each entry must have 'tool'"
-            assert "rule" in entry, "Each entry must have 'rule'"
-            assert "count" in entry, "Each entry must have 'count'"
-            assert isinstance(entry["count"], int), "count must be an integer"
+        assert len(data) > 0, "Expected at least one violation entry"
+        entry = data[0]
+        assert isinstance(entry, dict), "Each entry should be a dict"
+        assert "tool" in entry, "Each entry must have 'tool'"
+        assert "rule" in entry, "Each entry must have 'rule'"
+        assert "count" in entry, "Each entry must have 'count'"
+        assert isinstance(entry["count"], int), "count must be an integer"
 
-    def test_statistics_table_not_empty(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_statistics_table_not_empty(self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch) -> None:
         """--statistics (table) output always includes the statistics header."""
+        fake = fake_run_cmd_factory(
+            {
+                "ruff check": make_lint_result(
+                    tool_name="ruff check",
+                    stdout="Count\tCode\n-----\t----\n1\tF401\n",
+                ),
+            }
+        )
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         rc = run_lint(
-            path="src/python_setup_lint/runner.py",
+            path="src/main.py",
             statistics=True,
             no_fail_fast=True,
         )
@@ -295,10 +315,12 @@ class TestStatisticsObservability:
             f"Statistics table should include 'VIOLATION STATISTICS' header. Output length: {len(out)} chars."
         )
 
-    def test_statistics_json_empty_violations(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_statistics_json_empty_violations(self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch) -> None:
         """When no violations exist, JSON output is an empty array."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         rc = run_lint(
-            path="src/python_setup_lint/runner.py",
+            path="src/main.py",
             statistics=True,
             statistics_format="json",
             no_fail_fast=True,
@@ -306,9 +328,9 @@ class TestStatisticsObservability:
         _ = rc
         captured = capsys.readouterr()
         out = captured.out.strip()
-        # Output is always a JSON array — empty array is valid
         data = json.loads(out)
         assert isinstance(data, list)
+        assert data == [], f"Expected empty list, got {data}"
 
 
 # ── Statistics table formatting ───────────────────────────────────
