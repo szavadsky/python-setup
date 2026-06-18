@@ -1,0 +1,9 @@
+# Dogfood T11 v1 — kept out of python-setup's main pyproject so the dev
+# test suite doesn't pollute LINT_TOOLS.
+[[tool.python-setup-lint.extra-tools]]
+name = "grep-noqa-scan"
+command = ["grep", "-rnE", "--exclude-dir=__pycache__", "--include=*.py", "noqa: "]
+supports_path = true
+default_paths = ["src/", "tests/"]
+parse_strategy = "regex_count"
+parse_regex = "^[^:]+:\\d+:.*# noqa: (\\S+)"
