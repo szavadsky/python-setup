@@ -123,10 +123,12 @@ uncaught → traceback + non-zero exit. Failure shapes:
 
 Deferred to a later build, gated by real consumer demand (not a v2
 regression — v1 covers the declarative-TOML-configured-lint-step user
-story end-to-end):
+story end-to-end). The six deferred candidates (T8 R7):
 
-- Custom `fix_flag` / `statistics_flag` — extras rely on the strategy's
-  own default; explicit overrides are a power-user future.
+- Custom `fix_flag` — extras rely on the strategy's own default;
+  explicit override flag is a power-user future.
+- Custom `statistics_flag` — extras rely on the strategy's own default;
+  explicit override flag is a power-user future.
 - `path_expansion_strategy` enum (`"dir" | "expanded_glob_files" |
   "explicit_list"`) — extras use glob expansion via `default_paths`;
   pylint-style file-list expansion is deferred.
