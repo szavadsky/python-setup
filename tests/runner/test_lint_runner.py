@@ -1352,11 +1352,12 @@ class TestGenericLintToolBuildCommand:
 
         Specifically: shared-config-flag (none for unknown name) + path scoping
         + exclude — without touching any of the if/elif tool-name branches
-        (including the fix-flag branches keyed to ``ruff check`` /
-        ``rumdl check`` / ``ty check``).  An extra with ``supports_fix=True``
-        does NOT get a ``--fix`` flag because the generic branches don't
-        emit one for unknown names; the spec's ``supports_fix=True`` only
-        controls the unsupported-flag warning in :func:`run_lint`.
+        (the ruff-specific ``--exit-non-zero-on-fix`` and the
+        ``rumdl check`` / ``ty check`` whitelist).  An extra with
+        ``supports_fix=True`` DOES get a ``--fix`` flag — T11 closed that gap
+        by adding an else branch in :func:`_build_command`'s fix-flag section
+        so extras match built-in command shape.  The spec's ``supports_fix``
+        also still controls the unsupported-flag warning in :func:`run_lint`.
         """
         from python_setup_lint.runner import GenericLintTool
         spec = ToolSpec(
@@ -1375,9 +1376,10 @@ class TestGenericLintToolBuildCommand:
                 path=None,
                 exclude="tests/",
             )
-            # Base command + default_path + exclude (no --fix — name is
-            # not in the ruff/rumdl/ty fix-flag branches).
-            assert cmd == ["t4g", "check", "src/", "--exclude", "tests/"]
+            # Base command + --fix (T11 else-branch) + default_path + exclude.
+            # The fix flag lands right after the spec command, before paths
+            # (matches built-in shape from _build_command ordering).
+            assert cmd == ["t4g", "check", "--fix", "src/", "--exclude", "tests/"]
         except Exception as exc:  # noqa: BLE001
             pytest.fail(f"GenericLintTool.build_command raised: {exc!r}")
 

@@ -118,6 +118,9 @@ Built-in names are populated at import time from :data:`TOOLS`.
 Extras registered via :func:`register_lint_tool` add entries here.
 """
 
+PARSE_STRATEGIES: frozenset[str]
+"""Closed enum — valid ``parse_strategy`` values for extra-tool entries."""
+
 class LintTool:
     """Per-tool strategy for command construction + statistics.
 
@@ -170,6 +173,14 @@ class GenericLintTool(LintTool):
         parser: Callable[..., list[tuple[str, int]]] | None = None,
         config_flag: list[str] | None = None,
     ) -> None: ...
+
+class ExtraToolsConfigError(Exception):
+    """Raised on a malformed ``[[tool.python-setup-lint.extra-tools]]`` entry."""
+
+    location: str
+    reason: str
+
+    def __init__(self, location: str, reason: str) -> None: ...
 
 def register_lint_tool(
     tool: ToolSpec,
