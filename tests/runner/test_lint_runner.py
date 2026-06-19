@@ -1297,9 +1297,9 @@ class TestEdgeCases:
 
     def test_find_py_files_single_file(self) -> None:
         """_find_py_files with a single .py file path."""
-        files = _find_py_files(["src/python_setup_lint/runner.py"], cwd=Path.cwd())
+        files = _find_py_files(["src/python_setup_lint/runner/types.py"], cwd=Path.cwd())
         assert len(files) == 1
-        assert files[0] == "src/python_setup_lint/runner.py"
+        assert files[0] == "src/python_setup_lint/runner/types.py"
 
     def test_find_py_files_ignores_non_py(self) -> None:
         """_find_py_files returns only .py files."""
