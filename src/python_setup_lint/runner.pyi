@@ -261,8 +261,9 @@ def _diff_baseline(current: list[LintResult], baseline_path: Path) -> list[str]:
     """Compare current results against saved baseline.
 
     Returns empty list when current output fully matches baseline.
-    Each string describes a specific regression: exit-code change,
-    output change, or missing baseline entry.
+    Each string describes a specific regression (additions only).
+    Removals (shrinkage) are silently auto-recorded by rewriting the
+    baseline in-place.
 
     Args:
         current: :class:`LintResult` list from current run.
