@@ -33,6 +33,8 @@ class ToolSpec(NamedTuple):
         supports_path: Whether the tool accepts a positional path.
         supports_exclude: Whether the tool accepts ``--exclude`` / ``-e``.
         default_paths: Paths to use when no ``--path`` is given.
+        fix_flags: CLI flag(s) to append when ``--fix`` is active.
+        exclude_flag: CLI flag name for exclusion.
     """
 
     name: str
@@ -41,6 +43,8 @@ class ToolSpec(NamedTuple):
     supports_path: bool = False
     supports_exclude: bool = False
     default_paths: list[str] = []
+    fix_flags: tuple[str, ...] = ("--fix",)
+    exclude_flag: str = "--exclude"
 
 @dataclass
 class LintResult:
@@ -174,6 +178,15 @@ class GenericLintTool(LintTool):
         config_flag: list[str] | None = None,
     ) -> None: ...
 
+class _StubtestLintTool(LintTool):
+    """Strategy for ``mypy.stubtest`` — builds command from ``package_name`` + optional allowlist."""
+
+class _VerifyTypesLintTool(LintTool):
+    """Strategy for ``pyright verify types`` — builds command from ``package_name`` + optional project."""
+
+class _DetectSecretsLintTool(LintTool):
+    """Strategy for ``detect-secrets`` — wraps in ``bash -c`` pipeline over git-ls-files."""
+
 class ExtraToolsConfigError(Exception):
     """Raised on a malformed ``[[tool.python-setup-lint.extra-tools]]`` entry."""
 
@@ -212,6 +225,8 @@ def run_lint(
     statistics: bool = False,
     statistics_format: str = "table",
     overwrite_baseline: bool = False,
+    group: str = "none",
+    sort_by_rule: bool = False,
 ) -> int:
     """Run the full lint pipeline.
 
@@ -231,6 +246,8 @@ def run_lint(
         statistics_format: ``\"table\"`` (default) or ``\"json\"``.
         overwrite_baseline: Force overwrite of existing baseline file
             (used with ``--baseline``).
+        group: Group statistics output (``\"none\"``, ``\"tool\"``, ``\"rule\"``, ``\"file\"``).
+        sort_by_rule: Sort by rule name instead of count.
     """
 
 def main(argv: list[str] | None = None) -> int:
@@ -270,3 +287,18 @@ def _diff_baseline(current: list[LintResult], baseline_path: Path) -> list[str]:
         baseline_path: Path to a JSON file previously written by
             :func:`_capture_baseline`.
     """
+
+def _sort_counts(
+    counts: list[ViolationCount],
+    *,
+    sort_by_rule: bool = False,
+) -> list[ViolationCount]:
+    """Return *counts* in the requested sort order: by count (default) or by rule."""
+
+def _print_statistics_grouped(
+    counts: list[ViolationCount],
+    *,
+    group: str = "tool",
+    sort_by_rule: bool = False,
+) -> None:
+    """Print violation counts grouped by *group* key (tool, rule, or file)."""
