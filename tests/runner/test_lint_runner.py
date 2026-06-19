@@ -401,6 +401,341 @@ class TestBaseline:
         assert len(violations) == 1
         assert "Cannot read" in violations[0]
 
+    # ── T0: add-vs-remove semantics ─────────────────────────────
+
+    def test_diff_pure_shrinkage_auto_records(self, tmp_path: Path) -> None:
+        """Pure shrinkage (removed violations) auto-records silently, returns no violations."""
+        baseline_path = tmp_path / "shrink.json"
+        saved = [
+            {"tool": "ruff check", "exit_code": 0, "output": "src/a.py:1: error A\nsrc/b.py:2: error B"},
+            {"tool": "mypy", "exit_code": 0, "output": "src/c.py:3: error C"},
+        ]
+        baseline_path.write_text(json.dumps(saved))
+        # Current output has only one of the two violations (shrinkage)
+        results = [
+            make_lint_result(tool_name="ruff check", exit_code=0, stdout="src/a.py:1: error A"),
+            make_lint_result(tool_name="mypy", exit_code=0, stdout="src/c.py:3: error C"),
+        ]
+        violations = _diff_baseline(results, baseline_path)
+        assert violations == [], f"Expected no violations for pure shrinkage, got: {violations}"
+        # Baseline should be rewritten with shrunken content
+        import json as _json
+        updated = _json.loads(baseline_path.read_text())
+        ruff_entry = next(e for e in updated if e["tool"] == "ruff check")
+        assert "src/b.py:2: error B" not in ruff_entry.get("output", ""), (
+            f"Shrunken violation should be removed from baseline, got: {ruff_entry}"
+        )
+
+    def test_diff_pure_addition_flags_regression(self, tmp_path: Path) -> None:
+        """Pure addition (new violations) flags regression, baseline unchanged."""
+        baseline_path = tmp_path / "add.json"
+        saved = [
+            {"tool": "ruff check", "exit_code": 0, "output": "src/a.py:1: error A"},
+        ]
+        baseline_path.write_text(json.dumps(saved))
+        # Current output has an additional violation
+        results = [
+            make_lint_result(tool_name="ruff check", exit_code=0, stdout="src/a.py:1: error A\nsrc/b.py:2: error B"),
+        ]
+        violations = _diff_baseline(results, baseline_path)
+        assert any("output changed" in v.lower() for v in violations), (
+            f"Expected output change violation for addition, got: {violations}"
+        )
+        # Baseline should NOT be rewritten for additions
+        import json as _json
+        updated = _json.loads(baseline_path.read_text())
+        assert updated == saved, "Baseline should be unchanged on pure addition"
+
+    def test_diff_mixed_shrinkage_and_addition(self, tmp_path: Path) -> None:
+        """Mixed: shrinkage auto-records, addition flags regression, baseline rewritten for shrinkage only."""
+        baseline_path = tmp_path / "mixed.json"
+        saved = [
+            {"tool": "ruff check", "exit_code": 0, "output": "src/a.py:1: error A\nsrc/b.py:2: error B"},
+        ]
+        baseline_path.write_text(json.dumps(saved))
+        # Current: removed error B, added error C
+        results = [
+            make_lint_result(tool_name="ruff check", exit_code=0, stdout="src/a.py:1: error A\nsrc/c.py:3: error C"),
+        ]
+        violations = _diff_baseline(results, baseline_path)
+        assert any("output changed" in v.lower() for v in violations), (
+            f"Expected output change violation for addition, got: {violations}"
+        )
+        # Baseline should be rewritten: error B removed, error C NOT added
+        import json as _json
+        updated = _json.loads(baseline_path.read_text())
+        ruff_entry = next(e for e in updated if e["tool"] == "ruff check")
+        assert "src/b.py:2: error B" not in ruff_entry.get("output", ""), (
+            "Shrunken violation should be removed from baseline"
+        )
+        assert "src/c.py:3: error C" not in ruff_entry.get("output", ""), (
+            "Added violation should NOT appear in baseline"
+        )
+
+    def test_diff_pylint_shrinkage_auto_records(self, tmp_path: Path) -> None:
+        """Pylint inventory shrinkage auto-records silently."""
+        baseline_path = tmp_path / "pylint_shrink.json"
+        saved = [
+            {
+                "tool": "pylint",
+                "exit_code": 0,
+                "output": "1 src/a.py:1:1: W0611: unused-import\n1 src/b.py:2:2: C0114: missing-module-docstring",
+            },
+        ]
+        baseline_path.write_text(json.dumps(saved))
+        # Current has one fewer pylint signature
+        results = [
+            make_lint_result(
+                tool_name="pylint",
+                exit_code=0,
+                stdout="src/a.py:1:1: W0611: unused-import",
+            ),
+        ]
+        violations = _diff_baseline(results, baseline_path)
+        assert violations == [], f"Expected no violations for pylint shrinkage, got: {violations}"
+        import json as _json
+        updated = _json.loads(baseline_path.read_text())
+        pylint_entry = next(e for e in updated if e["tool"] == "pylint")
+        assert "C0114" not in pylint_entry.get("output", ""), (
+            "Shrunken pylint violation should be removed from baseline"
+        )
+
+    def test_diff_exit_code_shrinkage_auto_records(self, tmp_path: Path) -> None:
+        """Exit code improvement (1→0) auto-records silently."""
+        baseline_path = tmp_path / "rc_shrink.json"
+        saved = [{"tool": "mypy", "exit_code": 1, "output": "some error"}]
+        baseline_path.write_text(json.dumps(saved))
+        results = [make_lint_result(tool_name="mypy", exit_code=0, stdout="")]
+        violations = _diff_baseline(results, baseline_path)
+        assert violations == [], f"Expected no violations for exit-code shrinkage, got: {violations}"
+        import json as _json
+        updated = _json.loads(baseline_path.read_text())
+        mypy_entry = next(e for e in updated if e["tool"] == "mypy")
+        assert mypy_entry["exit_code"] == 0, "Baseline exit_code should be updated"
+
+    def test_diff_tool_removed_shrinkage_auto_records(self, tmp_path: Path) -> None:
+        """Tool present in baseline but absent from current → removed from baseline silently."""
+        baseline_path = tmp_path / "tool_removed.json"
+        saved = [
+            {"tool": "ruff check", "exit_code": 0, "output": "ok"},
+            {"tool": "mypy", "exit_code": 0, "output": "ok"},
+        ]
+        baseline_path.write_text(json.dumps(saved))
+        results = [make_lint_result(tool_name="ruff check", exit_code=0, stdout="ok")]
+        violations = _diff_baseline(results, baseline_path)
+        assert violations == [], f"Expected no violations for tool removal, got: {violations}"
+        import json as _json
+        updated = _json.loads(baseline_path.read_text())
+        assert len(updated) == 1, f"Expected 1 tool in baseline after removal, got {len(updated)}"
+        assert updated[0]["tool"] == "ruff check"
+
+    # ── T0: additional edge cases ────────────────────────────────
+
+    def test_diff_diagnostics_shrinkage_auto_records(self, tmp_path: Path) -> None:
+        """Pyright diagnostics error-count shrinkage auto-records silently."""
+        baseline_path = tmp_path / "diag_shrink.json"
+        saved = [{
+            "tool": "pyright check",
+            "exit_code": 0,
+            "diagnostics": {"summary": {"errorCount": 2, "warningCount": 0}},
+        }]
+        baseline_path.write_text(json.dumps(saved))
+        # Current has fewer errors (shrinkage)
+        results = [make_lint_result(
+            tool_name="pyright check", exit_code=0,
+            stdout=json.dumps({"summary": {"errorCount": 1, "warningCount": 0}}),
+        )]
+        violations = _diff_baseline(results, baseline_path)
+        assert violations == [], f"Expected no violations for diagnostics shrinkage, got: {violations}"
+        updated = json.loads(baseline_path.read_text())
+        assert updated[0]["diagnostics"]["summary"]["errorCount"] == 1
+
+    def test_diff_pylint_addition_flags_regression(self, tmp_path: Path) -> None:
+        """Pylint inventory addition flags regression, baseline unchanged."""
+        baseline_path = tmp_path / "pylint_add.json"
+        saved = [{
+            "tool": "pylint",
+            "exit_code": 0,
+            "output": "1 src/a.py:1:1: W0611: unused-import",
+        }]
+        baseline_path.write_text(json.dumps(saved))
+        # Current has an additional pylint signature
+        results = [make_lint_result(
+            tool_name="pylint", exit_code=0,
+            stdout="src/a.py:1:1: W0611: unused-import\nsrc/b.py:2:2: C0114: missing-module-docstring",
+        )]
+        violations = _diff_baseline(results, baseline_path)
+        assert any("output changed" in v.lower() for v in violations), (
+            f"Expected output change for pylint addition, got: {violations}"
+        )
+        # Baseline should NOT be rewritten for additions
+        updated = json.loads(baseline_path.read_text())
+        assert updated == saved, "Baseline should be unchanged on pylint addition"
+
+    def test_diff_ruff_ordering_insensitive(self, tmp_path: Path) -> None:
+        """Ruff output with same lines in different order is treated as identical (no violation)."""
+        baseline_path = tmp_path / "ruff_order.json"
+        saved = [{
+            "tool": "ruff check",
+            "exit_code": 0,
+            "output": "src/a.py:1: error A\nsrc/b.py:2: error B",
+        }]
+        baseline_path.write_text(json.dumps(saved))
+        # Same lines, reversed order
+        results = [make_lint_result(
+            tool_name="ruff check", exit_code=0,
+            stdout="src/b.py:2: error B\nsrc/a.py:1: error A",
+        )]
+        violations = _diff_baseline(results, baseline_path)
+        assert violations == [], f"Expected no violations for reordered ruff output, got: {violations}"
+
+    def test_diff_rumdl_shrinkage_auto_records(self, tmp_path: Path) -> None:
+        """Rumdl output shrinkage (fewer lines) auto-records silently, ignoring timing differences."""
+        baseline_path = tmp_path / "rumdl_shrink.json"
+        saved = [{
+            "tool": "rumdl check",
+            "exit_code": 0,
+            "output": "src/a.md:1 MD012 (10ms)\nsrc/b.md:3 MD013 (20ms)",
+        }]
+        baseline_path.write_text(json.dumps(saved))
+        # Current has one fewer violation, timing differs
+        results = [make_lint_result(
+            tool_name="rumdl check", exit_code=0,
+            stdout="src/a.md:1 MD012 (5ms)",
+        )]
+        violations = _diff_baseline(results, baseline_path)
+        assert violations == [], f"Expected no violations for rumdl shrinkage, got: {violations}"
+        updated = json.loads(baseline_path.read_text())
+        rumdl_entry = next(e for e in updated if e["tool"] == "rumdl check")
+        assert "MD013" not in rumdl_entry.get("output", ""), (
+            "Shrunken rumdl violation should be removed from baseline"
+        )
+
+    def test_diff_empty_baseline_no_current(self, tmp_path: Path) -> None:
+        """Empty baseline list with no current results → no violations, baseline unchanged."""
+        baseline_path = tmp_path / "empty.json"
+        baseline_path.write_text(json.dumps([]))
+        violations = _diff_baseline([], baseline_path)
+        assert violations == [], f"Expected no violations for empty baseline, got: {violations}"
+        assert json.loads(baseline_path.read_text()) == [], "Empty baseline should remain empty"
+
+    def test_diff_output_to_empty_shrinkage(self, tmp_path: Path) -> None:
+        """Output present in baseline but empty in current → pure shrinkage, auto-records."""
+        baseline_path = tmp_path / "to_empty.json"
+        saved = [{"tool": "mypy", "exit_code": 0, "output": "src/a.py:1: error"}]
+        baseline_path.write_text(json.dumps(saved))
+        results = [make_lint_result(tool_name="mypy", exit_code=0, stdout="")]
+        violations = _diff_baseline(results, baseline_path)
+        assert violations == [], f"Expected no violations for output-to-empty shrinkage, got: {violations}"
+        updated = json.loads(baseline_path.read_text())
+        mypy_entry = next(e for e in updated if e["tool"] == "mypy")
+        assert mypy_entry.get("output", "") == "", "Baseline output should be empty after full shrinkage"
+
+    # ── T0 review regression tests (D3–D7) ───────────────────────
+
+    def test_diff_duplicate_tool_in_baseline(self, tmp_path: Path) -> None:
+        """D3: Duplicate tool entries in baseline — all removed when tool absent from current."""
+        baseline_path = tmp_path / "dup_tool.json"
+        saved = [
+            {"tool": "ruff check", "exit_code": 0, "output": "src/a.py:1: error A"},
+            {"tool": "mypy", "exit_code": 0, "output": "src/b.py:1: error B"},
+            {"tool": "mypy", "exit_code": 0, "output": "src/c.py:2: error C"},
+        ]
+        baseline_path.write_text(json.dumps(saved))
+        # Current has ruff check (still present) but no mypy (both duplicates removed)
+        results = [make_lint_result(tool_name="ruff check", exit_code=0, stdout="src/a.py:1: error A")]
+        violations = _diff_baseline(results, baseline_path)
+        assert violations == [], f"Expected no violations for tool removal, got: {violations}"
+        updated = json.loads(baseline_path.read_text())
+        mypy_entries = [e for e in updated if e["tool"] == "mypy"]
+        assert mypy_entries == [], (
+            f"All duplicate mypy entries should be removed, got: {mypy_entries}"
+        )
+        # ruff check should still be present
+        ruff_entries = [e for e in updated if e["tool"] == "ruff check"]
+        assert len(ruff_entries) == 1
+
+    def test_diff_diagnostics_lost_regression(self, tmp_path: Path) -> None:
+        """D4: Saved has diagnostics dict, current stdout is non-JSON → regression flagged."""
+        baseline_path = tmp_path / "diag_lost.json"
+        saved = [{
+            "tool": "pyright check",
+            "exit_code": 0,
+            "diagnostics": {"summary": {"errorCount": 1, "warningCount": 0}},
+        }]
+        baseline_path.write_text(json.dumps(saved))
+        # Current stdout is plain text, not JSON
+        results = [make_lint_result(
+            tool_name="pyright check", exit_code=0,
+            stdout="some non-JSON output",
+        )]
+        violations = _diff_baseline(results, baseline_path)
+        assert any("diagnostics lost" in v.lower() for v in violations), (
+            f"Expected 'Diagnostics lost' violation, got: {violations}"
+        )
+        # Baseline should NOT be rewritten (regression, not shrinkage)
+        updated = json.loads(baseline_path.read_text())
+        assert updated[0]["diagnostics"] is not None, (
+            "Baseline diagnostics should not be replaced with None on regression"
+        )
+
+    def test_diff_unwritable_baseline(self, tmp_path: Path) -> None:
+        """D5: Unwritable baseline file returns violation instead of raising."""
+        baseline_path = tmp_path / "readonly.json"
+        saved = [
+            {"tool": "ruff check", "exit_code": 0, "output": "src/a.py:1: error A\nsrc/b.py:2: error B"},
+        ]
+        baseline_path.write_text(json.dumps(saved))
+        # Make the file read-only
+        baseline_path.chmod(0o444)
+        # Current has shrinkage (one violation removed) → triggers write
+        results = [make_lint_result(tool_name="ruff check", exit_code=0, stdout="src/a.py:1: error A")]
+        violations = _diff_baseline(results, baseline_path)
+        assert any("cannot write baseline" in v.lower() for v in violations), (
+            f"Expected 'Cannot write baseline' violation, got: {violations}"
+        )
+        # Restore permissions for cleanup
+        baseline_path.chmod(0o644)
+
+    def test_diff_whitespace_normalization(self, tmp_path: Path) -> None:
+        """D6: Trailing-whitespace-only differences are not flagged as regressions."""
+        baseline_path = tmp_path / "whitespace.json"
+        saved = [{
+            "tool": "mypy",
+            "exit_code": 0,
+            "output": "src/a.py:1: error A  \nsrc/b.py:2: error B  ",
+        }]
+        baseline_path.write_text(json.dumps(saved))
+        # Current has same content but no trailing spaces
+        results = [make_lint_result(
+            tool_name="mypy", exit_code=0,
+            stdout="src/a.py:1: error A\nsrc/b.py:2: error B",
+        )]
+        violations = _diff_baseline(results, baseline_path)
+        assert violations == [], (
+            f"Expected no violations for whitespace-only diff, got: {violations}"
+        )
+
+    def test_diff_duplicate_line_count_set_semantics(self, tmp_path: Path) -> None:
+        """D7: Set-semantics on output lines — duplicate count changes not flagged (documented)."""
+        baseline_path = tmp_path / "dup_count.json"
+        saved = [{
+            "tool": "mypy",
+            "exit_code": 0,
+            "output": "src/a.py:1: error A",
+        }]
+        baseline_path.write_text(json.dumps(saved))
+        # Current has 3 occurrences of the SAME line (count increase)
+        results = [make_lint_result(
+            tool_name="mypy", exit_code=0,
+            stdout="src/a.py:1: error A\nsrc/a.py:1: error A\nsrc/a.py:1: error A",
+        )]
+        violations = _diff_baseline(results, baseline_path)
+        # Set-semantics: same signature → no violation (documented in docstring)
+        assert violations == [], (
+            f"Expected no violations for duplicate count increase (set semantics), got: {violations}"
+        )
+
 
 # ── overwrite-baseline coverage (D11) ──────────────────────────────
 
