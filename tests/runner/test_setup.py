@@ -10,7 +10,6 @@ import json
 import os
 import shutil
 import subprocess
-import tempfile
 import textwrap
 from pathlib import Path
 
@@ -49,9 +48,9 @@ from python_setup_lint.setup import (
 
 
 @pytest.fixture
-def empty_project() -> Path:
+def empty_project(tmp_path: Path) -> Path:
     """Create a temp dir with a minimal pyproject.toml and AGENTS.md."""
-    d = Path(tempfile.mkdtemp(prefix="t15-test-"))
+    d = tmp_path
     pyproject = d / "pyproject.toml"
     pyproject.write_text(
         textwrap.dedent("""\
@@ -82,23 +81,23 @@ def configured_project(empty_project: Path) -> Path:
 
 
 class TestAtomicWrite:
-    def test_writes_content(self) -> None:
-        d = Path(tempfile.mkdtemp(prefix="t15-aw-"))
+    def test_writes_content(self, tmp_path: Path) -> None:
+        d = tmp_path
         p = d / "test.txt"
         _atomic_write(p, "hello")
         assert p.read_text() == "hello"
         # No tmp file left behind
         assert not list(d.glob("*.tmp"))
 
-    def test_overwrites_existing(self) -> None:
-        d = Path(tempfile.mkdtemp(prefix="t15-aw-"))
+    def test_overwrites_existing(self, tmp_path: Path) -> None:
+        d = tmp_path
         p = d / "test.txt"
         p.write_text("old")
         _atomic_write(p, "new")
         assert p.read_text() == "new"
 
-    def test_tmp_cleaned_on_error(self) -> None:
-        d = Path(tempfile.mkdtemp(prefix="t15-aw-"))
+    def test_tmp_cleaned_on_error(self, tmp_path: Path) -> None:
+        d = tmp_path
         p = d / "readonly" / "test.txt"
         # Parent doesn't exist — write will fail
         with pytest.raises(FileNotFoundError):
@@ -108,8 +107,8 @@ class TestAtomicWrite:
 
 
 class TestComputeChecksums:
-    def test_returns_checksums_for_existing_files(self) -> None:
-        d = Path(tempfile.mkdtemp(prefix="t15-cs-"))
+    def test_returns_checksums_for_existing_files(self, tmp_path: Path) -> None:
+        d = tmp_path
         (d / "a.txt").write_text("hello")
         (d / "b.txt").write_text("world")
         result = _compute_checksums(d, ["a.txt", "b.txt"])
@@ -118,15 +117,15 @@ class TestComputeChecksums:
         assert "b.txt" in result
         assert result["a.txt"] != result["b.txt"]
 
-    def test_skips_missing_files(self) -> None:
-        d = Path(tempfile.mkdtemp(prefix="t15-cs-"))
+    def test_skips_missing_files(self, tmp_path: Path) -> None:
+        d = tmp_path
         (d / "a.txt").write_text("hello")
         result = _compute_checksums(d, ["a.txt", "missing.txt"])
         assert len(result) == 1
         assert "a.txt" in result
 
-    def test_different_content_different_hash(self) -> None:
-        d = Path(tempfile.mkdtemp(prefix="t15-cs-"))
+    def test_different_content_different_hash(self, tmp_path: Path) -> None:
+        d = tmp_path
         p = d / "a.txt"
         p.write_text("v1")
         h1 = _compute_checksums(d, ["a.txt"])["a.txt"]
@@ -138,11 +137,12 @@ class TestComputeChecksums:
 class TestDiscoverCheckers:
     def test_finds_register_modules(self) -> None:
         modules = _discover_checkers()
-        # At least the 4 known checker modules with register()
+        # At least the 5 known checker modules with register()
         assert "python_setup_lint.checkers.beartype_checker" in modules
         assert "python_setup_lint.checkers.no_try_import_checker" in modules
         assert "python_setup_lint.checkers.stub_checker" in modules
         assert "python_setup_lint.checkers.stub_docstring_checker" in modules
+        assert "python_setup_lint.checkers.tmp_path_checker" in modules
         # Does NOT include modules without register (stub_coverage, stub_fidelity, etc.)
         assert "python_setup_lint.checkers.stub_coverage" not in modules
         assert "python_setup_lint.checkers.stub_fidelity" not in modules
@@ -155,8 +155,8 @@ class TestDiscoverCheckers:
 
 
 class TestPyprojectTomlHelpers:
-    def test_read_missing(self) -> None:
-        d = Path(tempfile.mkdtemp(prefix="t15-toml-"))
+    def test_read_missing(self, tmp_path: Path) -> None:
+        d = tmp_path
         assert _read_pyproject_toml(d) is None
 
     def test_read_existing(self, empty_project: Path) -> None:
@@ -373,8 +373,8 @@ class TestInstallWithExistingPrecommit:
 class TestInstallMissingPyproject:
     """Install into a dir without pyproject.toml."""
 
-    def test_returns_error(self) -> None:
-        d = Path(tempfile.mkdtemp(prefix="t15-nopy-"))
+    def test_returns_error(self, tmp_path: Path) -> None:
+        d = tmp_path
         rc = install(d, dev_path="/home/slava/aiexp/python-setup")
         assert rc == 1
 
@@ -446,11 +446,11 @@ class TestMainCLI:
         assert rc == 0
         assert (empty_project / ".pre-commit-config.yaml").exists()
 
-    def test_main_install_default_cwd(self) -> None:
+    def test_main_install_default_cwd(self, tmp_path: Path) -> None:
         """install without --path uses cwd."""
         # Just verify it parses without error — actual install would
         # modify cwd which we don't want in tests
-        d = Path(tempfile.mkdtemp(prefix="t15-cli-"))
+        d = tmp_path
         pyproject = d / "pyproject.toml"
         pyproject.write_text(
             textwrap.dedent("""\
@@ -514,9 +514,9 @@ class TestTemplates:
 
 
 class TestRunUv:
-    def test_uv_not_found_returns_error(self) -> None:
+    def test_uv_not_found_returns_error(self, tmp_path: Path) -> None:
         """When uv is not on PATH, _run_uv returns exit code 1."""
-        d = Path(tempfile.mkdtemp(prefix="t15-uv-"))
+        d = tmp_path
         # Use a temp dir with no uv binary
         import python_setup_lint.setup as setup_mod
         import subprocess as sp_subprocess
@@ -548,24 +548,25 @@ class TestGetPackageDir:
 
 
 class TestStepErrorPaths:
-    def test_step_pylint_plugins_missing_pyproject(self) -> None:
+    def test_step_pylint_plugins_missing_pyproject(self, tmp_path: Path) -> None:
         """_step_pylint_plugins appends error when pyproject.toml missing."""
-        d = Path(tempfile.mkdtemp(prefix="t15-step-"))
+        d = tmp_path
         state = SetupState()
         _step_pylint_plugins(state, d)
         assert len(state.errors) > 0
         assert "pyproject.toml" in state.errors[0]
 
-    def test_step_coding_rules_missing_source(self) -> None:
+    def test_step_coding_rules_missing_source(self, tmp_path: Path) -> None:
         """_step_coding_rules appends error when bundled CodingRules.md missing."""
-        d = Path(tempfile.mkdtemp(prefix="t15-step-"))
+        d = tmp_path
         state = SetupState()
         # Temporarily patch _get_package_dir to return a dir without CodingRules.md
         import python_setup_lint.setup as setup_mod
 
         original = setup_mod._get_package_dir
         try:
-            fake_dir = Path(tempfile.mkdtemp(prefix="t15-fake-"))
+            fake_dir = tmp_path / "fake-pkg"
+            fake_dir.mkdir()
             setup_mod._get_package_dir = lambda: fake_dir
             _step_coding_rules(state, d)
             assert len(state.errors) > 0
@@ -573,34 +574,34 @@ class TestStepErrorPaths:
         finally:
             setup_mod._get_package_dir = original
 
-    def test_step_agents_snippet_missing_agents(self) -> None:
+    def test_step_agents_snippet_missing_agents(self, tmp_path: Path) -> None:
         """_step_agents_snippet skips when AGENTS.md doesn't exist (no error)."""
-        d = Path(tempfile.mkdtemp(prefix="t15-step-"))
+        d = tmp_path
         state = SetupState()
         _step_agents_snippet(state, d)
         assert state.agents_skipped
         assert len(state.errors) == 0
 
-    def test_step_precommit_skips_when_exists(self) -> None:
+    def test_step_precommit_skips_when_exists(self, tmp_path: Path) -> None:
         """_step_precommit skips when .pre-commit-config.yaml already exists."""
-        d = Path(tempfile.mkdtemp(prefix="t15-step-"))
+        d = tmp_path
         (d / ".pre-commit-config.yaml").write_text("# existing")
         state = SetupState()
         _step_precommit(state, d)
         assert state.precommit_skipped
         assert not state.precommit_written
 
-    def test_step_precommit_writes_when_missing(self) -> None:
+    def test_step_precommit_writes_when_missing(self, tmp_path: Path) -> None:
         """_step_precommit writes template when .pre-commit-config.yaml missing."""
-        d = Path(tempfile.mkdtemp(prefix="t15-step-"))
+        d = tmp_path
         state = SetupState()
         _step_precommit(state, d)
         assert state.precommit_written
         assert (d / ".pre-commit-config.yaml").exists()
 
-    def test_step_pylint_plugins_merges_existing_and_discovered(self) -> None:
+    def test_step_pylint_plugins_merges_existing_and_discovered(self, tmp_path: Path) -> None:
         """_step_pylint_plugins merges existing plugins with discovered ones."""
-        d = Path(tempfile.mkdtemp(prefix="t15-step-"))
+        d = tmp_path
         pyproject = d / "pyproject.toml"
         pyproject.write_text(
             textwrap.dedent("""\
@@ -621,9 +622,9 @@ class TestStepErrorPaths:
         assert "existing.plugin" in plugins
         assert "python_setup_lint.checkers.beartype_checker" in plugins
 
-    def test_step_pylint_plugins_skips_when_all_present(self) -> None:
+    def test_step_pylint_plugins_skips_when_all_present(self, tmp_path: Path) -> None:
         """_step_pylint_plugins skips when all discovered plugins already registered."""
-        d = Path(tempfile.mkdtemp(prefix="t15-step-"))
+        d = tmp_path
         discovered = _discover_checkers()
         plugins_list = ", ".join(f'"{p}"' for p in discovered)
         pyproject = d / "pyproject.toml"
