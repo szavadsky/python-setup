@@ -120,3 +120,108 @@ class TestSkipsContextManagerNamedTemp:
             "import tempfile\n\nwith tempfile.mkdtemp() as d: pass"
         )
         assert len(msgs) == 1
+
+
+class TestFilePatterns:
+    """Checker must match various test-file patterns."""
+
+    def test_conftest_py(self):
+        msgs = _walk_and_release(
+            "import tempfile\n\nd = tempfile.mkdtemp()",
+            file_path="tests/conftest.py",
+        )
+        assert len(msgs) == 1
+
+    def test_asterisk_test_py(self):
+        msgs = _walk_and_release(
+            "import tempfile\n\nd = tempfile.mkdtemp()",
+            file_path="src/foo_test.py",
+        )
+        assert len(msgs) == 1
+
+    def test_test_asterisk_py(self):
+        msgs = _walk_and_release(
+            "import tempfile\n\nd = tempfile.mkdtemp()",
+            file_path="test_foo_bar.py",
+        )
+        assert len(msgs) == 1
+
+    def test_tests_subdir(self):
+        msgs = _walk_and_release(
+            "import tempfile\n\nd = tempfile.mkdtemp()",
+            file_path="tests/unit/subdir/test_mod.py",
+        )
+        assert len(msgs) == 1
+
+
+class TestImportVariants:
+    """Checker must handle various import styles (or document limitations)."""
+
+    def test_from_import_mkdtemp(self):
+        """from tempfile import mkdtemp — checker currently does NOT catch this form."""
+        msgs = _walk_and_release(
+            "from tempfile import mkdtemp\n\nd = mkdtemp()"
+        )
+        # TODO: This is a known gap — the checker only catches tempfile.attr() calls.
+        # A follow-up could extend _is_tempfile_call to handle Name nodes from
+        # from-imports.
+        assert len(msgs) == 0
+
+    def test_import_as_alias(self):
+        """import tempfile as tf — checker currently does NOT catch this form."""
+        msgs = _walk_and_release(
+            "import tempfile as tf\n\nd = tf.mkdtemp()"
+        )
+        # TODO: Known gap — the checker only checks for `tempfile` as the module name.
+        # A follow-up could resolve aliases.
+        assert len(msgs) == 0
+
+
+class TestEdgeCases:
+    """Edge cases for internal checker logic."""
+
+    def test_no_file_path_returns_false(self):
+        """_is_test_file returns False when node.root().file is None."""
+        tc = _make_tc()
+        tc.checker.open()
+        module = __import__("astroid").parse("import tempfile\n\nd = tempfile.mkdtemp()")
+        module.file = None
+        tc.walk(module)
+        msgs = tc.linter.release_messages()
+        assert len(msgs) == 0
+
+    def test_non_attribute_call_not_flagged(self):
+        """A bare mkdtemp() call (not tempfile.mkdtemp) is not flagged."""
+        msgs = _walk_and_release("mkdtemp()")
+        assert len(msgs) == 0
+
+    def test_wrong_module_not_flagged(self):
+        """os.mkdtemp() is not flagged (wrong module)."""
+        msgs = _walk_and_release("import os\n\nos.mkdtemp()")
+        assert len(msgs) == 0
+
+    def test_wrong_attribute_not_flagged(self):
+        """tempfile.something_else() is not flagged."""
+        msgs = _walk_and_release("import tempfile\n\ntempfile.something_else()")
+        assert len(msgs) == 0
+
+    def test_named_temporary_in_with_multi_expr(self):
+        """NamedTemporaryFile in a with-statement with multiple expressions is exempt."""
+        msgs = _walk_and_release(
+            "import tempfile\n\nwith tempfile.NamedTemporaryFile() as f, open('x') as g:\n    pass"
+        )
+        assert len(msgs) == 0
+
+    def test_non_test_path_not_matched(self):
+        """A path that doesn't match any test pattern is not flagged."""
+        msgs = _walk_and_release(
+            "import tempfile\n\nd = tempfile.mkdtemp()",
+            file_path="src/util/helper.py",
+        )
+        assert len(msgs) == 0
+
+    def test_matches_path_with_backslash_pattern(self):
+        """_matches_path handles backslash-containing patterns (Windows compat)."""
+        from python_setup_lint.checkers.tmp_path_checker import TempFileChecker
+        assert TempFileChecker._matches_path("tests\\foo\\test_mod.py", ["tests\\"])
+        assert not TempFileChecker._matches_path("src\\prod.py", ["tests\\"])
