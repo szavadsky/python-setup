@@ -17,10 +17,13 @@ from python_setup_lint.runner import (
     TOOLS,
     TOOLS_BY_NAME,
     STRATEGIES,
+    ExtraToolsConfigError,
+    LINT_TOOLS,
     LintResult,
     RunnerConfig,
     ToolSpec,
     ViolationCount,
+    _SUPPORTED_CONFIG_KEYS,
     _aggregate_statistics,
     _build_command,
     _build_statistics_flags,
@@ -43,6 +46,7 @@ from python_setup_lint.runner import (
     _print_statistics_table,
     _sort_counts,
     _run_cmd,
+    _reset_extra_tools_cache,
     main,
     run_lint,
 )
@@ -1961,3 +1965,232 @@ class TestInvalidGroupFlag:
             assert exc.code != 0, "argparse should exit non-zero for invalid --group value"
         else:
             pytest.fail("SystemExit not raised for invalid --group value")
+
+
+# ── T8: fail-fast on malformed pyproject / invalid tool config ──────
+#
+# Verifies the four malformation categories cited by T8.md:
+#   (a) malformed pyproject section (extra-tools wrong-type array shape)
+#   (b) unknown tool name in ``--config TOOL=PATH`` — closed-set rejection
+#   (c) bad ``--tools`` list (unknown tool name) — fail-fast at run_lint
+#   (d) missing required key in extra-tools declarative block
+# Plus one clean-pyproject-OK test (per ``tests/runner/`` conventions).
+# Each test asserts BOTH a precise message shape AND a non-zero exit code
+# (``SystemExit(2)`` for argparse-rejected CLI flags; raised
+# :class:`ExtraToolsConfigError` → uncaught → non-zero exit otherwise).
+
+
+class TestT8FailFastConfig:
+    """T8 fail-fast on malformed pyproject / invalid tool config.
+
+    Each test exercises ONE malformation category cited by T8.md and
+    asserts the exact error message shape + a non-zero exit code.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _isolate_t8_registries(self) -> object:
+        """Snapshot + restore LINT_TOOLS/STRATEGIES + extras cache per test.
+
+        The clean-pyproject test registers an extra via extras-merge —
+        without isolation it leaks into :data:`LINT_TOOLS` and breaks the
+        fake-count assertions in ``test_testing_fakes.py``.
+        """
+        baseline = list(LINT_TOOLS)
+        baseline_strategies = dict(STRATEGIES)
+        _reset_extra_tools_cache()
+        yield
+        LINT_TOOLS[:] = baseline
+        STRATEGIES.clear()
+        STRATEGIES.update(baseline_strategies)
+        _reset_extra_tools_cache()
+
+    @staticmethod
+    def _write_pyproject(tmp_path: Path, body: str) -> Path:
+        """Write a synthetic ``pyproject.toml`` body, reset extras cache, return resolved path."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(body, encoding="utf-8")
+        _reset_extra_tools_cache()
+        return pyproject.resolve()
+
+    def _default_config(self, tmp_path: Path) -> RunnerConfig:
+        return RunnerConfig(cwd=tmp_path, package_name="python_setup_lint")
+
+    # ── (a) malformed pyproject section ─────────────────────────────
+
+    def test_malformed_extra_tools_section_exits_nonzero(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A wrong-type ``extra-tools`` array → :class:`ExtraToolsConfigError`
+        carrying file path + reason; non-zero exit (uncaught traceback, no silent skip)."""
+        pyproject = self._write_pyproject(
+            tmp_path,
+            '[tool.python-setup-lint]\nextra-tools = "not-a-list"\n',
+        )
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake_run_cmd_factory({}))
+        with pytest.raises(ExtraToolsConfigError) as exc_info:
+            run_lint(config=self._default_config(tmp_path), no_fail_fast=True)
+        err = exc_info.value
+        assert err.location == str(pyproject)
+        assert err.reason == "wrong type: extra-tools must be a list of tables"
+
+    # ── (b) unknown tool id in ``--config TOOL=PATH`` ────────────────
+
+    def test_unknown_config_tool_id_exits_nonzero(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """``--config bogus=path`` → ``SystemExit(2)`` with stderr naming the
+        offending id + the supported set.  Previously a typo silently dropped
+        the config flag (entry never read by :func:`_config_flag_for`)."""
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake_run_cmd_factory({}))
+        with pytest.raises(SystemExit) as exc_info:
+            main(
+                ["--config", "bogus=/some/path.toml"],
+                config=self._default_config(tmp_path),
+            )
+        assert exc_info.value.code == 2
+        captured = capsys.readouterr()
+        assert "bogus" in captured.err
+        # Supported-set enumeration helps the user correct the typo.
+        assert "ruff" in captured.err and "pyright" in captured.err
+        # Closed-enum invariant: typo is excluded, all aliases included.
+        assert "bogus" not in _SUPPORTED_CONFIG_KEYS
+        assert {"ruff", "mypy", "pylint", "pyright", "rumdl", "ty"} <= _SUPPORTED_CONFIG_KEYS
+
+    # ── (c) bad ``--tools`` list (unknown tool name) ─────────────────
+
+    def test_bad_tools_list_exits_nonzero(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """``run_lint(tools_override=["ruff check", "bogus"])`` raises the T8
+        typed error naming the unknown tool + known set.  CLI syntax-only
+        validation is deferred to ``run_lint`` (post-extras-merge) because the
+        valid-name set is OPEN (extras come from pyproject)."""
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake_run_cmd_factory({}))
+        config = RunnerConfig(
+            cwd=tmp_path,
+            tools_override=["ruff check", "bogus-tool-name"],
+        )
+        with pytest.raises(ExtraToolsConfigError) as exc_info:
+            run_lint(config=config, no_fail_fast=True)
+        err = exc_info.value
+        assert err.reason.startswith("unknown tool name: 'bogus-tool-name'")
+        assert "ruff check" in err.reason
+        assert err.location == "<RunnerConfig.tools_override>"
+
+    # ── (d) missing required key in extra-tools declarative block ───
+
+    def test_missing_required_key_in_extra_tools_exits_nonzero(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """An extra-tools block missing ``command`` → :class:`ExtraToolsConfigError`
+        citing file path + missing required field name."""
+        pyproject = self._write_pyproject(
+            tmp_path,
+            '[tool.python-setup-lint]\n'
+            '[[tool.python-setup-lint.extra-tools]]\n'
+            'name = "no-command"\n',
+        )
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake_run_cmd_factory({}))
+        with pytest.raises(ExtraToolsConfigError) as exc_info:
+            run_lint(config=self._default_config(tmp_path), no_fail_fast=True)
+        err = exc_info.value
+        assert err.location == str(pyproject)
+        assert err.reason == "missing required field: command"
+
+    # ── (clean) clean pyproject runs cleanly ─────────────────────────
+
+    def test_clean_pyproject_extras_merge_runs_clean(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A clean pyproject with one valid extra-tools entry returns an int:
+        extras load + register + dispatch succeed, no fail-fast raise.  Ensures
+        the T8 fail-fast surface does NOT over-fire on valid config."""
+        self._write_pyproject(
+            tmp_path,
+            '[project]\n'
+            'name = "t8-clean"\n'
+            'version = "0.0.1"\n'
+            '\n'
+            '[tool.python-setup-lint]\n'
+            '[[tool.python-setup-lint.extra-tools]]\n'
+            'name = "t8-grep-noqa"\n'
+            'command = ["grep", "-rnE", "noqa: "]\n'
+            'supports_path = true\n'
+            'default_paths = ["src/"]\n'
+            'parse_strategy = "raw_lines"\n',
+        )
+        (tmp_path / "src").mkdir(exist_ok=True)
+        (tmp_path / "src" / "__init__.py").write_text("", encoding="utf-8")
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake_run_cmd_factory({}))
+        config = RunnerConfig(
+            cwd=tmp_path,
+            package_name="t8_clean",
+            tools_override=["ruff check", "t8-grep-noqa"],
+        )
+        rc = run_lint(config=config, no_fail_fast=True)
+        assert isinstance(rc, int)
+
+    # ── (e) unknown field in extra-tools entry ──────────────────────
+
+    def test_unknown_field_in_extra_tools_exits_nonzero(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """An extra-tools entry with an unknown field → :class:`ExtraToolsConfigError`
+        citing file path + the unknown field name + allowed set."""
+        pyproject = self._write_pyproject(
+            tmp_path,
+            '[tool.python-setup-lint]\n'
+            '[[tool.python-setup-lint.extra-tools]]\n'
+            'name = "my-tool"\n'
+            'command = ["tool"]\n'
+            'foo = "bar"\n',
+        )
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake_run_cmd_factory({}))
+        with pytest.raises(ExtraToolsConfigError) as exc_info:
+            run_lint(config=self._default_config(tmp_path), no_fail_fast=True)
+        err = exc_info.value
+        assert err.location == str(pyproject)
+        assert err.reason.startswith("unknown field: ['foo']; allowed:")
+
+    # ── (f) bad parse_strategy enum ─────────────────────────────────
+
+    def test_bad_parse_strategy_enum_exits_nonzero(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """An extra-tools entry with an invalid ``parse_strategy`` value → ExtraToolsConfigError
+        citing the bad enum value."""
+        pyproject = self._write_pyproject(
+            tmp_path,
+            '[tool.python-setup-lint]\n'
+            '[[tool.python-setup-lint.extra-tools]]\n'
+            'name = "my-tool"\n'
+            'command = ["tool"]\n'
+            'parse_strategy = "invalid-strat"\n',
+        )
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake_run_cmd_factory({}))
+        with pytest.raises(ExtraToolsConfigError) as exc_info:
+            run_lint(config=self._default_config(tmp_path), no_fail_fast=True)
+        err = exc_info.value
+        assert err.location == str(pyproject)
+        assert "bad enum: parse_strategy" in err.reason
+
+    # ── (g) unreadable pyproject.toml ───────────────────────────────
+
+    def test_unreadable_pyproject_toml_exits_nonzero(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A corrupt pyproject.toml → :class:`ExtraToolsConfigError` wrapping
+        the TOMLDecodeError, NOT a raw TOML exception leak."""
+        pyproject = self._write_pyproject(
+            tmp_path,
+            "[[[\ninvalid toml\n",
+        )
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake_run_cmd_factory({}))
+        with pytest.raises(ExtraToolsConfigError) as exc_info:
+            run_lint(config=self._default_config(tmp_path), no_fail_fast=True)
+        err = exc_info.value
+        assert err.location == str(pyproject)
+        assert err.reason.startswith("pyproject unreadable:")

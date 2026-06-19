@@ -88,9 +88,19 @@ class RunnerConfig:
         default_py_dirs: Default directories for pylint ``_find_py_files``
             discovery when no ``--path`` is given.
         tools_override: Optional list of tool names to run.  ``None``
-            runs all 11 default tools.
+            runs all 11 default tools.  Unknown names raise
+            :class:`ExtraToolsConfigError` (T8 fail-fast) rather than
+            silently running a subset.
         secrets_baseline: Path (relative to ``cwd``) to the
             detect-secrets baseline file.
+        config_paths: Optional mapping of tool identifiers to config file
+            paths.  Canonical keys are the built-in :class:`ToolSpec`
+            labels (``ruff check``, ``mypy``, ``pylint``, ``pyright check``,
+            ``rumdl check``, ``ty check``); the CLI ``--config`` flag
+            additionally accepts short aliases (``ruff``, ``pyright``,
+            ``rumdl``, ``ty``) which it normalises to the canonical label
+            (T8 fail-fast rejects unrecognised keys with non-zero
+            ``SystemExit``).
     """
 
     cwd: Path
@@ -98,6 +108,7 @@ class RunnerConfig:
     default_py_dirs: list[str] | None = None
     tools_override: list[str] | None = None
     secrets_baseline: str = ".secrets.baseline"
+    config_paths: dict[str, Path] | None = None
 
 TOOLS: list[ToolSpec]
 """All 11 tool specifications in execution order (built-ins)."""
@@ -188,7 +199,25 @@ class _DetectSecretsLintTool(LintTool):
     """Strategy for ``detect-secrets`` — wraps in ``bash -c`` pipeline over git-ls-files."""
 
 class ExtraToolsConfigError(Exception):
-    """Raised on a malformed ``[[tool.python-setup-lint.extra-tools]]`` entry."""
+    """Malformed pyproject / invalid tool config — T8 fail-fast envelope.
+
+    Raised on:
+
+    * A malformed ``[[tool.python-setup-lint.extra-tools]]`` entry (T8 R4
+      failure table) — ``location`` is the resolved pyproject path.
+    * An unreadable ``pyproject.toml`` (TOMLDecodeError, OSError) when the
+      file is present — ``location`` is the resolved pyproject path.
+    * An unknown tool name in :attr:`RunnerConfig.tools_override`
+      (T8 fail-fast) — ``location`` is the synthetic token
+      ``"<RunnerConfig.tools_override>"`` (no file for programmatic input).
+
+    ``SystemExit`` is NOT raised for these — the typed exception propagates
+    uncaught to the caller so the call surface (CLI ``main()`` returns int;
+    Python API caller catches or Python prints a traceback + exits
+    non-zero) is the caller's choice.  ``reason`` is a one-line identifier
+    naming the offending key + reason; no raw :class:`KeyError` /
+    :class:`ValueError` from ``tomllib`` leaks through.
+    """
 
     location: str
     reason: str

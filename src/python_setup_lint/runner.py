@@ -94,19 +94,31 @@ class RunnerConfig:
             discovery when no ``--path`` is given.
         tools_override: Optional list of tool names to run.  ``None``
             runs all 11 default tools.  Tool names map to internal
-            :class:`ToolSpec` entries via ``TOOLS_BY_NAME``.
+            :class:`ToolSpec` entries via ``TOOLS_BY_NAME`` (built-ins) and
+            the live :data:`LINT_TOOLS` registry (built-ins + extras).
+            Unknown names raise :class:`ExtraToolsConfigError` (T8 fail-fast)
+            rather than silently running a subset — a typo in a tool name
+            is treated as malformed configuration.
         secrets_baseline: Path (relative to ``cwd``) to the
             detect-secrets baseline file.
         config_paths: Optional mapping of tool identifiers to config file
-            paths.  Supported keys: ``ruff``, ``mypy``, ``pylint``,
-            ``pyright``, ``rumdl``, ``ty``.
+            paths.  Canonical keys are the built-in :class:`ToolSpec`
+            labels: ``ruff check``, ``mypy``, ``pylint``,
+            ``pyright check``, ``rumdl check``, ``ty check`` (matching the
+            names used in :func:`_config_flag_for` and the strategy
+            subclasses).  The CLI ``--config TOOL=PATH`` flag additionally
+            accepts short aliases (``ruff``, ``pyright``, ``rumdl``, ``ty``,
+            plus the canonical labels) which it normalises to the canonical
+            label — unrecognised keys are rejected with a non-zero
+            ``SystemExit`` and a message naming the offending key (T8
+            fail-fast).
 
-            * ``ruff``: ``--config <path>``
+            * ``ruff check``: ``--config <path>``
             * ``mypy``: ``--config-file <path>``
             * ``pylint``: ``--rcfile <path>``
-            * ``pyright``: ``--project <path>``
-            * ``rumdl``: ``--config <path>``
-            * ``ty``: ``--config <path>``
+            * ``pyright check``: ``--project <path>``
+            * ``rumdl check``: ``--config <path>``
+            * ``ty check``: ``--config <path>``
     """
 
     cwd: Path
@@ -189,6 +201,22 @@ TOOLS: list[ToolSpec] = [
 ]
 
 TOOLS_BY_NAME: dict[str, ToolSpec] = {t.name: t for t in TOOLS}
+
+# T8 fail-fast ``--config TOOL=PATH`` keys: canonical labels + short aliases
+# (``ruff`` → ``ruff check``).  Unknown ids exit non-zero via argparse
+# ``parser.error`` — no silent drop where a typo produced an entry
+# :func:`_config_flag_for` never read.
+_CONFIG_KEY_ALIASES: dict[str, str] = {
+    "ruff": "ruff check",
+    "pyright": "pyright check",
+    "rumdl": "rumdl check",
+    "ty": "ty check",
+    "mypy": "mypy",
+    "pylint": "pylint",
+}
+_SUPPORTED_CONFIG_KEYS: frozenset[str] = frozenset(
+    set(_CONFIG_KEY_ALIASES) | set(_CONFIG_KEY_ALIASES.values())
+)
 
 # ── Strategy registry ──────────────────────────────────────────────
 #
@@ -564,18 +592,25 @@ _EXTRA_TOOL_REQUIRED: tuple[str, ...] = ("name", "command")
 
 
 class ExtraToolsConfigError(Exception):
-    """Raised on a malformed ``[[tool.python-setup-lint.extra-tools]]`` entry.
+    """Typed fail-fast for malformed pyproject / invalid tool config (T8).
 
-    A typed exception (NOT a :class:`SystemExit` — extras-config errors are
-    user-facing configuration errors distinct from raw TOML-parse failures).
-    Carries a stable ``location`` (the file path) and ``reason`` (one-line
-    code identifier from the T8 R4 failure table).  :func:`run_lint` does
-    NOT catch it — propagated uncaught → traceback + non-zero exit per
-    T8 R4.  Mirrors the contract DESIGN-8 D6 locked; intentionally distinct
-    from T6's ``SystemExit`` for raw-TOML paperover.
+    Serves the whole T8 fail-fast envelope — see ``runner.pyi`` for the
+    full contract.  Three failure shapes all raise this:
+
+    * Malformed ``[[tool.python-setup-lint.extra-tools]]`` entry (T8 R4 table).
+    * Unreadable ``pyproject.toml`` (TOMLDecodeError / OSError wrapped via
+      ``raise ... from exc`` — no raw ``tomllib`` exception leaks).
+    * Unknown tool name in :attr:`RunnerConfig.tools_override` (location is
+      the synthetic ``"<RunnerConfig.tools_override>"`` token; no file).
+
+    :func:`run_lint` does NOT catch it — propagated uncaught so the caller
+    surface (CLI ``main()`` returns int; Python API caller catches or takes
+    the default traceback + non-zero exit) is the caller's choice.
+    Intentionally distinct from T6's ``SystemExit`` for raw-TOML paperover.
 
     Attributes:
-        location: Resolved path of the pyproject.toml the entry was read from.
+        location: Resolved pyproject path, or ``"<RunnerConfig.tools_override>"``
+            for programmatic-input errors that have no associated file.
         reason: Stable one-line code identifier of the failure shape.
     """
 
@@ -1842,18 +1877,24 @@ def run_lint(
         _EXTRA_TOOLS_REGISTERED_PATHS.add(cwd_resolved)
 
     # Resolve which tools to run.
-    # When ``tools_override`` is None, iterate the live registry
-    # (:data:`LINT_TOOLS`) — built-ins + any extras registered via
-    # :func:`register_lint_tool`.  When a name list is supplied, resolve
-    # against :data:`TOOLS_BY_NAME` (built-ins only); extras declared only
-    # in :data:`LINT_TOOLS` are still discoverable from the live registry.
+    # Resolve which tools to run.  ``tools_override=None`` → iterate the
+    # live registry (:data:`LINT_TOOLS`); with a list, each name MUST resolve
+    # against the live registry — an unknown name raises
+    # :class:`ExtraToolsConfigError` (T8 fail-fast, location
+    # ``<RunnerConfig.tools_override>``) rather than silently running a subset.
+    selected: list[ToolSpec] = []
     if config.tools_override is not None:
-        selected: list[ToolSpec] = []
         lint_tools_by_name = {t.name: t for t in LINT_TOOLS}
-        for name in config.tools_override:
-            spec = lint_tools_by_name.get(name.strip())
-            if spec is not None:
-                selected.append(spec)
+        for raw_name in config.tools_override:
+            name = raw_name.strip()
+            spec = lint_tools_by_name.get(name)
+            if spec is None:
+                raise ExtraToolsConfigError(
+                    "<RunnerConfig.tools_override>",
+                    f"unknown tool name: {name!r}; "
+                    f"known: {sorted(lint_tools_by_name)}",
+                )
+            selected.append(spec)
     else:
         selected = list(LINT_TOOLS)
 
@@ -2032,7 +2073,11 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
 
     # Start from caller-supplied defaults, allow CLI overrides.
     cwd = Path(args.cwd) if args.cwd else (config.cwd if config is not None else Path.cwd())
-    tools_override = args.tools.split(",") if args.tools else (config.tools_override if config is not None else None)
+    cli_tools_override = args.tools.split(",") if args.tools else None
+    base_tools_override = cli_tools_override if cli_tools_override is not None else (
+        config.tools_override if config is not None else None
+    )
+    tools_override: list[str] | None = base_tools_override
     package_name = args.package_name if args.package_name is not None else (config.package_name if config is not None else None)
     default_py_dirs = (
         args.default_py_dirs.split(",") if args.default_py_dirs else (config.default_py_dirs if config is not None else None)
@@ -2040,9 +2085,32 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
     config_paths: dict[str, Path] = dict(config.config_paths) if config is not None else {}
     for raw in args.config:
         if "=" not in raw:
-            parser.error(f"--config must be TOOL=PATH, got: {raw}")
+            parser.error(f"--config must be TOOL=PATH, got: {raw!r}")
         tool_id, path_str = raw.split("=", 1)
-        config_paths[tool_id] = Path(path_str)
+        # T8 fail-fast: validate tool_id against the closed config-key set.
+        # Previously a typo silently produced an entry :func:`_config_flag_for`
+        # never read; now exits ``SystemExit(2)`` naming the offending key.
+        if tool_id not in _SUPPORTED_CONFIG_KEYS:
+            parser.error(
+                f"--config: unknown tool id {tool_id!r}; "
+                f"supported (canonical labels + short aliases): "
+                f"{sorted(_SUPPORTED_CONFIG_KEYS)}"
+            )
+        # Normalise short alias → canonical label.  ``args.config`` is
+        # ``Namespace[Any]`` so ``tool_id`` is ``Any``; ``or tool_id`` coalesces
+        # the widened ``dict.get(Any, Any) -> str | None`` to ``str``.
+        canonical = _CONFIG_KEY_ALIASES.get(tool_id) or tool_id
+        config_paths[canonical] = Path(path_str)
+
+    # T8 fail-fast: ``--tools`` syntax (empty pieces, blank list) exits
+    # ``SystemExit(2)`` here.  Unknown-but-non-empty names are deferred to
+    # ``run_lint`` — the valid-name set is open (extras come from pyproject).
+    if cli_tools_override is not None:
+        if not cli_tools_override:
+            parser.error("--tools: empty tool list")
+        for raw_name in cli_tools_override:
+            if not raw_name.strip():
+                parser.error(f"--tools: empty name in {args.tools!r}")
 
     merged_config = RunnerConfig(
         cwd=cwd,
