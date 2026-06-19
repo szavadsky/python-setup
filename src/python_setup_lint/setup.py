@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import pkgutil
 import shutil
 import subprocess
@@ -23,13 +22,21 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+from ._setup_precommit import (
+    _AGENTS_SENTINEL,
+    _AGENTS_SENTINEL_END,
+    _AGENTS_SNIPPET,
+    _PRECOMMIT_TEMPLATE,
+    _atomic_write,
+    _step_agents_snippet,
+    _step_precommit,
+)
+
 # ── Constants ───────────────────────────────────────────────────────
 
 _PACKAGE_NAME = "python-setup"
 _GIT_URL = "git+https://github.com/szavadsky/python-setup"
 _STATE_FILE = ".python-setup-state.json"
-_AGENTS_SENTINEL = "<!-- python-setup:pre-commit -->"
-_AGENTS_SENTINEL_END = "<!-- /python-setup:pre-commit -->"
 
 # Bundled config files to copy / checksum-track (relative to config/ dir)
 _BUNDLED_CONFIGS: tuple[str, ...] = (
@@ -40,49 +47,6 @@ _BUNDLED_CONFIGS: tuple[str, ...] = (
     "rumdl.toml",
     "ty.toml",
 )
-
-_PRECOMMIT_TEMPLATE = """\
-# See https://pre-commit.com for more information
-# See https://pre-commit.com/hooks.html for more hooks
-repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.10
-    hooks:
-      - id: ruff-format
-      - id: ruff-check
-        args: [--fix, --exit-non-zero-on-fix]
-  - repo: local
-    hooks:
-      - id: lint
-        name: lint
-        entry: python-setup lint --no-fail-fast --baseline .lint.baseline
-        language: system
-        types: [python]
-        pass_filenames: false
-"""
-
-_AGENTS_SNIPPET = """\
-
-{open_sentinel}
-## Pre-commit hooks
-
-Install git hooks after cloning:
-
-```bash
-uv run pre-commit install
-```
-
-- **`git commit`** triggers fast hooks: `ruff-format` (auto-format) and `ruff-fix` (auto-fix). Both run silently and apply changes automatically.
-- **`git push`** triggers the full lint pipeline (`python-setup lint --no-fail-fast --baseline .lint.baseline`). The hook fails only on **new** violations (regressions), not pre-existing ones.
-- **Baseline regeneration**: When you intentionally want to accept the current violation state, run:
-
-  ```bash
-  python-setup lint --no-fail-fast --overwrite-baseline --baseline .lint.baseline
-  ```
-
-  Commit the updated `.lint.baseline` alongside your changes.
-{close_sentinel}
-"""
 
 
 # ── Data structures ─────────────────────────────────────────────────
@@ -109,17 +73,6 @@ class SetupState:
 
 
 # ── Helpers ─────────────────────────────────────────────────────────
-
-def _atomic_write(path: Path, content: str) -> None:
-    """Write *content* to *path* atomically via temp file + rename."""
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    try:
-        tmp.write_text(content, encoding="utf-8")
-        os.replace(tmp, path)
-    finally:
-        if tmp.exists():
-            tmp.unlink(missing_ok=True)
-
 
 def _compute_checksums(config_dir: Path, files: Sequence[str]) -> dict[str, str]:
     """Compute SHA-256 checksums for *files* relative to *config_dir*."""
@@ -321,19 +274,6 @@ def _step_pylint_plugins(state: SetupState, project_dir: Path) -> None:
     print(f"  [pylint] Added load-plugins: {', '.join(missing)}")
 
 
-def _step_precommit(state: SetupState, project_dir: Path) -> None:
-    """Step 3: Write .pre-commit-config.yaml template."""
-    precommit_path = project_dir / ".pre-commit-config.yaml"
-    if precommit_path.exists():
-        state.precommit_skipped = True
-        print("  [pre-commit] .pre-commit-config.yaml already exists — not overwriting")
-        return
-
-    _atomic_write(precommit_path, _PRECOMMIT_TEMPLATE)
-    state.precommit_written = True
-    print("  [pre-commit] Wrote .pre-commit-config.yaml")
-
-
 def _step_coding_rules(state: SetupState, project_dir: Path) -> None:
     """Step 4: Copy CodingRules.md from python-setup's bundled copy."""
     target = project_dir / "CodingRules.md"
@@ -350,30 +290,6 @@ def _step_coding_rules(state: SetupState, project_dir: Path) -> None:
     shutil.copy2(source, target)
     state.coding_rules_copied = True
     print("  [coding-rules] Copied CodingRules.md")
-
-
-def _step_agents_snippet(state: SetupState, project_dir: Path) -> None:
-    """Step 5: Append pre-commit setup instructions to AGENTS.md."""
-    agents_path = project_dir / "AGENTS.md"
-    if not agents_path.exists():
-        state.agents_skipped = True
-        print("  [agents] AGENTS.md not found — skipping snippet append")
-        return
-
-    content = agents_path.read_text(encoding="utf-8")
-    if _AGENTS_SENTINEL in content:
-        state.agents_skipped = True
-        print("  [agents] AGENTS.md already contains python-setup snippet — skipping")
-        return
-
-    snippet = _AGENTS_SNIPPET.format(
-        open_sentinel=_AGENTS_SENTINEL,
-        close_sentinel=_AGENTS_SENTINEL_END,
-    )
-    new_content = content.rstrip("\n") + snippet
-    _atomic_write(agents_path, new_content)
-    state.agents_appended = True
-    print("  [agents] Appended pre-commit setup instructions to AGENTS.md")
 
 
 def _save_state(project_dir: Path, state: SetupState) -> None:

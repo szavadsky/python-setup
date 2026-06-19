@@ -33,47 +33,24 @@ from python_setup_lint.runner import (
 )
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 
-# Built-in name used to exercise the duplicate-vs-builtin R4 branch.
-_BUILTIN_NAME = "ruff check"
-
-# A complete, valid ``[[...]]`` block mirroring the dogfood
-# ``grep-noqa-scan`` fixture (T11d1).
-_VALID_BLOCK = (
-    'name = "grep-noqa-scan"\n'
-    'command = ["grep", "-rnE", "--exclude-dir=__pycache__", '
-    '"--include=*.py", "noqa: "]\n'
-    "supports_path = true\n"
-    'default_paths = ["src/", "tests/"]\n'
-    'parse_strategy = "regex_count"\n'
-    'parse_regex = "^[^:]+:\\\\d+:.*# noqa: (\\\\S+)"\n'
+from tests.runner._factories import (
+    DOWNSTREAM_CASES,
+    EMPTY_LOADER_CASES,
+    EXTRA_OBSERV_BLOCK,
+    EXTRA_OBSERV_NAME,
+    EXTRA_OBSERV_STDOUT,
+    R4_EXACT_REASON_CASES,
+    R4_FLAG_WRONG_TYPE_CASES,
+    REGEX_BAD_GROUP_CASES,
+    VALID_EXTRA_BLOCK,
+    extra_block,
+    write_pyproject,
 )
 
 
-def _write_pyproject(tmp_path: object, body: str) -> object:
-    """Write a synthetic ``pyproject.toml`` body under *tmp_path*.
-
-    Returns the resolved path so tests can assert
-    ``ExtraToolsConfigError.location`` verbatim.
-    """
-    pyproject = tmp_path / "pyproject.toml"  # type: ignore[operator]
-    pyproject.write_text(body, encoding="utf-8")
-    _reset_extra_tools_cache()
-    return pyproject.resolve()
-
-
-def _extra_block(entries: str) -> str:
-    """Wrap one-or-more ``[[tool.python-setup-lint.extra-tools]]`` body lines."""
-    return f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{entries}"
-
-
 @pytest.fixture(autouse=True)
-def _isolate_registries() -> object:
-    """Isolate LINT_TOOLS/STRATEGIES + extra-tools cache per test.
-
-    Snapshot + restore LINT_TOOLS and STRATEGIES around each test so
-    merge tests don't leak mutations.  Also clears the per-process
-    extra-tools memo so cache-key collisions are impossible.
-    """
+def _isolate_registries() -> None:
+    """Snapshot+restore LINT_TOOLS/STRATEGIES + extras cache per test."""
     baseline = list(LINT_TOOLS)
     baseline_strategies = dict(STRATEGIES)
     _reset_extra_tools_cache()
@@ -85,234 +62,98 @@ def _isolate_registries() -> object:
 
 
 # ── Happy paths ─────────────────────────────────────────────────────
-# Loader returns ``[]`` on the three "no extras here" shapes: missing
-# pyproject, missing section, empty array (T8 R5 enumeration edge).
-
-_EMPTY_LOADER_CASES = [
-    ("no_pyproject", None),  # no file at all
-    ("no_section", "[tool.python-setup-lint]\nsome = 1\n"),  # tool section w/o array
-    ("empty_array", "[tool.python-setup-lint]\nextra-tools = []\n"),  # empty array
-]
 
 
-@pytest.mark.parametrize("case,body", _EMPTY_LOADER_CASES, ids=[c for c, _ in _EMPTY_LOADER_CASES])
+@pytest.mark.parametrize("case,body", EMPTY_LOADER_CASES, ids=[c for c, _ in EMPTY_LOADER_CASES])
 def test_load_extras_returns_empty(tmp_path, case, body):
-    """Each "no extras here" shape (no pyproject / no section / empty array) → ``[]``."""
+    """No pyproject / no section / empty array → ``_load_extra_tools`` returns ``[]``."""
     if body is not None:
-        _write_pyproject(tmp_path, body)
+        write_pyproject(tmp_path, body)
     assert _load_extra_tools(tmp_path) == []
 
 
 def test_load_extras_valid_entry_returns_spec(tmp_path):
     """Full dogfood block → one registration with right spec + parser."""
-    _write_pyproject(tmp_path, _extra_block(_VALID_BLOCK))
-    registrations = _load_extra_tools(tmp_path)
-    assert len(registrations) == 1
-    reg = registrations[0]
+    write_pyproject(tmp_path, extra_block(VALID_EXTRA_BLOCK))
+    [reg] = _load_extra_tools(tmp_path)
     assert reg.spec.name == "grep-noqa-scan"
     assert reg.spec.supports_path is True
     assert reg.spec.default_paths == ["src/", "tests/"]
-    assert reg.spec.command == [
-        "grep",
-        "-rnE",
-        "--exclude-dir=__pycache__",
-        "--include=*.py",
-        "noqa: ",
-    ]
+    assert reg.spec.command == ["grep", "-rnE", "--exclude-dir=__pycache__", "--include=*.py", "noqa: "]
     assert reg.config_flag is None
     assert reg.statistics_flag is None
-    # regex_count strategy → parser is a functools.partial binding parse_regex.
-    assert reg.parser is not None
-    out = reg.parser("src/x.py:5:rule=A # noqa: A\nfoo.py:7: # noqa: B\n", "")
+    out = reg.parser('src/x.py:5:rule=A # noqa: A\nfoo.py:7: # noqa: B\n', "")
     assert dict(out) == {"A": 1, "B": 1}
 
 
-# ── R4 failure table: per-shape ``ExtraToolsConfigError`` ───────────
+# ── R4 failure table: per-shape ExtraToolsConfigError ─────────────
 
 
-def _expect_error(tmp_path, body, *, reason_starts: str | None = None,
-                  reason_eq: str | None = None):
-    """Write *body*, call ``_load_extra_tools``, assert ``ExtraToolsConfigError``."""
-    pyproject = _write_pyproject(tmp_path, body)
+def _expect_error(tmp_path, body, *, reason_starts=None, reason_eq=None):
+    """Write *body*, call ``_load_extra_tools``, assert ExtraToolsConfigError; return err."""
+    pyproject = write_pyproject(tmp_path, body)
     with pytest.raises(ExtraToolsConfigError) as exc_info:
         _load_extra_tools(tmp_path)
     err = exc_info.value
-    assert err.location == str(pyproject), (
-        f"location mismatch: got {err.location!r}, want {str(pyproject)!r}"
-    )
+    assert err.location == str(pyproject)
     if reason_eq is not None:
-        assert err.reason == reason_eq, (
-            f"reason mismatch: got {err.reason!r}, want {reason_eq!r}"
-        )
+        assert err.reason == reason_eq
     if reason_starts is not None:
-        assert err.reason.startswith(reason_starts), (
-            f"reason mismatch: got {err.reason!r}, want prefix {reason_starts!r}"
-        )
+        assert err.reason.startswith(reason_starts)
     return err
 
 
-def test_validate_unknown_field_raises(tmp_path):
-    """Unknown field in entry → ``reason`` starts ``"unknown field: "``."""
+@pytest.mark.parametrize("body,reason_want,want_kind", R4_EXACT_REASON_CASES)
+def test_validate_r4_reason_matches(tmp_path, body, reason_want, want_kind) -> None:
+    """One row per R4 malformation — asserts locked reason (exact OR prefix)."""
     _expect_error(
-        tmp_path,
-        _extra_block('name = "x"\ncommand = ["x"]\nbogus_field = 1\n'),
-        reason_starts="unknown field: ",
+        tmp_path, body,
+        reason_eq=reason_want if want_kind == "exact" else None,
+        reason_starts=reason_want if want_kind == "starts_with" else None,
     )
 
 
-def test_validate_missing_required_field_raises(tmp_path):
-    """Entry with ``name`` only (missing ``command``) → exact missing-field reason."""
+@pytest.mark.parametrize("body_fragment,reason_want", R4_FLAG_WRONG_TYPE_CASES)
+def test_validate_r4_flag_wrong_type(tmp_path, body_fragment, reason_want) -> None:
+    """One row per wrong-type flag field — name + command are valid; the flag varies."""
+    _expect_error(tmp_path, extra_block(f'name = "x"\ncommand = ["x"]\n{body_fragment}'), reason_eq=reason_want)
+
+
+@pytest.mark.parametrize("regex", REGEX_BAD_GROUP_CASES)
+def test_validate_regex_count_invalid_raises(tmp_path, regex):
+    """Zero groups / two groups / unparseable regex → locked R4 reason prefix."""
     _expect_error(
         tmp_path,
-        _extra_block('name = "x"\n'),
-        reason_eq="missing required field: command",
-    )
-
-
-# Parametrised R4 rows where one ``_expect_error`` call maps to one R4 line.
-# Locked per DESIGN-8 D6 — production code is source-of-truth for reason strings.
-_R4_INLINE_CASES: list[tuple[str, str, bool]] = [
-    # (block_body, expected_reason, is_prefix)
-    ('name = 123\ncommand = ["x"]\n', "wrong type: name must be non-empty str", False),
-    # ``name = "   "`` (whitespace-only): the .strip() falsifies it before
-    # the empty-name branch, so the wrong-type reason fires first.
-    ('name = "   "\ncommand = ["x"]\n', "wrong type: name must be non-empty str", False),
-    ('name = "x"\ncommand = "ruff"\n', "wrong type: command must be non-empty list[str]", False),
-    ('name = "x"\ncommand = ["x", 1]\n', "wrong type: command must be list[str]", False),
-]
-
-
-@pytest.mark.parametrize(
-    "block,reason,is_prefix",
-    _R4_INLINE_CASES,
-    ids=["name_non_str", "name_whitespace", "command_scalar", "command_non_str_parts"],
-)
-def test_validate_r4_inline(tmp_path, block, reason, is_prefix):
-    """One R4 row per malformed block; locked reason strings emitted by code."""
-    _expect_error(tmp_path, _extra_block(block), reason_eq=None if is_prefix else reason,
-                  reason_starts=reason if is_prefix else None)
-
-
-def test_validate_duplicate_within_file_raises(tmp_path):
-    """Two entries with the same name → second entry raises duplicate-within-file."""
-    body = (
-        _extra_block('name = "dup"\ncommand = ["x"]\n')
-        + "[[tool.python-setup-lint.extra-tools]]\n"
-        + 'name = "dup"\ncommand = ["x"]\n'
-    )
-    _expect_error(tmp_path, body, reason_eq="duplicate within file: dup")
-
-
-def test_validate_duplicate_vs_builtin_raises(tmp_path):
-    """An entry whose name shadows a built-in tool → duplicate-vs-builtin reason."""
-    _expect_error(
-        tmp_path,
-        _extra_block(f'name = "{_BUILTIN_NAME}"\ncommand = ["x"]\n'),
-        reason_eq=f"duplicate vs built-in: {_BUILTIN_NAME}",
-    )
-
-
-# Wrong-type R4 table — parametrised over the boolean / list / scalar shapes.
-# Each (block-body fragment, expected reason) pair is one R4 line.
-_WRONG_TYPE_CASES = [
-    ('supports_fix = "yes"\n', "wrong type: supports_fix must be bool"),
-    ("supports_path = 1\n", "wrong type: supports_path must be bool"),
-    ('supports_exclude = "no"\n', "wrong type: supports_exclude must be bool"),
-    ('default_paths = "src/"\n', "wrong type: default_paths must be list[str]"),
-    ('default_paths = ["x", 1]\n', "wrong type: default_paths must be list[str]"),
-    ("config_flag = 12\n", "wrong type: config_flag must be str | list[str]"),
-    ('config_flag = ["--x", 1]\n', "wrong type: config_flag must be str | list[str]"),
-    ("parse_strategy = 7\n", "wrong type: parse_strategy must be str"),
-    ('parse_strategy = "bogus"\n', "bad enum: parse_strategy 'bogus'"),
-]
-
-
-@pytest.mark.parametrize("extra,reason", _WRONG_TYPE_CASES)
-def test_validate_wrong_type_parametrised(tmp_path, extra, reason):
-    """One R4 row per wrong-type field — locked reason string emitted by code."""
-    _expect_error(
-        tmp_path,
-        _extra_block(f'name = "x"\ncommand = ["x"]\n{extra}'),
-        reason_eq=reason,
+        extra_block(f'name = "x"\ncommand = ["x"]\nparse_strategy = "regex_count"\nparse_regex = "{regex}"\n'),
+        reason_starts="regex missing or != 1 capture group",
     )
 
 
 def test_validate_config_flag_str_wraps_to_single_element(tmp_path):
     """A string ``config_flag`` is accepted (wrapped to ``[value]``); no error."""
-    _write_pyproject(
-        tmp_path, _extra_block('name = "x"\ncommand = ["x"]\nconfig_flag = "--config"\n')
-    )
+    write_pyproject(tmp_path, extra_block('name = "x"\ncommand = ["x"]\nconfig_flag = "--config"\n'))
     [reg] = _load_extra_tools(tmp_path)
     assert reg.config_flag == ["--config"]
 
 
-def test_validate_bad_enum_lists_every_built_in_name():
-    """``PARSE_STRATEGIES`` includes both T11 generic + ``none`` sentinel."""
-    assert "regex_count" in PARSE_STRATEGIES
-    assert "raw_lines" in PARSE_STRATEGIES
-    assert "none" in PARSE_STRATEGIES
-    # 11 built-in stat parsers must all be present.
+def test_parse_strategies_includes_all_keys():
+    """``PARSE_STRATEGIES`` includes T11 generic + ``none`` sentinel + 11 built-ins."""
+    assert {"regex_count", "raw_lines", "none"} <= set(PARSE_STRATEGIES)
     assert {
         "ruff_statistics", "rumdl_statistics", "pylint_json2",
         "pyright_outputjson", "pyright_verify_types", "mypy_stderr",
         "ty_concise", "tach_json", "yamllint_parsable", "stubtest_stderr",
         "detect_secrets_json",
-    } <= PARSE_STRATEGIES
-
-
-def test_validate_regex_count_requires_parse_regex_raises(tmp_path):
-    """``parse_strategy = "regex_count"`` with no ``parse_regex`` → missing-field."""
-    _expect_error(
-        tmp_path,
-        _extra_block('name = "x"\ncommand = ["x"]\nparse_strategy = "regex_count"\n'),
-        reason_starts='missing required field: parse_regex',
-    )
-
-
-def test_validate_regex_count_bad_group_count_raises(tmp_path):
-    """``parse_regex`` with zero capture groups → locked R4 reason prefix."""
-    _expect_error(
-        tmp_path,
-        _extra_block(
-            'name = "x"\ncommand = ["x"]\nparse_strategy = "regex_count"\n'
-            'parse_regex = "no_groups_here"\n'
-        ),
-        reason_starts="regex missing or != 1 capture group",
-    )
-
-
-# Three regex_count R4 rows — parametrised over (parse_regex value).
-_REGEX_BAD_GROUP_CASES = [
-    "no_groups_here",          # zero capture groups
-    "(a)(b)",                  # two capture groups
-    "(unclosed",               # unparseable regex
-]
-
-
-@pytest.mark.parametrize("regex", _REGEX_BAD_GROUP_CASES)
-def test_validate_regex_count_invalid_raises(tmp_path, regex):
-    """Zero groups / two groups / unparseable regex → locked R4 reason prefix."""
-    _expect_error(
-        tmp_path,
-        _extra_block(
-            f'name = "x"\ncommand = ["x"]\nparse_strategy = "regex_count"\n'
-            f'parse_regex = "{regex}"\n'
-        ),
-        reason_starts="regex missing or != 1 capture group",
-    )
-
-
-# ── Loader boundary shapes (T8 R4: pyproject-unreadable + array shapes) ──
+    } <= set(PARSE_STRATEGIES)
 
 
 def test_load_extras_pyproject_unreadable_raises(tmp_path):
     """Malformed TOML → ExtraToolsConfigError with locked prefix + file location."""
-    pyproject = _write_pyproject(tmp_path, "bad = = syntax # not toml")
+    pyproject = write_pyproject(tmp_path, "bad = = syntax # not toml")
     with pytest.raises(ExtraToolsConfigError) as exc_info:
         _load_extra_tools(tmp_path)
-    err = exc_info.value
-    assert err.location == str(pyproject)
-    assert err.reason.startswith("pyproject unreadable:")
+    assert exc_info.value.location == str(pyproject)
+    assert exc_info.value.reason.startswith("pyproject unreadable:")
 
 
 @pytest.mark.parametrize(
@@ -333,16 +174,12 @@ def test_load_extras_array_shape_raises(tmp_path, body, reason):
 # ── ExtraToolsConfigError public attribute contract ────────────────
 
 
-def test_extra_tools_config_error_attributes():
-    """Constructor stores ``location`` + ``reason`` AND formats ``str(err)``."""
+def test_extra_tools_config_error_attributes_and_chain():
+    """Constructor stores ``location``+``reason``, formats ``str(err)``, preserves cause via ``raise from``."""
     err = ExtraToolsConfigError(location="x", reason="y")
     assert err.location == "x" and err.reason == "y"
     assert str(err) == "[x] y"
     assert isinstance(err, Exception) and not isinstance(err, SystemExit)
-
-
-def test_extra_tools_config_error_preserves_subclass_chain():
-    """The error is raisable through ``raise from`` and unwrapped by ``pytest.raises``."""
     with pytest.raises(ExtraToolsConfigError) as exc_info:
         try:
             raise ValueError("inner")
@@ -354,45 +191,34 @@ def test_extra_tools_config_error_preserves_subclass_chain():
 
 # MERGE category — _register_extra_tools contract
 
-# Synthetic extra-tool registrations (not loaded from disk).
-_X1 = _ExtraToolRegistration(
-    spec=ToolSpec(name="x1", command=["x1"]),
-    statistics_flag=None,
-    parser=None,
-    config_flag=None,
-)
-_X2 = _ExtraToolRegistration(
-    spec=ToolSpec(name="x2", command=["x2"]),
-    statistics_flag=None,
-    parser=None,
-    config_flag=None,
-)
+_X1 = _ExtraToolRegistration(spec=ToolSpec(name="x1", command=["x1"]),
+                            statistics_flag=None, parser=None, config_flag=None)
+_X2 = _ExtraToolRegistration(spec=ToolSpec(name="x2", command=["x2"]),
+                            statistics_flag=None, parser=None, config_flag=None)
 
 
 class TestExtraToolsMerge:
-    """_register_extra_tools merge contract: additive, idempotent, collision-safe."""
+    """``_register_extra_tools`` merge contract: additive, idempotent, collision-safe."""
 
-    def test_register_extra_tools_grows_lint_tools_by_n(self):
+    def test_grows_lint_tools_by_n(self) -> None:
         baseline_len = len(LINT_TOOLS)
         _register_extra_tools([_X1, _X2])
         assert len(LINT_TOOLS) == baseline_len + 2
 
-    def test_register_extra_tools_idempotent_on_same_names(self):
+    def test_idempotent_on_same_names(self) -> None:
         baseline_len = len(LINT_TOOLS)
         _register_extra_tools([_X1])
-        _register_extra_tools([_X1])  # idempotent re-call with same name
+        _register_extra_tools([_X1])  # idempotent re-call
         assert len(LINT_TOOLS) == baseline_len + 1
-        assert STRATEGIES["x1"] is not None  # strategy stable, no double registration
+        assert STRATEGIES["x1"] is not None
 
-    def test_register_extra_tools_tools_by_name_includes_extras(self):
+    def test_tools_by_name_includes_extras_and_builtins(self) -> None:
         _register_extra_tools([_X1, _X2])
         names = {t.name for t in LINT_TOOLS}
-        assert "x1" in names and "x2" in names
-        # All 11 built-ins remain post-merge.
-        for builtin in TOOLS_BY_NAME:
-            assert builtin in names, f"Built-in {builtin!r} missing after merge"
+        assert {"x1", "x2"} <= names
+        assert set(TOOLS_BY_NAME) <= names  # all 11 built-ins remain post-merge
 
-    def test_register_extra_tools_rejects_builtin_name_collision(self):
+    def test_rejects_builtin_name_collision(self) -> None:
         collision = _ExtraToolRegistration(
             spec=ToolSpec(name="ruff check", command=["ruff", "check"]),
             statistics_flag=None, parser=None, config_flag=None,
@@ -402,17 +228,13 @@ class TestExtraToolsMerge:
         assert exc_info.value.reason == "duplicate vs built-in: ruff check"
         assert exc_info.value.location == "<runtime>"
 
-    def test_register_extra_tools_no_op_on_empty_list(self):
+    def test_no_op_on_empty_list(self) -> None:
         baseline_len = len(LINT_TOOLS)
         _register_extra_tools([])
         assert len(LINT_TOOLS) == baseline_len
 
 
-# BUILD_COMMAND category — GenericLintTool.build_command.
-# Verifies T11 v1: a registered extra's strategy builds the same shape as
-# the built-ins — command + config_flag + default_paths + --fix (when
-# supports_fix) + --exclude (when supports_exclude) + glob expansion via
-# _expand_globs.  Direct strategy.build_command(ctx) — NO subprocess.
+# BUILD_COMMAND category — GenericLintTool.build_command (no subprocess).
 
 
 def _register_extra(
@@ -429,12 +251,9 @@ def _register_extra(
     _reset_extra_tools_cache()
     register_lint_tool(
         ToolSpec(
-            name=name,
-            command=command or ["mytool"],
-            supports_fix=supports_fix,
-            supports_path=supports_path,
-            supports_exclude=supports_exclude,
-            default_paths=default_paths or [],
+            name=name, command=command or ["mytool"],
+            supports_fix=supports_fix, supports_path=supports_path,
+            supports_exclude=supports_exclude, default_paths=default_paths or [],
         ),
         config_flag=config_flag,
     )
@@ -448,8 +267,7 @@ def _ctx(cwd: Path, *, config_paths: dict[str, Path] | None = None) -> RunnerCon
 class TestExtraBuildCommand:
     """``GenericLintTool.build_command`` synthesis from declarative fields."""
 
-    def test_builds_command_with_config_flag(self, tmp_path: Path) -> None:
-        """``config_flag=["--config"]`` + ``config_paths[extra]`` → flag+path right after the command."""
+    def test_build_command_with_config_flag(self, tmp_path: Path) -> None:
         _register_extra("extra1", config_flag=["--config"], default_paths=["src/"])
         cfg = tmp_path / "cfg.toml"
         cfg.write_text("x = 1\n")
@@ -457,326 +275,127 @@ class TestExtraBuildCommand:
         assert cmd[:3] == ["mytool", "--config", str(cfg)]
         assert cmd[3:] == ["src/"]
 
-    def test_appends_fix_flag_when_supports_fix(self, tmp_path: Path) -> None:
-        """``supports_fix=True`` + ``fix=True`` → ``--fix`` appended (non-ruff/rumdl/ty branch)."""
+    def test_build_command_appends_fix_flag(self, tmp_path: Path) -> None:
         _register_extra("extra1", supports_fix=True)
         ctx = _ctx(tmp_path)
         assert STRATEGIES["extra1"].build_command(config=ctx, fix=True) == ["mytool", "--fix"]
-        # Sanity: fix=False does not append.
-        assert STRATEGIES["extra1"].build_command(config=ctx) == ["mytool"]
+        assert STRATEGIES["extra1"].build_command(config=ctx) == ["mytool"]  # fix=False: no flag
 
-    def test_appends_exclude_flag_when_supports_exclude(self, tmp_path: Path) -> None:
-        """``supports_exclude=True`` + ``exclude`` → ``--exclude <path>`` (non-tach extras)."""
+    def test_build_command_appends_exclude_flag(self, tmp_path: Path) -> None:
         _register_extra("extra1", supports_exclude=True, supports_path=False)
-        ctx = _ctx(tmp_path)
-        assert STRATEGIES["extra1"].build_command(config=ctx, exclude="bad.py") == ["mytool", "--exclude", "bad.py"]
+        assert (STRATEGIES["extra1"].build_command(config=_ctx(tmp_path), exclude="bad.py")
+                == ["mytool", "--exclude", "bad.py"])
 
-    def test_expands_globs_in_default_paths(self, tmp_path: Path) -> None:
-        """``default_paths=["data/*.txt"]`` is expanded against ``cwd`` by ``_expand_globs``."""
+    def test_build_command_expands_glob_in_default_paths(self, tmp_path: Path) -> None:
         (tmp_path / "data").mkdir()
         for n in ("file1.txt", "file2.txt"):
             (tmp_path / "data" / n).write_text("a\n")
         _register_extra("extra1", supports_path=True, default_paths=["data/*.txt"])
         cmd = STRATEGIES["extra1"].build_command(config=_ctx(tmp_path))
-        # ``_expand_globs`` produces sorted relative paths.
         assert cmd[0] == "mytool"
-        assert cmd[1:] == sorted(["data/file1.txt", "data/file2.txt"])
+        assert cmd[1:] == sorted(["data/file1.txt", "data/file2.txt"])  # sorted relative paths
 
     @pytest.mark.parametrize(
-        "config_flag,config_paths,expected",
+        "config_flag,expected",
         [
-            # no_flag → bare command + default_paths; config_paths entry ignored
-            (None, {"extra1": Path("/x.toml")}, ["mytool", "src/"]),
-            # flag set but no config path → flag silently dropped; default_paths still appended
-            (["--config"], {}, ["mytool", "src/"]),
+            (None, ["mytool", "src/"]),                 # no_flag → flag dropped
+            (["--config"], ["mytool", "src/"]),         # flag set but no path → dropped
         ],
         ids=["no_config_flag", "config_flag_with_no_path"],
     )
-    def test_config_flag_boundaries(self, tmp_path: Path, config_flag, config_paths, expected) -> None:
+    def test_build_command_config_flag_boundaries(
+        self, tmp_path: Path, config_flag, expected,
+    ) -> None:
         """config_flag absent OR config_paths[extra] absent → no flag in the command."""
         _register_extra("extra1", config_flag=config_flag, default_paths=["src/"])
-        cmd = STRATEGIES["extra1"].build_command(config=_ctx(tmp_path, config_paths=config_paths))
+        cmd = STRATEGIES["extra1"].build_command(config=_ctx(tmp_path, config_paths={}))
         assert "--config" not in cmd
         assert cmd == expected
 
-    def test_parse_strategy_none_produces_empty_parse_statistics(self, tmp_path: Path) -> None:
-        """GenericLintTool with no parser → ``parse_statistics`` returns ``[]`` (matches ``_aggregate_statistics`` skip)."""
+    def test_parse_strategy_none_produces_empty_parse_statistics(self) -> None:
+        """GenericLintTool with no parser → ``parse_statistics`` returns ``[]``."""
         _register_extra("extra1")
-        strat = STRATEGIES["extra1"]
-        assert strat.parse_statistics("noise that looks like a violation\nwarn!\n", "") == []
+        assert STRATEGIES["extra1"].parse_statistics("noise\nwarn!\n", "") == []
 
 
 # ── DOWNSTREAM-INTEGRATION ───────────────────────────────────────
-# End-to-end fake-subprocess pipeline for extras — reuses the T1
-# ``fake_run_cmd_factory`` idiom (NO real subprocess). Covers the
-# loader → validator → registration → strategy dispatch → fake
-# subprocess → parse → aggregate composition chain.
-#
-# NOTE on run_lint return shape: ``run_lint`` returns ``int`` exit code
-# and does NOT expose its internal ``results`` list. Integration is
-# observed via:
-#   * ``capsys`` — lint output text (each tool's ``[<name>]`` banner)
-#   * ``--statistics --format json`` output — the aggregated
-#     ``ViolationCount`` list (the exact ``_aggregate_statistics(result)``
-#     artefact), one entry per parsed rule id.
-# Per the task brief: "consult production code for whether results is a
-# list of LintResult or a dict". Production code is source-of-truth.
-
-_REGEX_BLOCK = (
-    'name = "regextool"\n'
-    'command = ["fake-regex-cli"]\n'
-    "supports_path = true\n"
-    'default_paths = []\n'
-    'parse_strategy = "regex_count"\n'
-    'parse_regex = "^(?P<rule>[A-Z]+[0-9]+): .*"\n'
-)
-
-_NONE_BLOCK = (
-    'name = "nonestattool"\n'
-    'command = ["fake-none-cli"]\n'
-    "supports_path = true\n"
-    'default_paths = []\n'
-    'parse_strategy = "none"\n'
-)
-
-
-def _write_extra_pyproject(tmp_path: Path, body: str) -> Path:
-    """Write a synthetic ``pyproject.toml`` with one extra-tools block + resetmemo."""
-    pyproject = tmp_path / "pyproject.toml"
-    pyproject.write_text(f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{body}")
-    _reset_extra_tools_cache()
-    return pyproject.resolve()
+# End-to-end fake-subprocess pipeline for extras (NO real subprocess).
+# Covers loader → validator → registration → strategy dispatch → fake
+# subprocess → parse → aggregate. ``--statistics --format json`` output
+# observed via capsys (per-tool banners suppressed under statistics=True).
 
 
 class TestRunLintExtraDownstreamIntegration:
     """End-to-end fake-subprocess integration of the extras pipeline."""
 
-    def test_extra_runs_and_rule_appears_in_aggregate_statistics(
-        self,
-        tmp_path: Path,
-        capsys: pytest.CaptureFixture[str],
-        monkeypatch: pytest.MonkeyPatch,
+    @pytest.mark.parametrize(
+        "block,extra_name,extra_cmd,extra_stdout,expected_counts",
+        DOWNSTREAM_CASES,
+    )
+    def test_extra_downstream_pipeline(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch,
+        block: str, extra_name: str, extra_cmd: list[str],
+        extra_stdout: str, expected_counts: list[tuple[str, str, int]],
     ) -> None:
-        """A registered ``regex_count`` extra flows through the full pipeline.
-
-        Composition: loader → validator → ``_register_extra_tools`` →
-        ``_strategy_for`` synthesises a ``GenericLintTool`` → fake
-        ``_run_cmd`` returns a canned ``LintResult`` whose stdout is parsed
-        by the regex closure → ``_aggregate_statistics`` emits a
-        ``ViolationCount(tool="regextool", rule="RC1", count=2)`` (and RC2×1).
-
-        The canned ``LintResult`` shape (production source-of-truth, no
-        ``linted_files`` field — ``LintResult`` only has tool_name /
-        exit_code / stdout / stderr / elapsed)::
-
-            LintResult(
-                tool_name="regextool",
-                exit_code=0,
-                stdout="RC1: bad line\\nRC2: worse line\\nRC1: another",
-                stderr="",
-            )
-
-        The aggregation artefact (the list returned by
-        ``_aggregate_statistics``) is observed via ``--statistics --format
-        json`` output which serialises the same ``ViolationCount`` triples.
-        """
-        _write_extra_pyproject(tmp_path, _REGEX_BLOCK)
-        # Empty stdout for built-ins — they have parsers but we feed them
-        # nothing so they contribute zero rows. Dict-mode fake falls back
-        # to a zero-exit empty ``LintResult`` for unknown labels.
-        fake = fake_run_cmd_factory(
-            {
-                "regextool": make_lint_result(
-                    tool_name="regextool",
-                    exit_code=0,
-                    stdout="RC1: bad line\nRC2: worse line\nRC1: another",
-                ),
-            }
-        )
+        """(a) extra dispatched with its spec command; (b) JSON output has expected triples;
+        (c) direct re-aggregation reproduces the same counts/skip path."""
+        write_pyproject(tmp_path, f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{block}")
+        fake = fake_run_cmd_factory({extra_name: make_lint_result(tool_name=extra_name, stdout=extra_stdout)})
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
 
-        rc = run_lint(
-            config=RunnerConfig(cwd=tmp_path),
-            no_fail_fast=True,
-            statistics=True,
-            statistics_format="json",
-        )
+        rc = run_lint(config=RunnerConfig(cwd=tmp_path), no_fail_fast=True,
+                      statistics=True, statistics_format="json")
         assert isinstance(rc, int), f"run_lint must return int; got {type(rc)}"
 
-        captured = capsys.readouterr()
-        out = captured.out
-        # NOTE: under statistics=True, per-tool ``_print_result`` banner is
-        # suppressed (runner.py L1597 ``if not statistics: _print_result``).
-        # Proof the extra ran is its label in ``fake.calls`` (it dispatched
-        # through ``GenericLintTool.build_command`` to the fake subprocess).
-        assert any(c.label == "regextool" for c in fake.calls), (
-            "regextool must have been dispatched to _run_cmd. "
-            f"Got labels: {[c.label for c in fake.calls]}"
-        )
+        # (a) extra's command reached the fake subprocess verbatim.
+        extra_call = next(c for c in fake.calls if c.label == extra_name)
+        assert extra_call.cmd == extra_cmd
 
-        # The last non-empty line is the JSON statistics array. Parse it
-        # and assert our extra's rule ids are present with the right counts.
-        # Under ``statistics=True`` no per-tool ``_print_result`` banner is
-        # emitted, so the entire stdout is the JSON array.
-        out_stripped = out.strip()
-        assert out_stripped.startswith("["), (
-            f"expected JSON array as the entire stats output; got: {out!r}"
-        )
-        data = json.loads(out_stripped)
-
-        # Build a quick lookup of (tool, rule) → count for assertion clarity.
+        # (b) JSON output is the entire stdout under statistics=True.
+        data = json.loads(capsys.readouterr().out.strip())
         by_key = {(e["tool"], e["rule"]): e["count"] for e in data}
-        assert ("regextool", "RC1") in by_key, (
-            f"regex_count parser must emit RC1 into aggregate. Got: {data}"
-        )
-        assert by_key[("regextool", "RC1")] == 2, (
-            f"RC1 count wrong: expected 2, got {by_key[('regextool', 'RC1')]}. Full: {data}"
-        )
-        assert by_key.get(("regextool", "RC2")) == 1, (
-            f"RC2 count wrong: expected 1, got {by_key.get(('regextool', 'RC2'))}. Full: {data}"
-        )
+        if expected_counts:
+            for tool, rule, count in expected_counts:
+                assert by_key.get((tool, rule)) == count, f"{tool}/{rule} → got {by_key.get((tool, rule))}. Full: {data}"
+        else:  # parse_strategy="none" → the extra's tool name must NOT appear
+            leaked = [e for e in data if e.get("tool") == extra_name]
+            assert leaked == [], f"parse_strategy=none extra must not contribute rows: {leaked}. Full: {data}"
 
-        # Direct re-aggregation of the captured fake results verifies the
-        # closure path independently of the JSON serialisation seam.
-        direct = _aggregate_statistics(
-            [
-                make_lint_result(
-                    tool_name="regextool",
-                    stdout="RC1: bad line\nRC2: worse line\nRC1: another",
-                ),
-            ]
-        )
-        assert ViolationCount("regextool", "RC1", 2) in direct
-        assert ViolationCount("regextool", "RC2", 1) in direct
+        # (c) Direct re-aggregation reproduces the expected counts/skip.
+        direct = _aggregate_statistics([make_lint_result(tool_name=extra_name, stdout=extra_stdout)])
+        if expected_counts:
+            for tool, rule, count in expected_counts:
+                assert ViolationCount(tool, rule, count) in direct, f"_aggregate_statistics must emit {tool}/{rule}×{count}; got {direct}"
+        else:
+            assert all(v.tool != extra_name for v in direct)
 
-        # Verify the extra's ``cmd`` actually reached the fake subprocess
-        # (proves ``GenericLintTool.build_command`` composed from the spec).
-        regextool_call = next(c for c in fake.calls if c.label == "regextool")
-        assert regextool_call.cmd == ["fake-regex-cli"], (
-            "extra's command must reach _run_cmd verbatim. "
-            f"Got: {regextool_call.cmd}"
-        )
-
-    def test_extra_with_parse_strategy_none_runs_but_skips_statistics(
-        self,
-        tmp_path: Path,
-        capsys: pytest.CaptureFixture[str],
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """A ``parse_strategy="none"`` extra runs but contributes no stats rows.
-
-        ``_aggregate_statistics`` skips tools whose strategy returns ``[]``
-        from ``parse_statistics`` (the ``GenericLintTool`` ``_parser=None``
-        path). Smoke-level skip-assertion for T11t6's deeper observability
-        coverage: the extra's banner appears in lint output (it ran) but
-        its ``tool`` name does NOT appear in the JSON statistics array.
-        """
-        _write_extra_pyproject(tmp_path, _NONE_BLOCK)
-        fake = fake_run_cmd_factory(
-            {
-                "nonestattool": make_lint_result(
-                    tool_name="nonestattool",
-                    exit_code=0,
-                    stdout="noise\nthat has no rule ids\nRC1: ignored too\n",
-                ),
-            }
-        )
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
-
-        rc = run_lint(
-            config=RunnerConfig(cwd=tmp_path),
-            no_fail_fast=True,
-            statistics=True,
-            statistics_format="json",
-        )
-        assert isinstance(rc, int), f"run_lint must return int; got {type(rc)}"
-        captured = capsys.readouterr()
-        out = captured.out
-
-        # The extra ran (its label reached the fake subprocess).
-        # ``_print_result`` is suppressed under statistics=True, so the
-        # banner assertion would be misleading; ``fake.calls`` is the
-        # authoritative "this tool was dispatched" evidence.
-        assert any(c.label == "nonestattool" for c in fake.calls), (
-            "nonestattool must have been dispatched to _run_cmd. "
-            f"Got labels: {[c.label for c in fake.calls]}"
-        )
-
-        # The extra's rule ids do NOT leak into the aggregate. The entire
-        # stdout is the JSON statistics array (no per-tool banner under
-        # statistics=True).
-        out_stripped = out.strip()
-        assert out_stripped.startswith("["), (
-            f"expected JSON array as the entire stats output; got: {out!r}"
-        )
-        data = json.loads(out_stripped)
-        assert isinstance(data, list), f"stats JSON must be a list; got {type(data)}"
-
-        # Either the aggregate is empty (only the none extra ran, plus the
-        # built-ins were fed empty stdout) OR none of the entries reference
-        # the none-extra's tool name. RC1 must NOT appear under the extra.
-        none_tool_entries = [e for e in data if e.get("tool") == "nonestattool"]
-        assert none_tool_entries == [], (
-            f"parse_strategy=none extra must not contribute stats rows; "
-            f"got: {none_tool_entries}. Full aggregate: {data}"
-        )
-
-        # Direct re-aggregation confirms the skip path independently.
-        direct = _aggregate_statistics(
-            [
-                make_lint_result(
-                    tool_name="nonestattool",
-                    stdout="RC1: ignored\n",
-                ),
-            ]
-        )
-        assert all(v.tool != "nonestattool" for v in direct), (
-            f"_aggregate_statistics must skip parse_strategy=none extras; "
-            f"got: {direct}"
-        )
-
-        # The extra's command still reached the subprocess (composition held).
-        none_call = next(c for c in fake.calls if c.label == "nonestattool")
-        assert none_call.cmd == ["fake-none-cli"], (
-            f"none-extra must still be dispatched; got cmd: {none_call.cmd}"
-        )
 
 # ── PERF-BENCHMARK ─────────────────────────────────────────────────
-# ``_load_extra_tools`` memoisation verified via ratio assertion on
-# ``run_lint`` startup time.  ``@pytest.mark.slow`` so the fast gate
-# (``-m "not slow"``) skips it; the slow opt-in (``-m slow``) exercises
-# it.
+
+
+def _time_run_lint(cwd: Path, *, n: int = 50, clear_cache_each: bool = False) -> float:
+    """Run ``run_lint`` *n* times from *cwd* and return the per-iter wall-time."""
+    total = 0.0
+    for _ in range(n):
+        if clear_cache_each:
+            _reset_extra_tools_cache()
+        start = time.perf_counter()
+        run_lint(config=RunnerConfig(cwd=cwd), no_fail_fast=True)
+        total += time.perf_counter() - start
+    return total / n
 
 
 @pytest.mark.slow
 def test_run_lint_with_extras_startup_overhead_within_10_percent(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """``_load_extra_tools`` memoisation verified via warm ratio assertion.
-
-    Synthetic ``pyproject.toml`` with 10 extras (all
-    ``parse_strategy="none"``, no real subprocess) vs. a ``pyproject.toml``
-    with zero extras.  ``_run_cmd`` is monkeypatched so subprocess time
-    does not pollute the startup measurement.
-
-    The warm (memoised) ratio t(N=10)/t(N=0) must be < 1.10, proving the
-    ``_EXTRA_TOOLS_CACHE`` + registration-gate overhead stays O(1) regardless
-    of N extras.  Cold measurements (cache cleared before each iteration)
-    are recorded as informational only.  Both cold runs measure the full
-    pyproject read + validate + register path symmetrically.
-    """
-    # ── Two directories with different pyproject.toml ────────────
+    """Warm (memoised) t(N=10)/t(N=0) < 1.10 — extras caching stays O(1)."""
     no_extras_dir = tmp_path / "no_extras"
     extras_dir = tmp_path / "extras"
     no_extras_dir.mkdir()
     extras_dir.mkdir()
 
-    # pyproject with 0 extras (section present but no extra-tools key).
     (no_extras_dir / "pyproject.toml").write_text("[tool.python-setup-lint]\n")
-
-    # pyproject with 10 extras (all parse_strategy="none" so no stats
-    # parse — the perf concern is the loader + merge startup).
     lines = ["[tool.python-setup-lint]"]
     for i in range(10):
         lines.append("[[tool.python-setup-lint.extra-tools]]")
@@ -785,226 +404,63 @@ def test_run_lint_with_extras_startup_overhead_within_10_percent(
         lines.append('parse_strategy = "none"')
     (extras_dir / "pyproject.toml").write_text("\n".join(lines) + "\n")
 
-    # Fast fake ``_run_cmd`` — no real subprocess; empty dict mode
-    # returns zero-exit ``LintResult`` for every tool label.
-    fake = fake_run_cmd_factory({})
-    monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+    monkeypatch.setattr(_runner_module, "_run_cmd", fake_run_cmd_factory({}))
 
-    # Multiple iterations to stabilise sub-ms wall-time measurements.
-    _N_ITER = 50
-
-    # ── Cold N=0 (no extras, cache cleared before each) ─────────
-    t_0_cold = 0.0
-    for _ in range(_N_ITER):
-        _reset_extra_tools_cache()
-        start = time.perf_counter()
-        run_lint(config=RunnerConfig(cwd=no_extras_dir), no_fail_fast=True)
-        t_0_cold += time.perf_counter() - start
-    t_0_cold /= _N_ITER
-
-    # ── Cold N=10 (10 extras, cache cleared before each) ──────
-    t_10_cold = 0.0
-    for _ in range(_N_ITER):
-        _reset_extra_tools_cache()
-        start = time.perf_counter()
-        run_lint(config=RunnerConfig(cwd=extras_dir), no_fail_fast=True)
-        t_10_cold += time.perf_counter() - start
-    t_10_cold /= _N_ITER
-
-    # ── Informational warm measurements (memo hot) ─────────────
-    # Discard first iteration as module-level cache warmup for N=0.
+    t_0_cold = _time_run_lint(no_extras_dir, clear_cache_each=True)
+    t_10_cold = _time_run_lint(extras_dir, clear_cache_each=True)
     _reset_extra_tools_cache()
     run_lint(config=RunnerConfig(cwd=no_extras_dir), no_fail_fast=True)
-
-    t_0_warm = 0.0
-    for _ in range(_N_ITER):
-        start = time.perf_counter()
-        run_lint(config=RunnerConfig(cwd=no_extras_dir), no_fail_fast=True)
-        t_0_warm += time.perf_counter() - start
-    t_0_warm /= _N_ITER
-
-    # Warm-up N=10 cache entry.
+    t_0_warm = _time_run_lint(no_extras_dir)
     _reset_extra_tools_cache()
     run_lint(config=RunnerConfig(cwd=extras_dir), no_fail_fast=True)
-
-    t_10_warm = 0.0
-    for _ in range(_N_ITER):
-        start = time.perf_counter()
-        run_lint(config=RunnerConfig(cwd=extras_dir), no_fail_fast=True)
-        t_10_warm += time.perf_counter() - start
-    t_10_warm /= _N_ITER
+    t_10_warm = _time_run_lint(extras_dir)
 
     warm_ratio = t_10_warm / t_0_warm
-    cold_ratio = t_10_cold / t_0_cold
-    print(f"\n[bench] cold: t_0={t_0_cold:.6f}s  t_10={t_10_cold:.6f}s  "
-          f"ratio={cold_ratio:.4f}  |  "
-          f"warm: t_0={t_0_warm:.6f}s  t_10={t_10_warm:.6f}s  "
-          f"ratio={warm_ratio:.4f}")
-    # Assert the WARM memoised path — cache reused both sides, so the
-    # ratio reflects pure memo lookup overhead regardless of N extras.
-    # < 1.10 ensures the cache-key lookup + registration-gate check stay
-    # sub-linear. Cold measurements printed for informational comparison
-    # only; cold ratio naturally exceeds 1.10 due to TOML parse + validate.
+    print(f"\n[bench] cold t_0={t_0_cold:.6f}s t_10={t_10_cold:.6f}s ratio={t_10_cold / t_0_cold:.4f} | "
+          f"warm t_0={t_0_warm:.6f}s t_10={t_10_warm:.6f}s ratio={warm_ratio:.4f}")
     assert warm_ratio < 1.10, (
-        f"warm t(N=10)/t(N=0) = {warm_ratio:.4f} >= 1.10 — memoised "
-        f"extras path may have non-linear overhead "
+        f"warm t(N=10)/t(N=0) = {warm_ratio:.4f} >= 1.10 — memoised extras path is non-linear "
         f"(t_0_warm={t_0_warm:.6f}s, t_10_warm={t_10_warm:.6f}s)"
     )
 
 
 # ── OBSERVABILITY ─────────────────────────────────────────────────
-# ``--statistics --format json`` + ``--statistics --format table``
-# output surfaces for extras: a non-``none`` ``parse_strategy`` extra's
-# ``{tool, rule, count}`` entries appear in the JSON + render in the
-# aligned table.  Uniform treatment across built-ins + extras (no
-# separate "extras" section — T8 R3 observably-additive contract).
 
 
 class TestExtraStatisticsObservability:
-    """Stats output surfaces for extras — JSON + table format."""
+    """Stats output surfaces for extras — JSON + table format + ``none`` skip."""
 
-    _EXTRA_BLOCK = (
-        'name = "regextool"\n'
-        'command = ["fake-regex-cli"]\n'
-        "supports_path = true\n"
-        'default_paths = []\n'
-        'parse_strategy = "regex_count"\n'
-        'parse_regex = "^(?P<rule>[A-Z]+[0-9]+): .*"\n'
-    )
-
-    def _setup(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-        """Write pyproject with ``regextool`` extra + monkeypatch ``_run_cmd``.
-
-        The fake returns a canned ``LintResult`` for ``regextool`` (2 RC1 +
-        1 RC2) and zero-exit empty results for all 11 built-ins (empty
-        stdout → parsers return ``[]``, so only the extra contributes rows).
-        """
-        pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text(
-            f"[tool.python-setup-lint]\n"
-            f"[[tool.python-setup-lint.extra-tools]]\n"
-            f"{self._EXTRA_BLOCK}"
-        )
-        _reset_extra_tools_cache()
-
+    @staticmethod
+    def _install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Write the ``regextool`` extra pyproject + monkeypatch fake ``_run_cmd``."""
+        write_pyproject(tmp_path,
+                        f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{EXTRA_OBSERV_BLOCK}")
         fake = fake_run_cmd_factory({
-            "regextool": make_lint_result(
-                tool_name="regextool",
-                exit_code=0,
-                stdout="RC1: bad line\nRC2: worse line\nRC1: another",
-            ),
-        })
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
-        return pyproject.resolve()
-
-    def test_statistics_format_json_includes_extra_rule_counts(
-        self,
-        tmp_path: Path,
-        capsys: pytest.CaptureFixture[str],
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """JSON output includes the extra's ``{tool, rule, count}`` entries."""
-        self._setup(tmp_path, monkeypatch)
-        rc = run_lint(
-            config=RunnerConfig(cwd=tmp_path),
-            no_fail_fast=True,
-            statistics=True,
-            statistics_format="json",
-        )
-        assert isinstance(rc, int)
-        captured = capsys.readouterr()
-        out = captured.out.strip()
-        assert out.startswith("["), (
-            f"expected JSON array as the entire stats output; got: {out!r}"
-        )
-        data = json.loads(out)
-        by_key = {(e["tool"], e["rule"]): e["count"] for e in data}
-        assert by_key[("regextool", "RC1")] == 2, (
-            f"regextool RC1 count wrong: got {by_key.get(('regextool', 'RC1'))}. "
-            f"Full data: {data}"
-        )
-        assert by_key.get(("regextool", "RC2")) == 1, (
-            f"regextool RC2 count wrong: got {by_key.get(('regextool', 'RC2'))}. "
-            f"Full data: {data}"
-        )
-
-    def test_statistics_format_table_renders_extra_in_aligned_table(
-        self,
-        tmp_path: Path,
-        capsys: pytest.CaptureFixture[str],
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """Table output contains the extra's tool, rules, and count strings."""
-        self._setup(tmp_path, monkeypatch)
-        rc = run_lint(
-            config=RunnerConfig(cwd=tmp_path),
-            no_fail_fast=True,
-            statistics=True,
-            statistics_format="table",
-        )
-        assert isinstance(rc, int)
-        captured = capsys.readouterr()
-        out = captured.out
-
-        # Assert the table header row is present (proves rendering path).
-        assert "VIOLATION STATISTICS" in out, (
-            f"expected table header 'VIOLATION STATISTICS'; got: {out!r}"
-        )
-        assert "Tool" in out and "Rule" in out and "Count" in out, (
-            f"expected column headers Tool/Rule/Count; got: {out!r}"
-        )
-
-        # Assert the extra's tool name, rule labels, and count values are
-        # in the table output (string-``in`` per envelope: don't parse
-        # exact spacing; assert token presence).
-        for token in ("regextool", "RC1", "RC2", "1", "2"):
-            assert token in out, (
-                f"expected token {token!r} in table output; got: {out!r}"
-            )
-
-    def test_statistics_skips_extra_with_parse_strategy_none(
-        self,
-        tmp_path: Path,
-        capsys: pytest.CaptureFixture[str],
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """``parse_strategy="none"`` extra runs but does NOT appear in stats."""
-        pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text(
-            "[tool.python-setup-lint]\n"
-            "[[tool.python-setup-lint.extra-tools]]\n"
-            'name = "nonestattool"\n'
-            'command = ["fake-none-cli"]\n'
-            "supports_path = true\n"
-            'default_paths = []\n'
-            'parse_strategy = "none"\n'
-        )
-        _reset_extra_tools_cache()
-        fake = fake_run_cmd_factory({
-            "nonestattool": make_lint_result(
-                tool_name="nonestattool",
-                exit_code=0,
-                stdout="RC1: would be counted but strategy=none\n",
+            EXTRA_OBSERV_NAME: make_lint_result(
+                tool_name=EXTRA_OBSERV_NAME, exit_code=0, stdout=EXTRA_OBSERV_STDOUT,
             ),
         })
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
 
-        rc = run_lint(
-            config=RunnerConfig(cwd=tmp_path),
-            no_fail_fast=True,
-            statistics=True,
-            statistics_format="json",
-        )
+    @pytest.mark.parametrize("fmt", ["json", "table"])
+    def test_extra_rule_counts_surface_in_statistics_output(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, fmt: str,
+    ) -> None:
+        """JSON + table output both surface the extra's ``{tool, rule, count}`` triples."""
+        self._install(tmp_path, monkeypatch)
+        rc = run_lint(config=RunnerConfig(cwd=tmp_path), no_fail_fast=True,
+                      statistics=True, statistics_format=fmt)
         assert isinstance(rc, int)
-        captured = capsys.readouterr()
-        out = captured.out.strip()
-        assert out.startswith("["), (
-            f"expected JSON array; got: {out!r}"
-        )
-        data = json.loads(out)
-        # None of the entries should reference nonestattool.
-        none_entries = [e for e in data if e.get("tool") == "nonestattool"]
-        assert none_entries == [], (
-            f"parse_strategy=none extra must not contribute stats rows; "
-            f"got: {none_entries}. Full aggregate: {data}"
-        )
+        out = capsys.readouterr().out.strip()
+        if fmt == "json":
+            by_key = {(e["tool"], e["rule"]): e["count"] for e in json.loads(out)}
+            assert by_key[("regextool", "RC1")] == 2, f"RC1 wrong: {by_key}. Full: {out}"
+            assert by_key.get(("regextool", "RC2")) == 1, f"RC2 wrong: {by_key}. Full: {out}"
+        else:
+            assert "VIOLATION STATISTICS" in out
+            for token in ("regextool", "RC1", "RC2", "1", "2"):
+                assert token in out, f"expected {token!r} in table output\n{out}"
+
+
+# ``parse_strategy="none"`` observability skip is exercised by
+# ``test_extra_downstream_pipeline[parse_strategy_none_skips_aggregate]``.

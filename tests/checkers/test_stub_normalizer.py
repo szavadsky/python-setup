@@ -7,112 +7,81 @@ Exercises Phase 1 (inference), Phase 2 (AST walking), and rewrite rules.
 from __future__ import annotations
 
 import astroid
+import pytest
 
 from python_setup_lint.checkers.stub_normalizer import AnnotationNormalizer
 
+from tests.checkers._factories import (
+    _APPLY_REWRITES_CASES,
+    _AST_STRING_CASES,
+    _NORMALIZER_INFER_CASES,
+    _SPLIT_OUTER_COMMAS_CASES,
+)
 
-class TestAnnotationNormalizer:
-    """Two-phase normalization: infer → string-walking fallback."""
 
-    # ── Phase 1: infer() ──────────────────────────────────────────────────────
+# ── infer() phase ──────────────────────────────────────────────────
 
-    def test_infer_simple_name(self):
-        module = astroid.parse("x: str", module_name="test_mod")
-        ann = module.body[0].annotation
-        result = AnnotationNormalizer.normalize(ann)
-        assert result == "str"
 
-    def test_infer_builtin_list(self):
-        module = astroid.parse("x: list[int]", module_name="test_mod")
-        ann = module.body[0].annotation
-        result = AnnotationNormalizer.normalize(ann)
-        assert result == "list[int]"
+@pytest.mark.parametrize("code, expected", _NORMALIZER_INFER_CASES)
+def test_normalize_infer(code: str, expected: str | None) -> None:
+    """Phase-1 ``AnnotationNormalizer.normalize`` returns the expected string.
 
-    def test_infer_native_union(self):
-        module = astroid.parse("x: str | None", module_name="test_mod")
-        ann = module.body[0].annotation
-        result = AnnotationNormalizer.normalize(ann)
-        assert result == "str | None"
+    For the uninferable forward-ref row ``expected is None`` selects the
+    postcondition: assertion is ``result is not None`` (inference succeeds).
+    Otherwise plain equality against ``expected``.
+    """
+    module = astroid.parse(code, module_name="test_mod")
+    ann = module.body[0].annotation
+    result = AnnotationNormalizer.normalize(ann)
+    if expected is None:
+        assert result is not None, f"inference of {code!r} should not return None"
+    else:
+        assert result == expected, f"normalize({code!r}) = {result!r} (expected {expected!r})"
 
-    def test_infer_returns_none_for_uninferable(self):
-        module = astroid.parse("x: 'SomeFutureType'", module_name="test_mod")
-        ann = module.body[0].annotation
-        result = AnnotationNormalizer.normalize(ann)
-        assert result is not None
 
-    # ── Phase 2: AST-string walking ───────────────────────────────────────────
+# ── AST-string walking (Phase 2) ────────────────────────────────────
 
-    def test_ast_string_subscript(self):
-        module = astroid.parse("x: list[str]", module_name="test_mod")
-        ann = module.body[0].annotation
-        result = AnnotationNormalizer._ast_string(ann)
-        assert result is not None
-        assert "list" in result
 
-    def test_ast_string_binary_op_union(self):
-        module = astroid.parse("x: int | str", module_name="test_mod")
-        ann = module.body[0].annotation
-        result = AnnotationNormalizer._ast_string(ann)
-        assert result == "int | str"
+def _ann_from_code(code: str):
+    """Parse ``x: <ann>`` and return the annotation node of body[0]."""
+    module = astroid.parse(code, module_name="test_mod")
+    return module.body[0].annotation
 
-    def test_ast_string_attribute(self):
-        node = astroid.extract_node("x: typing.Optional[str]")
-        ann = node.annotation
-        result = AnnotationNormalizer._ast_string(ann)
-        assert result is not None
-        assert "typing.Optional" in result
 
-    def test_ast_string_tuple(self):
-        module = astroid.parse("x: tuple[int, str]", module_name="test_mod")
-        ann = module.body[0].annotation
-        result = AnnotationNormalizer._ast_string(ann)
-        assert result is not None
+@pytest.mark.parametrize("code, expected, assert_mode", _AST_STRING_CASES)
+def test_ast_string(code: str, expected: list[str] | None, assert_mode: str) -> None:
+    """Phase-2 ``AnnotationNormalizer._ast_string`` walks and stringifies the node.
 
-    def test_ast_string_const(self):
-        module = astroid.parse("x: Literal['hello']", module_name="test_mod")
-        ann = module.body[0].annotation
-        result = AnnotationNormalizer._ast_string(ann)
-        assert result is not None
-        assert "hello" in result
+    Three modes (per row):
+      - ``not_none``  — assert ``result is not None`` (no equality check).
+      - ``equals``    — assert ``result == expected[0]`` (exact string match).
+      - ``contains``  — assert every substring in ``expected`` is in ``result``.
+    """
+    result = AnnotationNormalizer._ast_string(_ann_from_code(code))
+    if assert_mode == "not_none":
+        assert result is not None, f"_ast_string({code!r}) returned None"
+    elif assert_mode == "equals":
+        assert result == expected[0], f"_ast_string({code!r}) = {result!r} (expected {expected[0]!r})"
+    elif assert_mode == "contains":
+        assert result is not None, f"_ast_string({code!r}) returned None"
+        for needle in expected or []:
+            assert needle in result, f"substring {needle!r} missing from {result!r}"
+    else:  # pragma: no cover - defensive
+        raise AssertionError(f"unknown assert_mode {assert_mode!r}")
 
-    def test_ast_string_nested_subscript(self):
-        module = astroid.parse("x: dict[str, list[int]]", module_name="test_mod")
-        ann = module.body[0].annotation
-        result = AnnotationNormalizer._ast_string(ann)
-        assert result is not None
-        assert "dict" in result
-        assert "list" in result
 
-    # ── Rewrite rules ─────────────────────────────────────────────────────────
+# ── _apply_rewrites rewrite rules ──────────────────────────────────
 
-    def test_rewrite_typing_list(self):
-        result = AnnotationNormalizer._apply_rewrites("typing.List[str]")
-        assert result == "list[str]"
 
-    def test_rewrite_typing_dict(self):
-        result = AnnotationNormalizer._apply_rewrites("typing.Dict[str, int]")
-        assert result == "dict[str, int]"
+@pytest.mark.parametrize("input_str, expected", _APPLY_REWRITES_CASES)
+def test_apply_rewrites(input_str: str, expected: str) -> None:
+    assert AnnotationNormalizer._apply_rewrites(input_str) == expected
 
-    def test_rewrite_typing_optional(self):
-        result = AnnotationNormalizer._apply_rewrites("typing.Optional[str]")
-        assert result == "str | None"
 
-    def test_rewrite_typing_union(self):
-        result = AnnotationNormalizer._apply_rewrites("typing.Union[str, int]")
-        assert result == "str | int"
+# ── _split_outer_commas ────────────────────────────────────────────
 
-    def test_rewrite_typing_union_nested_generic(self):
-        result = AnnotationNormalizer._apply_rewrites("typing.Union[list[str], int]")
-        assert result == "list[str] | int"
 
-    def test_rewrite_no_match_passes_through(self):
-        result = AnnotationNormalizer._apply_rewrites("collections.abc.Callable")
-        assert result == "collections.abc.Callable"
-
-    def test_split_outer_commas_simple(self):
-        parts = AnnotationNormalizer._split_outer_commas("str, int, float")
-        assert parts == ["str", "int", "float"]
-
-    def test_split_outer_commas_with_brackets(self):
-        parts = AnnotationNormalizer._split_outer_commas("list[str], int")
-        assert parts == ["list[str]", "int"]
+@pytest.mark.parametrize("input_str, expected_parts", _SPLIT_OUTER_COMMAS_CASES)
+def test_split_outer_commas(input_str: str, expected_parts: list[str]) -> None:
+    parts = AnnotationNormalizer._split_outer_commas(input_str)
+    assert parts == expected_parts
