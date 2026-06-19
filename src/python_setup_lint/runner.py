@@ -48,6 +48,8 @@ class ToolSpec(NamedTuple):
         supports_path: Whether the tool accepts a positional path.
         supports_exclude: Whether the tool accepts ``--exclude`` / ``-e``.
         default_paths: Paths to use when no ``--path`` is given.
+        fix_flags: Extra CLI flags to append when ``--fix`` is active.
+        exclude_flag: CLI flag name for exclusion (default ``--exclude``).
     """
 
     name: str
@@ -56,6 +58,8 @@ class ToolSpec(NamedTuple):
     supports_path: bool = False
     supports_exclude: bool = False
     default_paths: list[str] = []
+    fix_flags: tuple[str, ...] = ("--fix",)
+    exclude_flag: str = "--exclude"
 
 @dataclass
 class LintResult:
@@ -121,7 +125,7 @@ class RunnerConfig:
 # ── Tool definitions ────────────────────────────────────────────────
 
 TOOLS: list[ToolSpec] = [
-    ToolSpec("tach check", ["tach", "check"], supports_exclude=True),
+    ToolSpec("tach check", ["tach", "check"], supports_exclude=True, exclude_flag="-e"),
     ToolSpec(
         "ruff check",
         ["ruff", "check"],
@@ -129,6 +133,7 @@ TOOLS: list[ToolSpec] = [
         supports_path=True,
         supports_exclude=True,
         default_paths=["src/", "tests/"],
+        fix_flags=("--fix", "--exit-non-zero-on-fix"),
     ),
     ToolSpec(
         "rumdl check",
@@ -136,6 +141,7 @@ TOOLS: list[ToolSpec] = [
         supports_fix=True,
         supports_path=True,
         supports_exclude=True,
+        fix_flags=("--fix",),
     ),
     ToolSpec(
         "mypy",
@@ -155,6 +161,7 @@ TOOLS: list[ToolSpec] = [
         supports_fix=True,
         supports_path=True,
         supports_exclude=True,
+        fix_flags=("--fix",),
     ),
     ToolSpec(
         "mypy.stubtest",
@@ -258,8 +265,140 @@ class LintTool:
         return parser(stdout, stderr)
 
 
+# ── Per-tool strategy subclasses ─────────────────────────────────
+# Three built-in tools have fundamentally different command shapes that
+# cannot be expressed via ToolSpec declarative fields alone.  Each
+# overrides ``build_command`` with tool-specific logic, eliminating
+# ``if spec.name ==`` branches from ``_build_command``.
+
+
+class _StubtestLintTool(LintTool):
+    """Strategy for ``mypy.stubtest`` — builds command from ``package_name`` + optional allowlist."""
+
+    def build_command(
+        self,
+        *,
+        config: RunnerConfig,
+        fix: bool = False,
+        path: str | None = None,
+        exclude: str | None = None,
+    ) -> list[str]:
+        spec = self.spec
+        cwd = config.cwd
+        cmd = list(spec.command)
+        config_paths = config.config_paths or {}
+        mypy_config = config_paths.get("mypy")
+        cmd.extend(
+            [
+                config.package_name,
+                "--concise",
+                "--ignore-missing-stub",
+                "--mypy-config-file",
+                str(mypy_config) if mypy_config is not None else "pyproject.toml",
+            ]
+        )
+        allowlist_path = cwd / "stubtest_allowlist.txt"
+        if allowlist_path.exists():
+            cmd.extend(["--allowlist", "stubtest_allowlist.txt"])
+        return cmd
+
+
+class _VerifyTypesLintTool(LintTool):
+    """Strategy for ``pyright verify types`` — builds command from ``package_name`` + optional project."""
+
+    def build_command(
+        self,
+        *,
+        config: RunnerConfig,
+        fix: bool = False,
+        path: str | None = None,
+        exclude: str | None = None,
+    ) -> list[str]:
+        spec = self.spec
+        cmd = list(spec.command)
+        config_paths = config.config_paths or {}
+        pyright_config = config_paths.get("pyright check")
+        cmd.extend([config.package_name, "--ignoreexternal", "--outputjson"])
+        if pyright_config is not None:
+            cmd.extend(["--project", str(pyright_config)])
+        return cmd
+
+
+class _DetectSecretsLintTool(LintTool):
+    """Strategy for ``detect-secrets`` — wraps in ``bash -c`` pipeline over git-ls-files."""
+
+    def build_command(
+        self,
+        *,
+        config: RunnerConfig,
+        fix: bool = False,
+        path: str | None = None,
+        exclude: str | None = None,
+    ) -> list[str]:
+        spec = self.spec
+        _ = path, fix, exclude
+        return ["bash", "-c", f"git ls-files -z | xargs -0 {' '.join(spec.command)} --baseline {config.secrets_baseline}"]
+
+
+class _PylintLintTool(LintTool):
+    """Strategy for ``pylint`` — always resolves ``_find_py_files()`` for path expansion.
+
+    Pylint expects file arguments, not directory paths.  Unlike other tools
+    that accept a directory and recurse internally, pylint needs an explicit
+    list of ``.py`` files.  This strategy always calls ``_find_py_files``
+    regardless of whether ``spec.default_paths`` is empty, ensuring pylint
+    never runs with an empty file list.
+    """
+
+    def build_command(
+        self,
+        *,
+        config: RunnerConfig,
+        fix: bool = False,
+        path: str | None = None,
+        exclude: str | None = None,
+    ) -> list[str]:
+        spec = self.spec
+        cmd = list(spec.command)
+        config_paths = config.config_paths or {}
+
+        # ── Shared config files ───────────────────────────────
+        cmd.extend(_config_flag_for(spec.name, config_paths.get(spec.name)))
+
+        # ── Fix flags ────────────────────────────────────────
+        if fix and spec.supports_fix:
+            cmd.extend(spec.fix_flags)
+
+        # ── Path scoping — always expand to .py files ────────
+        if path is not None:
+            paths = _find_py_files([path], cwd=config.cwd)
+        else:
+            paths = _find_py_files(config.default_py_dirs, cwd=config.cwd)
+
+        # Expand globs (e.g. config/*.yaml)
+        paths = _expand_globs(paths, cwd=config.cwd)
+
+        if paths:
+            cmd.extend(paths)
+
+        # ── Exclude flags ────────────────────────────────────
+        if exclude is not None and spec.supports_exclude:
+            cmd.extend([spec.exclude_flag, exclude])
+
+        return cmd
+
+
 # Populate the strategy registry from the 11 built-ins.
-STRATEGIES: dict[str, LintTool] = {spec.name: LintTool(spec) for spec in TOOLS}
+_STRATEGY_CLASSES: dict[str, type[LintTool]] = {
+    "mypy.stubtest": _StubtestLintTool,
+    "pyright verify types": _VerifyTypesLintTool,
+    "detect-secrets": _DetectSecretsLintTool,
+    "pylint": _PylintLintTool,
+}
+STRATEGIES: dict[str, LintTool] = {
+    spec.name: (_STRATEGY_CLASSES.get(spec.name) or LintTool)(spec)
+    for spec in TOOLS
+}
 
 
 class GenericLintTool(LintTool):
@@ -908,65 +1047,21 @@ def _build_command(
 
 ## Build the full command list for a tool spec given runtime flags
 
-## When ``config_flag_override`` is provided (T11 extras declare their own
-
-## flag list at registration), it is emitted — in the same position as the
-
-## built-in dict-derived flag — followed by the config path from
-
-## ``config.config_paths[spec.name]``.  ``None`` preserves the legacy
-
-## ``_config_flag_for`` lookup for the 11 built-ins (byte-equivalent).
-
     cwd = config.cwd
     cmd = list(spec.command)
     config_paths = config.config_paths or {}
 
-    # ── Runtime-constructed commands ───────────────────────────
-    if spec.name == "mypy.stubtest" and config.package_name is not None:
-        mypy_config = config_paths.get("mypy")
-        cmd.extend(
-            [
-                config.package_name,
-                "--concise",
-                "--ignore-missing-stub",
-                "--mypy-config-file",
-                str(mypy_config) if mypy_config is not None else "pyproject.toml",
-            ]
-        )
-        allowlist_path = cwd / "stubtest_allowlist.txt"
-        if allowlist_path.exists():
-            cmd.extend(["--allowlist", "stubtest_allowlist.txt"])
-    elif spec.name == "pyright verify types" and config.package_name is not None:
-        pyright_config = config_paths.get("pyright check")
-        cmd.extend([config.package_name, "--ignoreexternal", "--outputjson"])
-        if pyright_config is not None:
-            cmd.extend(["--project", str(pyright_config)])
-    elif spec.name == "detect-secrets":
-        cmd = ["bash", "-c", f"git ls-files -z | xargs -0 detect-secrets-hook --baseline {config.secrets_baseline}"]
-
     # ── Shared config files ───────────────────────────────────
     if config_flag_override is not None:
-        # T11 extra: emit the declarative ``config_flag`` + the path under the
-        # extra's name.  ``None`` for the path means the extra didn't get a
-        # config-bound file → no flag emitted (matches built-in shape).
         extra_cfg = config_paths.get(spec.name)
         if extra_cfg is not None:
             cmd.extend([*config_flag_override, str(extra_cfg)])
     else:
         cmd.extend(_config_flag_for(spec.name, config_paths.get(spec.name)))
 
-    # ── Fix flags ──────────────────────────────────────────────
+    # ── Fix flags (data-driven via ToolSpec.fix_flags) ────────
     if fix and spec.supports_fix:
-        if spec.name == "ruff check":
-            cmd.extend(["--fix", "--exit-non-zero-on-fix"])
-        elif spec.name in ("rumdl check", "ty check"):
-            cmd.append("--fix")
-        else:
-            # T11 extra or any future tool with ``supports_fix=True``: the
-            # declarative contract is ``--fix`` (the 3 built-ins above are
-            # the only special-cased names; extras just get the bare flag).
-            cmd.append("--fix")
+        cmd.extend(spec.fix_flags)
 
     # ── Path scoping ───────────────────────────────────────────
     paths: list[str] = []
@@ -975,22 +1070,15 @@ def _build_command(
     elif spec.default_paths:
         paths = list(spec.default_paths)
 
-    # Expand path to .py file list for pylint (it expects file args)
-    if spec.name == "pylint":
-        paths = _find_py_files([path], cwd=cwd) if path is not None else _find_py_files(config.default_py_dirs, cwd=cwd)
-
     # Expand globs (e.g. config/*.yaml)
     paths = _expand_globs(paths, cwd=cwd)
 
     if paths:
         cmd.extend(paths)
 
-    # ── Exclude flags ──────────────────────────────────────────
+    # ── Exclude flags (data-driven via ToolSpec.exclude_flag) ─
     if exclude is not None and spec.supports_exclude:
-        if spec.name == "tach check":
-            cmd.extend(["-e", exclude])
-        else:
-            cmd.extend(["--exclude", exclude])
+        cmd.extend([spec.exclude_flag, exclude])
 
     return cmd
 
@@ -1343,6 +1431,82 @@ def _print_statistics_table(counts: list[ViolationCount]) -> None:
     for v in counts:
         print(f"{v.tool:<20} {v.rule:<30} {v.count:>6}")
 
+def _sort_counts(
+    counts: list[ViolationCount],
+    *,
+    sort_by_rule: bool = False,
+) -> list[ViolationCount]:
+    """Return *counts* in the requested sort order.
+
+    Default sort (``sort_by_rule=False``): count descending, then tool, then rule.
+    ``sort_by_rule=True``: rule ascending, then tool, then count descending.
+    """
+    if sort_by_rule:
+        return sorted(counts, key=lambda v: (v.rule, v.tool, -v.count))
+    return sorted(counts)
+
+def _print_statistics_grouped(
+    counts: list[ViolationCount],
+    *,
+    group: str = "tool",
+    sort_by_rule: bool = False,
+) -> None:
+    """Print violation counts grouped by *group* key.
+
+    * ``"tool"`` — section per tool.
+    * ``"rule"`` — section per rule, showing per-tool counts.
+    * ``"file"`` — same layout as ``"tool"`` (no per-file data in statistics).
+    """
+    if not counts:
+        print("\nNo violations found.")
+        return
+
+    sorted_counts = _sort_counts(counts, sort_by_rule=sort_by_rule)
+
+    if group in ("tool", "file"):
+        # Group by tool
+        from itertools import groupby
+
+        by_tool: dict[str, list[ViolationCount]] = {}
+        for v in sorted_counts:
+            by_tool.setdefault(v.tool, []).append(v)
+
+        print(f"\n{'=' * 60}")
+        print("VIOLATION STATISTICS (grouped by tool)")
+        print(f"{'=' * 60}")
+        total = 0
+        for tool_name, entries in by_tool.items():
+            print(f"\n  [{tool_name}]")
+            for v in entries:
+                print(f"    {v.rule:<30} {v.count:>6}")
+                total += v.count
+            print(f"    {'─' * 38}")
+            print(f"    {'Subtotal':<30} {sum(e.count for e in entries):>6}")
+        print(f"\n{'─' * 60}")
+        print(f"{'Total':<30} {total:>6}")
+
+    elif group == "rule":
+        # Group by rule
+        from itertools import groupby
+
+        by_rule: dict[str, list[ViolationCount]] = {}
+        for v in sorted_counts:
+            by_rule.setdefault(v.rule, []).append(v)
+
+        print(f"\n{'=' * 60}")
+        print("VIOLATION STATISTICS (grouped by rule)")
+        print(f"{'=' * 60}")
+        total = 0
+        for rule, entries in by_rule.items():
+            print(f"\n  [{rule}]")
+            for v in entries:
+                print(f"    {v.tool:<20} {v.count:>6}")
+                total += v.count
+            print(f"    {'─' * 28}")
+            print(f"    {'Subtotal':<20} {sum(e.count for e in entries):>6}")
+        print(f"\n{'─' * 60}")
+        print(f"{'Total':<30} {total:>6}")
+
 ## ── Subprocess runner ──────────────────────────────────────────────
 
 def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
@@ -1652,6 +1816,8 @@ def run_lint(
     statistics: bool = False,
     statistics_format: str = "table",
     overwrite_baseline: bool = False,
+    group: str = "none",
+    sort_by_rule: bool = False,
 ) -> int:
 
 ## Run the full lint pipeline
@@ -1736,7 +1902,11 @@ def run_lint(
                     indent=2,
                 )
             )
+        elif group != "none":
+            _print_statistics_grouped(vcounts, group=group, sort_by_rule=sort_by_rule)
         else:
+            if sort_by_rule:
+                vcounts = _sort_counts(vcounts, sort_by_rule=True)
             _print_statistics_table(vcounts)
 
     # ── Baseline handling ──────────────────────────────────────
@@ -1819,6 +1989,17 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
         help="Output format for --statistics (default: table)",
     )
     parser.add_argument(
+        "--group",
+        choices=("none", "rule", "tool", "file"),
+        default="none",
+        help="Group statistics output by tool, rule, or file (default: none)",
+    )
+    parser.add_argument(
+        "--sort-by-rule",
+        action="store_true",
+        help="Sort statistics output by rule name instead of count",
+    )
+    parser.add_argument(
         "--package-name",
         metavar="PKG",
         help="Package name for mypy.stubtest + pyright verifytypes",
@@ -1882,6 +2063,8 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
         overwrite_baseline=args.overwrite_baseline,
         statistics=args.statistics,
         statistics_format=args.format,
+        group=args.group,
+        sort_by_rule=args.sort_by_rule,
     )
 
 if __name__ == "__main__":

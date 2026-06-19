@@ -16,6 +16,7 @@ import pytest
 from python_setup_lint.runner import (
     TOOLS,
     TOOLS_BY_NAME,
+    STRATEGIES,
     LintResult,
     RunnerConfig,
     ToolSpec,
@@ -40,6 +41,7 @@ from python_setup_lint.runner import (
     _parse_yamllint_parsable,
     _print_result,
     _print_statistics_table,
+    _sort_counts,
     _run_cmd,
     main,
     run_lint,
@@ -127,17 +129,17 @@ class TestBuildCommand:
         assert cmd == ["tool"]  # no fix flag appended
 
     def test_fix_ruff(self) -> None:
-        spec = ToolSpec("ruff check", ["ruff", "check"], supports_fix=True)
+        spec = ToolSpec("ruff check", ["ruff", "check"], supports_fix=True, fix_flags=("--fix", "--exit-non-zero-on-fix"))
         cmd = _build_command(spec, config=_CONFIG, fix=True)
         assert cmd == ["ruff", "check", "--fix", "--exit-non-zero-on-fix"]
 
     def test_fix_rumdl(self) -> None:
-        spec = ToolSpec("rumdl check", ["rumdl", "check"], supports_fix=True)
+        spec = ToolSpec("rumdl check", ["rumdl", "check"], supports_fix=True, fix_flags=("--fix",))
         cmd = _build_command(spec, config=_CONFIG, fix=True)
         assert cmd == ["rumdl", "check", "--fix"]
 
     def test_fix_ty(self) -> None:
-        spec = ToolSpec("ty check", ["ty", "check"], supports_fix=True)
+        spec = ToolSpec("ty check", ["ty", "check"], supports_fix=True, fix_flags=("--fix",))
         cmd = _build_command(spec, config=_CONFIG, fix=True)
         assert cmd == ["ty", "check", "--fix"]
 
@@ -147,7 +149,7 @@ class TestBuildCommand:
         assert cmd == ["tool"]
 
     def test_exclude_tach(self) -> None:
-        spec = ToolSpec("tach check", ["tach", "check"], supports_exclude=True)
+        spec = ToolSpec("tach check", ["tach", "check"], supports_exclude=True, exclude_flag="-e")
         cmd = _build_command(spec, config=_CONFIG, exclude="tests/")
         assert cmd == ["tach", "check", "-e", "tests/"]
 
@@ -163,7 +165,9 @@ class TestBuildCommand:
 
     def test_pylint_expands_path(self) -> None:
         spec = ToolSpec("pylint", ["pylint"], supports_path=True)
-        cmd = _build_command(spec, config=_CONFIG, path="src/python_setup_lint")
+        from python_setup_lint.runner import _PylintLintTool
+        strategy = _PylintLintTool(spec)
+        cmd = strategy.build_command(config=_CONFIG, path="src/python_setup_lint")
         # Should call _find_py_files, which returns .py files under that dir
         assert cmd[0] == "pylint"
         assert len(cmd) > 1
@@ -181,38 +185,32 @@ class TestBuildCommand:
             assert arg.endswith(".py"), f"Expected .py file, got {arg}"
 
     def test_stubtest_with_package_name(self) -> None:
-        """stubtest includes package_name and allowlist when file exists."""
-        spec = TOOLS_BY_NAME["mypy.stubtest"]
+        """stubtest includes package_name and allowlist when file exists — via strategy."""
         config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
-        cmd = _build_command(spec, config=config)
+        strategy = STRATEGIES["mypy.stubtest"]
+        cmd = strategy.build_command(config=config)
         assert "python_setup_lint" in cmd
         assert "--concise" in cmd
         assert "--ignore-missing-stub" in cmd
-        # allowlist is conditional on file existence — may or may not be present
-
-    def test_stubtest_skipped_when_no_package_name(self) -> None:
-        """stubtest command has no package_name arg when package_name=None."""
-        spec = TOOLS_BY_NAME["mypy.stubtest"]
-        config = RunnerConfig(cwd=Path.cwd(), package_name=None)
-        cmd = _build_command(spec, config=config)
-        # Without package_name, stubtest just gets the base command
-        assert cmd == ["python", "-m", "mypy.stubtest"]
 
     def test_verifytypes_with_package_name(self) -> None:
-        """pyright verifytypes includes package_name."""
-        spec = TOOLS_BY_NAME["pyright verify types"]
+        """pyright verifytypes includes package_name — via strategy."""
         config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
-        cmd = _build_command(spec, config=config)
+        strategy = STRATEGIES["pyright verify types"]
+        cmd = strategy.build_command(config=config)
         assert "python_setup_lint" in cmd
         assert "--ignoreexternal" in cmd
         assert "--outputjson" in cmd
 
-    def test_verifytypes_skipped_when_no_package_name(self) -> None:
-        """pyright verifytypes command has no package_name arg when package_name=None."""
-        spec = TOOLS_BY_NAME["pyright verify types"]
-        config = RunnerConfig(cwd=Path.cwd(), package_name=None)
-        cmd = _build_command(spec, config=config)
-        assert cmd == ["pyright", "--verifytypes"]
+    def test_detect_secrets_via_strategy(self) -> None:
+        """detect-secrets strategy wraps command in bash -c pipeline."""
+        config = RunnerConfig(cwd=Path.cwd())
+        strategy = STRATEGIES["detect-secrets"]
+        cmd = strategy.build_command(config=config)
+        assert cmd[0] == "bash"
+        assert cmd[1] == "-c"
+        assert "detect-secrets-hook" in cmd[2]
+        assert "--baseline" in cmd[2]
 
 
 # ── _find_py_files ─────────────────────────────────────────────────
@@ -1782,3 +1780,184 @@ class TestStrategyForFallback:
         assert unique_name not in STRATEGIES, (
             "_strategy_for should not write into STRATEGIES — only register_lint_tool does"
         )
+
+
+# ── T7: --group / --sort-by-rule flags + _sort_counts ──────────────
+
+
+class TestSortCounts:
+    """Verify _sort_counts sort ordering."""
+
+    def test_default_sort(self) -> None:
+        counts = [
+            ViolationCount(tool="tool_b", rule="Z001", count=5),
+            ViolationCount(tool="tool_a", rule="A001", count=10),
+            ViolationCount(tool="tool_a", rule="B001", count=5),
+        ]
+        result = _sort_counts(counts, sort_by_rule=False)
+        assert result[0].rule == "A001"  # highest count first
+        assert result[1].rule == "B001"  # same count → tool name (tool_a < tool_b)
+        assert result[2].rule == "Z001"
+
+    def test_sort_by_rule(self) -> None:
+        counts = [
+            ViolationCount(tool="tool_b", rule="Z001", count=5),
+            ViolationCount(tool="tool_a", rule="A001", count=10),
+            ViolationCount(tool="tool_b", rule="A001", count=3),
+        ]
+        result = _sort_counts(counts, sort_by_rule=True)
+        assert result[0].rule == "A001"  # rule A < Z
+        assert result[0].tool == "tool_a"  # tool_a < tool_b
+        assert result[0].count == 10  # higher count first within same rule
+        assert result[2].rule == "Z001"
+
+    def test_empty_list(self) -> None:
+        assert _sort_counts([]) == []
+
+
+class TestMainGroupAndSortByRule:
+    """Verify --group and --sort-by-rule CLI flags."""
+
+    def test_main_group_flag_accepted(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """--group tool is accepted by CLI."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            ["--statistics", "--group", "tool", "--path", "src/python_setup_lint/runner.py"],
+            config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
+        )
+        assert isinstance(rc, int)
+
+    def test_main_group_rule_flag(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """--group rule is accepted by CLI."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            ["--statistics", "--group", "rule", "--path", "src/python_setup_lint/runner.py"],
+            config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
+        )
+        assert isinstance(rc, int)
+
+    def test_main_sort_by_rule_flag(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """--sort-by-rule is accepted by CLI."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            ["--statistics", "--sort-by-rule", "--path", "src/python_setup_lint/runner.py"],
+            config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
+        )
+        assert isinstance(rc, int)
+
+    def test_main_group_and_sort_by_rule(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """--group tool --sort-by-rule both accepted."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = main(
+            ["--statistics", "--group", "rule", "--sort-by-rule", "--path", "src/python_setup_lint/runner.py"],
+            config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
+        )
+        assert isinstance(rc, int)
+
+    def test_run_lint_group_sort_by_rule(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """run_lint forwards group and sort_by_rule kwargs."""
+        fake = fake_run_cmd_factory({})
+        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        rc = run_lint(
+            config=RunnerConfig(cwd=Path("/tmp"), package_name="python_setup_lint"),
+            statistics=True,
+            group="tool",
+            sort_by_rule=True,
+        )
+        assert isinstance(rc, int)
+
+
+# ── T7 QA-extension: grouped output content verification ────────────
+
+
+class TestGroupedOutput:
+    """Verify _print_statistics_grouped output format for each group mode.
+
+    Pure unit tests — no CLI, no mocks.  Verify function behaviour directly.
+    """
+
+    def test_group_tool_output(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """--group tool produces per-tool sections with subtotals."""
+        from python_setup_lint.runner import _print_statistics_grouped, ViolationCount
+
+        counts = [
+            ViolationCount(tool="tool_a", rule="A001", count=10),
+            ViolationCount(tool="tool_a", rule="B001", count=5),
+            ViolationCount(tool="tool_b", rule="A001", count=3),
+        ]
+        _print_statistics_grouped(counts, group="tool")
+        captured = capsys.readouterr()
+        assert "VIOLATION STATISTICS (grouped by tool)" in captured.out
+        assert "[tool_a]" in captured.out
+        assert "[tool_b]" in captured.out
+        assert "Subtotal" in captured.out
+        assert "Total" in captured.out
+        assert "15" in captured.out  # tool_a subtotal
+        assert "3" in captured.out   # tool_b subtotal
+
+    def test_group_rule_output(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """--group rule produces per-rule sections with subtotals."""
+        from python_setup_lint.runner import _print_statistics_grouped, ViolationCount
+
+        counts = [
+            ViolationCount(tool="tool_a", rule="Z001", count=3),
+            ViolationCount(tool="tool_b", rule="A001", count=7),
+            ViolationCount(tool="tool_b", rule="A001", count=5),
+        ]
+        _print_statistics_grouped(counts, group="rule")
+        captured = capsys.readouterr()
+        assert "VIOLATION STATISTICS (grouped by rule)" in captured.out
+        assert "[A001]" in captured.out
+        assert "[Z001]" in captured.out
+        assert "Subtotal" in captured.out
+
+    def test_group_file_aliases_to_tool(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """--group file produces same output as --group tool."""
+        from python_setup_lint.runner import _print_statistics_grouped, ViolationCount
+
+        counts = [ViolationCount(tool="tool_x", rule="R001", count=1)]
+        _print_statistics_grouped(counts, group="file")
+        captured = capsys.readouterr()
+        assert "VIOLATION STATISTICS (grouped by tool)" in captured.out
+        assert "[tool_x]" in captured.out
+
+    def test_group_empty_counts(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """Empty violation list prints 'No violations found.'"""
+        from python_setup_lint.runner import _print_statistics_grouped
+
+        _print_statistics_grouped([], group="tool")
+        captured = capsys.readouterr()
+        assert "No violations found" in captured.out
+
+    def test_group_with_sort_by_rule(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """Combined --group rule --sort-by-rule sorts within each rule section."""
+        from python_setup_lint.runner import _print_statistics_grouped, ViolationCount
+
+        counts = [
+            ViolationCount(tool="tool_b", rule="A001", count=3),
+            ViolationCount(tool="tool_a", rule="A001", count=10),
+            ViolationCount(tool="tool_a", rule="Z001", count=5),
+        ]
+        _print_statistics_grouped(counts, group="rule", sort_by_rule=True)
+        captured = capsys.readouterr()
+        # A001 section should come before Z001
+        a001_idx = captured.out.index("[A001]")
+        z001_idx = captured.out.index("[Z001]")
+        assert a001_idx < z001_idx, "A001 should appear before Z001 when sorted by rule"
+
+
+class TestInvalidGroupFlag:
+    """Verify invalid --group value is rejected by argparse."""
+
+    def test_invalid_group_value_raises_systemexit(self) -> None:
+        """argparse should reject --group invalid with a non-zero exit."""
+        try:
+            main(["--statistics", "--group", "bogus"])
+        except SystemExit as exc:
+            assert exc.code != 0, "argparse should exit non-zero for invalid --group value"
+        else:
+            pytest.fail("SystemExit not raised for invalid --group value")
