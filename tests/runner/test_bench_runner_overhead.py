@@ -226,10 +226,15 @@ def test_bench_runner_overhead(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
             "## Config Memoisation",
             "",
             "The dominant overhead source (config re-parse in "
-            "`_ruff_config_with_project_overrides`) has been memoised via a "
-            "module-level `_PYPROJECT_CACHE` keyed by `(resolved_path, mtime_ns)`. "
-            "This eliminates repeated `tomllib.load` calls for the same file "
-            "when the mtime has not changed.",
+            "`_ruff_config_with_project_overrides`) was memoised in an earlier "
+            "iteration but the function no longer exists in the codebase. "
+            "The current runner uses per-process memoisation of "
+            "`_load_extra_tools` (keyed on `(resolved_path, mtime_ns)` in "
+            "`extra_tools.py:348-360`) so that repeated `run_lint` invocations "
+            "in the same process reuse the cached parse. Overhead was already "
+            "negligible before any memoisation (T11 PoW baseline 0.001s) and "
+            "remains negligible because per-process tool-dispatch is N=11 tool "
+            "spec entries already in memory.",
             "",
             "## Verification Gate",
             "",

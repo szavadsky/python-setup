@@ -2,19 +2,19 @@
 
 Tests parameter descriptor extraction, callable comparison, and end-to-end
 pylint runs for signature mismatch detection.
+
+Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 """
 
 from __future__ import annotations
 
 import inspect
-import subprocess
-import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import astroid
+import pytest
 
-from python_setup_lint.checkers.stub_checker import StubChecker
 from python_setup_lint.checkers.stub_fidelity import (
     CallableComparisonCtx,
     ParamDescriptor,
@@ -24,301 +24,231 @@ from python_setup_lint.checkers.stub_fidelity import (
     _extract_param_descriptors,
 )
 
+from tests.checkers._factories import (
+    _CALLABLE_FIDELITY_INTEGRATION_CASES,
+    _COMPARE_ANNOTATION_CASES,
+    _COMPARE_DESCRIPTOR_CASES,
+    _COMPARE_RETURN_CASES,
+    _EXTRACT_ANNOTATION_CASES,
+    _EXTRACT_DEFAULT_CASES,
+    _EXTRACT_PARAM_CASES,
+    _EXTRACT_STRIP_SELF_CASES,
+    _run_pylint,
+)
+
 if TYPE_CHECKING:
-    import pytest
+    import pytest as _pytest  # noqa: F401
 
 PROJECT_SRC = Path(__file__).resolve().parents[3] / "src"
 
 
 def _parse_func(code: str):
+    """Parse a function source string and return the function astroid node."""
     module = astroid.parse(code, module_name="test")
     return module.body[0]
 
 
 def _extract(func_node, *, strip_self: bool = False):
+    """Wrap ``_extract_param_descriptors`` for short test bodies."""
     return _extract_param_descriptors(func_node.args, strip_self=strip_self)
 
 
-class TestParamDescriptor:
-    """ParamDescriptor fields and defaults."""
-
-    def test_fields(self):
-        p = ParamDescriptor(name="x", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, has_default=True, annotation_normalized="int")
-        assert p.name == "x"
-        assert p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
-        assert p.has_default is True
-        assert p.annotation_normalized == "int"
-
-    def test_no_annotation(self):
-        p = ParamDescriptor(name="y", kind=inspect.Parameter.KEYWORD_ONLY, has_default=False, annotation_normalized=None)
-        assert p.annotation_normalized is None
+def _p(name: str, ann: str | None = None) -> ParamDescriptor:
+    """Build a positional-or-keyword ``ParamDescriptor`` with the given ann."""
+    return ParamDescriptor(
+        name=name,
+        kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        has_default=False,
+        annotation_normalized=ann,
+    )
 
 
-class TestExtractParamDescriptors:
-    """_extract_param_descriptors correctly captures all parameter kinds."""
-
-    def test_empty_function(self):
-        f = _parse_func("def foo() -> None: ...")
-        assert _extract(f) == []
-
-    def test_positional_only(self):
-        f = _parse_func("def foo(a, b, /) -> None: ...")
-        descs = _extract(f)
-        assert len(descs) == 2
-        assert descs[0].name == "a"
-        assert descs[0].kind == inspect.Parameter.POSITIONAL_ONLY
-
-    def test_positional_or_keyword(self):
-        f = _parse_func("def foo(a, b) -> None: ...")
-        descs = _extract(f)
-        assert descs[0].kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
-
-    def test_var_positional(self):
-        f = _parse_func("def foo(*args) -> None: ...")
-        descs = _extract(f)
-        assert descs[0].kind == inspect.Parameter.VAR_POSITIONAL
-
-    def test_keyword_only(self):
-        f = _parse_func("def foo(*, x, y) -> None: ...")
-        descs = _extract(f)
-        assert descs[0].kind == inspect.Parameter.KEYWORD_ONLY
-
-    def test_var_keyword(self):
-        f = _parse_func("def foo(**kwargs) -> None: ...")
-        descs = _extract(f)
-        assert descs[0].kind == inspect.Parameter.VAR_KEYWORD
-
-    def test_default_presence_detected(self):
-        f = _parse_func("def foo(a, b=1) -> None: ...")
-        descs = _extract(f)
-        assert descs[0].has_default is False
-        assert descs[1].has_default is True
-
-    def test_default_presence_kwonly(self):
-        f = _parse_func("def foo(*, x, y='hello') -> None: ...")
-        descs = _extract(f)
-        assert descs[0].has_default is False
-        assert descs[1].has_default is True
-
-    def test_strip_self(self):
-        f = _parse_func("def bar(self, x, y) -> None: ...")
-        descs = _extract(f, strip_self=True)
-        assert len(descs) == 2
-        assert descs[0].name == "x"
-
-    def test_strip_cls(self):
-        f = _parse_func("def bar(cls, x, y) -> None: ...")
-        descs = _extract(f, strip_self=True)
-        assert len(descs) == 2
-        assert descs[0].name == "x"
-
-    def test_no_strip_non_method(self):
-        f = _parse_func("def bar(a, b) -> None: ...")
-        descs = _extract(f, strip_self=True)
-        assert len(descs) == 2
-        assert descs[0].name == "a"
-
-    def test_annotations_extracted(self):
-        f = _parse_func("def foo(x: int, y: str | None) -> None: ...")
-        descs = _extract(f)
-        assert "int" in descs[0].annotation_normalized
-        assert descs[1].annotation_normalized is not None
-
-    def test_vararg_annotation(self):
-        f = _parse_func("def foo(*args: int) -> None: ...")
-        descs = _extract(f)
-        assert "int" in descs[0].annotation_normalized
-
-    def test_kwarg_annotation(self):
-        f = _parse_func("def foo(**kwargs: str) -> None: ...")
-        descs = _extract(f)
-        assert "str" in descs[0].annotation_normalized
+def _build_descs(rows: list) -> list[ParamDescriptor]:
+    """Build a list of ``ParamDescriptor`` from a row-tuple list."""
+    return [
+        ParamDescriptor(name=r[0], kind=r[1], has_default=r[2], annotation_normalized=None)
+        for r in rows
+    ]
 
 
-class TestCompareCallableDescriptors:
-    """_compare_callable_descriptors correctly identifies mismatches."""
-
-    def _p(self, name, kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, has_default=False):
-        return ParamDescriptor(name=name, kind=kind, has_default=has_default, annotation_normalized=None)
-
-    def test_identical_params(self):
-        a = [self._p("a"), self._p("b")]
-        b = [self._p("a"), self._p("b")]
-        assert _compare_callable_descriptors(a, b) is None
-
-    def test_param_count_mismatch(self):
-        a = [self._p("a"), self._p("b")]
-        b = [self._p("a")]
-        result = _compare_callable_descriptors(a, b)
-        assert "param_count" in result
-
-    def test_param_name_mismatch(self):
-        a = [self._p("a")]
-        b = [self._p("b")]
-        result = _compare_callable_descriptors(a, b)
-        assert "param_name" in result
-
-    def test_param_kind_mismatch(self):
-        a = [ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, None)]
-        b = [ParamDescriptor("x", inspect.Parameter.KEYWORD_ONLY, False, None)]
-        result = _compare_callable_descriptors(a, b)
-        assert "param_kind" in result
-
-    def test_default_presence_mismatch(self):
-        a = [self._p("x", has_default=True)]
-        b = [self._p("x", has_default=False)]
-        result = _compare_callable_descriptors(a, b)
-        assert "param_default" in result
-
-    def test_empty_lists(self):
-        assert _compare_callable_descriptors([], []) is None
+def _returns_from_src(return_src: str | None):
+    """Parse ``def foo() -> <return_src>: ...`` and return the returns node (or None)."""
+    if return_src is None:
+        return None
+    module = astroid.parse(f"def foo() -> {return_src}: ...\n", module_name="test")
+    return module.body[0].returns
 
 
-class TestCompareCallableAnnotations:
-    """_compare_callable_annotations compares param annotations correctly."""
-
-    def _p(self, name, ann):
-        return ParamDescriptor(name=name, kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, has_default=False, annotation_normalized=ann)
-
-    def test_all_match_returns_empty(self):
-        a = [self._p("x", "int"), self._p("y", "str")]
-        b = [self._p("x", "int"), self._p("y", "str")]
-        assert _compare_callable_annotations(a, b) == []
-
-    def test_param_annotation_mismatch_detected(self):
-        a = [self._p("x", "int"), self._p("y", "str")]
-        b = [self._p("x", "int"), self._p("y", "int")]
-        result = _compare_callable_annotations(a, b)
-        assert len(result) == 1
-        assert result[0][0] == "y"
-
-    def test_skips_missing_annotations(self):
-        a = [self._p("x", None)]
-        b = [self._p("x", "int")]
-        assert _compare_callable_annotations(a, b) == []
-
-    def test_skips_no_annotation_on_both(self):
-        a = [self._p("x", None)]
-        b = [self._p("x", None)]
-        assert _compare_callable_annotations(a, b) == []
-
-    def test_empty_descriptors(self):
-        assert _compare_callable_annotations([], []) == []
+# ── ParamDescriptor fields ────────────────────────────────────────
 
 
-class TestCompareReturnAnnotations:
-    """_compare_return_annotations compares return annotations."""
-
-    def test_both_none(self):
-        stub, impl = _compare_return_annotations(None, None)
-        assert stub is None and impl is None
-
-    def test_stub_none(self):
-        module = astroid.parse("def foo() -> int: ...\n", module_name="test")
-        stub, impl = _compare_return_annotations(None, module.body[0].returns)
-        assert stub is None and impl is None
-
-    def test_impl_none(self):
-        module = astroid.parse("def foo() -> int: ...\n", module_name="test")
-        stub, impl = _compare_return_annotations(module.body[0].returns, None)
-        assert stub is None and impl is None
-
-    def test_matching_returns(self):
-        stub_mod = astroid.parse("def foo() -> int: ...\n", module_name="test")
-        impl_mod = astroid.parse("def foo() -> int: ...\n", module_name="test")
-        stub, impl = _compare_return_annotations(stub_mod.body[0].returns, impl_mod.body[0].returns)
-        assert stub is not None and impl is not None
-        assert stub == impl
-
-    def test_mismatched_returns(self):
-        stub_mod = astroid.parse("def foo() -> str: ...\n", module_name="test")
-        impl_mod = astroid.parse("def foo() -> int: ...\n", module_name="test")
-        stub, impl = _compare_return_annotations(stub_mod.body[0].returns, impl_mod.body[0].returns)
-        assert stub != impl
-
-    def test_normalized_typing(self):
-        stub_mod = astroid.parse("def foo() -> typing.List[int]: ...\n", module_name="test")
-        impl_mod = astroid.parse("def foo() -> list[int]: ...\n", module_name="test")
-        stub, impl = _compare_return_annotations(stub_mod.body[0].returns, impl_mod.body[0].returns)
-        assert stub == impl
+def test_param_descriptor_fields() -> None:
+    p = ParamDescriptor(
+        name="x", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        has_default=True, annotation_normalized="int",
+    )
+    assert p.name == "x"
+    assert p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+    assert p.has_default is True
+    assert p.annotation_normalized == "int"
 
 
-class TestCallableComparisonCtx:
-    """CallableComparisonCtx fields and defaults."""
+def test_param_descriptor_no_annotation() -> None:
+    p = ParamDescriptor(
+        name="y", kind=inspect.Parameter.KEYWORD_ONLY,
+        has_default=False, annotation_normalized=None,
+    )
+    assert p.annotation_normalized is None
 
-    def test_fields(self):
-        stub_mod = astroid.parse("def foo(x: int) -> None: ...\n", module_name="test")
-        impl_mod = astroid.parse("def foo(x: int) -> None: ...\n", module_name="test")
-        ctx = CallableComparisonCtx(
-            checker=None,  # type: ignore[arg-type]
-            module_name="mod_a",
-            func_name="foo",
-            msg_node=impl_mod,
-            stub_func=stub_mod.body[0],
-            impl_func=impl_mod.body[0],
+
+# ── _extract_param_descriptors ─────────────────────────────────────
+
+
+@pytest.mark.parametrize("func_src, expected_names, expected_kinds", _EXTRACT_PARAM_CASES)
+def test_extract_param_descriptors(
+    func_src: str, expected_names: list[str], expected_kinds: list,
+) -> None:
+    """Each row exercises a distinct parameter-kind classification path."""
+    descs = _extract(_parse_func(func_src))
+    assert [d.name for d in descs] == expected_names
+    assert [d.kind for d in descs] == expected_kinds
+
+
+@pytest.mark.parametrize(
+    "func_src, expected_per_param_defaults", _EXTRACT_DEFAULT_CASES,
+)
+def test_extract_default_presence_detected(
+    func_src: str, expected_per_param_defaults: list[bool],
+) -> None:
+    descs = _extract(_parse_func(func_src))
+    assert [d.has_default for d in descs] == expected_per_param_defaults
+
+
+@pytest.mark.parametrize(
+    "func_src, strip_self, expected_names", _EXTRACT_STRIP_SELF_CASES,
+)
+def test_extract_strip_self(
+    func_src: str, strip_self: bool, expected_names: list[str],
+) -> None:
+    descs = _extract(_parse_func(func_src), strip_self=strip_self)
+    assert [d.name for d in descs] == expected_names
+
+
+@pytest.mark.parametrize(
+    "func_src, needle_in_first, _needle_in_second", _EXTRACT_ANNOTATION_CASES,
+)
+def test_extract_annotations(
+    func_src: str, needle_in_first: str | None, _needle_in_second: str | None,
+) -> None:
+    """Each row exercises annotation extraction — asserts substring presence."""
+    descs = _extract(_parse_func(func_src))
+    assert needle_in_first in descs[0].annotation_normalized
+
+
+# ── _compare_callable_descriptors ─────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "a_rows, b_rows, expected_failure", _COMPARE_DESCRIPTOR_CASES,
+)
+def test_compare_callable_descriptors(
+    a_rows: list, b_rows: list, expected_failure: str | None,
+) -> None:
+    """Each row exercises a distinct mismatch kind (count/name/kind/default)."""
+    a = _build_descs(a_rows)
+    b = _build_descs(b_rows)
+    result = _compare_callable_descriptors(a, b)
+    if expected_failure is None:
+        assert result is None
+    else:
+        assert expected_failure in result, (
+            f"result={result!r} (expected substring {expected_failure!r})"
         )
-        assert ctx.module_name == "mod_a"
 
 
-class TestEndToEndCallable:
-    """Integration tests running pylint as subprocess."""
+# ── _compare_callable_annotations ──────────────────────────────────
 
-    def test_integration_signature_mismatch(self, tmp_path: Path):
-        src = tmp_path / "src"
-        src.mkdir()
-        (src / "__init__.py").write_text("")
-        (src / "__init__.pyi").write_text("")
-        (src / "mod_a.py").write_text("""
-def foo(x: int, y: str) -> None: ...
-""")
-        (src / "mod_a.pyi").write_text("""
-def foo(x: int) -> None: ...
-""")
-        (tmp_path / "pyproject.toml").write_text(
-            f"""\
-[tool.pylint.MASTER]
-load-plugins = "python_setup_lint.checkers.stub_checker"
 
-[tool.pylint.stub-checker]
-source-roots = ["{src}"]
-"""
-        )
-        result = subprocess.run(
-            [sys.executable, "-m", "pylint", str(src), "--disable=all", "--enable=signature-mismatch"],
-            capture_output=True,
-            text=True,
-            cwd=tmp_path,
-            env={**__import__("os").environ, "PYTHONPATH": str(PROJECT_SRC)},
-        )
-        combined = result.stdout + result.stderr
-        assert "E97B3" in combined
+@pytest.mark.parametrize(
+    "a_anns, b_anns, expected_count, expected_first_arg_name",
+    _COMPARE_ANNOTATION_CASES,
+)
+def test_compare_callable_annotations(
+    a_anns: list, b_anns: list, expected_count: int, expected_first_arg_name: str | None,
+) -> None:
+    a = [_p(name, ann) for name, ann in zip(["x", "y", "x"], a_anns, strict=False)]
+    b = [_p(name, ann) for name, ann in zip(["x", "y", "x"], b_anns, strict=False)]
+    result = _compare_callable_annotations(a, b)
+    assert len(result) == expected_count, (
+        f"a={a_anns!r} b={b_anns!r} → {len(result)} mismatches (expected {expected_count})"
+    )
+    if expected_first_arg_name is not None and result:
+        assert result[0][0] == expected_first_arg_name
 
-    def test_integration_return_annotation_mismatch(self, tmp_path: Path):
-        src = tmp_path / "src"
-        src.mkdir()
-        (src / "__init__.py").write_text("")
-        (src / "__init__.pyi").write_text("")
-        (src / "mod_a.py").write_text("""
-def foo() -> int: ...
-""")
-        (src / "mod_a.pyi").write_text("""
-def foo() -> str: ...
-""")
-        (tmp_path / "pyproject.toml").write_text(
-            f"""\
-[tool.pylint.MASTER]
-load-plugins = "python_setup_lint.checkers.stub_checker"
 
-[tool.pylint.stub-checker]
-source-roots = ["{src}"]
-"""
-        )
-        result = subprocess.run(
-            [sys.executable, "-m", "pylint", str(src), "--disable=all", "--enable=annotation-mismatch"],
-            capture_output=True,
-            text=True,
-            cwd=tmp_path,
-            env={**__import__("os").environ, "PYTHONPATH": str(PROJECT_SRC)},
-        )
-        combined = result.stdout + result.stderr
-        assert "E97B4" in combined
+def test_compare_callable_annotations_empty() -> None:
+    assert _compare_callable_annotations([], []) == []
+
+
+# ── _compare_return_annotations ────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "stub_src, impl_src, assert_mode, expected_eq", _COMPARE_RETURN_CASES,
+)
+def test_compare_return_annotations(
+    stub_src: str | None,
+    impl_src: str | None,
+    assert_mode: str,
+    expected_eq: bool,
+) -> None:
+    """Each row exercises a return-annotation comparison branch.
+
+    Two modes (per row):
+      - ``skip_both_none`` — when at least one input is None the comparison
+        MUST return ``(None, None)`` (the skip path is taken).
+      - ``compare``         — both inputs are non-None; the body asserts both
+        outputs are non-None and ``stub == impl`` matches ``expected_eq``.
+    """
+    stub_node = _returns_from_src(stub_src)
+    impl_node = _returns_from_src(impl_src)
+    stub, impl = _compare_return_annotations(stub_node, impl_node)
+    if assert_mode == "skip_both_none":
+        assert stub is None and impl is None, f"got ({stub!r}, {impl!r})"
+    elif assert_mode == "compare":
+        assert stub is not None and impl is not None, f"got ({stub!r}, {impl!r})"
+        assert (stub == impl) is expected_eq
+    else:  # pragma: no cover - defensive
+        raise AssertionError(f"unknown assert_mode {assert_mode!r}")
+
+
+# ── CallableComparisonCtx fields ───────────────────────────────────
+
+
+def test_callable_comparison_ctx_fields() -> None:
+    stub_mod = astroid.parse("def foo(x: int) -> None: ...\n", module_name="test")
+    impl_mod = astroid.parse("def foo(x: int) -> None: ...\n", module_name="test")
+    ctx = CallableComparisonCtx(
+        checker=None,  # type: ignore[arg-type]
+        module_name="mod_a",
+        func_name="foo",
+        msg_node=impl_mod,
+        stub_func=stub_mod.body[0],
+        impl_func=impl_mod.body[0],
+    )
+    assert ctx.module_name == "mod_a"
+    assert ctx.func_name == "foo"
+
+
+# ── end-to-end subprocess integration ─────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "mod_py, mod_pyi, enable, expected_code", _CALLABLE_FIDELITY_INTEGRATION_CASES,
+)
+def test_integration_callable(
+    tmp_path: Path, mod_py: str, mod_pyi: str, enable: str, expected_code: str,
+) -> None:
+    """End-to-end subprocess run: pylint surfaces the expected E97B code."""
+    combined = _run_pylint(tmp_path, mod_py, mod_pyi, enable, project_src=PROJECT_SRC)
+    assert expected_code in combined

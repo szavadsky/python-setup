@@ -4,31 +4,31 @@
 
 | Tool | Wall-time (s) | Peak RSS (KB) | Exit code |
 |------|--------------:|--------------:|----------:|
-| tach check | 0.141 | 75472.0 | 1 |
-| ruff check | 0.01 | 0.0 | 1 |
-| rumdl check | 0.004 | 0.0 | 0 |
-| mypy | 0.564 | 21996.0 | 0 |
-| yamllint | 0.051 | 0.0 | 2 |
-| ty check | 0.033 | 0.0 | 0 |
-| pyright check | 0.425 | 34632.0 | 0 |
-| pylint (no plugins) | 0.276 | 0.0 | 24 |
-| pylint (stdlib only) | 0.278 | 0.0 | 24 |
-| pylint (all custom) | 0.283 | 0.0 | 30 |
-| detect-secrets | 0.114 | 0.0 | 123 |
+| tach check | 0.323 | 46464.0 | 1 |
+| ruff check | 0.016 | 0.0 | 1 |
+| rumdl check | 0.006 | 0.0 | 0 |
+| mypy | 1.036 | 50272.0 | 0 |
+| yamllint | 0.076 | 0.0 | 2 |
+| ty check | 0.045 | 0.0 | 0 |
+| pyright check | 0.786 | 33644.0 | 0 |
+| pylint (no plugins) | 0.425 | 0.0 | 24 |
+| pylint (stdlib only) | 0.396 | 0.0 | 24 |
+| pylint (all custom) | 0.381 | 0.0 | 30 |
+| detect-secrets | 0.16 | 0.0 | 0 |
 
 ## Runner Overhead (before optimisation)
 
 | Metric | Value |
 |--------|------:|
-| Total `run_lint` wall-time | 1.955s |
-| Sum of per-tool subprocess time | 1.954s |
+| Total `run_lint` wall-time | 3.061s |
+| Sum of per-tool subprocess time | 3.060s |
 | **Runner Python overhead** | **0.001s** |
 | Runner overhead as % of total | **0.0%** |
 | Runner process peak RSS | 0.0 KB |
 
 ## Config Memoisation
 
-The dominant overhead source (config re-parse in `_ruff_config_with_project_overrides`) has been memoised via a module-level `_PYPROJECT_CACHE` keyed by `(resolved_path, mtime_ns)`. This eliminates repeated `tomllib.load` calls for the same file when the mtime has not changed.
+The dominant overhead source (config re-parse in `_ruff_config_with_project_overrides`) was memoised in an earlier iteration but the function no longer exists in the codebase. The current runner uses per-process memoisation of `_load_extra_tools` (keyed on `(resolved_path, mtime_ns)` in `extra_tools.py:348-360`) so that repeated `run_lint` invocations in the same process reuse the cached parse. Overhead was already negligible before any memoisation (T11 PoW baseline 0.001s) and remains negligible because per-process tool-dispatch is N=11 tool spec entries already in memory.
 
 ## Verification Gate
 
