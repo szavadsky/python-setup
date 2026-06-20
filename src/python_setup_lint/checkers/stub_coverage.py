@@ -241,6 +241,8 @@ def _index_stub_declarations(checker: StubChecker, module_name: str, stub_path: 
         elif isinstance(child, nodes.AnnAssign):
             if isinstance(child.target, nodes.AssignName):
                 declarations.add(child.target.name)
+        elif isinstance(child, nodes.TypeAlias):
+            declarations.add(child.name)
 
     checker._coverage.declaration_index[module_name] = declarations
 
