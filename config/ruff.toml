@@ -32,3 +32,47 @@ ignore = [
     "E402",    # module-import-not-at-top-of-file
     "B023",    # function-uses-loop-variable
 ]
+
+## Generic rules stays here. Tests code different from prod - generic
+[lint.per-file-ignores]
+"tests/**" = [
+    "TID251",
+    "S101",     # assertions are expected in tests
+    "S108",     # /tmp paths in test fixtures
+    "S110",     # best-effort try/except/pass in test helpers
+    "S112",     # intentional try/except/continue in test helpers
+    "S311",     # pre-existing weak-random; not in scope
+    "S603",     # subprocess calls with trusted test code
+    "S607",     # git on PATH is expected
+    "S608",     # table names are class constants, not user input
+    "PLW1510",  # subprocess return code checked manually in tests
+    "PT011",    # broad pytest.raises acceptable in tests
+    "PT012",    # multi-statement raises blocks acceptable in tests
+    "PT017",    # pre-existing assertRaises; not in scope
+    "PT018",    # composite assertions acceptable in tests
+    "ANN",      # annotations optional in tests
+    "ARG",      # unused args common in test stubs/testing protocols
+    "N818",     # pre-existing exception naming; not in scope
+    "F841",     # pre-existing unused-variable; not in scope
+    "SIM112",   # pre-existing env-var casing; not in scope
+    "SIM117",   # pre-existing nested-context; not in scope
+]
+"tests/data/**" = [
+    "F401",     # vendored corpus test data; not our code to fix
+    "UP031",    # vendored corpus uses %-formatting; not our code to fix
+    "A",        # vendored corpus has builtin-shadowing; not our code to fix
+    "N",        # vendored corpus has naming violations; not our code to fix
+    "S",        # vendored corpus — security lint not applicable
+    "PERF",     # vendored corpus — performance lint not applicable
+    "SIM105",   # vendored corpus — try/except/pass style not our code
+    "B018",     # vendored corpus — useless expressions; not our code
+    "B904",     # vendored corpus — bare raises; not our code
+]
+"*.pyi" = [
+    "TID251",
+    "PYI021",   # design decision: stubs carry docstrings for API contract
+    "PYI002",   # complex static type in stub, not changing signature
+    "ANN",      # stubs skip annotations
+    "ARG",      # stubs have unused args per protocol/abstract interface
+    "PERF",     # performance lint deferred for stubs
+]
