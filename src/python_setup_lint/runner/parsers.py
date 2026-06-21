@@ -56,33 +56,41 @@ def _parse_ruff_statistics(stdout: str, stderr: str) -> list[tuple[str, int]]:
 
 
 def _parse_rumdl_statistics(stdout: str, stderr: str) -> list[tuple[str, int]]:
-    """Parse rumdl --statistics output.
+    """Parse rumdl check output.
 
-    Format matches ruff: ``<count>\t<rule>\t``.
+    rumdl has no ``--statistics`` flag.  Its per-violation output format
+    is ``file:line:col: [RULE] message``.  This parser aggregates
+    violations by rule code (e.g. ``MD041``).
     """
     _ = stderr
     counts: dict[str, int] = {}
     for line in stdout.splitlines():
         line = line.strip()
-        if not line or line.startswith(("-", "Count")):
+        if not line:
             continue
-        m = re.match(r"^(\d+)\s+(\S+)", line)
+        # Format: file:line:col: [RULE] message
+        m = re.match(r"^[^:]+:\d+:\d+:\s+\[(\S+)\]", line)
         if m:
-            rule = m.group(2)
-            counts[rule] = counts.get(rule, 0) + int(m.group(1))
+            rule = m.group(1)
+            counts[rule] = counts.get(rule, 0) + 1
     return list(counts.items())
 
 
 def _parse_pylint_json2(stdout: str, stderr: str) -> list[tuple[str, int]]:
     """Parse pylint --output-format=json2 output.
 
-    JSON array of dicts, each with a ``symbol`` key.
+    Accepts both the legacy JSON array shape (``[{...}, ...]``) and the
+    modern dict shape (``{"messages": [{...}, ...], "status": ...}``).
+    Each message dict has a ``symbol`` key.
     """
     _ = stderr
     try:
         raw: Any = json.loads(stdout)
     except json.JSONDecodeError, TypeError:
         return []
+    # Modern dict shape: {"messages": [...], "status": ...}
+    if isinstance(raw, dict):
+        raw = raw.get("messages", [])
     if not isinstance(raw, list):
         return []
     counts: dict[str, int] = {}
