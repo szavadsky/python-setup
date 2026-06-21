@@ -262,7 +262,23 @@ class _PylintLintTool(LintTool):
     list of ``.py`` files.  This strategy always calls ``_find_py_files``
     regardless of whether ``spec.default_paths`` is empty, ensuring pylint
     never runs with an empty file list.
+
+    Auto-discovers ``.pylintrc`` when ``config_paths`` has no ``pylint``
+    entry: checks ``config/.pylintrc`` (shipped config dir) then
+    ``.pylintrc`` (project root).
     """
+
+    @staticmethod
+    def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
+        """Return the pylint rcfile path, or ``None`` if none found."""
+        explicit = config_paths.get("pylint")
+        if explicit is not None:
+            return explicit
+        # Auto-discover: shipped config dir, then project root.
+        for candidate in (cwd / "config" / ".pylintrc", cwd / ".pylintrc"):
+            if candidate.is_file():
+                return candidate
+        return None
 
     def build_command(
         self,
@@ -276,8 +292,9 @@ class _PylintLintTool(LintTool):
         cmd = list(spec.command)
         config_paths = config.config_paths or {}
 
-        # ── Shared config files ───────────────────────────────
-        cmd.extend(_config_flag_for(spec.name, config_paths.get(spec.name)))
+        # ── Shared config files (with auto-discovery) ───────────
+        rcfile = self._resolve_pylintrc(config_paths, config.cwd)
+        cmd.extend(_config_flag_for(spec.name, rcfile))
 
         # ── Fix flags ────────────────────────────────────────
         if fix and spec.supports_fix:

@@ -115,7 +115,10 @@ class TestStrategyBuildCommand:
         from python_setup_lint.runner import _PylintLintTool
         cmd = _PylintLintTool(ToolSpec("pylint", ["pylint"], supports_path=True)).build_command(
             config=_CONFIG, path="src/python_setup_lint")
-        assert cmd[0] == "pylint" and len(cmd) > 1 and all(a.endswith(".py") for a in cmd[1:])
+        assert cmd[0] == "pylint"
+        # Auto-discovery may inject --rcfile <path> before .py files; skip those.
+        py_files = [a for a in cmd[1:] if a.endswith(".py")]
+        assert len(py_files) > 0 and all(a.endswith(".py") for a in py_files)
 
     def test_yamllint_strategy_expands_glob(self) -> None:
         cmd = _build_command(
