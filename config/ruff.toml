@@ -71,6 +71,7 @@ ignore = [
 "*.pyi" = [
     "TID251",
     "PYI021",   # design decision: stubs carry docstrings for API contract
+    "PYI048",   # docstring + ... is two statements; allowed in stubs
     "PYI002",   # complex static type in stub, not changing signature
     "ANN",      # stubs skip annotations
     "ARG",      # stubs have unused args per protocol/abstract interface
