@@ -87,7 +87,7 @@ def _config_flag_for(spec_name: str, config_path: Path | None) -> list[str]:
         "pyright check": ["--project", str(config_path)],
         "pyright verify types": ["--project", str(config_path)],
         "rumdl check": ["--config", str(config_path)],
-        "ty check": ["--config", str(config_path)],
+        "ty check": ["--config-file", str(config_path)],
     }
     return flags.get(spec_name, [])
 

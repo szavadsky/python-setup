@@ -120,6 +120,41 @@ class TestStrategyBuildCommand:
         py_files = [a for a in cmd[1:] if a.endswith(".py")]
         assert len(py_files) > 0 and all(a.endswith(".py") for a in py_files)
 
+    def test_pylint_rcfile_auto_discovery(self) -> None:
+        """_resolve_pylintrc discovers config/.pylintrc when no explicit path given."""
+        from python_setup_lint.runner.dispatch import _PylintLintTool
+        cwd = Path.cwd()
+        rcfile = _PylintLintTool._resolve_pylintrc({}, cwd)
+        assert rcfile is not None, "Expected auto-discovered rcfile"
+        assert rcfile.name == ".pylintrc"
+        assert rcfile.is_file()
+
+    def test_pylint_rcfile_explicit_override(self, tmp_path: Path) -> None:
+        """_resolve_pylintrc returns explicit config_paths entry when provided."""
+        from python_setup_lint.runner.dispatch import _PylintLintTool
+        fake_rc = tmp_path / "custom.pylintrc"
+        fake_rc.write_text("[MASTER]\n")
+        rcfile = _PylintLintTool._resolve_pylintrc({"pylint": fake_rc}, Path.cwd())
+        assert rcfile == fake_rc
+
+    def test_pylint_rcfile_none_when_missing(self, tmp_path: Path) -> None:
+        """_resolve_pylintrc returns None when no rcfile exists."""
+        from python_setup_lint.runner.dispatch import _PylintLintTool
+        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)
+        assert rcfile is None
+
+    def test_pylint_build_command_injects_rcfile(self) -> None:
+        """build_command includes --rcfile when auto-discovered."""
+        from python_setup_lint.runner import _PylintLintTool
+        cmd = _PylintLintTool(ToolSpec("pylint", ["pylint"], supports_path=True)).build_command(
+            config=_CONFIG, path="src/python_setup_lint")
+        assert "--rcfile" in cmd, f"Expected --rcfile in {cmd!r}"
+        rcfile_idx = cmd.index("--rcfile")
+        assert rcfile_idx + 1 < len(cmd)
+        rcfile_path = Path(cmd[rcfile_idx + 1])
+        assert rcfile_path.name == ".pylintrc"
+        assert rcfile_path.is_file()
+
     def test_yamllint_strategy_expands_glob(self) -> None:
         cmd = _build_command(
             ToolSpec("yamllint", ["yamllint"], supports_path=True, default_paths=["src/**/*.py"]),
