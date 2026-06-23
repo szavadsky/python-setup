@@ -93,7 +93,7 @@ to manage the baseline file.
 
 ### Worked example
 
-The `consultant-mcp` project uses python-setup v0.2.0. Its `AGENTS.md` documents
+The `consultant-mcp` project uses python-setup v0.5.0. Its `AGENTS.md` documents
 the full setup — see the `<!-- python-setup:pre-commit -->` section for the
 canonical pre-commit + baseline workflow.
 
