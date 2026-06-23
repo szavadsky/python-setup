@@ -36,6 +36,7 @@ from __future__ import annotations
 # ``python_setup_lint.runner`` import path are listed here so the
 # pre-split single-module surface resolves unchanged after the T9 split.
 from .baseline import _capture_baseline as _capture_baseline
+from .baseline import _compare_sorted as _compare_sorted
 from .baseline import _diff_baseline as _diff_baseline
 from .cli import _CONFIG_KEY_ALIASES as _CONFIG_KEY_ALIASES
 from .cli import _SUPPORTED_CONFIG_KEYS as _SUPPORTED_CONFIG_KEYS
@@ -82,19 +83,30 @@ from .output import _sort_counts as _sort_counts
 from .parsers import (
     _BUILTIN_PARSE_STRATEGY_TO_PARSER as _BUILTIN_PARSE_STRATEGY_TO_PARSER,
 )
+from .parsers import _RECORD_PARSERS as _RECORD_PARSERS
 from .parsers import _STATISTICS_PARSERS as _STATISTICS_PARSERS
 from .parsers import PARSE_STRATEGIES as PARSE_STRATEGIES
+from .parsers import Record as Record
+from .parsers import _compare_records_key as _compare_records_key
 from .parsers import _parse_detect_secrets_json as _parse_detect_secrets_json
+from .parsers import _parse_mypy_records as _parse_mypy_records
 from .parsers import _parse_mypy_stderr as _parse_mypy_stderr
 from .parsers import _parse_pylint_json2 as _parse_pylint_json2
+from .parsers import _parse_pylint_records as _parse_pylint_records
 from .parsers import _parse_pyright_outputjson as _parse_pyright_outputjson
+from .parsers import _parse_pyright_records as _parse_pyright_records
 from .parsers import _parse_pyright_verify_types as _parse_pyright_verify_types
+from .parsers import _parse_ruff_records as _parse_ruff_records
 from .parsers import _parse_ruff_statistics as _parse_ruff_statistics
+from .parsers import _parse_rumdl_records as _parse_rumdl_records
 from .parsers import _parse_rumdl_statistics as _parse_rumdl_statistics
 from .parsers import _parse_stubtest_stderr as _parse_stubtest_stderr
 from .parsers import _parse_tach_json as _parse_tach_json
 from .parsers import _parse_ty_concise as _parse_ty_concise
+from .parsers import _parse_ty_records as _parse_ty_records
 from .parsers import _parse_yamllint_parsable as _parse_yamllint_parsable
+from .parsers import _parse_yamllint_records as _parse_yamllint_records
+from .parsers import _records_unchanged as _records_unchanged
 from .types import LintResult as LintResult
 from .types import RunnerConfig as RunnerConfig
 from .types import ToolSpec as ToolSpec
