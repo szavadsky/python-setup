@@ -186,7 +186,7 @@ STEP_CASES = [
                  lambda s, _: s.pylint_plugins_skipped and not s.pylint_plugins_added, id="pp_sk"),
     pytest.param(_step_add_dep, _s_failing_uv,
                  lambda s, _: len(s.errors) > 0 and "uv add" in s.errors[0] and "network error" in s.errors[0], id="ad_uvf"),
-    pytest.param(lambda s, d: _save_state(d, s), _s_empty_bundled,
+    pytest.param(lambda s, d: _save_state(d), _s_empty_bundled,
                  lambda s, d: len(json.loads((d / _STATE_FILE).read_text())["config_checksums"]) == 0, id="ss_efl"),
 ]
 
