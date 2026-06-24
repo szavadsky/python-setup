@@ -56,13 +56,9 @@ class AsyncTimeoutChecker(BaseChecker):
 
     @staticmethod
     def _resolve_client_name(call: nodes.Call) -> str | None:
-        """Return a human-readable call name if this is an HTTP-method call.
-
-        Matches patterns like ``client.get(...)``, ``client.post(...)``
-        where the method is a known HTTP verb.  This is intentionally
-        broad (any variable name) to catch httpx, aiohttp, and similar
-        async HTTP clients without hardcoding import paths.
-        """
+        # Human-readable call name for HTTP-method calls (client.get/post/...).
+        # Intentionally broad (any var name) to catch httpx, aiohttp, and similar
+        # async HTTP clients without hardcoding import paths.
         func = call.func
         if isinstance(func, nodes.Attribute):
             method_name = func.attrname
@@ -72,11 +68,9 @@ class AsyncTimeoutChecker(BaseChecker):
 
     @staticmethod
     def _has_enclosing_timeout(node: nodes.Await) -> bool:
-        """Walk up the AST to find an enclosing ``AsyncWith`` with a timeout expression.
-
-        Continues past non-timeout ``AsyncWith`` blocks (e.g. ``async with
-        httpx.AsyncClient()``) to find an outer timeout wrapper.
-        """
+        # Walk up the AST for an enclosing AsyncWith with a timeout expression.
+        # Continues past non-timeout AsyncWith blocks (e.g. async with
+        # httpx.AsyncClient()) to find an outer timeout wrapper.
         parent = node.parent
         while parent is not None:
             if isinstance(parent, nodes.AsyncWith):
@@ -91,7 +85,7 @@ class AsyncTimeoutChecker(BaseChecker):
 
     @staticmethod
     def _is_timeout_call(expr: nodes.NodeNG | None) -> bool:
-        """Check if *expr* is a call to ``asyncio.timeout(...)`` or ``anyio.fail_after(...)``."""
+        # True when *expr* is a call to asyncio.timeout(...)/anyio.fail_after(...).
         if not isinstance(expr, nodes.Call):
             return False
         func = expr.func

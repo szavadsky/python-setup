@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 
 def _get_stub_checker(linter: PyLinter) -> StubChecker | None:
-    """Return the registered StubChecker instance, or None."""
+    # Return the registered StubChecker instance, or None.
     checkers = linter._checkers.get("stub-checker", [])
     if checkers:
         return cast("StubChecker", checkers[0])
@@ -31,11 +31,9 @@ def _get_stub_checker(linter: PyLinter) -> StubChecker | None:
 
 
 def _has_companion_stub(py_path: Path, linter: PyLinter) -> bool:
-    """Check if *py_path* has a companion .pyi stub.
-
-    Prefers StubChecker's full resolution (inline + package + stub-roots).
-    Falls back to inline/package check when StubChecker not registered.
-    """
+    # True when *py_path* has a companion .pyi stub.
+    # Prefers StubChecker's full resolution (inline + package + stub-roots);
+    # falls back to inline/package check when StubChecker not registered.
     stub_checker = _get_stub_checker(linter)
     if stub_checker is not None:
         from python_setup_lint.checkers.stub_coverage import _resolve_stub
@@ -79,7 +77,6 @@ class StubDocstringChecker(BaseChecker):
         self._current_module_name: str | None = None
 
     def visit_module(self, node: nodes.Module) -> None:
-        """Decide whether this module should be processed; set up state."""
         self._enabled_for_module = False
         self._current_module_name = None
 
@@ -106,13 +103,11 @@ class StubDocstringChecker(BaseChecker):
         self._enabled_for_module = True
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
-        """Emit W9700 if function/method has a docstring in an enabled module."""
         if not self._enabled_for_module:
             return
         self._emit_if_docstring(node)
 
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
-        """Emit W9700 if async function/method has a docstring in an enabled module."""
         if not self._enabled_for_module:
             return
         self._emit_if_docstring(node)
@@ -120,7 +115,6 @@ class StubDocstringChecker(BaseChecker):
     def _emit_if_docstring(
         self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef
     ) -> None:
-        """Emit W9700 if *func_node* has a docstring (via doc_node)."""
         if func_node.doc_node is not None:
             self.add_message(
                 "docstring-in-impl",

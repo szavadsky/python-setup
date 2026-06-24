@@ -18,12 +18,19 @@ class StubDocstringChecker(BaseChecker):
     _enabled_for_module: bool
     _current_module_name: str | None
 
-    def visit_module(self, node: nodes.Module) -> None: ...
-    def visit_functiondef(self, node: nodes.FunctionDef) -> None: ...
-    def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None: ...
+    def visit_module(self, node: nodes.Module) -> None:
+        """Decide whether this module should be processed; set up state."""
+
+    def visit_functiondef(self, node: nodes.FunctionDef) -> None:
+        """Emit W9700 if function/method has a docstring in an enabled module."""
+
+    def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
+        """Emit W9700 if async function/method has a docstring in an enabled module."""
+
     def _emit_if_docstring(
         self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef
-    ) -> None: ...
+    ) -> None:
+        """Emit W9700 if *func_node* has a docstring (via doc_node)."""
 
 
 def register(linter: PyLinter) -> None: ...

@@ -156,13 +156,11 @@ class StubChecker(BaseChecker):
     )
 
     def __init__(self, linter: PyLinter) -> None:
-        """Initialize state via dataclass aggregates."""
         super().__init__(linter)
         self._coverage = _CoverageState()
         self._fidelity = _FidelityState()
 
     def open(self) -> None:
-        """Read pylint config into state dataclasses."""
         c = self._coverage
         config = self.linter.config
         raw_roots = getattr(config, "source_roots", None)
@@ -188,7 +186,6 @@ class StubChecker(BaseChecker):
         c.impl_missing_policy = str(raw_missing)
 
     def visit_module(self, node: nodes.Module) -> None:
-        """Classify and index each .py file."""
         raw_file: str | None = getattr(node, "file", None)
         if not raw_file:
             return
@@ -236,7 +233,6 @@ class StubChecker(BaseChecker):
         self._index_impl_annotations(module_name, node)
 
     def visit_import(self, node: nodes.Import) -> None:
-        """Record import facts for ``import X`` / ``import X as Y``."""
         c = self._coverage
         if c.current_module_name is None or c.current_module_name not in c.module_index:
             return
@@ -256,7 +252,6 @@ class StubChecker(BaseChecker):
             )
 
     def visit_importfrom(self, node: nodes.ImportFrom) -> None:
-        """Record import facts for ``from X import Y``."""
         c = self._coverage
         if c.current_module_name is None or c.current_module_name not in c.module_index:
             return
@@ -285,11 +280,6 @@ class StubChecker(BaseChecker):
             )
 
     def close(self) -> None:
-        """Emit Phase 1-3 violations: coverage, import contract, fidelity.
-
-        Post-processing: remove non-imported ``__main__`` modules from
-        stub-missing (standalone scripts exempt from stub requirement).
-        """
         c = self._coverage
         # For each main-module candidate, check if any import_usages target it.
         # If none do, it's a standalone script — exempt from stub requirement.
@@ -318,7 +308,6 @@ class StubChecker(BaseChecker):
         module_name: str,
         py_node: nodes.Module,
     ) -> None:
-        """Index annotation nodes from implementation for fidelity comparison."""
         f = self._fidelity
         impl_ann: dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | None]] = {}
         impl_callables: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
@@ -348,5 +337,4 @@ class StubChecker(BaseChecker):
 
 
 def register(linter: PyLinter) -> None:
-    """Register the StubChecker with pylint."""
     linter.register_checker(StubChecker(linter))
