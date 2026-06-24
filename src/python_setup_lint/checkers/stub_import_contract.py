@@ -39,7 +39,6 @@ class ImportUsage:
 
 
 def _in_type_checking_block(node: nodes.Import | nodes.ImportFrom) -> bool:
-    """Check if *node* is inside a ``if TYPE_CHECKING:`` block."""
     parent = node.parent
     while parent is not None:
         if isinstance(parent, nodes.If):
@@ -50,7 +49,6 @@ def _in_type_checking_block(node: nodes.Import | nodes.ImportFrom) -> bool:
 
 
 def _is_type_checking_guard(test: nodes.NodeNG) -> bool:
-    """Check if *test* is a ``TYPE_CHECKING`` name reference."""
     if isinstance(test, nodes.Name) and test.name == "TYPE_CHECKING":
         return True
     return isinstance(test, nodes.Attribute) and test.attrname == "TYPE_CHECKING"
@@ -66,16 +64,6 @@ def _resolve_relative(
     *,
     is_package: bool = False,
 ) -> str:
-    """Resolve a relative import target to an absolute module name.
-
-    Args:
-        current_module: Fully qualified name of the importing module.
-        level: Relative import level (0 for absolute, 1 for ``.``, etc.).
-        modname: The "from" part (e.g. ``"server"`` in ``from .server import``).
-        is_package: True if the importing module is a package (``__init__.py``).
-                    Package modules use their full name as the package; non-package
-                    modules derive the package by stripping the last component.
-    """
     if level == 0:
         return modname or ""
 
@@ -99,7 +87,6 @@ def _resolve_relative(
 
 
 def emit_import_contract_violations(checker: StubChecker) -> None:
-    """Emit E97A1/E97A2/E97A3 for every import usage that violates the contract."""
     c = checker._coverage
     for usage in c.import_usages:
         target = usage.target_module

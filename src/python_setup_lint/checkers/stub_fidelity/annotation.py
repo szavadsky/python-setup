@@ -47,13 +47,6 @@ __all__ = [
 
 
 def _normalize_bases(bases: list[nodes.NodeNG]) -> list[str]:
-    """Normalize base class AST nodes to a comparable sorted list of names.
-
-    Strips module prefix from ``Attribute`` nodes (e.g. ``pydantic.BaseModel``
-    → ``BaseModel``). Treats ``builtins.object`` ≡ ``object``. For subscript
-    nodes (e.g. ``Generic[T]``), extracts the base name (``Generic``).
-    Sorts the result. Returns an empty list for empty bases.
-    """
     normalized: list[str] = []
     for base in bases:
         if isinstance(base, nodes.Subscript):
@@ -71,26 +64,12 @@ def _normalize_bases(bases: list[nodes.NodeNG]) -> list[str]:
 
 
 def _is_public_method(member_name: str) -> bool:
-    """Check if *member_name* is a public method for class comparison.
-
-    Includes:
-    - Public methods (no leading underscore).
-    - ``__init__`` and ``__new__`` (special methods with public semantics).
-    Excludes:
-    - Private methods (leading ``_`` but not ``__``).
-    - Dunder methods other than ``__init__``/``__new__`` (e.g. ``__str__``, ``__repr__``).
-    - Class-level attributes (handled separately via variable comparison).
-    """
     if member_name in ("__init__", "__new__"):
         return True
     return not member_name.startswith("_")
 
 
 def _is_classvar(ann_node: nodes.NodeNG) -> bool:
-    """Check if *ann_node* has ``ClassVar`` as its base type.
-
-    Detects ``ClassVar[...]`` via AST structure (Subscript with Name('ClassVar')).
-    """
     return (
         isinstance(ann_node, nodes.Subscript)
         and isinstance(ann_node.value, nodes.Name)
@@ -99,10 +78,6 @@ def _is_classvar(ann_node: nodes.NodeNG) -> bool:
 
 
 def _compare_class_bases(ctx: ClassComparisonCtx) -> None:
-    """Compare base classes between stub and impl classes.
-
-    Emits E97B4 when normalized base lists differ.
-    """
     stub_bases = _normalize_bases(ctx.stub_class.bases)
     impl_bases = _normalize_bases(ctx.impl_class.bases)
     if stub_bases != impl_bases:
@@ -123,10 +98,6 @@ def _compare_class_bases(ctx: ClassComparisonCtx) -> None:
 
 
 def _compare_class_methods(ctx: ClassComparisonCtx) -> None:
-    """Compare public methods between stub and impl class bodies.
-
-    Delegates to ``_emit_callable_fidelity_issues`` for each method pair.
-    """
     stub_methods: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     impl_methods: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     for child in ctx.stub_class.body:
@@ -153,13 +124,8 @@ def _compare_class_methods(ctx: ClassComparisonCtx) -> None:
 
 
 def _compare_class_attrs(ctx: ClassComparisonCtx) -> None:
-    """Compare class-level annotated attributes between stub and impl.
-
-    Emits W97B5, E97B4, or I97B6 for each attribute comparison.
-    Skips ClassVar-annotated attributes.
-    """
     stub_attrs: dict[str, nodes.AnnAssign] = {}
-    impl_attrs: dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | None]] = {}
+    impl_attrs: dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]] = {}
     for child in ctx.stub_class.body:
         if isinstance(child, nodes.AnnAssign) and isinstance(
             child.target, nodes.AssignName
@@ -249,11 +215,6 @@ def _compare_class_attrs(ctx: ClassComparisonCtx) -> None:
 
 
 def _emit_variable_fidelity(checker: StubChecker, module_name: str) -> None:
-    """Compare variable annotations between stub and impl for *module_name*.
-
-    Only compares variables PRESENT in both stub and impl.
-    Variables absent from impl are caught by E97B1/E97B2 dispatch.
-    """
     f = checker._fidelity
     c = checker._coverage
     stub_vars = f.stub_variable_nodes.get(module_name, {})
@@ -311,6 +272,8 @@ def _emit_variable_fidelity(checker: StubChecker, module_name: str) -> None:
                     "Normalization failed for '%s' in '%s': stub=%s, impl=%s",
                     var_name,
                     module_name,
+                    stub_normalized,
+                    impl_normalized,
                 )
                 checker.add_message(
                     "annotation-unverifiable",
