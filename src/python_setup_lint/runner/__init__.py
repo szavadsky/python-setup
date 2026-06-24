@@ -38,8 +38,17 @@ from __future__ import annotations
 from .baseline import _capture_baseline as _capture_baseline
 from .baseline import _compare_sorted as _compare_sorted
 from .baseline import _diff_baseline as _diff_baseline
+from .baseline import peek_fallback_tools as peek_fallback_tools
 from .cli import _CONFIG_KEY_ALIASES as _CONFIG_KEY_ALIASES
 from .cli import _SUPPORTED_CONFIG_KEYS as _SUPPORTED_CONFIG_KEYS
+from .cli import _AUTOFIX_ENV_VAR as _AUTOFIX_ENV_VAR
+from .cli import _E999_RULE as _E999_RULE
+from .cli import _apply_autofix_conflict_aware as _apply_autofix_conflict_aware
+from .cli import _autofix_target_paths as _autofix_target_paths
+from .cli import _default_config_paths as _default_config_paths
+from .cli import _git_changed_files as _git_changed_files
+from .cli import _infer_package_name as _infer_package_name
+from .cli import _ruff_parseability_errors as _ruff_parseability_errors
 from .cli import main as main
 from .cli import run_lint as run_lint
 from .cmd_build import _build_command as _build_command
@@ -126,6 +135,7 @@ __all__ = [
     "ToolSpec",
     "ViolationCount",
     "main",
+    "peek_fallback_tools",
     "register_lint_tool",
     "run_lint",
 ]
