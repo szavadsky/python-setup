@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 def _extract_param_descriptors(
     args: nodes.Arguments,
     *,
-    strip_self: bool = False,
+    strip_self: bool = ...,
 ) -> list[ParamDescriptor]:
     """Build a list of ``ParamDescriptor`` from an Astroid ``Arguments`` node.
 
@@ -66,7 +66,7 @@ def _emit_callable_fidelity_issues(ctx: CallableComparisonCtx) -> None:
     comparison can be done (handled separately by coverage logic).
     """
 
-def _emit_callable_fidelity(checker: "StubChecker", module_name: str) -> None:
+def _emit_callable_fidelity(checker: StubChecker, module_name: str) -> None:
     """Compare callable signatures between stub and impl for *module_name*.
 
     Dispatches to ``_emit_callable_fidelity_issues`` for each stub callable.

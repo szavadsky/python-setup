@@ -58,7 +58,7 @@ def _compare_class_attrs(ctx: ClassComparisonCtx) -> None:
     Skips ClassVar-annotated attributes.
     """
 
-def _emit_variable_fidelity(checker: "StubChecker", module_name: str) -> None:
+def _emit_variable_fidelity(checker: StubChecker, module_name: str) -> None:
     """Compare variable annotations between stub and impl for *module_name*.
 
     Only compares variables PRESENT in both stub and impl.

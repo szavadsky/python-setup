@@ -17,13 +17,13 @@ resolve unchanged after the T10 split.
 
 from __future__ import annotations
 
-import inspect
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from astroid import nodes
-
 if TYPE_CHECKING:
+    import inspect
+    from astroid import nodes
+
     from python_setup_lint.checkers.stub_checker import StubChecker
 
 __all__ = [

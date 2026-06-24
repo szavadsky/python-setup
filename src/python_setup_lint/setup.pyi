@@ -5,8 +5,6 @@ Every install step checks current state before writing — running twice
 is a no-op.
 """
 
-from __future__ import annotations
-
 import argparse
 from collections.abc import Sequence
 from dataclasses import dataclass

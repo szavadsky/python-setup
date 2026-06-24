@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub_checker import StubChecker
 
-def emit_fidelity_violations(checker: "StubChecker") -> None:
+def emit_fidelity_violations(checker: StubChecker) -> None:
     """Emit all Phase 3 violations for every module in *stub_index*.
 
     Calls ``_emit_stub_symbol_check``, ``_emit_variable_fidelity``,
