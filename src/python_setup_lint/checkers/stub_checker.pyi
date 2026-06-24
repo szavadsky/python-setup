@@ -19,16 +19,34 @@ class StubChecker(BaseChecker):
     _coverage: _CoverageState
     _fidelity: _FidelityState
 
-    def __init__(self, linter: PyLinter) -> None: ...
-    def open(self) -> None: ...
-    def visit_module(self, node: nodes.Module) -> None: ...
-    def visit_import(self, node: nodes.Import) -> None: ...
-    def visit_importfrom(self, node: nodes.ImportFrom) -> None: ...
-    def close(self) -> None: ...
+    def __init__(self, linter: PyLinter) -> None:
+        """Initialize state via dataclass aggregates."""
+
+    def open(self) -> None:
+        """Read pylint config into state dataclasses."""
+
+    def visit_module(self, node: nodes.Module) -> None:
+        """Classify and index each .py file."""
+
+    def visit_import(self, node: nodes.Import) -> None:
+        """Record import facts for ``import X`` / ``import X as Y``."""
+
+    def visit_importfrom(self, node: nodes.ImportFrom) -> None:
+        """Record import facts for ``from X import Y``."""
+
+    def close(self) -> None:
+        """Emit Phase 1-3 violations: coverage, import contract, fidelity.
+
+        Post-processing: remove non-imported ``__main__`` modules from
+        stub-missing (standalone scripts exempt from stub requirement).
+        """
+
     def _index_impl_annotations(
         self,
         module_name: str,
         py_node: nodes.Module,
-    ) -> None: ...
+    ) -> None:
+        """Index annotation nodes from implementation for fidelity comparison."""
 
-def register(linter: PyLinter) -> None: ...
+def register(linter: PyLinter) -> None:
+    """Register the StubChecker with pylint."""

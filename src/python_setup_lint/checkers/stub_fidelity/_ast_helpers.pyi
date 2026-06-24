@@ -19,7 +19,7 @@ class _FidelityState:
 
     stub_variable_nodes: dict[str, dict[str, nodes.AnnAssign]]
     impl_annotations: dict[
-        str, dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | None]]
+        str, dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]]
     ]
     stub_callable_nodes: dict[
         str, dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef]
