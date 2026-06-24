@@ -835,6 +835,12 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
         secrets_baseline=config.secrets_baseline
         if config is not None
         else ".secrets.baseline",
+        # T7 — declarative override fields propagate through CLI merge:
+        # no CLI flag overrides these (defaults off keep python-setup's
+        # own run unchanged); callers like consultant.mcp set both via the
+        # ``config=`` argument.
+        ruff_project_overrides=config.ruff_project_overrides if config is not None else False,
+        pyright_project_override=config.pyright_project_override if config is not None else None,
     )
 
     return run_lint(

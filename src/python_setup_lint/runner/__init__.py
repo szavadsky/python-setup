@@ -53,6 +53,7 @@ from .cli import main as main
 from .cli import run_lint as run_lint
 from .cmd_build import _build_command as _build_command
 from .cmd_build import _build_statistics_flags as _build_statistics_flags
+from .cmd_build import _compose_ruff_config as _compose_ruff_config
 from .cmd_build import _config_flag_for as _config_flag_for
 from .cmd_build import _expand_globs as _expand_globs
 from .cmd_build import _find_py_files as _find_py_files
