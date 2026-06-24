@@ -56,7 +56,33 @@ _JSON_DIAGNOSTIC_TOOLS: frozenset[str] = frozenset({"pyright check"})
 # Tools whose stdout we currently do NOT parse into records — they keep
 # the legacy rstrip-set path AND are recorded in ``decisions.md`` (D3).
 # Populated lazily inside ``_diff_baseline`` per run; reset each call.
+# D1: exposed read-only via :func:`peek_fallback_tools` so tests / the
+# pipeline can observe WHICH tools fell back (the previous invisible
+# module-level set meant a tool could silently land in fallback with no
+# log line or assertion catching it).  The set is ``set[str]`` (not a
+# frozenset) because :func:`_diff_baseline` mutates it in place per run;
+# callers MUST treat the returned value as a snapshot (copy it before
+# mutating or asserting across calls).
 _FALLBACK_TOOLS: set[str] = set()
+
+
+def peek_fallback_tools() -> frozenset[str]:
+    """Snapshot the per-run set of tools that took the legacy rstrip-set path.
+
+    Returns:
+        A frozen copy of the internal :data:`_FALLBACK_TOOLS` set.  The
+        snapshot is taken at call time; mutation by a subsequent
+        :func:`_diff_baseline` invocation does NOT retroactively change a
+        previously returned snapshot.
+
+    Why this accessor exists (T2 D1): the legacy fallback set was a
+    module-level mutable populated per :func:`_diff_baseline` call but
+    never exposed via the public/private surface — a tool could land in
+    fallback with no observable evidence.  Tests AND the pipeline
+    should assert against this snapshot when a documented fallback is
+    expected (per envelope: "Emit decisions.md note per fallback tool").
+    """
+    return frozenset(_FALLBACK_TOOLS)
 
 
 def _compare_sorted(a: list[Record], b: list[Record]) -> tuple[list[Record], list[Record]]:
@@ -363,13 +389,32 @@ def _diff_baseline(
         elif parser is not None and isinstance(saved_entry.get("output"), str):
             # Legacy saved output BUT this tool now has a records parser →
             # upgrade the saved entry in-memory so the comparison is
-            # multiset-accurate.  If the parser finds ZERO records despite
-            # a non-empty saved output → fall back to rstrip-set for this
-            # entry only (the parser doesn't cover this stdout shape yet).
-            saved_records = parser(saved_entry["output"])
-            if not saved_records and saved_entry["output"].strip():
-                legacy_save_fallback = True
-                _FALLBACK_TOOLS.add(r.tool_name)
+            # multiset-accurate.  Two fallback triggers:
+            #   (a) parser finds ZERO records despite non-empty saved output
+            #       (the parser doesn't cover this stdout shape yet); OR
+            #   (b) D5 — parser found SOME records but the saved output has
+            #       UNPARSEABLE lines too (mixed-shape legacy output: a
+            #       pre-T2 baseline with parseable message lines AND a
+            #       ``Similar lines in 2 files`` banner with no spans).
+            #       Comparing ONLY the parsed records against the current
+            #       run's records would silently drop the unparseable
+            #       content from the diff (``_records_unchanged`` could
+            #       return ``True`` against a current that differs only
+            #       in those unparseable lines).  Fall back to rstrip-set
+            #       so the whole saved output participates in the diff.
+            saved_output = saved_entry["output"]
+            saved_records = parser(saved_output)
+            if saved_output.strip():
+                nonblank_saved_lines = sum(
+                    1 for ln in saved_output.splitlines() if ln.strip()
+                )
+                partial_parse = (
+                    saved_records
+                    and len(saved_records) < nonblank_saved_lines
+                )
+                if not saved_records or partial_parse:
+                    legacy_save_fallback = True
+                    _FALLBACK_TOOLS.add(r.tool_name)
 
         if parser is None:
             # No records parser for this tool → pure legacy rstrip-set path.

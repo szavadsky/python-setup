@@ -23,10 +23,6 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 from ._setup_precommit import (
-    _AGENTS_SENTINEL,
-    _AGENTS_SENTINEL_END,
-    _AGENTS_SNIPPET,
-    _PRECOMMIT_TEMPLATE,
     _atomic_write,
     _step_agents_snippet,
     _step_precommit,

@@ -7,7 +7,6 @@ Phase 2: AST-string walking + rewrite rules — fallback for Uninferable (~6%).
 from __future__ import annotations
 
 import re
-from typing import cast
 
 import astroid
 from astroid import nodes
@@ -73,7 +72,7 @@ class AnnotationNormalizer:
             # to the base ClassDef (``list``) and drops the type parameters,
             # causing false matches between ``list[int]`` and ``list[str]``.
             if isinstance(ann_node, nodes.Name):
-                return cast("str", result.name)
+                return result.name
             return None
         # For non-ClassDef results (UnionType, Const, etc) the str() form
         # is unreliable — fall through to Phase 2 (AST-string walking).

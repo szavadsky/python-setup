@@ -43,7 +43,6 @@ from tests.checkers._factories import (
     _STUB_FILE_CLASSIFICATION_CASES,
     _STUB_RESOLUTION_CASES,
     _VARIABLE_FIDELITY_CASES,
-    build_import_contract_state,
     materialize_pyi_exempt_layout,
     walk_stub_close_release,
     walk_stub_resolution_layout,

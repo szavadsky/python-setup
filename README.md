@@ -59,7 +59,7 @@ The installer does the following (all idempotent):
 |------|-------------|
 | Dependency | Adds `python-setup` to `[dependency-groups] dev` if missing |
 | Pylint plugins | Discovers custom checkers and adds them to `[tool.pylint.main] load-plugins` |
-| Pre-commit config | Writes `.pre-commit-config.yaml` with ruff-format, ruff-fix, and a local lint hook |
+| Pre-commit config | Writes `.pre-commit-config.yaml` with ruff-format, ruff-check, and a local lint hook that runs `python-setup lint --fix --no-fail-fast --baseline lint.baseline` (autofix is courtesy — all `supports_fix` tools apply fixes, conflict-tolerant) |
 | Coding rules | Copies `CodingRules.md` to the project root |
 | AGENTS.md snippet | Appends pre-commit setup instructions to `AGENTS.md` (if it exists) |
 
@@ -69,9 +69,21 @@ The installer does the following (all idempotent):
 uv run pre-commit install
 ```
 
-This installs the git hooks defined in `.pre-commit-config.yaml`:
-- **`git commit`** triggers `ruff-format` and `ruff-fix` (fast, auto-apply).
-- **`git push`** triggers the full lint pipeline with baseline diffing.
+This installs the git hooks defined in `.pre-commit-config.yaml` (all
+fire on `git commit`; there is no `pre-push` hook in the template):
+
+- **`git commit`** triggers `ruff-format` and `ruff-check` (fast hooks; both auto-apply changes).
+- **`git commit`** also triggers the full lint pipeline
+  (`python-setup lint --fix --no-fail-fast --baseline lint.baseline`). The
+  `lint` local hook runs all 11 tools; the `--fix` route autofixes every
+  tool that supports it (ruff, rumdl, ty) and then re-runs the
+  baseline-gated verification pass. Autofix is **courtesy, never blocks**:
+  it skips files with overlapping staged+unstaged changes (avoids
+  conflicts with the staged blob), reverts any file whose fix breaks
+  parseability (the E999 canary), and only NEW violations (regressions
+  vs the baseline) fail the hook. Use
+  `PYTHON_SETUP_LINT_NO_AUTOFIX=1` to disable autofix for a single run
+  without changing the `--fix` CLI plumbing.
 
 ### 4. Run lint
 
@@ -88,7 +100,7 @@ to manage the baseline file.
 - **Config files** in `python-setup/config/` (ruff, mypy, pylint, pyright, rumdl, ty) — inherited via `extend` in your `pyproject.toml`.
 - **Custom pylint checkers** — e.g. the `asyncio-timeout-checker` (T37) that flags `await client.{get,post,...}` calls missing an enclosing `asyncio.timeout(...)` / `anyio.fail_after(...)`. These are automatically registered by the installer.
 - **Extra lint tools** — declare project-specific tools via `[[tool.python-setup-lint.extra-tools]]` in your `pyproject.toml` (see [Custom lint steps via pyproject.toml](#custom-lint-steps-via-pyprojecttoml)).
-- **Pre-commit hooks** — fast auto-fix on commit, full pipeline on push.
+- **Pre-commit hooks** — fast auto-fix on commit AND the full lint pipeline (autofix route + baseline diffing) on the same `git commit` stage.
 - **Baseline diffing** — only new violations block CI; pre-existing ones are frozen in `lint.baseline`.
 
 ### Worked example

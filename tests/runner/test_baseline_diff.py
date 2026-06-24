@@ -34,6 +34,7 @@ from python_setup_lint.runner import (
     _parse_rumdl_records,
     _parse_ty_records,
     _parse_yamllint_records,
+    peek_fallback_tools,
 )
 from python_setup_lint.testing import make_lint_result
 
@@ -554,3 +555,641 @@ class TestPerfBenchmark:
         elapsed_ms = (time.perf_counter() - t0) * 1000
         assert violations == []
         assert elapsed_ms < 1000.0, f"_diff_baseline 50k took {elapsed_ms:.1f}ms (>1s ceiling)"
+
+
+# ── Error-path coverage: _diff_baseline failure modes ────────────
+
+
+class TestDiffBaselineErrors:
+    """``_diff_baseline`` error paths: missing/corrupt baseline, I/O failures."""
+
+    def test_baseline_file_not_found(self, tmp_path: Path) -> None:
+        missing = tmp_path / "does_not_exist.json"
+        violations = _diff_baseline([], missing)
+        assert any("Baseline file not found" in v for v in violations)
+
+    def test_cannot_read_corrupt_json(self, tmp_path: Path) -> None:
+        bad = tmp_path / "corrupt.json"
+        bad.write_text("{invalid json")
+        violations = _diff_baseline([], bad)
+        assert any("Cannot read baseline" in v for v in violations)
+
+    def test_new_tool_result_no_baseline_entry(self, tmp_path: Path) -> None:
+        saved = [{"tool": "pylint", "exit_code": 0, "schema": "v2", "records": []}]
+        baseline_path = tmp_path / "baseline.json"
+        baseline_path.write_text(json.dumps(saved))
+        current = [make_lint_result(tool_name="ruff check", stdout="src/a.py:1:3: E501 msg\n")]
+        violations = _diff_baseline(current, baseline_path)
+        assert any("New tool result" in v for v in violations)
+
+    def test_diagnostics_lost_when_current_not_json(self, tmp_path: Path) -> None:
+        """Saved has diagnostics (dict) but current stdout is non-JSON → regression."""
+        saved = [{
+            "tool": "pyright check", "exit_code": 0,
+            "diagnostics": {"summary": {"errorCount": 0, "warningCount": 0}},
+        }]
+        baseline_path = tmp_path / "baseline.json"
+        baseline_path.write_text(json.dumps(saved))
+        current = [make_lint_result(tool_name="pyright check", stdout="not json\n")]
+        violations = _diff_baseline(current, baseline_path)
+        assert any("Diagnostics lost" in v for v in violations)
+
+    def test_diagnostics_errors_increase_flagged(self, tmp_path: Path) -> None:
+        saved = [{
+            "tool": "pyright check", "exit_code": 0,
+            "diagnostics": {"summary": {"errorCount": 1, "warningCount": 0}},
+        }]
+        baseline_path = tmp_path / "baseline.json"
+        baseline_path.write_text(json.dumps(saved))
+        current = [make_lint_result(
+            tool_name="pyright check",
+            stdout=json.dumps({"summary": {"errorCount": 2, "warningCount": 0}}),
+        )]
+        violations = _diff_baseline(current, baseline_path)
+        assert any("Diagnostics changed" in v for v in violations)
+
+    def test_diagnostics_errors_decrease_shrinkage(self, tmp_path: Path) -> None:
+        saved = [{
+            "tool": "pyright check", "exit_code": 0,
+            "diagnostics": {"summary": {"errorCount": 2, "warningCount": 0}},
+        }]
+        baseline_path = tmp_path / "baseline.json"
+        baseline_path.write_text(json.dumps(saved))
+        current = [make_lint_result(
+            tool_name="pyright check",
+            stdout=json.dumps({"summary": {"errorCount": 1, "warningCount": 0}}),
+        )]
+        violations = _diff_baseline(current, baseline_path)
+        assert violations == []  # shrinkage → silent rewrite
+        reloaded = json.loads(baseline_path.read_text())
+        assert reloaded[0]["diagnostics"]["summary"]["errorCount"] == 1
+
+    def test_tool_absent_from_current_removed_from_baseline(self, tmp_path: Path) -> None:
+        saved = [
+            {"tool": "pylint", "exit_code": 0, "schema": "v2", "records": []},
+            {"tool": "ruff check", "exit_code": 0, "schema": "v2", "records": []},
+        ]
+        baseline_path = tmp_path / "baseline.json"
+        baseline_path.write_text(json.dumps(saved))
+        current = [make_lint_result(tool_name="pylint", stdout="")]
+        violations = _diff_baseline(current, baseline_path)
+        assert violations == []
+        reloaded = json.loads(baseline_path.read_text())
+        assert len(reloaded) == 1
+        assert reloaded[0]["tool"] == "pylint"
+
+
+# ── _capture_one edge cases ──────────────────────────────────────
+
+
+class TestCaptureOneEdgeCases:
+    """``_capture_one`` edge cases: pyright JSON, rumdl JSON/text, timing normalisation."""
+
+    def test_pyright_captured_as_diagnostics(self) -> None:
+        cap = _capture_baseline([make_lint_result(
+            tool_name="pyright check",
+            stdout=json.dumps({"summary": {"errorCount": 0, "warningCount": 0}}),
+        )])
+        assert "diagnostics" in cap[0]
+        assert cap[0]["diagnostics"]["summary"]["errorCount"] == 0
+
+    def test_pyright_volatile_fields_stripped(self) -> None:
+        cap = _capture_baseline([make_lint_result(
+            tool_name="pyright check",
+            stdout=json.dumps({
+                "time": "2024-01-01",
+                "version": "1.0",
+                "summary": {"errorCount": 0, "warningCount": 0, "timeInSec": 1.5},
+            }),
+        )])
+        diag = cap[0]["diagnostics"]
+        assert "time" not in diag
+        assert "version" not in diag
+        assert "timeInSec" not in diag.get("summary", {})
+
+    def test_rumdl_json_captured_as_diagnostics(self) -> None:
+        cap = _capture_baseline([make_lint_result(
+            tool_name="rumdl check",
+            stdout=json.dumps([{"file": "README.md", "rule": "MD013"}]),
+        )])
+        assert "diagnostics" in cap[0]
+
+    def test_rumdl_text_captured_as_records(self) -> None:
+        cap = _capture_baseline([make_lint_result(
+            tool_name="rumdl check",
+            stdout="README.md:8:1: [MD013] Line too long\n",
+        )])
+        assert cap[0]["schema"] == "v2"
+        assert cap[0]["records"][0]["rule"] == "MD013"
+
+    def test_rumdl_text_empty_records_nonempty_stdout_falls_back(self) -> None:
+        """rumdl text with only a success banner (no violations) → legacy output with timing collapsed."""
+        cap = _capture_baseline([make_lint_result(
+            tool_name="rumdl check",
+            stdout="No issues found (42ms)\n",
+        )])
+        assert "schema" not in cap[0]
+        assert "(XXXms)" in cap[0]["output"]
+
+    def test_rumdl_timing_normalised_in_output(self) -> None:
+        cap = _capture_baseline([make_lint_result(
+            tool_name="rumdl check",
+            stdout="README.md:8:1: [MD013] Line too long\nIssues: Found 1 issue (123ms)\n",
+        )])
+        # Records path: records non-empty → schema v2, no output fallback.
+        assert cap[0]["schema"] == "v2"
+        assert cap[0]["records"][0]["rule"] == "MD013"
+
+
+# ── _compare_sorted edge cases ───────────────────────────────────
+
+
+class TestCompareSortedEdgeCases:
+    """``_compare_sorted`` boundary conditions."""
+
+    def test_both_empty(self) -> None:
+        added, removed = _compare_sorted([], [])
+        assert added == [] and removed == []
+
+    def test_current_empty_saved_has_records(self) -> None:
+        saved = _sorted([Record("a.py", 1, 1, "E1", "m")])
+        added, removed = _compare_sorted([], saved)
+        assert added == []
+        assert len(removed) == 1
+
+    def test_current_has_records_saved_empty(self) -> None:
+        saved: list[Record] = []
+        current = _sorted([Record("a.py", 1, 1, "E1", "m")])
+        added, removed = _compare_sorted(current, saved)
+        assert len(added) == 1
+        assert removed == []
+
+    def test_none_file_on_both_sides(self) -> None:
+        """R0801-style None-file records on both sides → no spurious diff."""
+        a = _sorted([Record(None, None, None, "R0801:x<->y", "dup")])
+        b = _sorted([Record(None, None, None, "R0801:x<->y", "dup")])
+        added, removed = _compare_sorted(a, b)
+        assert added == [] and removed == []
+
+    def test_none_file_added(self) -> None:
+        a = _sorted([
+            Record(None, None, None, "R0801:x<->y", "dup"),
+            Record("a.py", 1, 1, "E1", "m"),
+        ])
+        b = _sorted([Record("a.py", 1, 1, "E1", "m")])
+        added, removed = _compare_sorted(a, b)
+        assert len(added) == 1
+        assert added[0].rule == "R0801:x<->y"
+        assert removed == []
+
+
+# ── Parser edge cases ────────────────────────────────────────────
+
+
+class TestParserEdgeCases:
+    """Additional per-tool parser edge cases beyond the core TestRecordParsers."""
+
+    def test_yamllint_space_before_rule_id(self) -> None:
+        """Some yamllint configs emit a space before the rule id."""
+        recs = _parse_yamllint_records("config/a.yaml:1:3: indentation: msg\n")
+        assert recs == [Record("config/a.yaml", 1, 3, "indentation", "msg")]
+
+    def test_rumdl_no_violations_footer_only(self) -> None:
+        recs = _parse_rumdl_records("Issues: Found 0 issues in 1 file (XXXms)\n")
+        assert recs == []
+
+    def test_mypy_notes_only_no_errors(self) -> None:
+        recs = _parse_mypy_records("src/a.py:1: note: see docs\nsrc/b.py:2: note: also docs\n")
+        assert recs == []
+
+    def test_ty_arrow_form_only(self) -> None:
+        """Ty multiline renderer without any concise lines."""
+        stdout = (
+            "error[invalid-argument-type]: Bad arg\n"
+            "  --> src/a.py:1:3\n"
+        )
+        recs = _parse_ty_records(stdout)
+        assert recs == [Record("src/a.py", 1, 3, "invalid-argument-type", "Bad arg")]
+
+    def test_ty_arrow_form_multiple_errors(self) -> None:
+        stdout = (
+            "error[invalid-argument-type]: Bad arg\n"
+            "  --> src/a.py:1:3\n"
+            "error[missing-return-type]: No return\n"
+            "  --> src/b.py:5:1\n"
+        )
+        recs = _parse_ty_records(stdout)
+        assert len(recs) == 2
+        assert recs[0].rule == "invalid-argument-type"
+        assert recs[1].rule == "missing-return-type"
+
+    def test_pylint_r0801_inline_spans(self) -> None:
+        """R0801 with both spans on the same line (compact form)."""
+        recs = _parse_pylint_records(
+            "Similar lines in 2 files\n==src/a.py:[1:5] ==src/b.py:[10:15]\n"
+        )
+        rules = [r.rule for r in recs]
+        assert "R0801:src/a.py:1-5<->src/b.py:10-15" in rules
+
+    def test_pylint_r0801_banner_without_enough_spans(self) -> None:
+        """Banner line with 'Similar lines in' but not enough spans → no R0801 record."""
+        recs = _parse_pylint_records("Similar lines in 2 files\n")
+        assert not any(r.rule.startswith("R0801") for r in recs)
+
+    def test_ruff_empty_stdout(self) -> None:
+        recs = _parse_ruff_records("")
+        assert recs == []
+
+    def test_ruff_stdout_with_only_footer(self) -> None:
+        recs = _parse_ruff_records("Found 1 error.\n")
+        assert recs == []
+
+
+# ── T2-1 review-fix additions: gaps D1–D6 ────────────────────────
+# Each class below targets one explicitly-named review gap from
+# ``reviews/T2-0.md``.  ``peek_fallback_tools`` is the D1 observability
+# seam — every test that takes the legacy rstrip-set fallback branch
+# asserts against it so the previously-invisible set is now anchored.
+
+
+class TestPeekFallbackTools:
+    """D1 — ``peek_fallback_tools`` exposes the previously-invisible set.
+
+    The legacy mutation-only :data:`_FALLBACK_TOOLS` meant a tool could
+    silently land in fallback with no log line or assertion catching it.
+    The accessor returns a frozen snapshot so tests can assert membership
+    without racing a subsequent ``_diff_baseline`` mutation.
+    """
+
+    def test_snapshot_is_frozen_copy_not_live_reference(self, tmp_path: Path) -> None:
+        """The returned frozenset is decoupled from the live set AND resets per run.
+
+        A frozenset is immutable by construction (the snapshot CAN'T be
+        mutated retroactively), but the value of the live set at snapshot
+        time is preserved EXACTLY (snapshot is a value copy, not a view)
+        AND the live set is reset by each ``_diff_baseline`` call so a
+        previously-fallback tool that is NOT in the new run is evicted
+        from the new snapshot.  Pins both halves of the D1 fix in one
+        assertion chain.
+        """
+        # First call: strange-tool lands in fallback.
+        diff_baseline_with(
+            tmp_path,
+            [{"tool": "strange-tool", "exit_code": 0, "output": "line A\n"}],
+            [make_lint_result(tool_name="strange-tool", stdout="line A\n")],
+        )
+        snap1 = peek_fallback_tools()
+        assert isinstance(snap1, frozenset)
+        assert snap1 == frozenset({"strange-tool"})
+        # Second call: a different no-fallback tool (pylint via records path).
+        diff_baseline_with(
+            tmp_path,
+            [{"tool": "pylint", "exit_code": 0, "schema": "v2", "records": []}],
+            [make_lint_result(tool_name="pylint", stdout="")],
+        )
+        assert snap1 == frozenset({"strange-tool"})  # snapshot unchanged
+        # And the live set now reflects the new run (empty: pylint took records path).
+        snap2 = peek_fallback_tools()
+        assert "strange-tool" not in snap2  # per-run reset evicted it
+        assert "pylint" not in snap2  # no fallback recorded for pylint
+        assert snap2 == frozenset()
+
+
+class TestFallbackTracking:
+    """D1/D2 — parser-known tool with zero-record output lands in fallback.
+
+    ``_legacy_pylint_zero_records_falls_back`` (review directional-fix #1):
+    a tool WITH a records parser whose stdout yields ZERO records (e.g.
+    a multiline Python traceback) MUST land in the fallback set AND the
+    saved entry MUST be rewritten via the legacy shrinkage branch, not
+    the records walk-merge.
+    """
+
+    def test_legacy_output_falls_back_when_parser_empty(self, tmp_path: Path) -> None:
+        """Pylint saved as legacy output that the parser can't parse → fallback."""
+        # Pylint stdout the records parser matches NOTHING in (a banner
+        # + an unparseable traceback tail).  The tool IS in
+        # ``_RECORD_PARSERS`` so the records path is TRIED first; when it
+        # yields zero records it must fall through to rstrip-set fallback.
+        saved_output = "************* Module banner only\n"
+        saved = [{"tool": "pylint", "exit_code": 0, "output": saved_output}]
+        current = [make_lint_result(tool_name="pylint", stdout=saved_output)]
+        violations, _ = diff_baseline_with(tmp_path, saved, current)
+        # No violation (output unchanged) AND the tool is observed in fallback.
+        assert "pylint" in peek_fallback_tools()
+        assert violations == []
+
+    def test_parser_known_tool_with_traceback_lands_in_fallback(self, tmp_path: Path) -> None:
+        """Non-empty ruff stdout that yields zero records → fallback + observable.
+
+        A multi-line Python traceback is non-empty but matches no
+        ``path:line:col: CODE msg`` line.  The capture path emits
+        legacy ``output`` (per the empty-records-nonempty-stdout capture
+        branch); the diff path then must take the legacy rstrip-set
+        fallback for BOTH the saved and the current side.
+        """
+        traceback = (
+            "Traceback (most recent call last):\n"
+            '  File "ruff_runner.py", line 12, in <module>\n'
+            "    raise RuntimeError('boom')\n"
+            "RuntimeError: boom\n"
+        )
+        # Capture the current side through ``_capture_baseline`` so the
+        # saved-entry shape mirrors a fresh post-T2 run that landed in the
+        # empty-records-nonempty-stdout capture fallback (legacy ``output``).
+        captured = _capture_baseline([make_lint_result(tool_name="ruff check", stdout=traceback)])
+        saved = captured  # saved baseline was written by a prior capture.
+        # Current run emits the SAME traceback (no violation expected),
+        # but the saved entry was emitted via the capture-side fallback
+        # so the diff path must also take the legacy fallback AND record
+        # ruff in the fallback set.
+        violations, reloaded = diff_baseline_with(
+            tmp_path, saved, [make_lint_result(tool_name="ruff check", stdout=traceback)],
+        )
+        assert "ruff check" in peek_fallback_tools()
+        assert violations == []
+        # Saved entry stays in legacy ``output`` form (no records upgrade
+        # because parsed-records was empty).
+        assert "records" not in reloaded[0]
+        assert reloaded[0]["output"] == traceback
+
+
+class TestLegacyRstripSet:
+    """D2 — the legacy rstrip-set ADDITION branch (regression).
+
+    ``test_legacy_unknown_tool_keeps_rstrip_set_path`` only exercised the
+    shrinkage (no-op) branch — current having FEWER lines than saved.
+    The addition branch — current having MORE lines than saved →
+    ``Output changed`` violation — was untested.
+    """
+
+    def test_legacy_addition_flagged(self, tmp_path: Path) -> None:
+        """A strange-tool baseline 'line A' vs current 'line A\nline B' → flagged."""
+        saved = [{"tool": "strange-tool", "exit_code": 0, "output": "line A\n"}]
+        current = [make_lint_result(tool_name="strange-tool", stdout="line A\nline B\n")]
+        violations, reloaded = diff_baseline_with(tmp_path, saved, current)
+        assert any("Output changed" in v for v in violations)
+        # Fallback set observed (the rstrip-set path was taken).
+        assert "strange-tool" in peek_fallback_tools()
+        # Addition branch does NOT mutate the saved baseline (the new
+        # line is a regression, not shrinkage).
+        assert reloaded[0]["output"] == "line A\n"
+
+    def test_legacy_addition_count_change_flagged(self, tmp_path: Path) -> None:
+        """Duplicate-line count increase on a strange-tool → addition flagged.
+
+        Pre-T2 the set-diff collapsed identical lines — a count change was
+        swallowed.  The legacy rstrip-set path also cannot catch a
+        count-only change (it IS a set diff), so this test documents
+        that the FALLBACK PATH is multiset-INACCURATE by design — the
+        records path is the multiset-accurate one.  The addition of a
+        DIFFERENT line is still caught by the set difference here.
+        """
+        saved = [{"tool": "strange-tool", "exit_code": 0, "output": "line A\nline A\n"}]
+        # Add a brand-new distinct line (set difference catches this).
+        current = [make_lint_result(tool_name="strange-tool", stdout="line A\nline A\nline B\n")]
+        violations, _ = diff_baseline_with(tmp_path, saved, current)
+        assert any("Output changed" in v for v in violations)
+
+
+class TestExitCodeBothNonzero:
+    """D3 — both exit codes nonzero but DIFFERENT → fall through to content compare.
+
+    The design comment in ``_diff_baseline`` says "both non-zero but
+    different → fall through to content compare" but no test pinned this.
+    ``test_exit_code_0_to_nonzero_flagged`` and ``..._nonzero_to_0_shrinkage``
+    cover only the parity transitions (0↔nonzero); both-nonzero-diff was
+    untested AND the records walk-merge path runs identically regardless
+    of exit_code parity.
+    """
+
+    def test_both_nonzero_diff_exit_codes_still_diff_content(self, tmp_path: Path) -> None:
+        """Saved exit=1 records=[X], current exit=2 records=[X,Y] → Y flagged as addition.
+
+        The exit_code parity delta (1 vs 2) does NOT itself flag a
+        violation; the content diff (records walk-merge) is the
+        authoritative signal.  An added record is still reported.
+        """
+        saved = [{
+            "tool": "mypy", "exit_code": 1, "schema": "v2",
+            "records": [{"file": "a.py", "line": 1, "col": None, "rule": "code", "msg": "m"}],
+        }]
+        current = [make_lint_result(
+            tool_name="mypy", exit_code=2,
+            stdout="a.py:1: error: m [code]\nb.py:2: error: n [other]\n",
+        )]
+        violations, reloaded = diff_baseline_with(tmp_path, saved, current)
+        assert any("mypy" in v for v in violations)
+        # Exit code 1 → 2 is NOT separately flagged (no "Exit code changed"
+        # message); only the content addition is reported.
+        assert not any("Exit code changed" in v for v in violations)
+        # Shrinkage path NOT taken (addition, not removal).
+        assert reloaded[0]["exit_code"] == 1
+
+    def test_both_nonzero_identical_content_no_diff(self, tmp_path: Path) -> None:
+        """Saved exit=1 records=[X], current exit=2 records=[X] → no diff.
+
+        Exit_code parity delta alone does NOT produce a violation when
+        the records multiset is identical.  Documents the design intent
+        that nonzero→nonzero counts ONLY as content drift, not as a
+        regression by itself.
+        """
+        saved = [{
+            "tool": "mypy", "exit_code": 1, "schema": "v2",
+            "records": [{"file": "a.py", "line": 1, "col": None, "rule": "code", "msg": "m"}],
+        }]
+        current = [make_lint_result(
+            tool_name="mypy", exit_code=2,
+            stdout="a.py:1: error: m [code]\n",
+        )]
+        violations, reloaded = diff_baseline_with(tmp_path, saved, current)
+        assert violations == []
+        # No baseline mutation (records unchanged).
+        assert reloaded[0]["exit_code"] == 1
+
+
+class TestMultiSavedToolDedup:
+    """D4 — duplicate saved tool entries ALL removed on tool absence.
+
+    The comment at ``baseline.py`` in the tools-absent shrinkage branch
+    says "Remove ALL entries with the same tool name (not just the last
+    one)" but only a single-entry saved list was tested.  A pre-T2
+    baseline with duplicate tool entries (a real concern per the
+    comment) must have EVERY matching entry evicted when the tool is
+    absent from the current run.
+    """
+
+    def test_duplicate_saved_tool_entries_all_removed_on_tool_absence(self, tmp_path: Path) -> None:
+        """Two saved 'pylint' entries + current omits pylint → reloaded has zero pylint."""
+        saved = [
+            {"tool": "pylint", "exit_code": 0, "schema": "v2", "records": []},
+            {"tool": "pylint", "exit_code": 1, "schema": "v2",
+             "records": [{"file": "a.py", "line": 1, "col": None, "rule": "code", "msg": "m"}]},
+            {"tool": "ruff check", "exit_code": 0, "schema": "v2", "records": []},
+        ]
+        baseline_path = tmp_path / "baseline.json"
+        baseline_path.write_text(json.dumps(saved))
+        current = [make_lint_result(tool_name="ruff check", stdout="")]
+        violations = _diff_baseline(current, baseline_path)
+        assert violations == []
+        reloaded = json.loads(baseline_path.read_text())
+        # Both pylint entries evicted; only ruff remains.
+        assert len(reloaded) == 1
+        assert reloaded[0]["tool"] == "ruff check"
+        assert all(e["tool"] != "pylint" for e in reloaded)
+
+
+class TestMixedShapeLegacyOutput:
+    """D5 — mixed-shape legacy output upgrade path.
+
+    A pre-T2 baseline may contain legacy ``output`` with BOTH parseable
+    message lines AND an unparseable banner (e.g. a pylint
+    ``Similar lines in 2 files`` header with NO spans, plus real
+    ``path:line:col: CODE: msg`` lines).  Two scenarios:
+      * PARTIAL parse (some records) → fall back to rstrip-set so the
+        unparseable lines participate in the diff (D5 fix: no silent
+        diff loss).  Records path is NOT taken.
+      * ZERO parse (all unparseable) → fall back to rstrip-set (the
+        pre-existing behaviour).
+    """
+
+    def test_legacy_pylint_with_unparseable_lines_upgrades_partial(self, tmp_path: Path) -> None:
+        """Saved output has a real violation line + an unparseable banner.
+
+        Pre-fix behaviour: parser returns 1 record (the real line), and
+        ``_records_unchanged`` may report no-diff against a current that
+        differs ONLY in the banner — silent diff loss.  Post-fix (D5):
+        the partial-parse triggers the rstrip-set fallback so the WHOLE
+        saved output participates in the diff.
+        """
+        saved_output = (
+            "Similar lines in 2 files\n"  # banner with NO spans — unparseable
+            "src/a.py:1:1: W0611: x (unused-import)\n"  # parseable
+        )
+        saved = [{"tool": "pylint", "exit_code": 0, "output": saved_output}]
+        # Current IDENTICAL to saved — no diff expected (the rstrip-set
+        # path compares the whole output, including the banner).
+        current = [make_lint_result(tool_name="pylint", stdout=saved_output)]
+        violations, reloaded = diff_baseline_with(tmp_path, saved, current)
+        assert violations == []
+        assert "pylint" in peek_fallback_tools()
+        # Records path NOT taken → entry stays in legacy ``output`` form
+        # (no in-memory schema-v2 upgrade).
+        assert "records" not in reloaded[0]
+        assert "schema" not in reloaded[0]
+        assert reloaded[0]["output"] == saved_output
+
+    def test_legacy_pylint_partial_parse_addition_flagged(self, tmp_path: Path) -> None:
+        """Same partial-parse fixture, but current adds a NEW violation line.
+
+        Pre-fix: the records parser returned 1 record (identical on both
+        sides) → ``_records_unchanged`` TRUE → silent diff loss of the
+        new violation (it was never in the parsed-records set so the
+        walk-merge never saw it as an addition).  Post-fix (D5): the
+        partial-parse triggers the rstrip-set fallback so the whole
+        saved+current output is folded via ``_pylint_inventory`` and
+        the new signature is caught as an addition.
+
+        NOTE: an unparseable banner-only addition (e.g.
+        ``************* Module extra``) is folded away by
+        ``_pylint_inventory`` (it produces no signature) so the legacy
+        path does NOT catch it — that's the documented R0801/R0401
+        collapse semantics.  This test exercises a NEW parseable
+        violation line so the addition is observable through the
+        folded inventory.
+        """
+        saved_output = (
+            "Similar lines in 2 files\n"  # unparseable banner
+            "src/a.py:1:1: W0611: x (unused-import)\n"  # parseable signature
+        )
+        current_output = saved_output + "src/c.py:5:1: C0114: new (missing-module-docstring)\n"
+        saved = [{"tool": "pylint", "exit_code": 0, "output": saved_output}]
+        current = [make_lint_result(tool_name="pylint", stdout=current_output)]
+        violations, _ = diff_baseline_with(tmp_path, saved, current)
+        assert any("Output changed" in v for v in violations)
+        assert "pylint" in peek_fallback_tools()
+
+    def test_legacy_pylint_only_unparseable_falls_back(self, tmp_path: Path) -> None:
+        """The inverse: saved output is ENTIRELY unparseable (zero records).
+
+        The pre-existing zero-record fallback path is preserved: the
+        tool lands in the fallback set AND the legacy rstrip-set path
+        is taken.
+        """
+        saved_output = "************* Module banner only\n"
+        saved = [{"tool": "pylint", "exit_code": 0, "output": saved_output}]
+        current = [make_lint_result(tool_name="pylint", stdout=saved_output)]
+        violations, reloaded = diff_baseline_with(tmp_path, saved, current)
+        assert violations == []
+        assert "pylint" in peek_fallback_tools()
+        assert "records" not in reloaded[0]
+        assert reloaded[0]["output"] == saved_output
+
+
+class TestCaptureBaselineOnDisk:
+    """D6 — ``_capture_baseline`` writes records in sorted order on disk.
+
+    The envelope's load-bearing invariant is "records kept sorted by
+    ``(file, line, col, rule)``".  Existing tests only assert the
+    parsed-back records are sorted (via ``_RECORD_PARSERS``); no test
+    pinned that ``_capture_baseline`` writes them sorted on the disk
+    boundary.  An unsorted on-disk list would cause ``_records_unchanged``
+    to spuriously report a diff on read-back.
+    """
+
+    def test_records_emitted_in_sorted_order(self) -> None:
+        """Capture intentionally-unsorted current stdout → on-disk records are sorted.
+
+        The record parsers all call ``records.sort(key=_compare_records_key)``
+        at the end; this test pins the invariant at the ``_capture_baseline``
+        boundary so a future parser that forgets the sort is caught here,
+        not by a spurious downstream diff.
+        """
+        # Three ruff lines emitted out of sort order (z before a, plus a
+        # None-col line which sorts ahead of any col'd line at the same
+        # file:line per the sentinel-tuple key).
+        stdout = (
+            "src/z.py:9:1: E501 zeta\n"
+            "src/a.py:1:3: E501 alpha\n"
+            "src/a.py:1: E501 alpha-no-col\n"
+        )
+        cap = _capture_baseline([make_lint_result(tool_name="ruff check", stdout=stdout)])
+        records = cap[0]["records"]
+        # Reconstruct the sort key for each emitted record and assert
+        # the on-disk list equals the sorted form (no reorder needed).
+        keys = [
+            (
+                () if r["file"] is None else (r["file"],),
+                () if r["line"] is None else (r["line"],),
+                () if r["col"] is None else (r["col"],),
+                r["rule"],
+            )
+            for r in records
+        ]
+        assert keys == sorted(keys), f"records not sorted on disk: {records!r}"
+        # Sanity: the expected order is alpha-no-col (None col → sentinel),
+        # alpha (col=3), then zeta.
+        assert [r["file"] for r in records] == ["src/a.py", "src/a.py", "src/z.py"]
+        assert records[0]["col"] is None  # None col sorts ahead of 3.
+        assert records[1]["col"] == 3
+
+    def test_records_sorted_round_trip_through_diff(self, tmp_path: Path) -> None:
+        """A captured-then-saved baseline round-trips through ``_diff_baseline``.
+
+        Captures a current run, writes the captured records as the saved
+        baseline, then diffs an IDENTICAL current run against it — the
+        sorted-on-disk invariant means ``_records_unchanged`` returns
+        ``True`` and NO spurious diff fires.
+        """
+        stdout = (
+            "src/z.py:9:1: E501 zeta\n"
+            "src/a.py:1:3: E501 alpha\n"
+            "src/b.py:5:2: E501 beta\n"
+        )
+        cap = _capture_baseline([make_lint_result(tool_name="ruff check", stdout=stdout)])
+        # Re-emit the captured records as the saved baseline (simulating
+        # a fresh post-T2 baseline write).
+        saved = cap
+        current = [make_lint_result(tool_name="ruff check", stdout=stdout)]
+        violations, _ = diff_baseline_with(tmp_path, saved, current)
+        assert violations == []  # no spurious diff from sort-order mismatch

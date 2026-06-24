@@ -7,7 +7,7 @@ simulate test-file paths.
 from __future__ import annotations
 
 from python_setup_lint.checkers.tmp_path_checker import TempFileChecker
-from python_setup_lint.testing import _make_tc as _make_tc_factory, _walk_and_release as _walk_shared
+from python_setup_lint.testing import _make_tc as _make_tc_factory
 
 
 _make_tc = lambda: _make_tc_factory(TempFileChecker)

@@ -1,6 +1,10 @@
 """Unit tests for ``python_setup_lint.setup``."""
 from __future__ import annotations
-import inspect, json, os, re, textwrap
+import inspect
+import json
+import os
+import re
+import textwrap
 from pathlib import Path
 import pytest
 
@@ -416,7 +420,8 @@ class TestSetPylintLoadPluginsMerge:
 class TestDownstreamIntegration:
     @pytest.mark.slow
     def test_install_then_lint(self) -> None:
-        import subprocess, shutil
+        import subprocess
+        import shutil
         c = Path.home() / ".tmp" / "t15-downstream"
         if c.exists():
             shutil.rmtree(c)
