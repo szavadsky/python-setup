@@ -12,6 +12,7 @@ Lint-runner fakes:
 
 from __future__ import annotations
 
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -148,3 +149,124 @@ def fake_run_cmd_factory(
     After the test, inspect ``fake.calls`` to assert on constructed commands.
     """
     return FakeRunCmd(results=results)
+
+
+# ── Consumer-agnostic health checks ───────────────────────────────
+#
+# ``test_checked_main`` and the ``assert_*_precommit_*`` validators are
+# intended for reuse by any ``python-setup`` consumer.  They contain no
+# project-specific paths; the consumer supplies ``repo_root`` and
+# (optionally) the baseline filename, so the same code validates every
+# project's ``.pre-commit-config.yaml`` generated from the shared template.
+
+
+def test_checked_main() -> None:
+    """Run pytest with typeguard enabled (consumer-agnostic).
+
+    Equivalent to ``pytest -p typeguard -q tests/unit`` with trailing
+    ``sys.argv`` passthrough.  Uses the ``typeguard`` pytest plugin
+    (``-p typeguard``) rather than ``--typeguard-packages=<name>`` so the
+    entry point does not hardcode any package name — any consumer can
+    wire ``test-checked = "python_setup_lint.testing:test_checked_main"``
+    in its ``[project.scripts]`` and delete its local wrapper.
+
+    Consumers that want typeguard scoped to a single package may keep a
+    ``typeguard-packages`` key in ``[tool.pytest.ini_options]``; the plugin
+    honours that ini value when present and instruments every package
+    otherwise.
+    """
+    import sys
+
+    import pytest
+
+    args = ["-p", "typeguard", "-q", "tests/unit"]
+    args.extend(sys.argv[1:])
+    sys.exit(pytest.main(args))
+
+
+def _load_precommit_config(repo_root: Path) -> dict[str, Any]:
+    """Load and return ``repo_root / .pre-commit-config.yaml`` as a dict.
+
+    Raises ``AssertionError`` (with a helpful message) when the file is
+    missing or not a YAML mapping with a ``repos`` key, so callers can use
+    the return value without re-validating.
+    """
+    import yaml
+
+    config_path = repo_root / ".pre-commit-config.yaml"
+    assert config_path.exists(), f"Missing pre-commit config: {config_path}"
+    with open(config_path) as f:
+        data = yaml.safe_load(f)
+    assert isinstance(data, dict), "Expected .pre-commit-config.yaml to be a YAML mapping (dict)"
+    assert "repos" in data, "Expected 'repos' key in pre-commit config"
+    return data
+
+
+def assert_precommit_config_valid(repo_root: Path) -> None:
+    """Assert ``.pre-commit-config.yaml`` is valid YAML + passes ``validate-config``.
+
+    Consumer-agnostic: works against any ``python-setup``-generated config.
+    Runs ``pre-commit validate-config`` against the file (caller's
+    responsibility to ensure ``pre-commit`` is installed in the active env).
+    """
+    config_path = repo_root / ".pre-commit-config.yaml"
+    _load_precommit_config(repo_root)  # raises AssertionError on YAML/shape errors
+    result = subprocess.run(  # noqa: S603 - path is constructed, not user input
+        ["pre-commit", "validate-config", str(config_path)],
+        check=False,
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, (
+        f"pre-commit validate-config failed (exit {result.returncode}):\n{result.stdout}\n{result.stderr}"
+    )
+
+
+def assert_precommit_hooks_shape(
+    repo_root: Path,
+    *,
+    baseline_filename: str = "lint.baseline",
+) -> None:
+    """Assert the pre-commit hook shape matches the shared template contract.
+
+    Checked invariants (consumer-agnostic):
+    * a ``lint`` local hook exists, uses ``language: system``, and its entry
+      contains ``--no-fail-fast`` and ``--baseline <baseline_filename>``;
+    * the ruff fix hook carries ``--fix``;
+    * the fast hooks (``ruff-format``, ``ruff``) run on the ``pre-commit`` stage.
+
+    Raises ``AssertionError`` on the first violated invariant.
+    """
+    config = _load_precommit_config(repo_root)
+
+    def _find_hook(hook_id: str) -> dict[str, Any] | None:
+        for repo in config.get("repos", []):
+            for hook in repo.get("hooks", []):
+                if isinstance(hook, dict) and hook.get("id") == hook_id:
+                    return hook
+        return None
+
+    lint_hook = _find_hook("lint")
+    assert lint_hook is not None, "Missing 'lint' local hook in .pre-commit-config.yaml"
+    assert lint_hook.get("language") == "system", "'lint' hook must use language: system"
+    lint_entry = lint_hook.get("entry", "")
+    assert "--no-fail-fast" in lint_entry, f"'lint' entry must contain --no-fail-fast, got: {lint_entry!r}"
+    assert f"--baseline {baseline_filename}" in lint_entry, (
+        f"'lint' entry must contain --baseline {baseline_filename}, got: {lint_entry!r}"
+    )
+
+    ruff_hook = _find_hook("ruff") or _find_hook("ruff-check")
+    assert ruff_hook is not None, "Missing ruff fix hook (id 'ruff' or 'ruff-check')"
+    ruff_args = ruff_hook.get("args", [])
+    assert "--fix" in ruff_args, f"ruff fix hook must carry --fix, got args: {ruff_args!r}"
+
+    for fast_id in ("ruff-format", "ruff", "ruff-check"):
+        fast_hook = _find_hook(fast_id)
+        if fast_hook is None:
+            continue
+        stages = fast_hook.get("stages", [])
+        assert "pre-commit" in stages or stages == [], (
+            f"fast hook '{fast_id}' must run on the pre-commit stage, got stages: {stages!r}"
+        )

@@ -8,11 +8,14 @@ Lint-runner fakes:
 - ``make_lint_result`` — convenience factory for ``LintResult``.
 - ``fake_run_cmd_factory`` — builds a callable that returns canned ``LintResult``
   by tool label or call order, capturing every ``cmd`` it receives.
+
+Consumer-agnostic health checks (T11):
+- ``test_checked_main`` — typeguard-pytest console-script entry point.
+- ``assert_precommit_config_valid`` / ``assert_precommit_hooks_shape`` —
+  generic ``.pre-commit-config.yaml`` validators for any python-setup consumer.
 """
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -90,9 +93,9 @@ class FakeRunCmd:
     """
 
     results: dict[str, LintResult] | list[LintResult]
-    calls: list[_FakeRunCmdRecord] = field(default_factory=list)
+    calls: list[_FakeRunCmdRecord] = ...
 
-    def __call__(self, cmd: list[str], *, cwd: Path = Path(), label: str = "") -> LintResult:
+    def __call__(self, cmd: list[str], *, cwd: Path = ..., label: str = "") -> LintResult:
         """Match ``_run_cmd(cmd, *, cwd, label) -> LintResult`` signature."""
 
 
@@ -114,4 +117,42 @@ def fake_run_cmd_factory(
         )
 
     After the test, inspect ``fake.calls`` to assert on constructed commands.
+    """
+
+
+# ── Consumer-agnostic health checks ───────────────────────────────
+
+
+def test_checked_main() -> None:
+    """Run pytest with typeguard enabled (``-p typeguard -q tests/unit``).
+
+    Consumer-agnostic typeguard runner: uses the ``typeguard`` pytest plugin
+    rather than ``--typeguard-packages=<name>`` so no package name is
+    hardcoded.  Consumers wire ``test-checked =
+    "python_setup_lint.testing:test_checked_main"`` and delete local wrappers.
+    """
+
+
+def assert_precommit_config_valid(repo_root: Path) -> None:
+    """Assert ``.pre-commit-config.yaml`` is valid YAML + passes ``validate-config``.
+
+    Works against any ``python-setup``-generated config.  Requires
+    ``pre-commit`` installed in the active env.
+    """
+
+
+def assert_precommit_hooks_shape(
+    repo_root: Path,
+    *,
+    baseline_filename: str = "lint.baseline",
+) -> None:
+    """Assert the pre-commit hook shape matches the shared template contract.
+
+    Invariants (consumer-agnostic):
+    * ``lint`` local hook exists, ``language: system``, entry has
+      ``--no-fail-fast`` and ``--baseline <baseline_filename>``;
+    * ruff fix hook carries ``--fix``;
+    * fast hooks (``ruff-format``, ``ruff``/``ruff-check``) run on ``pre-commit``.
+
+    Raises ``AssertionError`` on the first violated invariant.
     """
