@@ -10,6 +10,8 @@ declaratively (``mypy.stubtest``, ``pyright verify types``, ``detect-secrets``,
 
 from __future__ import annotations
 
+import tempfile
+import tomllib
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -21,11 +23,20 @@ from .types import RunnerConfig, ToolSpec
 __all__ = [
     "_build_command",
     "_build_statistics_flags",
+    "_compose_ruff_config",
     "_config_flag_for",
     "_expand_globs",
     "_find_py_files",
     "_resolve_pylintrc",
 ]
+
+
+# Module-level memo for parsed ``pyproject.toml`` used by
+# :func:`_compose_ruff_config`, keyed by ``(resolved_path, mtime_ns)``.
+# An edit to the file mid-session triggers a fresh parse because the mtime
+# changes.  Ported from consultant.mcp ``_lint_scripts._PYPROJECT_CACHE`` —
+# kept module-private, not re-exported via ``runner/__init__``.
+_PYPROJECT_CACHE: dict[tuple[Path, int], dict] = {}
 
 
 def _build_statistics_flags(spec: ToolSpec) -> list[str]:
@@ -108,6 +119,112 @@ def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
         if candidate.is_file():
             return candidate
     return None
+
+
+def _load_pyproject_toml(path: Path) -> dict:
+    """Load and cache ``pyproject.toml``, keyed by path + mtime.
+
+    Memoised so repeated calls within the same process avoid re-parsing
+    the file when it has not changed on disk.  Cache key is
+    ``(resolved_path, mtime_ns)`` — an edit to the file mid-session
+    triggers a fresh parse.  Returns an empty dict when the path is
+    unreadable (caller treats as no-override).
+
+    Raises:
+        SystemExit: when the pyproject is malformed (T8 fail-fast on
+            malformed configuration rather than silent fallback).
+    """
+    resolved = path.resolve()
+    try:
+        mtime = resolved.stat().st_mtime_ns
+    except OSError:
+        return {}
+    key = (resolved, mtime)
+    cached = _PYPROJECT_CACHE.get(key)
+    if cached is not None:
+        return cached
+    try:
+        with open(resolved, "rb") as f:  # noqa: SIM115
+            data = tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        raise SystemExit(
+            f"python_setup_lint.runner.cmd_build: pyproject.toml at {resolved} is malformed or unreadable: {exc}"
+        ) from exc
+    _PYPROJECT_CACHE[key] = data
+    return data
+
+
+def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
+    """Build an effective ruff config that ``extend``s *shared_config*.
+
+    ``ruff check --config <shared>`` does not merge project-specific
+    settings from ``pyproject.toml``.  This helper writes a temporary
+    ``ruff.toml`` that extends the shared config + copies the project's
+    ``[tool.ruff.lint.flake8-tidy-imports].banned-api`` and
+    ``[tool.ruff.lint.per-file-ignores]`` stanzas so the runner can pass
+    it to ruff via ``--config``.
+
+    No-override fast path: when the project ``pyproject.toml`` has neither
+    a ``banned-api`` table nor a ``per-file-ignores`` table (or is
+    missing/unreadable), returns *shared_config* unchanged — no temp file
+    written.
+
+    Temp file location: ``tempfile.gettempdir() /
+    "python_setup_lint_ruff_{cwd_name}" / "ruff.toml"`` — written once
+    per run.  Ported verbatim from consultant.mcp
+    ``_ruff_config_with_project_overrides`` (battle-tested).
+
+    Args:
+        cwd: Project root — ``cwd / "pyproject.toml"`` is the override
+            source.
+        shared_config: Shared ruff config path (the ``extend`` target).
+
+    Returns:
+        Path to the composed temp ``ruff.toml``, or *shared_config*
+        unchanged when no overrides apply.
+    """
+    project_banned_api: dict[str, dict[str, str]] = {}
+    project_per_file: dict[str, list[str]] = {}
+    pyproject = cwd / "pyproject.toml"
+    if pyproject.is_file():
+        data = _load_pyproject_toml(pyproject)
+        lint_cfg = data.get("tool", {}).get("ruff", {}).get("lint", {})
+        raw_banned_api = lint_cfg.get("flake8-tidy-imports", {}).get("banned-api", {})
+        if isinstance(raw_banned_api, dict):
+            project_banned_api = {
+                key: {"msg": str(value.get("msg", ""))} if isinstance(value, dict) else {"msg": str(value)}
+                for key, value in raw_banned_api.items()
+            }
+        raw_per_file = lint_cfg.get("per-file-ignores", {})
+        if isinstance(raw_per_file, dict):
+            project_per_file = {
+                key: [str(v) for v in value] if isinstance(value, list) else [str(value)] for key, value in raw_per_file.items()
+            }
+
+    # No-override fast path — return shared config unchanged.
+    if not project_banned_api and not project_per_file:
+        return shared_config
+
+    lines: list[str] = [f'extend = "{shared_config}"', ""]
+    if project_banned_api:
+        lines.append("[lint.flake8-tidy-imports]")
+        for api, info in project_banned_api.items():
+            safe_api = api.replace('"', '\\"')
+            msg = info.get("msg", "")
+            lines.append(f'banned-api."{safe_api}" = {{ msg = "{msg}" }}')
+        lines.append("")
+    if project_per_file:
+        lines.append("[lint.per-file-ignores]")
+        for pattern, codes in project_per_file.items():
+            safe_pattern = pattern.replace('"', '\\"')
+            lines.append(f'"{safe_pattern}" = {codes}')
+        lines.append("")
+
+    out_dir = Path(tempfile.gettempdir()) / f"python_setup_lint_ruff_{cwd.name}"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    effective = out_dir / "ruff.toml"
+    effective.write_text("\n".join(lines), encoding="utf-8")
+    return effective
 
 
 def _build_command(
