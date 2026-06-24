@@ -39,6 +39,28 @@ def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
     dir), then ``.pylintrc`` (project root).
     """
 
+def _load_pyproject_toml(path: Path) -> dict:
+    """Load and cache ``pyproject.toml``, keyed by ``(resolved_path, mtime_ns)``.
+
+    Memoised so repeated calls within the same process avoid re-parsing the
+    file when it has not changed on disk.  Returns an empty dict when the
+    path is unreadable (caller treats as no-override).  Raises ``SystemExit``
+    when the pyproject is malformed (T8 fail-fast on malformed config rather
+    than silent fallback).
+    """
+
+def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
+    """Build an effective ruff config that ``extend``s *shared_config*.
+
+    Writes a temporary ``ruff.toml`` that extends the shared config + copies
+    the project's ``[tool.ruff.lint.flake8-tidy-imports].banned-api`` and
+    ``[tool.ruff.lint.per-file-ignores]`` stanzas.  No-override fast path:
+    returns *shared_config* unchanged (no temp file) when the project
+    ``pyproject.toml`` has neither stanza.  Temp file lands under
+    ``tempfile.gettempdir() / "python_setup_lint_ruff_{cwd_name}" / "ruff.toml"``.
+    Ported from consultant.mcp ``_ruff_config_with_project_overrides``.
+    """
+
 def _build_command(
     spec: ToolSpec,
     *,
