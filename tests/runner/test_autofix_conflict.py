@@ -1112,6 +1112,150 @@ class TestRunLintFixDispatch:
         assert _CANARY_LABEL not in labels
 
 
+# ── Real-git integration: staged+unstaged conflict, staged-only fix, E999 revert ─
+
+
+class TestAutofixRealGitIntegration:
+    """End-to-end ``_apply_autofix_conflict_aware`` against a real ``git init`` repo.
+
+    Each test creates a fresh tmp git repo, stages/commits files, then
+    invokes the conflict-aware helper with a fake ``run_cmd`` that simulates
+    ruff writing a fix.  Asserts the correct stderr lines and on-disk state
+    — proving the helper's git-diff seam works against a real git index.
+    """
+
+    _CANARY_LABEL = "python-setup:autofix-canary"
+
+    def _make_spec(self) -> ToolSpec:
+        return next(t for t in LINT_TOOLS if t.name == "ruff check")
+
+    def _make_canned(
+        self, *, canary_e999_files: tuple[str, ...] = ()
+    ) -> dict[str, LintResult]:
+        base = canned_results_all_tools(exit_code=0, stdout="")
+        if canary_e999_files:
+            canary_stdout = "\n".join(
+                f"{f}:1:1: E999 SyntaxError" for f in canary_e999_files
+            )
+        else:
+            canary_stdout = ""
+        base[self._CANARY_LABEL] = make_lint_result(
+            tool_name=self._CANARY_LABEL, exit_code=1, stdout=canary_stdout
+        )
+        return base
+
+    # ── Case 1: staged+unstaged same file → skipped ──────────────
+
+    def test_staged_and_unstaged_same_file_skipped_real_git(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """File with staged AND unstaged changes is skipped; staged blob untouched."""
+        _git_init(tmp_path)
+        _write_file(tmp_path, "f.py", "x = 1\n")
+        _commit_all(tmp_path)
+        # Stage a change, then overlay an unstaged change on the same file.
+        _write_file(tmp_path, "f.py", "y = 2\n")
+        _stage(tmp_path, "f.py")
+        _write_file(tmp_path, "f.py", "z = 3\n")
+        staged_blob = subprocess.run(
+            ["git", "show", "HEAD:f.py"],
+            cwd=tmp_path, capture_output=True, text=True, check=True,
+        ).stdout
+        fake = fake_run_cmd_factory(self._make_canned())
+        _apply_autofix_conflict_aware(
+            self._make_spec(),
+            config=tmp_config(tmp_path),
+            paths_to_check=["f.py"],
+            run_cmd=fake,
+        )
+        captured = capsys.readouterr()
+        # The file is skipped — no fix pass touches it.
+        assert "autofix skipped for f.py: staged+unstaged conflict" in captured.err
+        # The staged blob (HEAD:f.py) is untouched — the fix tool never ran.
+        post_staged_blob = subprocess.run(
+            ["git", "show", "HEAD:f.py"],
+            cwd=tmp_path, capture_output=True, text=True, check=True,
+        ).stdout
+        assert post_staged_blob == staged_blob, (
+            f"staged blob changed: was {staged_blob!r}, now {post_staged_blob!r}"
+        )
+        # The unstaged content is also unchanged (the fix tool never wrote).
+        assert (tmp_path / "f.py").read_text() == "z = 3\n"
+
+    # ── Case 2: staged-only file gets fixed ──────────────────────
+
+    def test_staged_only_file_fixed_real_git(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """File staged only (no unstaged changes) → autofix applies."""
+        _git_init(tmp_path)
+        _write_file(tmp_path, "f.py", "x = 1\n")
+        _commit_all(tmp_path)
+        _write_file(tmp_path, "f.py", "y = 2\n")
+        _stage(tmp_path, "f.py")
+        # The file is staged-only — no unstaged overlay → safe to fix.
+        # The fake fix writes "y = 2  # fixed\n" to simulate ruff --fix.
+        target = tmp_path / "f.py"
+        post_fix = "y = 2  # fixed\n"
+        canned = self._make_canned()
+        wrapped = _PostFixFakeRunCmd(
+            fake_run_cmd_factory(canned),
+            post_fix_path=target,
+            post_fix_content=post_fix,
+        )
+        _apply_autofix_conflict_aware(
+            self._make_spec(),
+            config=tmp_config(tmp_path),
+            paths_to_check=["f.py"],
+            run_cmd=wrapped,
+        )
+        captured = capsys.readouterr()
+        assert "autofix skipped" not in captured.err
+        assert "autofix reverted" not in captured.err
+        # The fix pass wrote the post-fix content.
+        assert target.read_text() == post_fix
+
+    # ── Case 3: E999-canary revert with real git repo ─────────────
+
+    def test_e999_canary_revert_real_git(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """A fix that breaks parseability triggers E999-canary revert; file restored."""
+        _git_init(tmp_path)
+        _write_file(tmp_path, "src/main.py", "x = 1  # original\n")
+        _commit_all(tmp_path)
+        original = "x = 1  # original\n"
+        post_fix = "x = 2  # broken-syntax\n"
+        target = tmp_path / "src/main.py"
+        canned = self._make_canned(canary_e999_files=("src/main.py",))
+        wrapped = _PostFixFakeRunCmd(
+            fake_run_cmd_factory(canned),
+            post_fix_path=target,
+            post_fix_content=post_fix,
+        )
+        _apply_autofix_conflict_aware(
+            self._make_spec(),
+            config=tmp_config(tmp_path),
+            paths_to_check=["src/main.py"],
+            run_cmd=wrapped,
+        )
+        captured = capsys.readouterr()
+        assert "autofix reverted src/main.py: E999 after fix" in captured.err
+        # (a) The fix pass modified the file.
+        after_fix = wrapped.snapshots_after_label("ruff check")
+        assert after_fix == post_fix, (
+            f"fix pass did not modify file: got {after_fix!r}"
+        )
+        # (b) Final on-disk state equals original — revert worked.
+        assert target.read_text() == original
+
+
 # ── Helper: post-fix fake that simulates the tool writing bytes to file ─
 
 

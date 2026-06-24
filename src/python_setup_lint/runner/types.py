@@ -103,6 +103,24 @@ class RunnerConfig:
             * ``pyright check``: ``--project <path>``
             * ``rumdl check``: ``--config <path>``
             * ``ty check``: ``--config <path>``
+        ruff_project_overrides: When ``True``, compose a temp
+            ``ruff.toml`` that ``extend``s the shared
+            ``config_paths["ruff check"]`` config + copies the project
+            ``pyproject.toml`` ``[tool.ruff.lint.flake8-tidy-imports].banned-api``
+            and ``[tool.ruff.lint.per-file-ignores]`` stanzas
+            (consultant.mcp's hand-rolled merge, ported verbatim into
+            :func:`python_setup_lint.runner.cmd_build._compose_ruff_config`).
+            The composed path replaces ``config_paths["ruff check"]``
+            before the ruff command is built.  Defaults to ``False`` so
+            python-setup's own run is unchanged.
+        pyright_project_override: When set, takes precedence over
+            ``config_paths["pyright check"]`` — passed to pyright as
+            ``--project <path>``.  Consultant.mcp points this at
+            ``cwd / "pyproject.toml"`` so pyright does cwd-relative venv
+            discovery (the shipped ``pyrightconfig.json`` declares
+            ``venvPath: "."`` resolved relative to the config FILE → wrong
+            venv → runner timeout).  Defaults to ``None`` so python-setup's
+            own run uses the shipped config unchanged.
     """
 
     cwd: Path
@@ -111,6 +129,8 @@ class RunnerConfig:
     tools_override: list[str] | None = None
     secrets_baseline: str = ".secrets.baseline"
     config_paths: dict[str, Path] | None = None
+    ruff_project_overrides: bool = False
+    pyright_project_override: Path | None = None
 
     def __post_init__(self) -> None:
         if self.default_py_dirs is None:

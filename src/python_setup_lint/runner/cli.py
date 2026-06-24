@@ -38,7 +38,7 @@ import sys
 import tomllib
 from pathlib import Path
 
-from .cmd_build import _expand_globs, _find_py_files
+from .cmd_build import _compose_ruff_config, _expand_globs, _find_py_files
 from .dispatch import LINT_TOOLS, _strategy_for
 from .extra_tools import (
     _EXTRA_TOOLS_REGISTERED_PATHS,
@@ -468,6 +468,28 @@ def run_lint(
     """
     if config is None:
         config = RunnerConfig(cwd=Path.cwd())
+
+    # ── T7 — ruff compose + pyright project override ──────────────
+    # Apply the two declarative ``RunnerConfig`` override fields before any
+    # tool runs so they mutate ``config.config_paths`` exactly once.
+    # ``ruff_project_overrides`` composes a temp ``ruff.toml`` extending the
+    # shared ``config_paths["ruff check"]`` (port of cm's
+    # ``_ruff_config_with_project_overrides``).  ``pyright_project_override``
+    # takes precedence over any ``config_paths["pyright check"]`` entry.
+    # Both default off → python-setup's own run unchanged.  CLI ``--config``
+    # entries (already merged into ``config.config_paths`` by ``main``)
+    # still win for non-override tools; ruff's compose source is whatever
+    # path currently occupies the ruff slot (typically the shipped config).
+    if config.ruff_project_overrides:
+        shared_ruff = config.config_paths.get("ruff check")
+        if shared_ruff is not None:
+            composed = _compose_ruff_config(config.cwd, shared_ruff)
+            if composed != shared_ruff:
+                # Mutate in place so downstream strategy dispatch reads the
+                # composed path without a config-clone hop.
+                config.config_paths["ruff check"] = composed
+    if config.pyright_project_override is not None:
+        config.config_paths["pyright check"] = config.pyright_project_override
 
     # ── T4 — env-var autofix opt-out ─────────────────────────────
     # ``PYTHON_SETUP_LINT_NO_AUTOFIX=1`` flips ``fix=False`` BEFORE the tool
