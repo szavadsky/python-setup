@@ -44,13 +44,50 @@ class _CoverageState:
     current_module_name: str | None = None
     main_module_candidates: set[str] = ...
 
-def _matches_path(str_path: str, patterns: list[str]) -> bool: ...
-def _is_test_file(checker: StubChecker, path: Path) -> bool: ...
-def _is_opted_out(checker: StubChecker, path: Path) -> bool: ...
-def _is_init_exempt(node: nodes.Module) -> bool: ...
-def _is_trivial_test_data(node: nodes.Module) -> bool: ...
-def _has_main_block(node: nodes.Module) -> bool: ...
-def _is_under_source_root(checker: StubChecker, path: Path) -> bool: ...
-def _resolve_stub(checker: StubChecker, py_path: Path) -> Path | None: ...
-def _index_stub_declarations(checker: StubChecker, module_name: str, stub_path: Path) -> None: ...
-def emit_coverage_violations(checker: StubChecker) -> None: ...
+def _matches_path(str_path: str, patterns: list[str]) -> bool:
+    """Check if *str_path* matches any of the *patterns*.
+
+    Patterns containing ``/`` or ``\\`` are treated as directory prefixes;
+    other patterns use fnmatch globbing against the full path and basename.
+    """
+
+def _is_test_file(checker: StubChecker, path: Path) -> bool:
+    """Check if *path* matches any configured test pattern."""
+
+def _is_opted_out(checker: StubChecker, path: Path) -> bool:
+    """Check if *path* matches any stub-opt-out pattern."""
+
+def _is_init_exempt(node: nodes.Module) -> bool:
+    """Check if an ``__init__.py`` is exempt from stub requirement.
+
+    Exempt when body contains only imports, ``__all__``, and simple
+    assignments.  NOT exempt if ``__getattr__`` is defined or any
+    non-trivial logic (calls, class/func defs, expressions) exists.
+    """
+
+def _is_trivial_test_data(node: nodes.Module) -> bool:
+    """Check if module is trivial test data (only literal assignments, no
+    classes, functions, or imports)."""
+
+def _has_main_block(node: nodes.Module) -> bool:
+    """Check if module has a ``if __name__ == '__main__':`` block."""
+
+def _is_under_source_root(checker: StubChecker, path: Path) -> bool:
+    """Check if *path* is under any configured source root."""
+
+def _resolve_stub(checker: StubChecker, py_path: Path) -> Path | None:
+    """Resolve a .pyi companion for *py_path*.
+
+    Returns the resolved stub path or None.
+
+    Resolution order:
+    1. Inline ``<module>.pyi`` next to ``<module>.py``.
+    2. For ``__init__.py``, companion ``__init__.pyi`` in same directory.
+    3. Configured *stub-roots*.
+    """
+
+def _index_stub_declarations(checker: StubChecker, module_name: str, stub_path: Path) -> None:
+    """Parse a .pyi stub file and index its top-level declarations."""
+
+def emit_coverage_violations(checker: StubChecker) -> None:
+    """Emit E97A0 for every module without a .pyi stub."""

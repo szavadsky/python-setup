@@ -28,11 +28,6 @@ __all__ = ["emit_fidelity_violations"]
 
 
 def emit_fidelity_violations(checker: StubChecker) -> None:
-    """Emit all Phase 3 violations for every module in *stub_index*.
-
-    Calls ``_emit_stub_symbol_check``, ``_emit_variable_fidelity``,
-    and ``_emit_callable_fidelity`` for each module.
-    """
     for module_name in checker._coverage.stub_index:
         _emit_stub_symbol_check(checker, module_name)
         _emit_variable_fidelity(checker, module_name)

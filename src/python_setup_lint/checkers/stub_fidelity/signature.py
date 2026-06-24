@@ -53,11 +53,6 @@ def _extract_param_descriptors(
     *,
     strip_self: bool = False,
 ) -> list[ParamDescriptor]:
-    """Build a list of ``ParamDescriptor`` from an Astroid ``Arguments`` node.
-
-    If *strip_self* is True and the first parameter is named ``self`` or
-    ``cls``, it is excluded from the result.
-    """
     descriptors: list[ParamDescriptor] = []
 
     n_pos = len(args.posonlyargs)
@@ -66,10 +61,8 @@ def _extract_param_descriptors(
     n_defaults = len(args.defaults)
 
     def _has_default(idx: int) -> bool:
-        """Check if parameter at index *idx* (across posonlyargs + args) has a default.
-
-        Defaults are right-aligned in the ``defaults`` list.
-        """
+        # True if param at index *idx* (across posonlyargs + args) has a default.
+        # Defaults are right-aligned in the ``defaults`` list.
         return n_defaults > 0 and idx >= n_regular - n_defaults
 
     # Positional-only parameters
@@ -158,11 +151,7 @@ def _compare_callable_descriptors(
     stub_params: list[ParamDescriptor],
     impl_params: list[ParamDescriptor],
 ) -> str | None:
-    """Compare two parameter descriptor lists, returning a detail string on
-    mismatch or None if they match.
 
-    Checks: count, name, kind, default-presence.
-    """
     if len(stub_params) != len(impl_params):
         return f"param_count({len(stub_params)} vs {len(impl_params)})"
 
@@ -181,12 +170,6 @@ def _compare_callable_annotations(
     stub_params: list[ParamDescriptor],
     impl_params: list[ParamDescriptor],
 ) -> list[tuple[str, str, str]]:
-    """Compare parameter annotations between stub and impl descriptors.
-
-    Returns a list of ``(param_name, stub_normalized, impl_normalized)``
-    tuples for mismatches. Only reports mismatches when both sides have
-    an annotation.
-    """
     mismatches: list[tuple[str, str, str]] = []
     for sp, ip in zip(stub_params, impl_params, strict=True):
         if (
@@ -204,12 +187,6 @@ def _compare_return_annotations(
     stub_returns: nodes.NodeNG | None,
     impl_returns: nodes.NodeNG | None,
 ) -> tuple[str | None, str | None]:
-    """Compare return annotations.
-
-    Returns ``(stub_normalized, impl_normalized)`` where either may be
-    None if the annotation is absent or unverifiable. Both are None when
-    there is nothing to compare.
-    """
     if stub_returns is None or impl_returns is None:
         return (None, None)
 
@@ -219,11 +196,6 @@ def _compare_return_annotations(
 
 
 def _emit_callable_fidelity_issues(ctx: CallableComparisonCtx) -> None:
-    """Emit E97B3/E97B4/I97B6 for a single callable pair.
-
-    If *impl_func* is None, the function exists only in the stub — no
-    comparison can be done (handled separately by coverage logic).
-    """
     if ctx.impl_func is None:
         return
 
@@ -311,10 +283,6 @@ def _emit_callable_fidelity_issues(ctx: CallableComparisonCtx) -> None:
 
 
 def _emit_callable_fidelity(checker: StubChecker, module_name: str) -> None:
-    """Compare callable signatures between stub and impl for *module_name*.
-
-    Dispatches to ``_emit_callable_fidelity_issues`` for each stub callable.
-    """
     f = checker._fidelity
     stub_callables = f.stub_callable_nodes.get(module_name, {})
     impl_callables = f.impl_callable_nodes.get(module_name, {})

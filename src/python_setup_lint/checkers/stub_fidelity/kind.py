@@ -38,11 +38,6 @@ __all__ = ["_emit_stub_symbol_check"]
 
 
 def _emit_stub_symbol_check(checker: StubChecker, module_name: str) -> None:
-    """Emit E97B1/E97B2 and class comparison for all stub symbols.
-
-    E97B1: symbol declared in stub but absent from implementation.
-    E97B2: symbol exists in both but with different kind (class vs function vs var).
-    """
     f = checker._fidelity
     c = checker._coverage
     impl_all = f.impl_all_names.get(module_name, set())

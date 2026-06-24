@@ -51,11 +51,7 @@ class _CoverageState:
 
 
 def _matches_path(str_path: str, patterns: list[str]) -> bool:
-    """Check if *str_path* matches any of the *patterns*.
 
-    Patterns containing ``/`` or ``\\`` are treated as directory prefixes;
-    other patterns use fnmatch globbing against the full path and basename.
-    """
     for pattern in patterns:
         if "/" in pattern or "\\" in pattern:
             # Directory prefix pattern
@@ -67,12 +63,10 @@ def _matches_path(str_path: str, patterns: list[str]) -> bool:
 
 
 def _is_test_file(checker: StubChecker, path: Path) -> bool:
-    """Check if *path* matches any configured test pattern."""
     return _matches_path(path.as_posix(), checker._coverage.test_patterns)
 
 
 def _is_opted_out(checker: StubChecker, path: Path) -> bool:
-    """Check if *path* matches any stub-opt-out pattern."""
     return _matches_path(path.as_posix(), checker._coverage.opt_out_patterns)
 
 
@@ -80,12 +74,6 @@ def _is_opted_out(checker: StubChecker, path: Path) -> bool:
 
 
 def _is_init_exempt(node: nodes.Module) -> bool:
-    """Check if an ``__init__.py`` is exempt from stub requirement.
-
-    Exempt when body contains only imports, ``__all__``, and simple
-    assignments.  NOT exempt if ``__getattr__`` is defined or any
-    non-trivial logic (calls, class/func defs, expressions) exists.
-    """
     has_logic = False
     for child in node.body:
         if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
@@ -126,8 +114,6 @@ def _is_init_exempt(node: nodes.Module) -> bool:
 
 
 def _is_trivial_test_data(node: nodes.Module) -> bool:
-    """Check if module is trivial test data (only literal assignments, no
-    classes, functions, or imports)."""
     for child in node.body:
         if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef)):
             return False
@@ -146,7 +132,7 @@ def _is_trivial_test_data(node: nodes.Module) -> bool:
 
 
 def _has_main_block(node: nodes.Module) -> bool:
-    """Check if module has a ``if __name__ == '__main__':`` block."""
+
     for child in node.body:
         if isinstance(child, nodes.If):
             test = child.test
@@ -168,7 +154,6 @@ def _has_main_block(node: nodes.Module) -> bool:
 
 
 def _is_under_source_root(checker: StubChecker, path: Path) -> bool:
-    """Check if *path* is under any configured source root."""
     for root in checker._coverage.source_roots:
         try:
             path.relative_to(root)
@@ -182,15 +167,6 @@ def _is_under_source_root(checker: StubChecker, path: Path) -> bool:
 
 
 def _resolve_stub(checker: StubChecker, py_path: Path) -> Path | None:
-    """Resolve a .pyi companion for *py_path*.
-
-    Returns the resolved stub path or None.
-
-    Resolution order:
-    1. Inline ``<module>.pyi`` next to ``<module>.py``.
-    2. For ``__init__.py``, companion ``__init__.pyi`` in same directory.
-    3. Configured *stub-roots*.
-    """
     # 1. Inline companion
     inline = py_path.with_suffix(".pyi")
     if inline.exists():
@@ -223,7 +199,6 @@ def _resolve_stub(checker: StubChecker, py_path: Path) -> Path | None:
 
 
 def _index_stub_declarations(checker: StubChecker, module_name: str, stub_path: Path) -> None:
-    """Parse a .pyi stub file and index its top-level declarations."""
     try:
         stub_module = astroid.parse(stub_path.read_text(), module_name=module_name)
     except SyntaxError:
@@ -267,7 +242,6 @@ def _index_stub_declarations(checker: StubChecker, module_name: str, stub_path: 
 
 
 def emit_coverage_violations(checker: StubChecker) -> None:
-    """Emit E97A0 for every module without a .pyi stub."""
     c = checker._coverage
     for module_name in sorted(c.stub_missing):
         entry = c.module_index.get(module_name)

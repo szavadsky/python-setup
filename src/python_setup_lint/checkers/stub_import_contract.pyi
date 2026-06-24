@@ -49,4 +49,5 @@ def _resolve_relative(
     for dotted relative imports (``..``, ``...``), capped at package depth.
     """
 
-def emit_import_contract_violations(checker: StubChecker) -> None: ...
+def emit_import_contract_violations(checker: StubChecker) -> None:
+    """Emit E97A1/E97A2/E97A3 for every import usage that violates the contract."""
