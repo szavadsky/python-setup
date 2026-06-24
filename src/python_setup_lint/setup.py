@@ -19,14 +19,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from collections.abc import Sequence
-
 from ._setup_precommit import (
     _atomic_write,
     _step_agents_snippet,
     _step_precommit,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 # ── Constants ───────────────────────────────────────────────────────
 
@@ -98,7 +98,11 @@ def _discover_checkers() -> list[str]:
                 result.append(m.name)
         except ImportError as e:
             import warnings
-            warnings.warn(f"Failed to import checker module {m.name}: {e}", ImportWarning)
+            warnings.warn(
+                f"Failed to import checker module {m.name}: {e}",
+                ImportWarning,
+                stacklevel=2,
+            )
     return sorted(result)
 
 
@@ -185,6 +189,7 @@ def _run_uv(args: list[str], *, cwd: Path) -> tuple[int, str, str]:
             capture_output=True,
             text=True,
             timeout=120,
+            check=False,
         )
         return proc.returncode, proc.stdout, proc.stderr
     except FileNotFoundError:
@@ -228,10 +233,7 @@ def _step_add_dep(
         return
 
     # Add the dependency — path is the package argument itself
-    if dev_path:
-        args = ["add", "--dev", dev_path]
-    else:
-        args = ["add", "--dev", f"python-setup @ {_GIT_URL}"]
+    args = ["add", "--dev", dev_path] if dev_path else ["add", "--dev", f"python-setup @ {_GIT_URL}"]
 
     rc, stdout, stderr = _run_uv(args, cwd=project_dir)
     if rc != 0:
@@ -288,7 +290,7 @@ def _step_coding_rules(state: SetupState, project_dir: Path) -> None:
     print("  [coding-rules] Copied CodingRules.md")
 
 
-def _save_state(project_dir: Path, state: SetupState) -> None:
+def _save_state(project_dir: Path) -> None:
     """Save install state to .python-setup-state.json for update drift detection."""
     pkg_dir = _get_package_dir()
     config_dir = pkg_dir / "config"
@@ -325,7 +327,7 @@ def install(
 
     # Save state for update drift detection
     if state.all_ok:
-        _save_state(project_dir, state)
+        _save_state(project_dir)
 
     # Summary
     print()
