@@ -27,7 +27,6 @@ in :file:`decisions.md` per fallback).
 
 from __future__ import annotations
 
-import importlib.metadata
 import json
 import re
 from pathlib import Path
