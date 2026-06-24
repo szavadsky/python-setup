@@ -38,7 +38,7 @@ import sys
 import tomllib
 from pathlib import Path
 
-from .cmd_build import _compose_ruff_config, _expand_globs, _find_py_files
+from .cmd_build import _compose_ruff_config, _expand_globs, _find_py_files, _resolve_pylintrc
 from .dispatch import LINT_TOOLS, _strategy_for
 from .extra_tools import (
     _EXTRA_TOOLS_REGISTERED_PATHS,
@@ -662,6 +662,71 @@ def run_lint(
     return overall_rc
 
 
+def _print_config_status(
+    *,
+    config_paths: dict[str, Path],
+    cli_overridden: frozenset[str],
+    caller_config_paths: dict[str, Path],
+    shipped_paths: dict[str, Path],
+    cwd: Path,
+    ruff_composed: bool,
+) -> None:
+    """Print per-tool config origin.
+
+    Iterates all built-in tools (from :data:`LINT_TOOLS`) and prints the
+    resolved config path and origin category for each.  Origin categories:
+
+    * ``shipped, from python-setup v<VERSION>`` — the tool uses the config
+      file shipped with the installed python-setup package.
+    * ``overridden via --config`` — the user passed ``--config TOOL=PATH``
+      on the CLI.
+    * ``overridden (RunnerConfig)`` — the caller supplied a
+      :class:`RunnerConfig` with an explicit ``config_paths`` entry.
+    * ``auto-discovered, project-local`` — no explicit config, but a
+      project-local file was found (currently only pylint's ``.pylintrc``).
+    * ``generated (composed)`` — a temp config was composed from the
+      shipped config + project overrides (currently only ruff when
+      ``ruff_project_overrides`` is active).
+    * ``not configured`` — no config file resolved for this tool.
+    """
+    import importlib.metadata
+
+    try:
+        version = importlib.metadata.version("python-setup")
+    except importlib.metadata.PackageNotFoundError:
+        version = "unknown"
+
+    from .dispatch import LINT_TOOLS
+
+    for spec in LINT_TOOLS:
+        name = spec.name
+        config_path = config_paths.get(name)
+
+        if config_path is None:
+            if name == "pylint":
+                rcfile = _resolve_pylintrc(config_paths, cwd)
+                if rcfile is not None:
+                    print(f"  {name:<20} {rcfile}  (auto-discovered, project-local)")
+                else:
+                    print(f"  {name:<20}  (not configured)")
+            else:
+                print(f"  {name:<20}  (not configured)")
+            continue
+
+        if name in cli_overridden:
+            origin = "overridden via --config"
+        elif name in caller_config_paths:
+            origin = "overridden (RunnerConfig)"
+        elif name in shipped_paths and config_path.resolve() == shipped_paths[name].resolve():
+            origin = f"shipped, from python-setup v{version}"
+        elif ruff_composed and name == "ruff check":
+            origin = "generated (composed)"
+        else:
+            origin = "auto-discovered"
+
+        print(f"  {name:<20} {config_path}  ({origin})")
+
+
 def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -> int:
     """CLI entry point for ``uv run lint``.
 
@@ -752,6 +817,11 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
         default=[],
         help="Override config file for a tool (ruff, mypy, pylint, pyright, rumdl, ty). May be given multiple times.",
     )
+    parser.add_argument(
+        "--config-status",
+        action="store_true",
+        help="Print per-tool config origin and exit (do not run tools)",
+    )
     args = parser.parse_args(argv)
 
     # Start from caller-supplied defaults, allow CLI overrides.
@@ -825,6 +895,33 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
         for k, v in discovered.items():
             if k not in config_paths:
                 config_paths[k] = v
+
+    # ── T6-F4 — --config-status early return ─────────────────────
+    if args.config_status:
+        cli_overridden: set[str] = set()
+        for raw in args.config:
+            if "=" not in raw:
+                continue
+            tool_id = raw.split("=", 1)[0]
+            canonical = _CONFIG_KEY_ALIASES.get(tool_id) or tool_id
+            cli_overridden.add(canonical)
+        caller_config_paths: dict[str, Path] = (
+            dict(config.config_paths) if config is not None else {}
+        )
+        shipped_paths = _default_config_paths(cwd)
+        ruff_composed = (
+            (config is not None and config.ruff_project_overrides)
+            and "ruff check" in shipped_paths
+        )
+        _print_config_status(
+            config_paths=config_paths,
+            cli_overridden=frozenset(cli_overridden),
+            caller_config_paths=caller_config_paths,
+            shipped_paths=shipped_paths,
+            cwd=cwd,
+            ruff_composed=ruff_composed,
+        )
+        return 0
 
     merged_config = RunnerConfig(
         cwd=cwd,

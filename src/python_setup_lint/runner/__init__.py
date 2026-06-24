@@ -48,6 +48,7 @@ from .cli import _autofix_target_paths as _autofix_target_paths
 from .cli import _default_config_paths as _default_config_paths
 from .cli import _git_changed_files as _git_changed_files
 from .cli import _infer_package_name as _infer_package_name
+from .cli import _print_config_status as _print_config_status
 from .cli import _ruff_parseability_errors as _ruff_parseability_errors
 from .cli import main as main
 from .cli import run_lint as run_lint
