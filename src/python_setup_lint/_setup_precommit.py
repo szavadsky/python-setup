@@ -31,7 +31,7 @@ repos:
     hooks:
       - id: lint
         name: lint
-        entry: python-setup lint --no-fail-fast --baseline .lint.baseline
+        entry: python-setup lint --fix --no-fail-fast --baseline lint.baseline
         language: system
         types: [python]
         pass_filenames: false
@@ -48,15 +48,16 @@ Install git hooks after cloning:
 uv run pre-commit install
 ```
 
-- **`git commit`** triggers fast hooks: `ruff-format` (auto-format) and `ruff-fix` (auto-fix). Both run silently and apply changes automatically.
-- **`git push`** triggers the full lint pipeline (`python-setup lint --no-fail-fast --baseline .lint.baseline`). The hook fails only on **new** violations (regressions), not pre-existing ones.
+- **`git commit`** triggers fast hooks: `ruff-format` (auto-format) and `ruff-check` (auto-fix). Both run silently and apply changes automatically.
+- **`git commit`** also triggers the full lint pipeline (`python-setup lint --fix --no-fail-fast --baseline lint.baseline`). The `lint` hook autofixes ALL tools that support it (ruff, rumdl, ty) via the wrapper's `--fix` route, then re-runs the baseline-gated verification pass. Autofix is **courtesy**: it skips files where staged AND unstaged changes overlap (avoids conflicts with the staged blob), reverts any file a tool's fix breaks parseability on (E999 canary), and never blocks — only NEW violations (regressions) vs the baseline fail the hook.
+- **Autofix opt-out**: set `PYTHON_SETUP_LINT_NO_AUTOFIX=1` to disable autofix for the run (the `--fix` CLI flag still parses; the runner flips autofix off internally before the loop). Useful when you want only the verification pass to run.
 - **Baseline regeneration**: When you intentionally want to accept the current violation state, run:
 
   ```bash
-  python-setup lint --no-fail-fast --overwrite-baseline --baseline .lint.baseline
+  python-setup lint --no-fail-fast --overwrite-baseline --baseline lint.baseline
   ```
 
-  Commit the updated `.lint.baseline` alongside your changes.
+  Commit the updated `lint.baseline` alongside your changes.
 {close_sentinel}
 """
 

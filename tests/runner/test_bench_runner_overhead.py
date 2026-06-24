@@ -11,7 +11,6 @@ isolated and reduced to <5% of total ``run_lint`` walltime or <200ms absolute.
 
 from __future__ import annotations
 
-import json
 import resource
 import time
 from pathlib import Path
@@ -239,7 +238,7 @@ def test_bench_runner_overhead(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
             "## Verification Gate",
             "",
             f"- Runner overhead: **{runner_overhead_before:.3f}s ({overhead_pct_before:.1f}%)**",
-            f"- Target: <5% of total OR <200ms absolute",
+            "- Target: <5% of total OR <200ms absolute",
             f"- {'PASS' if overhead_pct_before < 5 or runner_overhead_before < 0.2 else 'FAIL'}: "
             f"{'overhead within threshold' if overhead_pct_before < 5 or runner_overhead_before < 0.2 else 'overhead exceeds threshold'}",
             "",

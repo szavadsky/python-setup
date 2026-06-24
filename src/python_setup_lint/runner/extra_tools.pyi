@@ -158,16 +158,3 @@ def _register_extra_tools(registrations: list[_ExtraToolRegistration]) -> None:
             name (T8 R3 — defense-in-depth; :func:`_validate_extra` already
             rejects at load time).
     """
-
-def register_lint_tool(
-    tool: ToolSpec,
-    *,
-    statistics_flag: list[str] | None = None,
-    parser: Callable[..., list[tuple[str, int]]] | None = None,
-    config_flag: list[str] | None = None,
-) -> None:
-    """Append *tool* to :data:`LINT_TOOLS` and register its strategy.
-
-    Re-exported from :mod:`python_setup_lint.runner.dispatch` for the
-    extra-tools loader.
-    """

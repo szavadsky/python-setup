@@ -12,7 +12,6 @@ Lint-runner fakes:
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -23,7 +22,6 @@ from pylint.testutils import CheckerTestCase
 if TYPE_CHECKING:
     from pylint.checkers import BaseChecker
 
-    import pytest
 
     from python_setup_lint.runner import LintResult
 

@@ -1,0 +1,4 @@
+[36m[Tach][0m 43 tests in 9 files unaffected by changes ([33m~37.5s could be saved[0m). Skip with: [1mpytest --tach[0m
+[36m[Tach][0m [2mTo disable: pytest -p no:tach (https://docs.gauge.sh/usage/commands#using-the-pytest-plugin-directly)[0m
+...........................................                              [100%]
+43 passed in 23.66s

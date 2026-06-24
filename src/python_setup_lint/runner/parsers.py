@@ -168,7 +168,11 @@ def _parse_pylint_json2(stdout: str, stderr: str) -> list[tuple[str, int]]:
     _ = stderr
     try:
         raw: Any = json.loads(stdout)
-    except json.JSONDecodeError, TypeError:
+    except (json.JSONDecodeError, TypeError):
+        # Py3.14 WARNING: ``except A, B:`` parses as a tuple-handler
+        # (``except (A, B):``), NOT Python-2 ``except AExc, target:``.
+        # Parenthesise explicitly so future maintainers don't misread it
+        # as a binding form (per decisions.md D8 precedent).
         return []
     # Modern dict shape: {"messages": [...], "status": ...}
     if isinstance(raw, dict):

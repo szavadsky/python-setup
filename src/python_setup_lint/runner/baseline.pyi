@@ -15,6 +15,18 @@ from typing import Any
 from .parsers import Record
 from .types import LintResult
 
+def peek_fallback_tools() -> frozenset[str]:
+    """Snapshot the per-run set of tools that took the legacy rstrip-set path.
+
+    Returns a frozen copy taken at call time; subsequent
+    :func:`_diff_baseline` invocations do NOT retroactively mutate a
+    previously returned snapshot.  Tests / the pipeline should assert
+    against this snapshot when a documented fallback is expected (T2 D1
+    — the legacy mutation-only set was previously invisible).
+
+    See :file:`decisions.md` D15 for the rationale + per-tool fallback list.
+    """
+
 def _compare_sorted(a: list[Record], b: list[Record]) -> tuple[list[Record], list[Record]]:
     """Walk-merge two pre-sorted record lists → ``(added, removed)``.
 

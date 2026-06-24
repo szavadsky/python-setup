@@ -14,7 +14,6 @@ max-branches=16
 max-locals=20
 max-nested-blocks=8
 max-public-methods=30
-max-complexity=15
 max-attributes=15
 
 [SIMILARITIES]

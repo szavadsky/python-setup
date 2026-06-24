@@ -31,6 +31,14 @@ def _build_statistics_flags(spec: ToolSpec) -> list[str]:
     Returns ``[]`` when the tool already emits parseable output by default.
     """
 
+def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
+    """Return the pylint rcfile path, or ``None`` if none found.
+
+    Checks ``config_paths`` for an explicit ``"pylint"`` entry first.
+    Falls back to auto-discovery: ``config/.pylintrc`` (shipped config
+    dir), then ``.pylintrc`` (project root).
+    """
+
 def _build_command(
     spec: ToolSpec,
     *,

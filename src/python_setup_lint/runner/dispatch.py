@@ -18,6 +18,7 @@ unknown names, and :func:`_strategy_for` synthesises a
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 
 from .cmd_build import (
     _build_command,
@@ -25,6 +26,7 @@ from .cmd_build import (
     _config_flag_for,
     _expand_globs,
     _find_py_files,
+    _resolve_pylintrc,
 )
 from .parsers import _STATISTICS_PARSERS
 from .types import RunnerConfig, ToolSpec
@@ -76,7 +78,7 @@ TOOLS: list[ToolSpec] = [
         "yamllint",
         ["yamllint"],
         supports_path=True,
-        default_paths=["config/*.yaml"],
+        default_paths=["."],
     ),
     ToolSpec(
         "ty check",
@@ -235,7 +237,14 @@ class _VerifyTypesLintTool(LintTool):
 
 
 class _DetectSecretsLintTool(LintTool):
-    """Strategy for ``detect-secrets`` — wraps in ``bash -c`` pipeline over git-ls-files."""
+    """Strategy for ``detect-secrets`` — wraps in ``bash -c`` pipeline over git-ls-files.
+
+    When the baseline file already exists, runs the standard pipeline
+    (``git ls-files | detect-secrets-hook --baseline <path>``).  When the
+    baseline is missing, bootstraps by running ``detect-secrets scan`` and
+    redirecting output to the baseline path — this creates the baseline on
+    first invocation so subsequent runs have a reference point.
+    """
 
     def build_command(
         self,
@@ -247,10 +256,18 @@ class _DetectSecretsLintTool(LintTool):
     ) -> list[str]:
         spec = self.spec
         _ = path, fix, exclude
+        baseline_path = config.cwd / config.secrets_baseline
+        if baseline_path.is_file():
+            return [
+                "bash",
+                "-c",
+                f"git ls-files -z | xargs -0 {' '.join(spec.command)} --baseline {config.secrets_baseline}",
+            ]
+        # Bootstrap: scan all files and create baseline on first invocation.
         return [
             "bash",
             "-c",
-            f"git ls-files -z | xargs -0 {' '.join(spec.command)} --baseline {config.secrets_baseline}",
+            f"detect-secrets scan > {config.secrets_baseline}",
         ]
 
 
@@ -265,20 +282,17 @@ class _PylintLintTool(LintTool):
 
     Auto-discovers ``.pylintrc`` when ``config_paths`` has no ``pylint``
     entry: checks ``config/.pylintrc`` (shipped config dir) then
-    ``.pylintrc`` (project root).
+    ``.pylintrc`` (project root).  Delegates to
+    :func:`python_setup_lint.runner.cmd_build._resolve_pylintrc`.
     """
 
     @staticmethod
     def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
-        """Return the pylint rcfile path, or ``None`` if none found."""
-        explicit = config_paths.get("pylint")
-        if explicit is not None:
-            return explicit
-        # Auto-discover: shipped config dir, then project root.
-        for candidate in (cwd / "config" / ".pylintrc", cwd / ".pylintrc"):
-            if candidate.is_file():
-                return candidate
-        return None
+        """Return the pylint rcfile path, or ``None`` if none found.
+
+        Delegates to :func:`python_setup_lint.runner.cmd_build._resolve_pylintrc`.
+        """
+        return _resolve_pylintrc(config_paths, cwd)
 
     def build_command(
         self,

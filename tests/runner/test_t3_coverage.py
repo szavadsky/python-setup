@@ -10,7 +10,6 @@ import python_setup_lint.runner as _runner_module
 from python_setup_lint.runner import (
     TOOLS,
     LintResult,
-    RunnerConfig,
     ViolationCount,
     _aggregate_statistics,
     _build_statistics_flags,
