@@ -19,8 +19,6 @@ Checker logic
 W-level only — does not affect build exit codes.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from astroid import nodes
