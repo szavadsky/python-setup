@@ -24,6 +24,7 @@ __all__ = [
     "_config_flag_for",
     "_expand_globs",
     "_find_py_files",
+    "_resolve_pylintrc",
 ]
 
 
@@ -88,8 +89,25 @@ def _config_flag_for(spec_name: str, config_path: Path | None) -> list[str]:
         "pyright verify types": ["--project", str(config_path)],
         "rumdl check": ["--config", str(config_path)],
         "ty check": ["--config-file", str(config_path)],
+        "yamllint": ["--config-file", str(config_path)],
     }
     return flags.get(spec_name, [])
+
+
+def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
+    """Return the pylint rcfile path, or ``None`` if none found.
+
+    Checks ``config_paths`` for an explicit ``"pylint"`` entry first.
+    Falls back to auto-discovery: ``config/.pylintrc`` (shipped config
+    dir), then ``.pylintrc`` (project root).
+    """
+    explicit = config_paths.get("pylint")
+    if explicit is not None:
+        return explicit
+    for candidate in (cwd / "config" / ".pylintrc", cwd / ".pylintrc"):
+        if candidate.is_file():
+            return candidate
+    return None
 
 
 def _build_command(
