@@ -17,6 +17,7 @@ unknown names, and :func:`_strategy_for` synthesises a
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Callable
 from pathlib import Path
 
@@ -308,6 +309,7 @@ class _PylintLintTool(LintTool):
 
         # ── Shared config files (with auto-discovery) ───────────
         rcfile = self._resolve_pylintrc(config_paths, config.cwd)
+        print(f"[pylint] Using rcfile: {rcfile}", file=sys.stderr)
         cmd.extend(_config_flag_for(spec.name, rcfile))
 
         # ── Fix flags ────────────────────────────────────────
