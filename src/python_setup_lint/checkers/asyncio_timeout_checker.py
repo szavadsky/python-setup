@@ -11,13 +11,13 @@ Per CodingRules External Call Requirements:
 """
 
 from __future__ import annotations
-from beartype import beartype
 
+from typing import ClassVar
 
 from astroid import nodes
+from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
-
 
 _HTTP_METHODS: frozenset[str] = frozenset(
     {
@@ -29,7 +29,7 @@ _HTTP_METHODS: frozenset[str] = frozenset(
         "request",
         "stream",
         "send",
-    }
+    },
 )
 
 _KNOWN_TIMEOUT_FUNCS: frozenset[str] = frozenset(
@@ -37,24 +37,27 @@ _KNOWN_TIMEOUT_FUNCS: frozenset[str] = frozenset(
         "asyncio.timeout",
         "anyio.fail_after",
         "anyio.move_on_after",
-    }
+    },
 )
 
 
 class AsyncTimeoutChecker(BaseChecker):
     """AST visitor that flags await calls missing enclosing timeout context."""
 
-    name = "asyncio-timeout"
-    msgs = {
+    name: ClassVar[str] = "asyncio-timeout"
+    msgs: ClassVar[dict[str, tuple[str, str, str]]] = {
         "W9703": (
-            "External async call '%s' without enclosing asyncio.timeout() / anyio.fail_after()",
+            "External async call '%s' without enclosing"
+            " asyncio.timeout() / anyio.fail_after()",
             "asyncio-timeout",
-            "External async calls must be wrapped in asyncio.timeout() or anyio.fail_after().",
+            "External async calls must be wrapped in"
+            " asyncio.timeout() or anyio.fail_after().",
         ),
     }
 
     @beartype
     def visit_await(self, node: nodes.Await) -> None:
+        """Flag await calls on HTTP methods missing enclosing timeout context."""
         if not isinstance(node.value, nodes.Call):
             return
         call = node.value
@@ -90,7 +93,8 @@ class AsyncTimeoutChecker(BaseChecker):
                         return True
                 # Don't stop here — keep walking up past non-timeout AsyncWith
             if isinstance(
-                parent, (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.Module)
+                parent,
+                (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.Module),
             ):
                 return False
             parent = parent.parent
@@ -110,4 +114,5 @@ class AsyncTimeoutChecker(BaseChecker):
 
 
 def register(linter: PyLinter) -> None:
+    """Register the checker with the linter."""
     linter.register_checker(AsyncTimeoutChecker(linter))
