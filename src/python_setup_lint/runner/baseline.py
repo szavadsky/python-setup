@@ -128,6 +128,12 @@ def _normalise_rumdl_timing(text: str) -> str:
     return re.sub(r"\(\d+ms\)", "(XXXms)", text)
 
 
+def _normalise_pyright_verifytypes_output(text: str) -> str:
+    result = re.sub(r'"time":\s*"?\d+"?', "", text)
+    result = re.sub(r'"timeInSec":\s*[0-9.]+', "", result)
+    return result
+
+
 def _strip_pyright_volatile(diag: object) -> None:
     if not isinstance(diag, dict):
         return
@@ -181,7 +187,9 @@ def _capture_one(r: LintResult) -> dict[str, Any]:
             entry.pop("schema", None)
         return entry
     # Tools without a records parser: keep the legacy ``output`` string.
-    if r.tool_name == "rumdl check":
+    if r.tool_name == "pyright verify types":
+        entry["output"] = _normalise_pyright_verifytypes_output(r.stdout or "")
+    elif r.tool_name == "rumdl check":
         entry["output"] = _normalise_rumdl_timing(r.stdout or "")
     else:
         entry["output"] = r.stdout
@@ -433,6 +441,8 @@ def _legacy_current_output(r: LintResult) -> str:
         return _normalise_rumdl_timing(r.stdout or "")
     if r.tool_name == "pylint":
         return _pylint_inventory(r.stdout or "")
+    if r.tool_name == "pyright verify types":
+        return _normalise_pyright_verifytypes_output(r.stdout or "")
     return r.stdout or ""
 
 
@@ -444,6 +454,8 @@ def _legacy_saved_output(saved_entry: dict[str, Any], tool_name: str) -> str:
         return _normalise_rumdl_timing(saved_output)
     if tool_name == "pylint":
         return _pylint_inventory(saved_output)
+    if tool_name == "pyright verify types":
+        return _normalise_pyright_verifytypes_output(saved_output)
     return saved_output
 
 

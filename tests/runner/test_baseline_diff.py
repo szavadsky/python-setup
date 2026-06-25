@@ -908,6 +908,60 @@ class TestCaptureOneEdgeCases:
         assert "version" not in diag
         assert "timeInSec" not in diag.get("summary", {})
 
+    def test_pyright_verifytypes_volatile_fields_stripped(self) -> None:
+        cap = _capture_baseline(
+            [
+                make_lint_result(
+                    tool_name="pyright verify types",
+                    stdout=json.dumps(
+                        {
+                            "version": "1.1.410",
+                            "time": "1782394246865",
+                            "timeInSec": 0.51,
+                            "diagnostics": [],
+                        }
+                    ),
+                )
+            ]
+        )
+        output = cap[0].get("output", "")
+        assert "time" not in output
+        assert "timeInSec" not in output
+        assert "version" in output
+
+    def test_pyright_verifytypes_baseline_diff_stable(self, tmp_path: Path) -> None:
+        baseline_path = tmp_path / "baseline.json"
+        saved = [
+            {
+                "tool": "pyright verify types",
+                "exit_code": 0,
+                "output": json.dumps(
+                    {
+                        "version": "1.1.410",
+                        "time": "1782394246865",
+                        "timeInSec": 0.51,
+                        "diagnostics": [],
+                    }
+                ),
+            }
+        ]
+        baseline_path.write_text(json.dumps(saved))
+        current = [
+            make_lint_result(
+                tool_name="pyright verify types",
+                stdout=json.dumps(
+                    {
+                        "version": "1.1.410",
+                        "time": "1782394247000",
+                        "timeInSec": 0.72,
+                        "diagnostics": [],
+                    }
+                ),
+            )
+        ]
+        violations = _diff_baseline(current, baseline_path)
+        assert violations == []
+
     def test_rumdl_json_captured_as_diagnostics(self) -> None:
         cap = _capture_baseline(
             [
