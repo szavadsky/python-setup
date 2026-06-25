@@ -7,16 +7,15 @@ from typing import TYPE_CHECKING
 
 from astroid import nodes
 
-from ._ast_helpers import ClassComparisonCtx
 
+from ._ast_helpers import ClassComparisonCtx
 if TYPE_CHECKING:
+    from astroid.bases import Proxy
     from python_setup_lint.checkers.stub_checker import StubChecker
 
-def _normalize_bases(bases: list[nodes.NodeNG]) -> list[str]:
-    """Normalize base class AST nodes to a comparable sorted list of names.
-
-    Strips module prefix from ``Attribute`` nodes (e.g. ``pydantic.BaseModel``
-    → ``BaseModel``). Treats ``builtins.object`` ≡ ``object``. For subscript
+def _normalize_bases(bases: list[nodes.NodeNG | Proxy]) -> list[str]:
+    """Strips module prefix from ``Attribute`` nodes (e.g. ``pydantic.BaseModel``
+    to ``BaseModel``). Treats ``builtins.object`` as ``object``. For subscript
     nodes (e.g. ``Generic[T]``), extracts the base name (``Generic``).
     Sorts the result. Returns an empty list for empty bases.
     """

@@ -5,6 +5,7 @@ compares class base lists / public methods / class-level attributes,
 and emits the corresponding message ids.
 
 Functions:
+
 - :func:`_normalize_bases` — normalise base-class AST nodes to a sorted, comparable list.
 - :func:`_is_public_method` — public-method predicate used by ``_compare_class_methods``.
 - :func:`_is_classvar` — detects ``ClassVar[...]`` AST pattern.
@@ -31,8 +32,9 @@ from ._ast_helpers import CallableComparisonCtx, ClassComparisonCtx
 from .signature import _emit_callable_fidelity_issues
 
 if TYPE_CHECKING:
-    from python_setup_lint.checkers.stub_checker import StubChecker
+    from astroid.bases import Proxy
 
+    from python_setup_lint.checkers.stub_checker import StubChecker
 log = logging.getLogger(__name__)
 
 __all__ = [
@@ -45,8 +47,7 @@ __all__ = [
     "_normalize_bases",
 ]
 
-
-def _normalize_bases(bases: list[nodes.NodeNG]) -> list[str]:
+def _normalize_bases(bases: list[nodes.NodeNG | Proxy]) -> list[str]:
     normalized: list[str] = []
     for base in bases:
         if isinstance(base, nodes.Subscript):
@@ -62,12 +63,10 @@ def _normalize_bases(bases: list[nodes.NodeNG]) -> list[str]:
     normalized.sort()
     return normalized
 
-
 def _is_public_method(member_name: str) -> bool:
     if member_name in ("__init__", "__new__"):
         return True
     return not member_name.startswith("_")
-
 
 def _is_classvar(ann_node: nodes.NodeNG) -> bool:
     return (
@@ -75,7 +74,6 @@ def _is_classvar(ann_node: nodes.NodeNG) -> bool:
         and isinstance(ann_node.value, nodes.Name)
         and ann_node.value.name == "ClassVar"
     )
-
 
 def _compare_class_bases(ctx: ClassComparisonCtx) -> None:
     stub_bases = _normalize_bases(ctx.stub_class.bases)
@@ -96,18 +94,15 @@ def _compare_class_bases(ctx: ClassComparisonCtx) -> None:
             args=(ctx.class_name, ctx.module_name, stub_str, impl_str),
         )
 
-
 def _compare_class_methods(ctx: ClassComparisonCtx) -> None:
     stub_methods: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     impl_methods: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     for child in ctx.stub_class.body:
-        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
-            if _is_public_method(child.name):
-                stub_methods[child.name] = child
+        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)) and _is_public_method(child.name):
+            stub_methods[child.name] = child
     for child in ctx.impl_class.body:
-        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
-            if _is_public_method(child.name):
-                impl_methods[child.name] = child
+        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)) and _is_public_method(child.name):
+            impl_methods[child.name] = child
 
     for mname, stub_method in stub_methods.items():
         impl_method = impl_methods.get(mname)
@@ -121,7 +116,6 @@ def _compare_class_methods(ctx: ClassComparisonCtx) -> None:
                 impl_func=impl_method,
             )
         )
-
 
 def _compare_class_attrs(ctx: ClassComparisonCtx) -> None:
     stub_attrs: dict[str, nodes.AnnAssign] = {}
@@ -214,7 +208,6 @@ def _compare_class_attrs(ctx: ClassComparisonCtx) -> None:
                     ctx.module_name,
                     stub_norm,
                 )
-
 
 def _emit_variable_fidelity(checker: StubChecker, module_name: str) -> None:
     f = checker._fidelity
