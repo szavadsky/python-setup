@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "ty": {
+      "command": "uv",
+      "args": ["run", "ty", "server"],
+      "fileTypes": [".py"],
+      "rootMarkers": ["pyproject.toml", ".git", "setup.py", "setup.cfg"]
+    }
+  }
+}
