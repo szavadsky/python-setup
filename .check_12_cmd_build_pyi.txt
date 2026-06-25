@@ -1,0 +1,13 @@
+## Target
+Verify that fixes to src/python_setup_lint/runner/cmd_build.pyi don't cause regressions
+
+## Change
+1. Run `uv run ruff check src/python_setup_lint/runner/cmd_build.pyi` to verify no ruff violations remain
+2. Run `uv run lint --no-fail-fast --path src/python_setup_lint/runner/cmd_build.pyi` to verify no lint regressions
+3. Run `uv run pytest -x -q` to verify all tests pass
+
+## Acceptance
+- Ruff check passes on src/python_setup_lint/runner/cmd_build.pyi
+- Lint pipeline shows no regressions on src/python_setup_lint/runner/cmd_build.pyi
+- All relevant tests pass
+- If any check fails, rollback with `git checkout -- {file}`

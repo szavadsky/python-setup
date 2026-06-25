@@ -1,0 +1,21 @@
+## Target
+Fix all lint violations in tests/checkers/_factories.py
+
+## Violations to fix
+- **C0412**: Group imports: stdlib first, then third-party, then local
+- **I001**: Fix import ordering with `uv run ruff check --fix --select I001 tests/checkers/_factories.py`
+- **invalid-argument-type**: Fix invalid argument type
+- **no-untyped-def**: Add type annotations to function definition
+- **type-arg**: Add type argument to generic type (e.g., dict -> dict[str, Any])
+- **unused-ignore**: Remove unused `# type: ignore` comments
+
+## Change
+1. Read tests/checkers/_factories.py to understand current state
+3. Fix all violations listed above
+4. Run `uv run ruff check --fix tests/checkers/_factories.py`
+6. Run `uv run ruff format tests/checkers/_factories.py`
+
+## Acceptance
+- All violations listed above are fixed in tests/checkers/_factories.py
+- Ruff check passes on the file(s)
+- Do NOT run tests or full lint pipeline - just fix the file

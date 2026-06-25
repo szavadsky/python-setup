@@ -1,0 +1,16 @@
+## Target
+Fix all lint violations in tests/conftest.py
+
+## Violations to fix
+- **TC003**: Move TYPE_CHECKING-only imports inside TYPE_CHECKING block
+
+## Change
+1. Read tests/conftest.py to understand current state
+3. Fix all violations listed above
+4. Run `uv run ruff check --fix tests/conftest.py`
+6. Run `uv run ruff format tests/conftest.py`
+
+## Acceptance
+- All violations listed above are fixed in tests/conftest.py
+- Ruff check passes on the file(s)
+- Do NOT run tests or full lint pipeline - just fix the file

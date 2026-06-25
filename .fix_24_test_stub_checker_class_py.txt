@@ -1,0 +1,17 @@
+## Target
+Fix all lint violations in tests/checkers/test_stub_checker_class.py
+
+## Violations to fix
+- **invalid-argument-type**: Fix invalid argument type
+- **unused-ignore**: Remove unused `# type: ignore` comments
+
+## Change
+1. Read tests/checkers/test_stub_checker_class.py to understand current state
+3. Fix all violations listed above
+4. Run `uv run ruff check --fix tests/checkers/test_stub_checker_class.py`
+6. Run `uv run ruff format tests/checkers/test_stub_checker_class.py`
+
+## Acceptance
+- All violations listed above are fixed in tests/checkers/test_stub_checker_class.py
+- Ruff check passes on the file(s)
+- Do NOT run tests or full lint pipeline - just fix the file

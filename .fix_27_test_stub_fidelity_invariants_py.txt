@@ -1,0 +1,21 @@
+## Target
+Fix all lint violations in tests/checkers/test_stub_fidelity_invariants.py
+
+## Violations to fix
+- **I001**: Fix import ordering with `uv run ruff check --fix --select I001 tests/checkers/test_stub_fidelity_invariants.py`
+- **arg-type**: Fix argument type annotation
+- **invalid-argument-type**: Fix invalid argument type
+- **no-any-return**: Add explicit return type annotation
+- **unsupported-operator**: Fix unsupported operator usage
+- **unused-ignore**: Remove unused `# type: ignore` comments
+
+## Change
+1. Read tests/checkers/test_stub_fidelity_invariants.py to understand current state
+3. Fix all violations listed above
+4. Run `uv run ruff check --fix tests/checkers/test_stub_fidelity_invariants.py`
+6. Run `uv run ruff format tests/checkers/test_stub_fidelity_invariants.py`
+
+## Acceptance
+- All violations listed above are fixed in tests/checkers/test_stub_fidelity_invariants.py
+- Ruff check passes on the file(s)
+- Do NOT run tests or full lint pipeline - just fix the file

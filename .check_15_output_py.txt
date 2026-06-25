@@ -1,0 +1,14 @@
+## Target
+Verify that fixes to src/python_setup_lint/runner/output.py don't cause regressions
+
+## Change
+1. Run `uv run ruff check src/python_setup_lint/runner/output.py` to verify no ruff violations remain
+2. Run `uv run lint --no-fail-fast --path src/python_setup_lint/runner/output.py` to verify no lint regressions
+3. Run `uv run pytest -x -q` to verify all tests pass
+
+## Acceptance
+- Ruff check passes on src/python_setup_lint/runner/output.py
+- Lint pipeline shows no regressions on src/python_setup_lint/runner/output.py
+- All relevant tests pass
+- If any check fails, rollback with `git checkout -- {file}`
+- If any check fails, also rollback with `git checkout -- src/python_setup_lint/runner/output.pyi`
