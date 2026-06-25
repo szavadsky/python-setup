@@ -5,12 +5,12 @@ manual ``tempfile`` calls that leak directories.
 """
 
 from __future__ import annotations
-from beartype import beartype
 
 import fnmatch
 from pathlib import Path
 
 from astroid import nodes
+from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
@@ -123,5 +123,6 @@ class TempFileChecker(BaseChecker):
         return False
 
 
+@beartype
 def register(linter: PyLinter) -> None:
     linter.register_checker(TempFileChecker(linter))
