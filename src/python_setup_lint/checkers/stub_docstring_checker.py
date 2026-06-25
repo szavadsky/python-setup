@@ -6,18 +6,19 @@ those belong in .pyi. Implementation comments (why, tricks) stay in .py.
 """
 
 from __future__ import annotations
-from beartype import beartype
 
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-from astroid import nodes
+from astroid import nodes  # noqa: TC002
+from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub_checker import StubChecker
+
 
 log = logging.getLogger(__name__)
 
@@ -60,8 +61,9 @@ class StubDocstringChecker(BaseChecker):
     so methods inside classes are also checked. ClassDef is NOT visited —
     class-level docstrings are legitimate in .py per CodingRules.md.
     """
-
-    name = "stub-docstring-checker"
+    name: str = "stub-docstring-checker"
+    _enabled_for_module: bool
+    _current_module_name: str | None
     msgs = {
         "W9700": (
             "Implementation file '%s' has usage docstring for '%s'; move to .pyi",
@@ -73,8 +75,8 @@ class StubDocstringChecker(BaseChecker):
 
     def __init__(self, linter: PyLinter) -> None:
         super().__init__(linter)
-        self._enabled_for_module = False
         self._current_module_name: str | None = None
+        self._enabled_for_module: bool = False
 
     @beartype
     def visit_module(self, node: nodes.Module) -> None:
@@ -92,12 +94,11 @@ class StubDocstringChecker(BaseChecker):
 
         # Only process modules that passed stub_checker exemptions
         stub_checker = _get_stub_checker(self.linter)
-        if stub_checker is not None:
-            if module_name and module_name not in stub_checker._coverage.module_index:
-                log.debug(
-                    "Skip %s: not in stub_checker module_index (exempted)", module_name
-                )
-                return
+        if stub_checker is not None and module_name and module_name not in stub_checker._coverage.module_index:
+            log.debug(
+                "Skip %s: not in stub_checker module_index (exempted)", module_name
+            )
+            return
 
         # Skip files without a companion .pyi
         if not _has_companion_stub(py_path, self.linter):
@@ -128,5 +129,6 @@ class StubDocstringChecker(BaseChecker):
             )
 
 
+@beartype
 def register(linter: PyLinter) -> None:
     linter.register_checker(StubDocstringChecker(linter))
