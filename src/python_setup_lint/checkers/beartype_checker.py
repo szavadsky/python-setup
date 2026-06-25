@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 class BeartypeCoverageChecker(BaseChecker):
     """AST visitor that inventories @beartype coverage on public functions."""
 
-    name = "beartype-coverage"
+    name: str = "beartype-coverage"
     msgs = {
         "W9701": (
             "Public function '%s' in '%s' is missing @beartype decorator",
@@ -59,7 +59,9 @@ class BeartypeCoverageChecker(BaseChecker):
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         self._check_function(node)
 
-    def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
+    def visit_asyncfunctiondef(  # pylint: disable=missing-beartype  # circular import — AsyncFunctionDef not available at runtime
+        self, node: nodes.AsyncFunctionDef
+    ) -> None:
         self._check_function(node)
 
     def _check_function(self, node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> None:
@@ -124,5 +126,7 @@ class BeartypeCoverageChecker(BaseChecker):
         return False
 
 
-def register(linter: PyLinter) -> None:
+def register(  # pylint: disable=missing-beartype  # circular import — PyLinter not available at runtime
+    linter: PyLinter,
+) -> None:
     linter.register_checker(BeartypeCoverageChecker(linter))
