@@ -1,6 +1,7 @@
 """Symbol-presence + kind-mismatch dispatch (Invariant 3 — the E97B1/E97B2 family).
 
 Walks stub symbols for each module and emits:
+
 - E97B1 (``stub-symbol-missing``) when a stub-declared symbol is absent from the
   implementation.
 - E97B2 (``symbol-kind-mismatch``) when stub and impl disagree on the symbol
@@ -11,6 +12,7 @@ class-attribute comparison into :mod:`._ast_helpers` consumers
 (:mod:`.annotation`).
 
 Functions:
+
 - :func:`_emit_stub_symbol_check` — emits E97B1/E97B2 and dispatches class comparison.
 
 Topologically the upstream-most dispatcher: depends on ``_ast_helpers``
@@ -35,7 +37,6 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 __all__ = ["_emit_stub_symbol_check"]
-
 
 def _emit_stub_symbol_check(checker: StubChecker, module_name: str) -> None:
     f = checker._fidelity
