@@ -4,6 +4,7 @@ Holds the dataclasses and the per-call state that flows between the
 cohesive sub-modules (`signature.py`, `annotation.py`, `kind.py`).
 
 Definitions:
+
 - ``_FidelityState``  — aggregated stub/impl node maps keyed by module.
 - ``ParamDescriptor``  — canonical form of a single callable parameter.
 - ``ClassComparisonCtx``  — context bundle for one class stub-vs-impl pair.
@@ -34,7 +35,6 @@ __all__ = [
     "_FidelityState",
 ]
 
-
 @dataclass
 class _FidelityState:
     """Phase 3 state aggregated for StubChecker.
@@ -60,7 +60,6 @@ class _FidelityState:
     impl_class_nodes: dict[str, dict[str, nodes.ClassDef]] = field(default_factory=dict)
     impl_all_names: dict[str, set[str]] = field(default_factory=dict)
 
-
 @dataclass
 class ParamDescriptor:
     """Canonical form of a single function parameter for comparison.
@@ -76,7 +75,6 @@ class ParamDescriptor:
     has_default: bool
     annotation_normalized: str | None
 
-
 @dataclass
 class ClassComparisonCtx:
     """Context bundle for comparing a single class stub-vs-impl pair.
@@ -90,7 +88,6 @@ class ClassComparisonCtx:
     msg_node: nodes.NodeNG
     stub_class: nodes.ClassDef
     impl_class: nodes.ClassDef
-
 
 @dataclass
 class CallableComparisonCtx:
