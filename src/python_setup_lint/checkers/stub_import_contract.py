@@ -19,9 +19,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
-
 # ── Import usage record ────────────────────────────────────────────────────────
-
 
 @dataclass
 class ImportUsage:
@@ -34,9 +32,7 @@ class ImportUsage:
     alias: str | None
     is_star: bool
 
-
 # ── TYPE_CHECKING guard detection ─────────────────────────────────────────────
-
 
 def _in_type_checking_block(node: nodes.Import | nodes.ImportFrom) -> bool:
     parent = node.parent
@@ -47,15 +43,12 @@ def _in_type_checking_block(node: nodes.Import | nodes.ImportFrom) -> bool:
         parent = parent.parent
     return False
 
-
 def _is_type_checking_guard(test: nodes.NodeNG) -> bool:
     if isinstance(test, nodes.Name) and test.name == "TYPE_CHECKING":
         return True
     return isinstance(test, nodes.Attribute) and test.attrname == "TYPE_CHECKING"
 
-
 # ── Import resolution helpers ─────────────────────────────────────────────────
-
 
 def _resolve_relative(
     current_module: str,
@@ -82,11 +75,9 @@ def _resolve_relative(
         parts.append(modname)
     return ".".join(parts)
 
-
 # ── Public API ─────────────────────────────────────────────────────────────────
 
-
-def emit_import_contract_violations(checker: StubChecker) -> None:
+def emit_import_contract_violations(checker: StubChecker) -> None:  # pylint: disable=missing-beartype
     c = checker._coverage
     for usage in c.import_usages:
         target = usage.target_module
@@ -95,9 +86,8 @@ def emit_import_contract_violations(checker: StubChecker) -> None:
         if target not in c.module_index:
             continue
 
-        importer_node = c.module_index.get(usage.importer_module, (None, (None, None)))[
-            1
-        ]
+        entry = c.module_index.get(usage.importer_module)
+        importer_node: nodes.Module | None = entry[1] if entry is not None else None
 
         # Check if target has a stub
         if target not in c.stub_index:
