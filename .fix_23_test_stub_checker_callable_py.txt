@@ -1,0 +1,19 @@
+## Target
+Fix all lint violations in tests/checkers/test_stub_checker_callable.py
+
+## Violations to fix
+- **invalid-argument-type**: Fix invalid argument type
+- **no-untyped-def**: Add type annotations to function definition
+- **type-arg**: Add type argument to generic type (e.g., dict -> dict[str, Any])
+- **unsupported-operator**: Fix unsupported operator usage
+
+## Change
+1. Read tests/checkers/test_stub_checker_callable.py to understand current state
+3. Fix all violations listed above
+4. Run `uv run ruff check --fix tests/checkers/test_stub_checker_callable.py`
+6. Run `uv run ruff format tests/checkers/test_stub_checker_callable.py`
+
+## Acceptance
+- All violations listed above are fixed in tests/checkers/test_stub_checker_callable.py
+- Ruff check passes on the file(s)
+- Do NOT run tests or full lint pipeline - just fix the file

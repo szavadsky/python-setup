@@ -1,0 +1,24 @@
+## Target
+Fix all lint violations in src/python_setup_lint/checkers/beartype_checker.py
+
+## Violations to fix
+- **I001**: Fix import ordering with `uv run ruff check --fix --select I001 src/python_setup_lint/checkers/beartype_checker.py`
+- **W9701**: Add `# pylint: disable=missing-beartype` with technical justification (circular import or type not available at runtime)
+- **W97B5**: Add type annotation to the function/variable
+
+Also update companion .pyi stub at src/python_setup_lint/checkers/beartype_checker.pyi if needed (signature/annotation must match)
+
+## Change
+1. Read src/python_setup_lint/checkers/beartype_checker.py to understand current state
+2. Read src/python_setup_lint/checkers/beartype_checker.pyi to understand current stub
+3. Fix all violations listed above
+4. Run `uv run ruff check --fix src/python_setup_lint/checkers/beartype_checker.py`
+5. Run `uv run ruff check --fix src/python_setup_lint/checkers/beartype_checker.pyi`
+6. Run `uv run ruff format src/python_setup_lint/checkers/beartype_checker.py`
+7. Run `uv run ruff format src/python_setup_lint/checkers/beartype_checker.pyi`
+
+## Acceptance
+- All violations listed above are fixed in src/python_setup_lint/checkers/beartype_checker.py
+- Companion .pyi stub at src/python_setup_lint/checkers/beartype_checker.pyi is consistent with the .py file
+- Ruff check passes on the file(s)
+- Do NOT run tests or full lint pipeline - just fix the file

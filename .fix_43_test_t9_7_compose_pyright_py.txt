@@ -1,0 +1,19 @@
+## Target
+Fix all lint violations in tests/runner/test_t9_7_compose_pyright.py
+
+## Violations to fix
+- **invalid-argument-type**: Fix invalid argument type
+- **not-subscriptable**: Fix type that is not subscriptable
+- **type-arg**: Add type argument to generic type (e.g., dict -> dict[str, Any])
+- **unsupported-operator**: Fix unsupported operator usage
+
+## Change
+1. Read tests/runner/test_t9_7_compose_pyright.py to understand current state
+3. Fix all violations listed above
+4. Run `uv run ruff check --fix tests/runner/test_t9_7_compose_pyright.py`
+6. Run `uv run ruff format tests/runner/test_t9_7_compose_pyright.py`
+
+## Acceptance
+- All violations listed above are fixed in tests/runner/test_t9_7_compose_pyright.py
+- Ruff check passes on the file(s)
+- Do NOT run tests or full lint pipeline - just fix the file

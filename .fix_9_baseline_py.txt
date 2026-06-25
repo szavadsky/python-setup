@@ -1,0 +1,24 @@
+## Target
+Fix all lint violations in src/python_setup_lint/runner/baseline.py
+
+## Violations to fix
+- **I001**: Fix import ordering with `uv run ruff check --fix --select I001 src/python_setup_lint/runner/baseline.py`
+- **TC001**: Move TYPE_CHECKING-only imports inside TYPE_CHECKING block
+- **W9701**: Add `# pylint: disable=missing-beartype` with technical justification (circular import or type not available at runtime)
+
+Also update companion .pyi stub at src/python_setup_lint/runner/baseline.pyi if needed (signature/annotation must match)
+
+## Change
+1. Read src/python_setup_lint/runner/baseline.py to understand current state
+2. Read src/python_setup_lint/runner/baseline.pyi to understand current stub
+3. Fix all violations listed above
+4. Run `uv run ruff check --fix src/python_setup_lint/runner/baseline.py`
+5. Run `uv run ruff check --fix src/python_setup_lint/runner/baseline.pyi`
+6. Run `uv run ruff format src/python_setup_lint/runner/baseline.py`
+7. Run `uv run ruff format src/python_setup_lint/runner/baseline.pyi`
+
+## Acceptance
+- All violations listed above are fixed in src/python_setup_lint/runner/baseline.py
+- Companion .pyi stub at src/python_setup_lint/runner/baseline.pyi is consistent with the .py file
+- Ruff check passes on the file(s)
+- Do NOT run tests or full lint pipeline - just fix the file

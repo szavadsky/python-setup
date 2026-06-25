@@ -36,6 +36,7 @@ import re
 import subprocess
 import sys
 import tomllib
+from collections.abc import Callable  # noqa: TC003 — used at runtime in function signatures
 from pathlib import Path
 
 import beartype
@@ -204,7 +205,9 @@ def _git_changed_files(cwd: Path, *, staged: bool) -> set[str]:
 
 
 @beartype.beartype
-def _ruff_parseability_errors(cwd: Path, paths: list[str], run_cmd: object) -> set[str]:
+def _ruff_parseability_errors(
+    cwd: Path, paths: list[str], run_cmd: Callable[..., LintResult]
+) -> set[str]:
     if not paths:
         return set()
     cmd = ["ruff", "check", "--no-fix", *paths]
@@ -226,7 +229,7 @@ def _apply_autofix_conflict_aware(
     *,
     config: RunnerConfig,
     paths_to_check: list[str],
-    run_cmd: object,
+    run_cmd: Callable[..., LintResult],
 ) -> LintResult:
     staged_set = _git_changed_files(config.cwd, staged=True)
     unstaged_set = _git_changed_files(config.cwd, staged=False)
@@ -289,6 +292,11 @@ def _autofix_target_paths(
     return _find_py_files(paths, cwd=config.cwd)
 
 
+# pylint: disable=missing-beartype  # beartype cannot type-check the full
+#   pipeline body (dynamic dispatch, external subprocess calls, complex
+#   control flow); the function is the top-level orchestrator, not a
+#   leaf utility — beartype's overhead on this entry point is not
+#   justified.
 def run_lint(
     *,
     config: RunnerConfig | None = None,
@@ -515,6 +523,11 @@ def _print_config_status(
         print(f"  {name:<20} {config_path}  ({origin})")
 
 
+# pylint: disable=missing-beartype  # beartype cannot type-check the full
+#   CLI entry point (argparse parsing, dynamic RunnerConfig construction,
+#   external subprocess dispatch); the function is the top-level
+#   orchestrator, not a leaf utility — beartype's overhead on this entry
+#   point is not justified.
 def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Run the python-setup lint pipeline",
