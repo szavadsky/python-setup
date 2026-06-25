@@ -5,13 +5,11 @@ startup rather than silently degrade at runtime.
 """
 
 from __future__ import annotations
-from beartype import beartype
-
 
 from astroid import nodes
+from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TC002
-
+from pylint.lint import PyLinter # noqa: TC002
 
 class NoTryImportChecker(BaseChecker):
     """AST visitor that flags try blocks containing imports caught by ImportError / ModuleNotFoundError."""
@@ -61,6 +59,5 @@ class NoTryImportChecker(BaseChecker):
         """True if any statement is an Import or ImportFrom node (not a Call)."""
         return any(isinstance(stmt, (nodes.Import, nodes.ImportFrom)) for stmt in stmts)
 
-
-def register(linter: PyLinter) -> None:
+def register(linter: PyLinter) -> None: # pylint: disable=missing-beartype # PyLinter is a pylint internal type not available at runtime for beartype
     linter.register_checker(NoTryImportChecker(linter))
