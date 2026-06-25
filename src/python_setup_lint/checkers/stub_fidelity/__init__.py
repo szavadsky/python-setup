@@ -40,25 +40,31 @@ per the CodingRules ``__init__.py`` exemption.
 
 from __future__ import annotations
 
-from ._ast_helpers import CallableComparisonCtx
-from ._ast_helpers import ClassComparisonCtx
-from ._ast_helpers import ParamDescriptor
-from ._ast_helpers import _FidelityState
-from .annotation import _compare_class_attrs
-from .annotation import _compare_class_bases
-from .annotation import _compare_class_methods
-from .annotation import _emit_variable_fidelity
-from .annotation import _is_classvar
-from .annotation import _is_public_method
-from .annotation import _normalize_bases
+from ._ast_helpers import (
+    CallableComparisonCtx,
+    ClassComparisonCtx,
+    ParamDescriptor,
+    _FidelityState,
+)
+from .annotation import (
+    _compare_class_attrs,
+    _compare_class_bases,
+    _compare_class_methods,
+    _emit_variable_fidelity,
+    _is_classvar,
+    _is_public_method,
+    _normalize_bases,
+)
 from .kind import _emit_stub_symbol_check
 from .orchestrator import emit_fidelity_violations
-from .signature import _compare_callable_annotations
-from .signature import _compare_callable_descriptors
-from .signature import _compare_return_annotations
-from .signature import _emit_callable_fidelity
-from .signature import _emit_callable_fidelity_issues
-from .signature import _extract_param_descriptors
+from .signature import (
+    _compare_callable_annotations,
+    _compare_callable_descriptors,
+    _compare_return_annotations,
+    _emit_callable_fidelity,
+    _emit_callable_fidelity_issues,
+    _extract_param_descriptors,
+)
 
 __all__ = [
     "CallableComparisonCtx",
