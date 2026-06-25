@@ -254,6 +254,7 @@ def _index_stub_declarations(
 # ── Public API ─────────────────────────────────────────────────────────────────
 
 
+# pylint: disable=missing-beartype  # StubChecker is TYPE_CHECKING-only; beartype can't resolve at runtime
 def emit_coverage_violations(checker: StubChecker) -> None:
     c = checker._coverage
     for module_name in sorted(c.stub_missing):
