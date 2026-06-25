@@ -34,7 +34,6 @@ from python_setup_lint.testing import (
 )
 from python_setup_lint.testing import test_checked_main as _test_checked_main
 
-
 # ── Helpers ───────────────────────────────────────────────────────
 
 

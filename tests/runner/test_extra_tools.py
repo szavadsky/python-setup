@@ -17,14 +17,14 @@ import python_setup_lint.runner as _runner_module
 from python_setup_lint.runner import (
     LINT_TOOLS,
     PARSE_STRATEGIES,
-    RunnerConfig,
     STRATEGIES,
     TOOLS_BY_NAME,
+    ExtraToolsConfigError,
+    RunnerConfig,
     ToolSpec,
     ViolationCount,
-    ExtraToolsConfigError,
-    _ExtraToolRegistration,
     _aggregate_statistics,
+    _ExtraToolRegistration,
     _load_extra_tools,
     _register_extra_tools,
     _reset_extra_tools_cache,
@@ -32,7 +32,6 @@ from python_setup_lint.runner import (
     run_lint,
 )
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
-
 from tests.runner._factories import (
     DOWNSTREAM_CASES,
     EMPTY_LOADER_CASES,

@@ -28,7 +28,6 @@ from python_setup_lint.runner import (
     _reset_extra_tools_cache,
 )
 
-
 # ── Project fixtures for setup tests ────────────────────────────────
 
 

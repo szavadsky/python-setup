@@ -38,7 +38,13 @@ import sys
 import tomllib
 from pathlib import Path
 
-from .cmd_build import _compose_ruff_config, _expand_globs, _find_py_files, _resolve_pylintrc
+from .cmd_build import (
+    _compose_pyright_config,
+    _compose_ruff_config,
+    _expand_globs,
+    _find_py_files,
+    _resolve_pylintrc,
+)
 from .dispatch import LINT_TOOLS, _strategy_for
 from .extra_tools import (
     _EXTRA_TOOLS_REGISTERED_PATHS,
@@ -490,6 +496,26 @@ def run_lint(
                 config.config_paths["ruff check"] = composed
     if config.pyright_project_override is not None:
         config.config_paths["pyright check"] = config.pyright_project_override
+    elif config.config_paths is not None and config.config_paths.get("pyright check") is not None:
+        # T9.7 — default path: compose a cwd-rooted pyright config when no
+        # explicit override is wired.  The shipped config lives at
+        # ``config/pyrightconfig.json`` (outside the project cwd), so pyright
+        # resolves its relative ``venvPath``/``exclude`` entries against the
+        # config FILE dir → wrong venv → ~10k ``.venv`` files walked (~17k
+        # diagnostics).  ``_compose_pyright_config`` rewrites ``venvPath`` +
+        # ``exclude`` to absolute ``cwd``-rooted paths and writes a tmp
+        # ``pyrightconfig.json`` passed via ``--project``.  Idempotent across
+        # invocations and a no-op when the shipped config already resolves
+        # against ``cwd`` (returns the shared path unchanged).
+        # ``config_paths`` is bound to a typed alias here so mypy does not
+        # flag the union-narrowing pattern that the ruff block above inherits
+        # from ``config.config_paths`` being ``dict[str, Path] | None`` — the
+        # alias collapses the ``None`` arm via the preceding ``is not None``.
+        paths = config.config_paths
+        shared_pyright = paths["pyright check"]
+        composed_pyright = _compose_pyright_config(config.cwd, shared_pyright)
+        if composed_pyright != shared_pyright:
+            paths["pyright check"] = composed_pyright
 
     # ── T4 — env-var autofix opt-out ─────────────────────────────
     # ``PYTHON_SETUP_LINT_NO_AUTOFIX=1`` flips ``fix=False`` BEFORE the tool

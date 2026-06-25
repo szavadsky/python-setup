@@ -28,7 +28,6 @@ from python_setup_lint.checkers.stub_coverage import (
     _resolve_stub,
     emit_coverage_violations,
 )
-
 from tests.checkers._factories import (
     _EMIT_COVERAGE_CASES,
     _HAS_MAIN_BLOCK_CASES,

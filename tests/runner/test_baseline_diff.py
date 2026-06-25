@@ -37,9 +37,7 @@ from python_setup_lint.runner import (
     peek_fallback_tools,
 )
 from python_setup_lint.testing import make_lint_result
-
 from tests.runner._factories import diff_baseline_with
-
 
 # ── Surface unit: _compare_sorted pure-fn ────────────────────────
 

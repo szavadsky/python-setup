@@ -12,13 +12,11 @@ import pytest
 
 from python_setup_lint.checkers.beartype_checker import BeartypeCoverageChecker
 from python_setup_lint.testing import _make_tc as _make_tc_factory
-
 from tests.checkers._factories import (
     _BEARTYPE_MISS_CASES,
     _BEARTYPE_SKIP_CASES,
     _BEARTYPE_SOURCE_ROOT_CASES,
 )
-
 
 _make_tc = lambda: _make_tc_factory(BeartypeCoverageChecker)
 

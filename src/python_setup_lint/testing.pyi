@@ -24,7 +24,6 @@ from pylint.testutils import CheckerTestCase
 if TYPE_CHECKING:
     from pylint.checkers import BaseChecker
 
-
     from python_setup_lint.runner import LintResult
 
 

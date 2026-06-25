@@ -65,5 +65,6 @@ markers = [
 
 [dependency-groups]
 dev = [
+    "beartype>=0.22.9",
     "pytest>=9.1.0",
 ]

@@ -11,7 +11,6 @@ import pytest
 from python_setup_lint.checkers.asyncio_timeout_checker import AsyncTimeoutChecker
 from python_setup_lint.testing import _walk_and_release
 
-
 _DETECT_CASES: list[pytest.Param] = [
     pytest.param(
         "async def f():\n    async with httpx.AsyncClient() as c:\n        resp = await c.get('https://example.com')\n",

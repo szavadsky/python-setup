@@ -14,6 +14,8 @@ import pytest
 
 import python_setup_lint.runner as _runner_module
 from python_setup_lint.runner import (
+    _STATISTICS_PARSERS,
+    _SUPPORTED_CONFIG_KEYS,
     LINT_TOOLS,
     PARSE_STRATEGIES,
     STRATEGIES,
@@ -24,7 +26,6 @@ from python_setup_lint.runner import (
     RunnerConfig,
     ToolSpec,
     ViolationCount,
-    _SUPPORTED_CONFIG_KEYS,
     _build_command,
     _build_statistics_flags,
     _capture_baseline,
@@ -35,13 +36,11 @@ from python_setup_lint.runner import (
     _print_statistics_grouped,
     _run_cmd,
     _sort_counts,
-    _STATISTICS_PARSERS,
     main,
     register_lint_tool,
     run_lint,
 )
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
-
 from tests.runner._factories import (
     BUILD_COMMAND_CASES,
     CLEAN_EXTRAS_PYPROJECT_BODY,
@@ -443,7 +442,7 @@ class TestCaptureBaseline:
         "tool,stdout,want_in,want_not_in",
         [
             ("pyright check", json.dumps({"summary": {"errorCount": 1}}),
-             {"diagnostics": {"summary": {"errorCount": 1}}}, []),  # noqa: E501
+             {"diagnostics": {"summary": {"errorCount": 1}}}, []),
             ("pyright check", json.dumps({"summary": {"errorCount": 1, "timeInSec": 12.5, "filesAnalyzed": 100}}),
              None, ["timeInSec"]),  # volatile timeInSec stripped; filesAnalyzed kept
             ("rumdl check", "\nSuccess: No issues found in 47 files (12ms)\n",
@@ -470,7 +469,7 @@ class TestCaptureBaseline:
 )
 def test_diff_baseline_matrix(
     tmp_path: Path,
-    saved: "dict[str, Any] | list[dict[str, Any]]",
+    saved: dict[str, Any] | list[dict[str, Any]],
     current: dict[str, Any],
     want_kind: str,
     post_assert_id: str,
@@ -548,7 +547,7 @@ class TestDiffBaselineEdgeCases:
 
     def test_peek_fallback_tools_snapshot(self) -> None:
         """peek_fallback_tools returns a frozen snapshot of the per-run fallback set."""
-        from python_setup_lint.runner.baseline import peek_fallback_tools, _FALLBACK_TOOLS
+        from python_setup_lint.runner.baseline import _FALLBACK_TOOLS, peek_fallback_tools
         snapshot = peek_fallback_tools()
         assert isinstance(snapshot, frozenset)
         _FALLBACK_TOOLS.add("test_tool")
@@ -559,7 +558,7 @@ class TestDiffBaselineEdgeCases:
 
     def test_peek_fallback_tools_cleared_per_diff(self, tmp_path: Path) -> None:
         """_diff_baseline clears _FALLBACK_TOOLS at the start of each call."""
-        from python_setup_lint.runner.baseline import peek_fallback_tools, _FALLBACK_TOOLS
+        from python_setup_lint.runner.baseline import _FALLBACK_TOOLS, peek_fallback_tools
         _FALLBACK_TOOLS.add("stale_tool")
         baseline_path = tmp_path / "empty_baseline.json"
         baseline_path.write_text("[]")
@@ -881,7 +880,7 @@ class TestStrategyForFallback:
         assert _strategy_for("ruff check", ToolSpec("ruff check", ["ruff", "check"])) is original
 
     def test_unknown_name_returns_generic(self) -> None:
-        from python_setup_lint.runner import _strategy_for, GenericLintTool
+        from python_setup_lint.runner import GenericLintTool, _strategy_for
         fake_spec = ToolSpec("t4-unknown-fallback", ["t4fake"])
         got = _strategy_for("t4-unknown-fallback", fake_spec)
         assert isinstance(got, GenericLintTool) and got.spec is fake_spec
