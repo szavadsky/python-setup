@@ -301,7 +301,7 @@ def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
         p = Path(value)
         if p.is_absolute():
             return None
-        return str((abs_cwd / p))
+        return str(abs_cwd / p)
 
     changed = False
     venv_path = data.get("venvPath")
