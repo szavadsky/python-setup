@@ -46,7 +46,6 @@ from python_setup_lint.runner import (
 )
 from python_setup_lint.testing import fake_run_cmd_factory
 
-
 # ── _compose_pyright_config surface-unit ─────────────────────────
 
 
