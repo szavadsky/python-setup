@@ -32,5 +32,4 @@ class StubDocstringChecker(BaseChecker):
     ) -> None:
         """Emit W9700 if *func_node* has a docstring (via doc_node)."""
 
-
 def register(linter: PyLinter) -> None: ...

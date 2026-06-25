@@ -20,8 +20,9 @@ The fixtures cover every emitted message-id family:
 
 from __future__ import annotations
 
+from typing import Any, TYPE_CHECKING
+
 import inspect
-from pathlib import Path
 
 import astroid
 
@@ -41,12 +42,17 @@ from python_setup_lint.checkers.stub_fidelity import (
 )
 from python_setup_lint.testing import _make_tc as _make_tc_factory
 
-_make_tc = lambda: _make_tc_factory(StubChecker)
+if TYPE_CHECKING:
+    from pathlib import Path
+
+
+def _make_tc() -> Any:
+    return _make_tc_factory(StubChecker)
 
 
 def _run(
     tmp_path: Path, py_code: str, pyi_code: str, module_name: str = "mod_a"
-) -> list:
+) -> list[Any]:
     """Run StubChecker end-to-end on a synthetic module + stub.
 
     Returns released messages sorted (msg_id, args tuple).
@@ -58,7 +64,7 @@ def _run(
     (src / f"{module_name}.py").write_text(py_code)
     (src / f"{module_name}.pyi").write_text(pyi_code)
 
-    tc = _make_tc()
+    tc = _make_tc()  # type: ignore[no-untyped-call]
     tc.linter.config.source_roots = [str(src)]
     tc.checker.open()
     module = astroid.parse(py_code, module_name=module_name)
@@ -68,12 +74,12 @@ def _run(
     return tc.linter.release_messages()
 
 
-def _msg_ids(msgs: list) -> list[str]:
+def _msg_ids(msgs: list[Any]) -> list[str]:
     """Sorted msg-id list emitted."""
     return sorted(m.msg_id for m in msgs)
 
 
-def _args_of(msgs: list, msg_id: str) -> list[tuple]:
+def _args_of(msgs: list[Any], msg_id: str) -> list[tuple[Any, ...]]:
     """Args tuple for each emitted message with given msg_id, sorted."""
     return sorted(m.args for m in msgs if m.msg_id == msg_id)
 
@@ -326,7 +332,7 @@ class TestComparePureHelpersDirect:
 
     def test_descriptors_count_mismatch(self) -> None:
         a = [ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, None)]
-        assert "param_count" in _compare_callable_descriptors(a, [])
+        assert "param_count" in _compare_callable_descriptors(a, [])  # type: ignore[operator]
 
     def test_annotations_match_returns_empty(self) -> None:
         a = [
@@ -421,7 +427,7 @@ class TestEmitFidelityViolationsOrchestrator:
     def test_empty_checker_no_error(self) -> None:
         # No stub_index entries → no dispatch.  Defensive guard against
         # any future refactor that would iterate outside stub_index.
-        tc = _make_tc()
+        tc = _make_tc()  # type: ignore[no-untyped-call]
         tc.checker.open()
         # Empty _coverage.stub_index → emit_fidelity_violations returns.
-        assert emit_fidelity_violations(tc.checker) is None  # returns None
+        emit_fidelity_violations(tc.checker)  # returns None

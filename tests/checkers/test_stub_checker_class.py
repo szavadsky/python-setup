@@ -10,6 +10,7 @@ Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import astroid
 import pytest
@@ -34,13 +35,14 @@ from tests.checkers._factories import (
 PROJECT_SRC = Path(__file__).resolve().parents[3] / "src"
 
 
-_make_tc = lambda: _make_tc_factory(StubChecker)
+def _make_tc() -> Any:
+    return _make_tc_factory(StubChecker)
 
 
 # ── _normalize_bases ───────────────────────────────────────────────
 
 
-@pytest.mark.parametrize("class_src, expected_substrings", _NORMALIZE_BASES_CASES)
+@pytest.mark.parametrize(("class_src", "expected_substrings"), _NORMALIZE_BASES_CASES)
 def test_normalize_bases(class_src: str, expected_substrings: list[str]) -> None:
     """``_normalize_bases`` returns the expected base-class name(s).
 
@@ -59,7 +61,7 @@ def test_normalize_bases_empty() -> None:
 # ── _is_public_method ──────────────────────────────────────────────
 
 
-@pytest.mark.parametrize("name, expected", _IS_PUBLIC_METHOD_CASES)
+@pytest.mark.parametrize(("name", "expected"), _IS_PUBLIC_METHOD_CASES)
 def test_is_public_method(name: str, expected: bool) -> None:
     assert _is_public_method(name) is expected
 
@@ -86,18 +88,19 @@ def test_class_comparison_ctx_fields() -> None:
 
 
 def test_e97b1_message_code_registered() -> None:
-    assert "E97B1" in _make_tc().checker.msgs
+    assert "E97B1" in _make_tc().checker.msgs  # type: ignore[no-untyped-call]
 
 
 def test_e97b2_message_code_registered() -> None:
-    assert "E97B2" in _make_tc().checker.msgs
+    assert "E97B2" in _make_tc().checker.msgs  # type: ignore[no-untyped-call]
 
 
 # ── E97B1: stub symbol missing from impl ───────────────────────────
 
 
 @pytest.mark.parametrize(
-    "py_code, pyi_code, msg_id, expected_count, name_in_args", _STUB_SYMBOL_MISSING_CASES,
+    ("py_code", "pyi_code", "msg_id", "expected_count", "name_in_args"),
+    _STUB_SYMBOL_MISSING_CASES,
 )
 def test_stub_symbol_missing(
     tmp_path: Path,
@@ -118,9 +121,12 @@ def test_stub_symbol_missing(
 # ── E97B2: symbol kind mismatch ────────────────────────────────────
 
 
-@pytest.mark.parametrize("py_code, pyi_code, msg_id", _KIND_MISMATCH_CASES)
+@pytest.mark.parametrize(("py_code", "pyi_code", "msg_id"), _KIND_MISMATCH_CASES)
 def test_symbol_kind_mismatch(
-    tmp_path: Path, py_code: str, pyi_code: str, msg_id: str,
+    tmp_path: Path,
+    py_code: str,
+    pyi_code: str,
+    msg_id: str,
 ) -> None:
     """E97B2 fires when stub and impl kinds differ."""
     msgs = walk_stub_checker_with_pair(tmp_path, py_code, pyi_code)
@@ -132,10 +138,15 @@ def test_symbol_kind_mismatch(
 
 
 @pytest.mark.parametrize(
-    "mod_py, mod_pyi, enable, expected_code", _CLASS_FIDELITY_INTEGRATION_CASES,
+    ("mod_py", "mod_pyi", "enable", "expected_code"),
+    _CLASS_FIDELITY_INTEGRATION_CASES,
 )
 def test_integration_class_fidelity(
-    tmp_path: Path, mod_py: str, mod_pyi: str, enable: str, expected_code: str,
+    tmp_path: Path,
+    mod_py: str,
+    mod_pyi: str,
+    enable: str,
+    expected_code: str,
 ) -> None:
     """End-to-end: pylint surfaces the expected E97B/W97B5 code via *enable*."""
     combined = _run_pylint(tmp_path, mod_py, mod_pyi, enable, project_src=PROJECT_SRC)

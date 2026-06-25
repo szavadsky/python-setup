@@ -40,25 +40,25 @@ per the CodingRules ``__init__.py`` exemption.
 
 from __future__ import annotations
 
-from ._ast_helpers import CallableComparisonCtx as CallableComparisonCtx
-from ._ast_helpers import ClassComparisonCtx as ClassComparisonCtx
-from ._ast_helpers import ParamDescriptor as ParamDescriptor
-from ._ast_helpers import _FidelityState as _FidelityState
-from .annotation import _compare_class_attrs as _compare_class_attrs
-from .annotation import _compare_class_bases as _compare_class_bases
-from .annotation import _compare_class_methods as _compare_class_methods
-from .annotation import _emit_variable_fidelity as _emit_variable_fidelity
-from .annotation import _is_classvar as _is_classvar
-from .annotation import _is_public_method as _is_public_method
-from .annotation import _normalize_bases as _normalize_bases
-from .kind import _emit_stub_symbol_check as _emit_stub_symbol_check
-from .orchestrator import emit_fidelity_violations as emit_fidelity_violations
-from .signature import _compare_callable_annotations as _compare_callable_annotations
-from .signature import _compare_callable_descriptors as _compare_callable_descriptors
-from .signature import _compare_return_annotations as _compare_return_annotations
-from .signature import _emit_callable_fidelity as _emit_callable_fidelity
-from .signature import _emit_callable_fidelity_issues as _emit_callable_fidelity_issues
-from .signature import _extract_param_descriptors as _extract_param_descriptors
+from ._ast_helpers import CallableComparisonCtx
+from ._ast_helpers import ClassComparisonCtx
+from ._ast_helpers import ParamDescriptor
+from ._ast_helpers import _FidelityState
+from .annotation import _compare_class_attrs
+from .annotation import _compare_class_bases
+from .annotation import _compare_class_methods
+from .annotation import _emit_variable_fidelity
+from .annotation import _is_classvar
+from .annotation import _is_public_method
+from .annotation import _normalize_bases
+from .kind import _emit_stub_symbol_check
+from .orchestrator import emit_fidelity_violations
+from .signature import _compare_callable_annotations
+from .signature import _compare_callable_descriptors
+from .signature import _compare_return_annotations
+from .signature import _emit_callable_fidelity
+from .signature import _emit_callable_fidelity_issues
+from .signature import _extract_param_descriptors
 
 __all__ = [
     "CallableComparisonCtx",

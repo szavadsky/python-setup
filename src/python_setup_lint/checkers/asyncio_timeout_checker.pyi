@@ -27,13 +27,11 @@ from pylint.checkers import BaseChecker
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
 
-
 class AsyncTimeoutChecker(BaseChecker):
     """AST visitor that flags await calls missing enclosing timeout context."""
 
     name: str = "asyncio-timeout"
 
     def visit_await(self, node: nodes.Await) -> None: ...
-
 
 def register(linter: PyLinter) -> None: ...

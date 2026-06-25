@@ -27,7 +27,9 @@ def peek_fallback_tools() -> frozenset[str]:
     See :file:`decisions.md` D15 for the rationale + per-tool fallback list.
     """
 
-def _compare_sorted(a: list[Record], b: list[Record]) -> tuple[list[Record], list[Record]]:
+def _compare_sorted(
+    a: list[Record], b: list[Record]
+) -> tuple[list[Record], list[Record]]:
     """Walk-merge two pre-sorted record lists → ``(added, removed)``.
 
     Both inputs MUST be sorted by ``_compare_records_key``.  Multiset-aware:

@@ -5,16 +5,15 @@ Informational (W-level) only — does not block builds.
 """
 
 from __future__ import annotations
+from beartype import beartype
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
+from pylint.lint import PyLinter  # noqa: TC002
 
-if TYPE_CHECKING:
-    from pylint.lint import PyLinter
 
 log = logging.getLogger(__name__)
 
@@ -46,6 +45,7 @@ class BeartypeCoverageChecker(BaseChecker):
         super().__init__(linter)
         self._source_roots: list[Path] = []
 
+    @beartype
     def open(self) -> None:
         config = self.linter.config
         raw_roots = getattr(config, "source_roots", None)
@@ -55,15 +55,14 @@ class BeartypeCoverageChecker(BaseChecker):
             else [Path("src").resolve()]
         )
 
+    @beartype
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         self._check_function(node)
 
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
         self._check_function(node)
 
-    def _check_function(
-        self, node: nodes.FunctionDef | nodes.AsyncFunctionDef
-    ) -> None:
+    def _check_function(self, node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> None:
         # Skip modules outside source roots
         file_path = self._get_file_path(node)
         if file_path is None or not self._is_under_source_root(file_path):
@@ -95,7 +94,10 @@ class BeartypeCoverageChecker(BaseChecker):
         if node.decorators is None:
             return False
         for dec in node.decorators.nodes:
-            if isinstance(dec, nodes.Name) and dec.name in {"beartype", "no_type_check"}:
+            if isinstance(dec, nodes.Name) and dec.name in {
+                "beartype",
+                "no_type_check",
+            }:
                 return True
             if isinstance(dec, nodes.Attribute) and dec.attrname == "no_type_check":
                 return True
@@ -108,7 +110,7 @@ class BeartypeCoverageChecker(BaseChecker):
             if file_val is None:
                 return None
             return Path(file_val)
-        except (AttributeError, TypeError):
+        except AttributeError, TypeError:
             return None
 
     def _is_under_source_root(self, path: Path) -> bool:

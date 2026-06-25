@@ -17,7 +17,6 @@ _GIT_URL: str
 _STATE_FILE: str
 _BUNDLED_CONFIGS: tuple[str, ...]
 
-
 # ── Data structures ─────────────────────────────────────────────────
 
 @dataclass
@@ -39,7 +38,6 @@ class SetupState:
     @property
     def all_ok(self) -> bool: ...
 
-
 # ── Helpers ─────────────────────────────────────────────────────────
 
 def _compute_checksums(config_dir: Path, files: Sequence[str]) -> dict[str, str]: ...
@@ -52,12 +50,13 @@ def _get_dev_deps(data: dict[str, object]) -> list[str]: ...
 def _has_python_setup_dep(dev_deps: list[str]) -> bool: ...
 def _run_uv(args: list[str], *, cwd: Path) -> tuple[int, str, str]: ...
 def _get_package_dir() -> Path: ...
-def _step_add_dep(state: SetupState, project_dir: Path, *, dev_path: str | None = None) -> None: ...
+def _step_add_dep(
+    state: SetupState, project_dir: Path, *, dev_path: str | None = None
+) -> None: ...
 def _step_pylint_plugins(state: SetupState, project_dir: Path) -> None: ...
 def _step_coding_rules(state: SetupState, project_dir: Path) -> None: ...
 def _save_state(project_dir: Path) -> None: ...
 def _build_parser() -> argparse.ArgumentParser: ...
-
 
 # ── Public API ──────────────────────────────────────────────────────
 
@@ -71,13 +70,11 @@ def install(
     Returns exit code (0 = success, 1 = errors).
     """
 
-
 def update(project_dir: Path) -> int:
     """Update python-setup in *project_dir* and report config drift.
 
     Returns exit code (0 = success, 1 = errors).
     """
-
 
 def main(argv: list[str] | None = None) -> int:
     """CLI entry point for ``python-setup install`` / ``python-setup update``."""

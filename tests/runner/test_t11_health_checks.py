@@ -71,7 +71,9 @@ repos:
 class TestTestCheckedMainArgv:
     """``test_checked_main`` builds the consumer-agnostic typeguard argv."""
 
-    def test_assembles_typeguard_plugin_argv(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_assembles_typeguard_plugin_argv(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         captured: dict[str, Any] = {}
 
         def _fake_pytest_main(args: list[str]) -> int:
@@ -150,7 +152,9 @@ class TestAssertPrecommitConfigValid:
         with pytest.raises(AssertionError, match="'repos' key"):
             assert_precommit_config_valid(tmp_path)
 
-    def test_valid_yaml_shape_loaded(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_valid_yaml_shape_loaded(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         # The YAML/shape check passes even before ``validate-config``; we
         # exercise the loader path by stubbing pre-commit to exit 0.
         _write_precommit(tmp_path, repos_yaml=_VALID_CONFIG)
@@ -168,7 +172,9 @@ class TestAssertPrecommitConfigValid:
         # Should not raise.
         assert_precommit_config_valid(tmp_path)
 
-    def test_validate_config_failure_message_is_observable(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_validate_config_failure_message_is_observable(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Observability: a ``validate-config`` failure surfaces rc + captured output.
 
         A CI failure must reconstruct what ``pre-commit validate-config`` reported,

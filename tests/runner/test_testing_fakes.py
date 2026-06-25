@@ -9,6 +9,7 @@ installed (no real subprocess spawned).
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 from pathlib import Path
 
 import pytest
@@ -36,18 +37,44 @@ from tests.runner._factories import (
 def test_make_lint_result_defaults_and_override_apply() -> None:
     r_default = make_lint_result()
     assert isinstance(r_default, LintResult)
-    assert (r_default.tool_name, r_default.exit_code, r_default.stdout, r_default.stderr, r_default.elapsed) == (
-        "ruff check", 0, "", "", 0.0,
+    assert (
+        r_default.tool_name,
+        r_default.exit_code,
+        r_default.stdout,
+        r_default.stderr,
+        r_default.elapsed,
+    ) == (
+        "ruff check",
+        0,
+        "",
+        "",
+        0.0,
     )
-    r = make_lint_result(tool_name="mypy", exit_code=1, stdout="err", stderr="d", elapsed=2.5)
-    assert (r.tool_name, r.exit_code, r.stdout, r.stderr, r.elapsed) == ("mypy", 1, "err", "d", 2.5)
+    r = make_lint_result(
+        tool_name="mypy", exit_code=1, stdout="err", stderr="d", elapsed=2.5
+    )
+    assert (r.tool_name, r.exit_code, r.stdout, r.stderr, r.elapsed) == (
+        "mypy",
+        1,
+        "err",
+        "d",
+        2.5,
+    )
 
 
-@pytest.mark.parametrize("kind,results,calls,expected_exits,expected_names", DISPATCH_CASES)
-def test_dispatch_returns_expected_result(kind, results, calls, expected_exits, expected_names) -> None:
+@pytest.mark.parametrize(
+    "kind,results,calls,expected_exits,expected_names", DISPATCH_CASES
+)
+def test_dispatch_returns_expected_result(
+    kind: str, results: Any, calls: Any, expected_exits: Any, expected_names: Any
+) -> None:
     """Each dispatch-mode row returns the canned ``exit_code``/``tool_name`` for the call."""
-    fake = fake_run_cmd_factory(results) if kind == "dict" else FakeRunCmd(results=results)
-    for (cmd, label), exp_exit, exp_name in zip(calls, expected_exits, expected_names, strict=True):
+    fake = (
+        fake_run_cmd_factory(results) if kind == "dict" else FakeRunCmd(results=results)
+    )
+    for (cmd, label), exp_exit, exp_name in zip(
+        calls, expected_exits, expected_names, strict=True
+    ):
         out = fake(cmd, label=label)
         assert out.exit_code == exp_exit
         assert out.tool_name == exp_name
@@ -63,7 +90,9 @@ def test_list_dispatch_extra_calls_return_zero_exit_empty() -> None:
 
 
 @pytest.mark.parametrize("results,calls,expected_records", CALLS_CAPTURED_CASES)
-def test_calls_captured_in_order(results, calls, expected_records) -> None:
+def test_calls_captured_in_order(
+    results: Any, calls: Any, expected_records: Any
+) -> None:
     """Both dispatch modes record every call as ``_FakeRunCmdRecord(cmd, label)`` in order."""
     fake = fake_run_cmd_factory(results)
     for cmd, label in calls:
@@ -88,12 +117,20 @@ def test_dict_empty_dict_multiple_labels_zero_exit() -> None:
     "results,label,expected_exit",
     [
         ({"mypy": make_lint_result(tool_name="mypy", exit_code=2)}, "mypy", 2),
-        ([make_lint_result(tool_name="tool_a", exit_code=0),
-          make_lint_result(tool_name="tool_b", exit_code=1)], "tool_b", 1),
+        (
+            [
+                make_lint_result(tool_name="tool_a", exit_code=0),
+                make_lint_result(tool_name="tool_b", exit_code=1),
+            ],
+            "tool_b",
+            1,
+        ),
     ],
     ids=["dict_direct", "list_direct"],
 )
-def test_fake_run_cmd_direct_construction(results, label, expected_exit) -> None:
+def test_fake_run_cmd_direct_construction(
+    results: Any, label: str, expected_exit: int
+) -> None:
     """``FakeRunCmd(results=...)`` dispatches identically to the factory path."""
     fake = FakeRunCmd(results=results)
     if isinstance(results, list):  # list mode: call the FIRST tool to reach the second
@@ -108,14 +145,19 @@ def test_fake_run_cmd_direct_construction(results, label, expected_exit) -> None
 # skip). Uses ``canned_results_all_tools()`` to avoid the 11-key dict literal.
 
 
-def _install_fake_and_run(monkeypatch: pytest.MonkeyPatch, **run_lint_kwargs) -> FakeRunCmd:
+def _install_fake_and_run(
+    monkeypatch: pytest.MonkeyPatch, **run_lint_kwargs: Any
+) -> FakeRunCmd:
     """Install a 11-tool dict-mode ``FakeRunCmd`` + invoke ``run_lint`` (no_fail_fast=True).
 
     ``package_name=None`` ⇒ skip stubtest+verifytypes. Returns ``fake`` for assertion.
     """
     fake = fake_run_cmd_factory(canned_results_all_tools())
     monkeypatch.setattr(_runner_module, "_run_cmd", fake)
-    config = RunnerConfig(cwd=Path.cwd(), package_name=run_lint_kwargs.pop("package_name", "python_setup_lint"))
+    config = RunnerConfig(
+        cwd=Path.cwd(),
+        package_name=run_lint_kwargs.pop("package_name", "python_setup_lint"),
+    )
     rc = run_lint(config=config, no_fail_fast=True, **run_lint_kwargs)
     assert isinstance(rc, int)
     return fake
@@ -123,7 +165,9 @@ def _install_fake_and_run(monkeypatch: pytest.MonkeyPatch, **run_lint_kwargs) ->
 
 @pytest.mark.parametrize("run_lint_kwargs,predicate", RUN_LINT_FAKE_INVARIANT_CASES)
 def test_run_lint_with_fake_dispatch_invariants(
-    monkeypatch: pytest.MonkeyPatch, run_lint_kwargs: dict, predicate: Callable[[FakeRunCmd], bool],
+    monkeypatch: pytest.MonkeyPatch,
+    run_lint_kwargs: dict[str, Any],
+    predicate: Callable[[FakeRunCmd], bool],
 ) -> None:
     """One ``run_lint(...)`` + 11-tool fake; the row's predicate asserts the invariant."""
     fake = _install_fake_and_run(monkeypatch, **run_lint_kwargs)
@@ -135,7 +179,12 @@ def test_run_lint_with_fake_returns_zero(monkeypatch: pytest.MonkeyPatch) -> Non
     fake = fake_run_cmd_factory(canned_results_all_tools())
     monkeypatch.setattr(_runner_module, "_run_cmd", fake)
     config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
-    assert run_lint(config=config, no_fail_fast=True, path="src/python_setup_lint/runner.py") == 0
+    assert (
+        run_lint(
+            config=config, no_fail_fast=True, path="src/python_setup_lint/runner.py"
+        )
+        == 0
+    )
 
 
 def test_fake_no_subprocess_spawned(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -148,7 +197,7 @@ def test_fake_no_subprocess_spawned(monkeypatch: pytest.MonkeyPatch) -> None:
     def spy_run(*args: object, **kwargs: object) -> object:
         cmd = args[0] if args else kwargs.get("args", [])
         spy_calls.append(list(cmd) if isinstance(cmd, (list, tuple)) else [str(cmd)])
-        return original_run(*args, **kwargs)
+        return original_run(*args, **kwargs, check=False)  # type: ignore[call-overload]
 
     monkeypatch.setattr(subprocess, "run", spy_run)
     fake = fake_run_cmd_factory(canned_results_all_tools())
@@ -156,5 +205,9 @@ def test_fake_no_subprocess_spawned(monkeypatch: pytest.MonkeyPatch) -> None:
     config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
     run_lint(config=config, no_fail_fast=True, path="src/python_setup_lint/runner.py")
 
-    lint_calls = [c for c in spy_calls if any(t in c for t in ("ruff", "mypy", "pylint"))]
-    assert lint_calls == [], f"Expected no subprocess.run for lint tools; got: {lint_calls}"
+    lint_calls = [
+        c for c in spy_calls if any(t in c for t in ("ruff", "mypy", "pylint"))
+    ]
+    assert lint_calls == [], (
+        f"Expected no subprocess.run for lint tools; got: {lint_calls}"
+    )

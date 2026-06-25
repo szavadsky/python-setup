@@ -5,14 +5,12 @@ startup rather than silently degrade at runtime.
 """
 
 from __future__ import annotations
+from beartype import beartype
 
-from typing import TYPE_CHECKING
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
-
-if TYPE_CHECKING:
-    from pylint.lint import PyLinter
+from pylint.lint import PyLinter  # noqa: TC002
 
 
 class NoTryImportChecker(BaseChecker):
@@ -27,6 +25,7 @@ class NoTryImportChecker(BaseChecker):
         ),
     }
 
+    @beartype
     def visit_try(self, node: nodes.Try) -> None:
         import_error_names = {"ImportError", "ModuleNotFoundError"}
 

@@ -14,6 +14,7 @@ build astroid modules from source / assert message ids live here too.
 """
 
 from __future__ import annotations
+from typing import Any
 
 import inspect
 from pathlib import Path
@@ -31,10 +32,10 @@ if TYPE_CHECKING:
 # ── Generic message helpers ────────────────────────────────────────
 
 
-def make_tc(checker_class: type[BaseChecker]):
+def make_tc(checker_class: type[BaseChecker]) -> Any:
     """Create a ``CheckerTestCase`` for *checker_class* (thin wrapper over
     ``python_setup_lint.testing._make_tc``)."""
-    return _make_tc_factory(checker_class)
+    return _make_tc_factory(checker_class)  # type: ignore[no-untyped-call]
 
 
 # (The ``parse_module`` / ``msg_ids`` / ``filter_msgs`` / ``count_msg``
@@ -48,57 +49,77 @@ def make_tc(checker_class: type[BaseChecker]):
 # Each row is ``(src, expected_count, expected_args)``. The checker walks the
 # code and counts emitted ``no-try-import`` messages; rows assert the count
 # and (optionally) the first message's args tuple.
-_NO_TRY_DETECT_CASES: list[pytest.Param] = [
+_NO_TRY_DETECT_CASES: list[Any] = [
     pytest.param(
         "try:\n    import litellm\nexcept ImportError:\n    pass\n",
-        1, ("ImportError",), id="import_in_try_except_importerror",
+        1,
+        ("ImportError",),
+        id="import_in_try_except_importerror",
     ),
     pytest.param(
         "try:\n    import litellm\nexcept ModuleNotFoundError:\n    pass\n",
-        1, (), id="import_in_try_except_modulenotfound",
+        1,
+        (),
+        id="import_in_try_except_modulenotfound",
     ),
     pytest.param(
         "try:\n    from pydantic import ValidationError\nexcept ImportError:\n    pass\n",
-        1, (), id="from_import_in_try_except_importerror",
+        1,
+        (),
+        id="from_import_in_try_except_importerror",
     ),
     pytest.param(
         "try:\n    import httpx\nexcept:\n    pass\n",
-        1, ("bare except",), id="import_in_try_bare_except",
+        1,
+        ("bare except",),
+        id="import_in_try_bare_except",
     ),
     pytest.param(
         "try:\n    import litellm\nexcept (ImportError, ModuleNotFoundError):\n    pass\n",
-        1, (), id="import_in_try_tuple_import_errors",
+        1,
+        (),
+        id="import_in_try_tuple_import_errors",
     ),
     pytest.param(
         "try:\n    import litellm\nexcept ImportError:\n    pass\n\n"
         "try:\n    import httpx\nexcept ImportError:\n    pass\n",
-        2, (), id="two_imports_separate_try_blocks",
+        2,
+        (),
+        id="two_imports_separate_try_blocks",
     ),
     pytest.param(
         "try:\n    import litellm\nexcept ImportError:\n    pass\n"
         "except ModuleNotFoundError:\n    pass\n",
-        2, (), id="two_imports_separate_handlers_one_try",
+        2,
+        (),
+        id="two_imports_separate_handlers_one_try",
     ),
     pytest.param(
         # not flagged: ImportError handler absent; ValueError does NOT trigger.
         "try:\n    import litellm\nexcept ValueError:\n    pass\n",
-        0, (), id="import_in_try_non_import_handler_not_flagged",
+        0,
+        (),
+        id="import_in_try_non_import_handler_not_flagged",
     ),
     pytest.param(
         # only the ImportError handler counts; ValueError/OSError handlers are ignored.
         "try:\n    import httpx\nexcept ValueError:\n    pass\n"
         "except ImportError:\n    pass\nexcept OSError:\n    pass\n",
-        1, (), id="handler_mixed_import_and_non_import",
+        1,
+        (),
+        id="handler_mixed_import_and_non_import",
     ),
     pytest.param(
         # proxy module-level guard pattern IS flagged (no opt-out in this checker).
         "try:\n    import litellm as _litellm\nexcept ImportError:\n    _litellm = None\n",
-        1, (), id="proxy_module_level_guard",
+        1,
+        (),
+        id="proxy_module_level_guard",
     ),
 ]
 
 
-_NO_TRY_DO_NOT_DETECT_CASES: list[pytest.Param] = [
+_NO_TRY_DO_NOT_DETECT_CASES: list[Any] = [
     pytest.param(
         "try:\n    x = 1 / 0\nexcept ZeroDivisionError:\n    pass\n",
         id="try_without_import",
@@ -124,30 +145,37 @@ _NO_TRY_DO_NOT_DETECT_CASES: list[pytest.Param] = [
 # ``missing-beartype`` verdict. ``expected_first_arg=None`` skips the
 # args[0] check (used only for module-level functions, where args[0] is
 # the function name not a method label).
-_BEARTYPE_MISS_CASES: list[pytest.Param] = [
+_BEARTYPE_MISS_CASES: list[Any] = [
     pytest.param("def foo(): pass", 1, None, id="plain_def"),
     pytest.param("async def foo(): pass", 1, None, id="async_def"),
-    pytest.param("class X:\n    def method(self): pass", 1, "method", id="public_method_in_class"),
-    pytest.param("def foo(): pass\ndef bar(): pass\n", 2, None, id="multiple_public_functions"),
+    pytest.param(
+        "class X:\n    def method(self): pass", 1, "method", id="public_method_in_class"
+    ),
+    pytest.param(
+        "def foo(): pass\ndef bar(): pass\n", 2, None, id="multiple_public_functions"
+    ),
 ]
 
 # Rows: ``(src, file_path, expected_count)`` — file under or outside the
 # ``BeartypeCoverageChecker`` source root default ``src/``.
-_BEARTYPE_SOURCE_ROOT_CASES: list[pytest.Param] = [
+_BEARTYPE_SOURCE_ROOT_CASES: list[Any] = [
     pytest.param("def foo(): pass", "tests/test_mod.py", 0, id="outside_source_root"),
     pytest.param("def foo(): pass", "src/prod.py", 1, id="under_source_root"),
 ]
 
 # Rows: ``(src, expected_missing_count)`` — these code segments must NOT
 # trigger ``missing-beartype``.
-_BEARTYPE_SKIP_CASES: list[pytest.Param] = [
+_BEARTYPE_SKIP_CASES: list[Any] = [
     pytest.param("def _helper(): pass", 0, id="private_function"),
-    pytest.param("def public(): pass\ndef _private(): pass\n", 1, id="mixed_public_and_private"),
+    pytest.param(
+        "def public(): pass\ndef _private(): pass\n", 1, id="mixed_public_and_private"
+    ),
     pytest.param("class X:\n    def __init__(self): pass", 0, id="init_skipped"),
     pytest.param("class X:\n    def __str__(self): pass", 0, id="str_skipped"),
     pytest.param(
         "class X:\n    def __init__(self): pass\n    def run(self): pass",
-        1, id="dunder_only_init_skipped_then_public",
+        1,
+        id="dunder_only_init_skipped_then_public",
     ),
 ]
 
@@ -158,7 +186,7 @@ _BEARTYPE_SKIP_CASES: list[pytest.Param] = [
 # ``"returns"`` to extract from a parsed ``x: <ann>`` module body[0]. The
 # normalizer is exercised via ``AnnotationNormalizer.normalize`` or
 # ``AnnotationNormalizer._ast_string`` depending on the row's ``method``.
-_NORMALIZER_INFER_CASES: list[pytest.Param] = [
+_NORMALIZER_INFER_CASES: list[Any] = [
     pytest.param("x: str", "str", id="infer_simple_name"),
     pytest.param("x: list[int]", "list[int]", id="infer_builtin_list"),
     pytest.param("x: str | None", "str | None", id="infer_native_union"),
@@ -172,37 +200,58 @@ _NORMALIZER_INFER_CASES: list[pytest.Param] = [
 
 # (file_path, source_roots, test_patterns, stub_opt_out, expected_e97a0_count)
 # — all rows run code ``x = 1\n`` (irrelevant: classification-only).
-_STUB_FILE_CLASSIFICATION_CASES: list[pytest.Param] = [
+_STUB_FILE_CLASSIFICATION_CASES: list[Any] = [
     pytest.param(
-        "/workspace/tests/test_foo.py", ["/workspace/src"], None, None,
-        0, id="test_file_in_tests_dir",
+        "/workspace/tests/test_foo.py",
+        ["/workspace/src"],
+        None,
+        None,
+        0,
+        id="test_file_in_tests_dir",
     ),
     pytest.param(
-        "/workspace/src/test_example.py", ["/workspace/src"],
-        ["test_*.py", "tests/"], None,
-        0, id="test_file_named_test_prefixed",
+        "/workspace/src/test_example.py",
+        ["/workspace/src"],
+        ["test_*.py", "tests/"],
+        None,
+        0,
+        id="test_file_named_test_prefixed",
     ),
     pytest.param(
-        "/workspace/other/foo.py", ["/workspace/src"], None, None,
-        0, id="file_outside_source_root_skipped",
+        "/workspace/other/foo.py",
+        ["/workspace/src"],
+        None,
+        None,
+        0,
+        id="file_outside_source_root_skipped",
     ),
     pytest.param(
-        "/workspace/src/generated/foo.py", ["/workspace/src"], None, ["src/generated/"],
-        0, id="opted_out_by_directory",
+        "/workspace/src/generated/foo.py",
+        ["/workspace/src"],
+        None,
+        ["src/generated/"],
+        0,
+        id="opted_out_by_directory",
     ),
     pytest.param(
-        "/workspace/src/vendor/external.py", ["/workspace/src"], None, ["src/vendor/"],
-        0, id="opted_out_by_filename",
+        "/workspace/src/vendor/external.py",
+        ["/workspace/src"],
+        None,
+        ["src/vendor/"],
+        0,
+        id="opted_out_by_filename",
     ),
 ]
 
 
 # Rows for ``TestResolveRelative``: ``(modname, level, name, is_package, expected)``
-_RESOLVE_RELATIVE_CASES: list[pytest.Param] = [
+_RESOLVE_RELATIVE_CASES: list[Any] = [
     pytest.param("mod_a", 0, "os", False, "os", id="absolute_import"),
     pytest.param("mod_a", 0, None, False, "", id="absolute_no_modname"),
     pytest.param("mypkg", 1, None, True, "mypkg", id="same_package_init"),
-    pytest.param("mypkg", 1, "mod_a", True, "mypkg.mod_a", id="same_package_init_with_name"),
+    pytest.param(
+        "mypkg", 1, "mod_a", True, "mypkg.mod_a", id="same_package_init_with_name"
+    ),
     pytest.param("mypkg.mod_a", 2, "sibling", False, "sibling", id="parent_package"),
     pytest.param("pkg.sub.mod_a", 3, "other", False, "other", id="grandparent_package"),
     pytest.param("mod_a", 3, "other", True, "other", id="level_exceeds_depth"),
@@ -216,7 +265,7 @@ _RESOLVE_RELATIVE_CASES: list[pytest.Param] = [
 #
 # Simpler form below: ``(node_src, expected)`` where the parsed module's
 # body[0].value is the operand. Used for both Name and Attribute forms.
-_IS_TYPE_CHECKING_GUARD_CASES: list[pytest.Param] = [
+_IS_TYPE_CHECKING_GUARD_CASES: list[Any] = [
     pytest.param("TYPE_CHECKING", True, id="name_form"),
     pytest.param("typing.TYPE_CHECKING", True, id="typing_dot_name"),
     pytest.param("SOME_FLAG", False, id="other_name"),
@@ -227,7 +276,7 @@ _IS_TYPE_CHECKING_GUARD_CASES: list[pytest.Param] = [
 # ``(code, accessor)`` — accessor returns the import astroid node relative to
 # ``astroid.parse(code)``. Used by both ``_in_type_checking_block`` positive
 # and negative tests.
-_IN_TYPE_CHECKING_BLOCK_POSITIVE_CASES: list[pytest.Param] = [
+_IN_TYPE_CHECKING_BLOCK_POSITIVE_CASES: list[Any] = [
     pytest.param(
         "if TYPE_CHECKING:\n    from foo import Bar\n",
         lambda m: m.body[0].body[0],
@@ -240,7 +289,7 @@ _IN_TYPE_CHECKING_BLOCK_POSITIVE_CASES: list[pytest.Param] = [
     ),
 ]
 
-_IN_TYPE_CHECKING_BLOCK_NEGATIVE_CASES: list[pytest.Param] = [
+_IN_TYPE_CHECKING_BLOCK_NEGATIVE_CASES: list[Any] = [
     pytest.param(
         "from foo import Bar\n",
         lambda m: m.body[0],
@@ -252,23 +301,43 @@ _IN_TYPE_CHECKING_BLOCK_NEGATIVE_CASES: list[pytest.Param] = [
 # ── stub coverage helper tests: parametrise tables ───────────────────
 
 # ``_matches_path`` rows: ``(path, patterns, expected)``.
-_MATCHES_PATH_CASES: list[pytest.Param] = [
+_MATCHES_PATH_CASES: list[Any] = [
     pytest.param("/workspace/src/foo.py", [], False, id="empty_patterns_returns_false"),
-    pytest.param("src/generated/foo.py", ["src/generated/"], True, id="directory_prefix_match"),
-    pytest.param("/workspace/src/generated/foo.py", ["src/generated/"], True,
-                 id="directory_prefix_with_leading_slash"),
-    pytest.param("/workspace/src/handwritten/foo.py", ["src/generated/"], False,
-                 id="directory_prefix_no_match"),
-    pytest.param("/workspace/src/test_example.py", ["test_*.py"], True, id="fnmatch_full_path"),
-    pytest.param("/workspace/src/foo/bar_test.py", ["*_test.py"], True, id="fnmatch_basename"),
-    pytest.param("/workspace/src/prod.py", ["test_*.py"], False, id="fnmatch_no_match"),
-    pytest.param("src\\generated\\foo.py", ["src\\generated\\"], True, id="backslash_pattern"),
     pytest.param(
-        "/workspace/tests/test_foo.py", ["tests/", "test_*.py", "*_test.py"], True,
+        "src/generated/foo.py", ["src/generated/"], True, id="directory_prefix_match"
+    ),
+    pytest.param(
+        "/workspace/src/generated/foo.py",
+        ["src/generated/"],
+        True,
+        id="directory_prefix_with_leading_slash",
+    ),
+    pytest.param(
+        "/workspace/src/handwritten/foo.py",
+        ["src/generated/"],
+        False,
+        id="directory_prefix_no_match",
+    ),
+    pytest.param(
+        "/workspace/src/test_example.py", ["test_*.py"], True, id="fnmatch_full_path"
+    ),
+    pytest.param(
+        "/workspace/src/foo/bar_test.py", ["*_test.py"], True, id="fnmatch_basename"
+    ),
+    pytest.param("/workspace/src/prod.py", ["test_*.py"], False, id="fnmatch_no_match"),
+    pytest.param(
+        "src\\generated\\foo.py", ["src\\generated\\"], True, id="backslash_pattern"
+    ),
+    pytest.param(
+        "/workspace/tests/test_foo.py",
+        ["tests/", "test_*.py", "*_test.py"],
+        True,
         id="multiple_patterns_any_match",
     ),
     pytest.param(
-        "/workspace/src/prod.py", ["tests/", "test_*.py"], False,
+        "/workspace/src/prod.py",
+        ["tests/", "test_*.py"],
+        False,
         id="multiple_patterns_none_match",
     ),
 ]
@@ -276,50 +345,100 @@ _MATCHES_PATH_CASES: list[pytest.Param] = [
 
 # ``_is_test_file`` rows: ``(path, test_patterns, expected)``.
 _DEFAULT_TEST_PATTERNS = ["tests/", "test_*.py", "*_test.py", "conftest.py"]
-_IS_TEST_FILE_CASES: list[pytest.Param] = [
-    pytest.param("/workspace/tests/test_foo.py", _DEFAULT_TEST_PATTERNS, True, id="tests_dir_match"),
-    pytest.param("/workspace/src/test_example.py", _DEFAULT_TEST_PATTERNS, True, id="test_prefixed_filename"),
-    pytest.param("/workspace/src/foo_test.py", _DEFAULT_TEST_PATTERNS, True, id="suffixed_filename"),
-    pytest.param("/workspace/src/conftest.py", _DEFAULT_TEST_PATTERNS, True, id="conftest"),
-    pytest.param("/workspace/src/prod.py", _DEFAULT_TEST_PATTERNS, False, id="production_file_not_test"),
+_IS_TEST_FILE_CASES: list[Any] = [
+    pytest.param(
+        "/workspace/tests/test_foo.py",
+        _DEFAULT_TEST_PATTERNS,
+        True,
+        id="tests_dir_match",
+    ),
+    pytest.param(
+        "/workspace/src/test_example.py",
+        _DEFAULT_TEST_PATTERNS,
+        True,
+        id="test_prefixed_filename",
+    ),
+    pytest.param(
+        "/workspace/src/foo_test.py",
+        _DEFAULT_TEST_PATTERNS,
+        True,
+        id="suffixed_filename",
+    ),
+    pytest.param(
+        "/workspace/src/conftest.py", _DEFAULT_TEST_PATTERNS, True, id="conftest"
+    ),
+    pytest.param(
+        "/workspace/src/prod.py",
+        _DEFAULT_TEST_PATTERNS,
+        False,
+        id="production_file_not_test",
+    ),
 ]
 # Custom-pattern split (must come before the default-pattern class uses it; the
 # default-pattern list above is named inline so each row is self-contained).
-_IS_TEST_FILE_CUSTOM_CASES: list[pytest.Param] = [
+_IS_TEST_FILE_CUSTOM_CASES: list[Any] = [
     # patterns=['specs/'] matches specs/ but NOT tests/
-    pytest.param("/workspace/specs/test_foo.py", ["specs/"], True, id="custom_pattern_matches"),
-    pytest.param("/workspace/tests/test_foo.py", ["specs/"], False, id="custom_pattern_excludes_tests"),
+    pytest.param(
+        "/workspace/specs/test_foo.py", ["specs/"], True, id="custom_pattern_matches"
+    ),
+    pytest.param(
+        "/workspace/tests/test_foo.py",
+        ["specs/"],
+        False,
+        id="custom_pattern_excludes_tests",
+    ),
 ]
 
 
 # ``_is_opted_out`` rows: ``(path, opt_out_patterns, expected)``.
-_IS_OPTED_OUT_CASES: list[pytest.Param] = [
-    pytest.param("/workspace/src/generated/foo.py", ["src/generated/"], True, id="opted_out_by_directory"),
-    pytest.param("/workspace/src/handwritten/foo.py", ["src/generated/"], False, id="not_opted_out"),
-    pytest.param("/workspace/src/vendor_foo.py", ["vendor_*.py"], True, id="opted_out_by_filename"),
+_IS_OPTED_OUT_CASES: list[Any] = [
+    pytest.param(
+        "/workspace/src/generated/foo.py",
+        ["src/generated/"],
+        True,
+        id="opted_out_by_directory",
+    ),
+    pytest.param(
+        "/workspace/src/handwritten/foo.py",
+        ["src/generated/"],
+        False,
+        id="not_opted_out",
+    ),
+    pytest.param(
+        "/workspace/src/vendor_foo.py",
+        ["vendor_*.py"],
+        True,
+        id="opted_out_by_filename",
+    ),
     pytest.param("/workspace/src/foo.py", [], False, id="empty_opt_out"),
 ]
 
 
 # ``_is_init_exempt`` rows: ``(code, expected)``.
-_IS_INIT_EXEMPT_CASES: list[pytest.Param] = [
+_IS_INIT_EXEMPT_CASES: list[Any] = [
     pytest.param("", True, id="empty_body_exempt"),
     pytest.param("from .sub import Foo\nimport os\n", True, id="only_imports_exempt"),
     pytest.param("__all__ = ['Foo', 'Bar']\n", True, id="all_assignment_exempt"),
-    pytest.param("def __getattr__(name): ...\n", False, id="getattr_defined_not_exempt"),
+    pytest.param(
+        "def __getattr__(name): ...\n", False, id="getattr_defined_not_exempt"
+    ),
     pytest.param("def helper(): pass\n", False, id="function_def_not_exempt"),
     pytest.param("class Helper: pass\n", False, id="class_def_not_exempt"),
     pytest.param("setup(name='foo')\n", False, id="standalone_expression_not_exempt"),
     pytest.param("x = 1\n", False, id="non_all_assignment_not_exempt"),
     pytest.param("x: int = 1\n", False, id="ann_assign_not_exempt"),
-    pytest.param("import os\nif os.name == 'nt':\n    x = 1\n", False, id="if_block_not_exempt"),
+    pytest.param(
+        "import os\nif os.name == 'nt':\n    x = 1\n", False, id="if_block_not_exempt"
+    ),
 ]
 
 
 # ``_is_trivial_test_data`` rows: ``(code, expected)``.
-_IS_TRIVIAL_TEST_DATA_CASES: list[pytest.Param] = [
+_IS_TRIVIAL_TEST_DATA_CASES: list[Any] = [
     pytest.param("", True, id="empty_module_trivial"),
-    pytest.param("x = 1\ny = 'hello'\nz = 3.14\n", True, id="literal_assignments_trivial"),
+    pytest.param(
+        "x = 1\ny = 'hello'\nz = 3.14\n", True, id="literal_assignments_trivial"
+    ),
     pytest.param("def helper(): pass\n", False, id="function_def_not_trivial"),
     pytest.param("class Data: pass\n", False, id="class_def_not_trivial"),
     pytest.param("import os\n", False, id="import_not_trivial"),
@@ -329,20 +448,31 @@ _IS_TRIVIAL_TEST_DATA_CASES: list[pytest.Param] = [
 
 
 # ``_has_main_block`` rows: ``(code, expected)``.
-_HAS_MAIN_BLOCK_CASES: list[pytest.Param] = [
+_HAS_MAIN_BLOCK_CASES: list[Any] = [
     pytest.param("if __name__ == '__main__':\n    main()\n", True, id="double_equals"),
     pytest.param('if __name__ == "__main__":\n    main()\n', True, id="double_quotes"),
     pytest.param("def foo(): pass\n", False, id="no_main_block"),
-    pytest.param("if __name__ != '__main__':\n    pass\n", False, id="different_condition"),
+    pytest.param(
+        "if __name__ != '__main__':\n    pass\n", False, id="different_condition"
+    ),
     pytest.param("", False, id="empty_module"),
 ]
 
 
 # ``_is_under_source_root`` rows: ``(path, source_roots, expected)``.
-_IS_UNDER_SOURCE_ROOT_CASES: list[pytest.Param] = [
-    pytest.param("/workspace/src/prod.py", ["/workspace/src"], True, id="path_under_root"),
-    pytest.param("/workspace/tests/foo.py", ["/workspace/src"], False, id="path_not_under_root"),
-    pytest.param("/workspace/lib/foo.py", ["/workspace/src", "/workspace/lib"], True, id="multiple_roots"),
+_IS_UNDER_SOURCE_ROOT_CASES: list[Any] = [
+    pytest.param(
+        "/workspace/src/prod.py", ["/workspace/src"], True, id="path_under_root"
+    ),
+    pytest.param(
+        "/workspace/tests/foo.py", ["/workspace/src"], False, id="path_not_under_root"
+    ),
+    pytest.param(
+        "/workspace/lib/foo.py",
+        ["/workspace/src", "/workspace/lib"],
+        True,
+        id="multiple_roots",
+    ),
 ]
 
 
@@ -350,49 +480,84 @@ _IS_UNDER_SOURCE_ROOT_CASES: list[pytest.Param] = [
 
 # Rows: ``(func_src, expected_names, expected_kinds)`` — kinds matched by
 # inspecting positions in `expected_kinds` against the extracted list.
-_EXTRACT_PARAM_CASES: list[pytest.Param] = [
+_EXTRACT_PARAM_CASES: list[Any] = [
     pytest.param("def foo() -> None: ...", [], [], id="empty_function"),
-    pytest.param("def foo(a, b, /) -> None: ...", ["a", "b"],
-                 [inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_ONLY],
-                 id="positional_only"),
-    pytest.param("def foo(a, b) -> None: ...", ["a", "b"],
-                 [inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.POSITIONAL_OR_KEYWORD],
-                 id="positional_or_keyword"),
-    pytest.param("def foo(*args) -> None: ...", ["args"], [inspect.Parameter.VAR_POSITIONAL],
-                 id="var_positional"),
-    pytest.param("def foo(*, x, y) -> None: ...", ["x", "y"],
-                 [inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.KEYWORD_ONLY],
-                 id="keyword_only"),
-    pytest.param("def foo(**kwargs) -> None: ...", ["kwargs"], [inspect.Parameter.VAR_KEYWORD],
-                 id="var_keyword"),
+    pytest.param(
+        "def foo(a, b, /) -> None: ...",
+        ["a", "b"],
+        [inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_ONLY],
+        id="positional_only",
+    ),
+    pytest.param(
+        "def foo(a, b) -> None: ...",
+        ["a", "b"],
+        [
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        ],
+        id="positional_or_keyword",
+    ),
+    pytest.param(
+        "def foo(*args) -> None: ...",
+        ["args"],
+        [inspect.Parameter.VAR_POSITIONAL],
+        id="var_positional",
+    ),
+    pytest.param(
+        "def foo(*, x, y) -> None: ...",
+        ["x", "y"],
+        [inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.KEYWORD_ONLY],
+        id="keyword_only",
+    ),
+    pytest.param(
+        "def foo(**kwargs) -> None: ...",
+        ["kwargs"],
+        [inspect.Parameter.VAR_KEYWORD],
+        id="var_keyword",
+    ),
 ]
 
 
 # Rows for default-presence detection: ``(func_src, expected_per_param_defaults)``
-_EXTRACT_DEFAULT_CASES: list[pytest.Param] = [
-    pytest.param("def foo(a, b=1) -> None: ...", [False, True], id="default_presence_detected"),
-    pytest.param("def foo(*, x, y='hello') -> None: ...", [False, True],
-                 id="default_presence_kwonly"),
+_EXTRACT_DEFAULT_CASES: list[Any] = [
+    pytest.param(
+        "def foo(a, b=1) -> None: ...", [False, True], id="default_presence_detected"
+    ),
+    pytest.param(
+        "def foo(*, x, y='hello') -> None: ...",
+        [False, True],
+        id="default_presence_kwonly",
+    ),
 ]
 
 
 # Rows: ``(func_src, strip_self, expected_names)`` — exercises ``strip_self`` of
 # ``_extract_param_descriptors``.
-_EXTRACT_STRIP_SELF_CASES: list[pytest.Param] = [
+_EXTRACT_STRIP_SELF_CASES: list[Any] = [
     pytest.param("def bar(self, x, y) -> None: ...", True, ["x", "y"], id="strip_self"),
     pytest.param("def bar(cls, x, y) -> None: ...", True, ["x", "y"], id="strip_cls"),
     # non-method (no self/cls) → strip_self is a no-op
-    pytest.param("def bar(a, b) -> None: ...", True, ["a", "b"], id="no_strip_non_method"),
+    pytest.param(
+        "def bar(a, b) -> None: ...", True, ["a", "b"], id="no_strip_non_method"
+    ),
 ]
 
 
 # Rows: ``(func_src, needle_in_first_normalized, needle_in_second_normalized)`` —
 # exercises annotation extraction; only verifies substrings present.
-_EXTRACT_ANNOTATION_CASES: list[pytest.Param] = [
-    pytest.param("def foo(x: int, y: str | None) -> None: ...", "int", None,
-                 id="annotations_extracted"),
-    pytest.param("def foo(*args: int) -> None: ...", "int", None, id="vararg_annotation"),
-    pytest.param("def foo(**kwargs: str) -> None: ...", "str", None, id="kwarg_annotation"),
+_EXTRACT_ANNOTATION_CASES: list[Any] = [
+    pytest.param(
+        "def foo(x: int, y: str | None) -> None: ...",
+        "int",
+        None,
+        id="annotations_extracted",
+    ),
+    pytest.param(
+        "def foo(*args: int) -> None: ...", "int", None, id="vararg_annotation"
+    ),
+    pytest.param(
+        "def foo(**kwargs: str) -> None: ...", "str", None, id="kwarg_annotation"
+    ),
 ]
 
 
@@ -402,32 +567,46 @@ _EXTRACT_ANNOTATION_CASES: list[pytest.Param] = [
 # Rows: ``(a, b, expected_failure_substr)``. ``None`` expected means matching.
 # Each descriptor is built via the ``_desc`` helper at test-time, kept inline
 # in the test function as a small builder closure (no shared state needed).
-_COMPARE_DESCRIPTOR_CASES: list[pytest.Param] = [
+_COMPARE_DESCRIPTOR_CASES: list[Any] = [
     pytest.param(
         # identical params — both [a, b] PO_OR_KW
-        [("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False), ("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
-        [("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False), ("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
-        None, id="identical_params",
+        [
+            ("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
+            ("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
+        ],
+        [
+            ("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
+            ("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
+        ],
+        None,
+        id="identical_params",
     ),
     pytest.param(
-        [("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False), ("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
+        [
+            ("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
+            ("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
+        ],
         [("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
-        "param_count", id="param_count_mismatch",
+        "param_count",
+        id="param_count_mismatch",
     ),
     pytest.param(
         [("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
         [("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
-        "param_name", id="param_name_mismatch",
+        "param_name",
+        id="param_name_mismatch",
     ),
     pytest.param(
         [("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
         [("x", inspect.Parameter.KEYWORD_ONLY, False)],
-        "param_kind", id="param_kind_mismatch",
+        "param_kind",
+        id="param_kind_mismatch",
     ),
     pytest.param(
         [("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, True)],
         [("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
-        "param_default", id="default_presence_mismatch",
+        "param_default",
+        id="default_presence_mismatch",
     ),
     pytest.param([], [], None, id="empty_lists"),
 ]
@@ -435,9 +614,11 @@ _COMPARE_DESCRIPTOR_CASES: list[pytest.Param] = [
 
 # Rows: ``(a_ann, b_ann, expected_mismatch_count, expected_first_arg_name)``.
 # ParamDescriptor(name, kind=PO_OR_KW, has_default=False, annotation_normalized=ann).
-_COMPARE_ANNOTATION_CASES: list[pytest.Param] = [
+_COMPARE_ANNOTATION_CASES: list[Any] = [
     pytest.param(["int", "str"], ["int", "str"], 0, None, id="all_match_returns_empty"),
-    pytest.param(["int", "str"], ["int", "int"], 1, "y", id="param_annotation_mismatch_detected"),
+    pytest.param(
+        ["int", "str"], ["int", "int"], 1, "y", id="param_annotation_mismatch_detected"
+    ),
     pytest.param([None], ["int"], 0, None, id="skips_missing_annotations"),
     pytest.param([None], [None], 0, None, id="skips_no_annotation_on_both"),
 ]
@@ -450,32 +631,37 @@ _COMPARE_ANNOTATION_CASES: list[pytest.Param] = [
 #     MUST return ``(None, None)`` (the skip path).
 #   - ``"compare"``: both sides are non-None — the body asserts both are not
 #     None and verifies the ``stub == impl`` outcome against ``expected_eq``.
-_COMPARE_RETURN_CASES: list[pytest.Param] = [
+_COMPARE_RETURN_CASES: list[Any] = [
     pytest.param(None, None, "skip_both_none", True, id="both_none"),
     pytest.param(None, "int", "skip_both_none", True, id="stub_none_skipped"),
     pytest.param("int", None, "skip_both_none", True, id="impl_none_skipped"),
     pytest.param("int", "int", "compare", True, id="matching_returns"),
     pytest.param("str", "int", "compare", False, id="mismatched_returns"),
-    pytest.param("typing.List[int]", "list[int]", "compare", True,
-                 id="normalized_typing"),
+    pytest.param(
+        "typing.List[int]", "list[int]", "compare", True, id="normalized_typing"
+    ),
 ]
 
 
 # ── stub_class fidelity parametrise: _normalize_bases ───────────────
 
 # Rows: ``(class_src, expected_substrings)`` — exercises ``_normalize_bases``.
-_NORMALIZE_BASES_CASES: list[pytest.Param] = [
+_NORMALIZE_BASES_CASES: list[Any] = [
     pytest.param("class Foo(BaseModel): ...\n", ["BaseModel"], id="simple_name"),
-    pytest.param("class Foo(pydantic.BaseModel): ...\n", ["BaseModel"], id="attribute_base"),
+    pytest.param(
+        "class Foo(pydantic.BaseModel): ...\n", ["BaseModel"], id="attribute_base"
+    ),
     pytest.param("class Foo(object): ...\n", ["builtins.object"], id="builtins_object"),
     # multiple bases returned sorted
-    pytest.param("class Foo(B, A, C): ...\n", ["A", "B", "C"], id="multiple_bases_sorted"),
+    pytest.param(
+        "class Foo(B, A, C): ...\n", ["A", "B", "C"], id="multiple_bases_sorted"
+    ),
     pytest.param("class Foo(Generic[T]): ...\n", ["Generic"], id="subscript_base"),
 ]
 
 
 # ``_is_public_method`` rows: ``(name, expected)``.
-_IS_PUBLIC_METHOD_CASES: list[pytest.Param] = [
+_IS_PUBLIC_METHOD_CASES: list[Any] = [
     pytest.param("foo", True, id="plain_name"),
     pytest.param("_helper", False, id="private_name"),
     pytest.param("__str__", False, id="dunder_str"),
@@ -488,19 +674,57 @@ _IS_PUBLIC_METHOD_CASES: list[pytest.Param] = [
 # ── stub_class: E97B1 / E97B2 parametrise ────────────────────────────
 
 # ``(py_code, pyi_code, msg_id, expected_count, name_in_args)`` rows.
-_STUB_SYMBOL_MISSING_CASES: list[pytest.Param] = [
-    pytest.param("x: int = 1\n", "x: int\nclass Foo: ...\n",
-                 "stub-symbol-missing", 1, "Foo", id="stub_class_missing_from_impl"),
-    pytest.param("x: int = 1\n", "x: int\ndef foo(): ...\n",
-                 "stub-symbol-missing", 1, "foo", id="stub_func_missing_from_impl"),
-    pytest.param("x: int = 1\n", "x: int\ny: str\n",
-                 "stub-symbol-missing", 1, "y", id="stub_var_missing_from_impl"),
+_STUB_SYMBOL_MISSING_CASES: list[Any] = [
+    pytest.param(
+        "x: int = 1\n",
+        "x: int\nclass Foo: ...\n",
+        "stub-symbol-missing",
+        1,
+        "Foo",
+        id="stub_class_missing_from_impl",
+    ),
+    pytest.param(
+        "x: int = 1\n",
+        "x: int\ndef foo(): ...\n",
+        "stub-symbol-missing",
+        1,
+        "foo",
+        id="stub_func_missing_from_impl",
+    ),
+    pytest.param(
+        "x: int = 1\n",
+        "x: int\ny: str\n",
+        "stub-symbol-missing",
+        1,
+        "y",
+        id="stub_var_missing_from_impl",
+    ),
 ]
-_KIND_MISMATCH_CASES: list[pytest.Param] = [
-    pytest.param("Foo: int = 1\n", "class Foo: ...\n", "symbol-kind-mismatch", id="stub_class_impl_var"),
-    pytest.param("foo: int = 1\n", "def foo(): ...\n", "symbol-kind-mismatch", id="stub_func_impl_var"),
-    pytest.param("def Foo(): ...\n", "class Foo: ...\n", "symbol-kind-mismatch", id="stub_class_impl_func"),
-    pytest.param("class Foo: ...\n", "Foo: int\n", "symbol-kind-mismatch", id="stub_var_impl_class"),
+_KIND_MISMATCH_CASES: list[Any] = [
+    pytest.param(
+        "Foo: int = 1\n",
+        "class Foo: ...\n",
+        "symbol-kind-mismatch",
+        id="stub_class_impl_var",
+    ),
+    pytest.param(
+        "foo: int = 1\n",
+        "def foo(): ...\n",
+        "symbol-kind-mismatch",
+        id="stub_func_impl_var",
+    ),
+    pytest.param(
+        "def Foo(): ...\n",
+        "class Foo: ...\n",
+        "symbol-kind-mismatch",
+        id="stub_class_impl_func",
+    ),
+    pytest.param(
+        "class Foo: ...\n",
+        "Foo: int\n",
+        "symbol-kind-mismatch",
+        id="stub_var_impl_class",
+    ),
 ]
 
 
@@ -508,57 +732,90 @@ _KIND_MISMATCH_CASES: list[pytest.Param] = [
 
 # ``(code, expected_docstring_in_impl_count)`` — exercises cases where NO
 # companion .pyi exists (so the checker emits nothing).
-_DOCSTRING_NO_COMPANION_CASES: list[pytest.Param] = [
-    pytest.param("def foo():\n    \"\"\"My docstring.\"\"\"\n    pass\n", 0,
-                 id="no_companion_plain_func"),
-    pytest.param("async def foo():\n    \"\"\"My docstring.\"\"\"\n    pass\n", 0,
-                 id="no_companion_async_func"),
+_DOCSTRING_NO_COMPANION_CASES: list[Any] = [
+    pytest.param(
+        'def foo():\n    """My docstring."""\n    pass\n',
+        0,
+        id="no_companion_plain_func",
+    ),
+    pytest.param(
+        'async def foo():\n    """My docstring."""\n    pass\n',
+        0,
+        id="no_companion_async_func",
+    ),
     # note: triple-quote inside class is split across lines
-    pytest.param("class MyClass:\n    def method(self):\n        \"\"\"Method doc.\"\"\"\n        pass\n",
-                 0, id="no_companion_method"),
+    pytest.param(
+        'class MyClass:\n    def method(self):\n        """Method doc."""\n        pass\n',
+        0,
+        id="no_companion_method",
+    ),
 ]
 
 # Negative detection rows: ``docstring-in-impl`` must NOT fire.
-_DOCSTRING_DOES_NOT_DETECT_CASES: list[pytest.Param] = [
+_DOCSTRING_DOES_NOT_DETECT_CASES: list[Any] = [
     pytest.param("def foo():\n    pass\n", id="no_docstring_no_message"),
     pytest.param("def foo():\n    ...\n", id="empty_body_no_message"),
-    pytest.param("class MyClass:\n    \"\"\"Class-level docs.\"\"\"\n    pass\n",
-                 id="class_docstring_no_message"),
+    pytest.param(
+        'class MyClass:\n    """Class-level docs."""\n    pass\n',
+        id="class_docstring_no_message",
+    ),
     pytest.param("def foo():\n    42\n    pass\n", id="non_string_first_expr"),
 ]
 
 
 # Rows: ``(code, expected_count, expected_args1)`` — exercises cases where a
 # companion .pyi exists and W9700 emits.
-_DOCSTRING_DETECT_CASES: list[pytest.Param] = [
-    pytest.param("def foo():\n    \"\"\"Usage docstring.\"\"\"\n    pass\n", 1, "foo",
-                 id="function_docstring_detected"),
-    pytest.param("async def foo():\n    \"\"\"Usage docstring.\"\"\"\n    pass\n", 1, None,
-                 id="async_function_docstring_detected"),
-    pytest.param("class MyClass:\n    def method(self):\n        \"\"\"Method doc.\"\"\"\n        pass\n",
-                 1, "method", id="method_docstring_detected"),
-    pytest.param("def foo():\n    \"\"\"Doc.\"\"\"\n    pass\n\ndef bar():\n    pass\n",
-                 1, None, id="mixed_docstrings_and_no_docstrings"),
+_DOCSTRING_DETECT_CASES: list[Any] = [
+    pytest.param(
+        'def foo():\n    """Usage docstring."""\n    pass\n',
+        1,
+        "foo",
+        id="function_docstring_detected",
+    ),
+    pytest.param(
+        'async def foo():\n    """Usage docstring."""\n    pass\n',
+        1,
+        None,
+        id="async_function_docstring_detected",
+    ),
+    pytest.param(
+        'class MyClass:\n    def method(self):\n        """Method doc."""\n        pass\n',
+        1,
+        "method",
+        id="method_docstring_detected",
+    ),
+    pytest.param(
+        'def foo():\n    """Doc."""\n    pass\n\ndef bar():\n    pass\n',
+        1,
+        None,
+        id="mixed_docstrings_and_no_docstrings",
+    ),
 ]
 
 
 # ── stub-fidelity rewrite-table (AnnotationNormalizer._apply_rewrites) ──
 
 # ``(input, expected)`` rows.
-_APPLY_REWRITES_CASES: list[pytest.Param] = [
+_APPLY_REWRITES_CASES: list[Any] = [
     pytest.param("typing.List[str]", "list[str]", id="rewrite_typing_list"),
     pytest.param("typing.Dict[str, int]", "dict[str, int]", id="rewrite_typing_dict"),
     pytest.param("typing.Optional[str]", "str | None", id="rewrite_typing_optional"),
     pytest.param("typing.Union[str, int]", "str | int", id="rewrite_typing_union"),
-    pytest.param("typing.Union[list[str], int]", "list[str] | int",
-                 id="rewrite_typing_union_nested_generic"),
-    pytest.param("collections.abc.Callable", "collections.abc.Callable",
-                 id="rewrite_no_match_passes_through"),
+    pytest.param(
+        "typing.Union[list[str], int]",
+        "list[str] | int",
+        id="rewrite_typing_union_nested_generic",
+    ),
+    pytest.param(
+        "collections.abc.Callable",
+        "collections.abc.Callable",
+        id="rewrite_no_match_passes_through",
+    ),
 ]
 
 
 # ``_split_outer_commas`` rows: ``(input, expected_parts)``.
-_SPLIT_OUTER_COMMAS_CASES: list[pytest.Param] = [
+_SPLIT_OUTER_COMMAS_CASES: list[Any] = [
     pytest.param("str, int, float", ["str", "int", "float"], id="simple"),
     pytest.param("list[str], int", ["list[str]", "int"], id="with_brackets"),
 ]
@@ -571,20 +828,24 @@ _SPLIT_OUTER_COMMAS_CASES: list[pytest.Param] = [
 # - ``assert_mode == "equals"``: body asserts ``result == expected[0]``.
 # - ``assert_mode == "contains"``: body asserts each substring in ``expected``
 #   is present in the result (membership check). ``expected`` is a list.
-_AST_STRING_CASES: list[pytest.Param] = [
+_AST_STRING_CASES: list[Any] = [
     pytest.param("x: list[str]", ["list"], "contains", id="subscript"),
     pytest.param("x: int | str", ["int | str"], "equals", id="binary_op_union"),
-    pytest.param("x: typing.Optional[str]", ["typing.Optional"], "contains", id="attribute"),
+    pytest.param(
+        "x: typing.Optional[str]", ["typing.Optional"], "contains", id="attribute"
+    ),
     pytest.param("x: tuple[int, str]", None, "not_none", id="tuple"),
     pytest.param("x: Literal['hello']", ["hello"], "contains", id="const"),
-    pytest.param("x: dict[str, list[int]]", ["dict", "list"], "contains",
-                 id="nested_subscript"),
+    pytest.param(
+        "x: dict[str, list[int]]", ["dict", "list"], "contains", id="nested_subscript"
+    ),
 ]
 
 
 # ── stub_coverage: shared fixture for checker construction ───────────
 
-def make_coverage_checker(**config_kwargs):
+
+def make_coverage_checker(**config_kwargs) -> tuple:
     """Build a ``StubChecker`` instance with optional config overrides and call
     ``checker.open()`` to initialize state. Mirrors the previous per-test
     ``_make_checker`` helper.
@@ -615,7 +876,7 @@ def build_import_contract_state(
     stub_index: dict | None = None,
     declaration_index: dict | None = None,
     import_usages: list | None = None,
-):
+) -> tuple:
     """Build a ``StubChecker`` ``_coverage`` state pre-populated with the
     provided indexes/usages (and synthetic mock nodes for importer modules).
     Returns ``(checker, tc)``.
@@ -639,29 +900,35 @@ def build_import_contract_state(
                 mock_node.name = usage.importer_module
                 mock_node.position = None
                 c.module_index[usage.importer_module] = (
-                    Path(f"/workspace/src/{usage.importer_module}.py"), mock_node,
+                    Path(f"/workspace/src/{usage.importer_module}.py"),
+                    mock_node,
                 )
     return tc.checker, tc
 
 
-def _stub_checker_class():
+def _stub_checker_class() -> type:
     """Late import of ``StubChecker`` (kept out of module top to avoid
     import-time work for test files that don't need it)."""
     from python_setup_lint.checkers.stub_checker import StubChecker
+
     return StubChecker
 
 
 # Lazy import of ``ImportUsage`` — kept off module top to avoid coupling.
-def import_usage(*args, **kwargs):
+def import_usage(*args: Any, **kwargs: Any) -> Any:
     """Build an ``ImportUsage`` instance (late import)."""
     from python_setup_lint.checkers.stub_import_contract import ImportUsage
+
     return ImportUsage(*args, **kwargs)
 
 
 # ── stub_docstring: shared walker (StubChecker + StubDocstringChecker) ─
 
+
 def walk_both_release_for_pyi(
-    code: str, py_path: Path, source_roots: list[str] | None = None,
+    code: str,
+    py_path: Path,
+    source_roots: list[str] | None = None,
 ) -> list:
     """Walk StubChecker + StubDocstringChecker together with a companion ``.pyi``.
 
@@ -698,29 +965,54 @@ def walk_both_release_for_pyi(
 
     return linter.release_messages()
 
+
 # ── stub_checker: import-usage / contract-violations tables ─────────
 
 # ``ImportUsage`` field-echo rows: ``(field_overrides, expected_attr_checks)``.
 # Each row asserts a single attribute equals the override value (the test
 # body iterates the dict and asserts each key against the field). Rows
 # previously existed as 3 narrow `TestImportUsage::test_*` methods.
-_IMPORT_USAGE_FIELD_CASES: list[pytest.Param] = [
+_IMPORT_USAGE_FIELD_CASES: list[Any] = [
     pytest.param(
-        {"importer_module": "mod_a", "lineno": 5, "target_module": "mod_b",
-         "symbol_name": "Foo", "alias": None, "is_star": False},
-        {"importer_module": "mod_a", "lineno": 5, "target_module": "mod_b",
-         "symbol_name": "Foo", "alias": None, "is_star": False},
+        {
+            "importer_module": "mod_a",
+            "lineno": 5,
+            "target_module": "mod_b",
+            "symbol_name": "Foo",
+            "alias": None,
+            "is_star": False,
+        },
+        {
+            "importer_module": "mod_a",
+            "lineno": 5,
+            "target_module": "mod_b",
+            "symbol_name": "Foo",
+            "alias": None,
+            "is_star": False,
+        },
         id="fields",
     ),
     pytest.param(
-        {"importer_module": "mod_a", "lineno": 3, "target_module": "mod_b",
-         "symbol_name": None, "alias": None, "is_star": False},
+        {
+            "importer_module": "mod_a",
+            "lineno": 3,
+            "target_module": "mod_b",
+            "symbol_name": None,
+            "alias": None,
+            "is_star": False,
+        },
         {"symbol_name": None},
         id="module_import_symbol_name_none",
     ),
     pytest.param(
-        {"importer_module": "mod_a", "lineno": 7, "target_module": "mod_b",
-         "symbol_name": "*", "alias": None, "is_star": True},
+        {
+            "importer_module": "mod_a",
+            "lineno": 7,
+            "target_module": "mod_b",
+            "symbol_name": "*",
+            "alias": None,
+            "is_star": True,
+        },
         {"is_star": True},
         id="star_import_is_star",
     ),
@@ -735,60 +1027,79 @@ _IMPORT_USAGE_FIELD_CASES: list[pytest.Param] = [
 #
 # The test body builds the ImportUsage + the per-target mock node and the
 # importer-module mock, then calls ``emit_import_contract_violations``.
-_IMPORT_CONTRACT_CASES: list[pytest.Param] = [
+_IMPORT_CONTRACT_CASES: list[Any] = [
     # E97A2 — target stub absent (has_stub=False)
     pytest.param(
-        "mod_a", False, None, "mod_a", "Foo", False, None,
-        "missing-module-stub-for-import", 1, id="e97a2_when_target_no_stub",
+        "mod_a",
+        False,
+        None,
+        "mod_a",
+        "Foo",
+        False,
+        None,
+        "missing-module-stub-for-import",
+        1,
+        id="e97a2_when_target_no_stub",
     ),
     # E97A1 — symbol absent from stub declarations
     pytest.param(
-        "mod_b", True, {"Foo"}, "mod_a", "Bar", False, None,
-        "missing-import-declaration", 1, id="e97a1_when_symbol_not_declared",
+        "mod_b",
+        True,
+        {"Foo"},
+        "mod_a",
+        "Bar",
+        False,
+        None,
+        "missing-import-declaration",
+        1,
+        id="e97a1_when_symbol_not_declared",
     ),
     # No violation — symbol IS declared
     pytest.param(
-        "mod_b", True, {"Foo"}, "mod_a", "Foo", False, None, None, 0,
+        "mod_b",
+        True,
+        {"Foo"},
+        "mod_a",
+        "Foo",
+        False,
+        None,
+        None,
+        0,
         id="no_violation_when_symbol_declared",
     ),
     # E97A3 — star import when policy='error'
     pytest.param(
-        "mod_b", True, None, "mod_a", "*", True, "error",
-        "star-import-unresolvable", 1, id="e97a3_star_import",
+        "mod_b",
+        True,
+        None,
+        "mod_a",
+        "*",
+        True,
+        "error",
+        "star-import-unresolvable",
+        1,
+        id="e97a3_star_import",
     ),
 ]
 
 
 # ``TestStarImportPolicy`` rows: ``(star_policy, expected_e97a3_count)``.
-_STAR_POLICY_CASES: list[pytest.Param] = [
+_STAR_POLICY_CASES: list[Any] = [
     pytest.param("error", 1, id="star_policy_error"),
     pytest.param("ignore", 0, id="star_policy_ignore"),
 ]
 
 
-# ``_in_type_checking_block`` positive rows — accessor walks the parsed
-# module's body to find the import node, then asserts ``True``.
-_IN_TYPE_CHECKING_BLOCK_POSITIVE_CASES: list[pytest.Param] = [
-    pytest.param(
-        "if TYPE_CHECKING:\n    from foo import Bar\n",
-        lambda m: m.body[0].body[0], id="under_type_checking",
-    ),
-    pytest.param(
-        "if TYPE_CHECKING:\n    if True:\n        from foo import Bar\n",
-        lambda m: m.body[0].body[0].body[0], id="nested_inside_type_checking",
-    ),
-]
-
-
 # Variable annotation fidelity rows: ``(expr_src, expected_bool)`` for
 # ``_is_classvar`` plus a single AnnotationNormalizer normalize row.
-_VARIABLE_FIDELITY_CASES: list[pytest.Param] = [
+_VARIABLE_FIDELITY_CASES: list[Any] = [
     pytest.param("ClassVar[int]", True, id="classvar_skipped"),
     pytest.param("int", False, id="non_classvar"),
 ]
 
 
 # ── stub_checker: shared walk helpers ───────────────────────────────
+
 
 def walk_stub_close_release(
     code: str,
@@ -799,7 +1110,7 @@ def walk_stub_close_release(
     stub_opt_out: list[str] | None = None,
     stub_roots: list[str] | None = None,
     module_name: str = "test_module",
-):
+) -> list:
     """Walk ``StubChecker`` open()/walk()/close() over a single module and
     return the released message list.
 
@@ -810,7 +1121,7 @@ def walk_stub_close_release(
     """
     from python_setup_lint.checkers.stub_checker import StubChecker
 
-    tc = _make_tc_factory(StubChecker)
+    tc = _make_tc_factory(StubChecker)  # type: ignore[no-untyped-call]
     if source_roots is not None:
         tc.linter.config.source_roots = source_roots
     if test_patterns is not None:
@@ -836,21 +1147,38 @@ def walk_stub_close_release(
 #   - "trivial_data" → tests/data/fixture_data.py + source_root src/
 # Per ``/memories/repo/T1-pyi-exemptions.md`` these encode proven invariants;
 # preserve coverage verbatim across reductions (envelope calls this out).
-_PYI_EXEMPT_LOG_LAYOUT_CASES: list[pytest.Param] = [
-    pytest.param("init", "from .sub import Foo\n", "Exempt mypkg: __init__.py",
-                 id="init_exempt_logs_record"),
-    pytest.param("main", "\ndef run():\n    pass\nif __name__ == '__main__':\n    run()\n",
-                 "Exempt script: standalone", id="main_exempt_logs_record"),
-    pytest.param("conftest", "import pytest\n",
-                 "Exempt conftest_root: conftest.py", id="conftest_exempt_logs_record"),
-    pytest.param("trivial_data", "x = 1\ny = 'hello'\n",
-                 "Exempt tests.data.fixture_data: trivial test data",
-                 id="trivial_test_data_exempt_logs_record"),
+_PYI_EXEMPT_LOG_LAYOUT_CASES: list[Any] = [
+    pytest.param(
+        "init",
+        "from .sub import Foo\n",
+        "Exempt mypkg: __init__.py",
+        id="init_exempt_logs_record",
+    ),
+    pytest.param(
+        "main",
+        "\ndef run():\n    pass\nif __name__ == '__main__':\n    run()\n",
+        "Exempt script: standalone",
+        id="main_exempt_logs_record",
+    ),
+    pytest.param(
+        "conftest",
+        "import pytest\n",
+        "Exempt conftest_root: conftest.py",
+        id="conftest_exempt_logs_record",
+    ),
+    pytest.param(
+        "trivial_data",
+        "x = 1\ny = 'hello'\n",
+        "Exempt tests.data.fixture_data: trivial test data",
+        id="trivial_test_data_exempt_logs_record",
+    ),
 ]
 
 
 def materialize_pyi_exempt_layout(
-    tmp_path: Path, layout_kind: str, code: str,
+    tmp_path: Path,
+    layout_kind: str,
+    code: str,
 ) -> tuple[str, list[str], str]:
     """Materialise the per-row tmp_path layout for one T1-pyi-exemption test.
 
@@ -883,7 +1211,7 @@ def materialize_pyi_exempt_layout(
 # ── stub_checker: shared import-contract / star-policy state builders ─
 
 
-def _build_star_import_policy_state(star_policy: str, import_usage_factory):
+def _build_star_import_policy_state(star_policy: str, import_usage_factory) -> tuple:
     """Build a ``StubChecker`` state covering the star-import-policy matrix.
 
     Returns ``(tc, checker)``. The star-import policy is set on the state;
@@ -897,7 +1225,7 @@ def _build_star_import_policy_state(star_policy: str, import_usage_factory):
     mock_a = MagicMock()
     mock_a.name = "mod_a"
     mock_a.position = None
-    tc = _make_tc_factory(StubChecker)
+    tc = _make_tc_factory(StubChecker)  # type: ignore[no-untyped-call]
     tc.checker._coverage.module_index = {
         "mod_a": (Path("/workspace/src/mod_a.py"), mock_a),
         "mod_b": (Path("/workspace/src/mod_b.py"), mock_b),
@@ -908,9 +1236,10 @@ def _build_star_import_policy_state(star_policy: str, import_usage_factory):
     return tc, tc.checker
 
 
-def _star_usage_factory():
+def _star_usage_factory() -> Any:
     """Build the standard star-import ``ImportUsage`` row (``"*"`` / is_star True)."""
     from python_setup_lint.checkers.stub_import_contract import ImportUsage
+
     return ImportUsage("mod_a", 1, "mod_b", "*", None, True)
 
 
@@ -923,7 +1252,7 @@ def _star_usage_factory():
 #   - "stub_root"  → src/<module_name>.py + stubs/<module_name>.pyi
 #   - "no_stub"    → src/<module_name>.py only (E97A0 expected)
 #   - "empty"     → walk no modules (no E97A0 expected)
-_STUB_RESOLUTION_CASES: list[pytest.Param] = [
+_STUB_RESOLUTION_CASES: list[Any] = [
     pytest.param("inline", "x = 1\n", "has_stub", 0, id="inline_stub_detected"),
     pytest.param("package", "x = 1\n", "mypkg", 0, id="package_init_stub_detected"),
     pytest.param("stub_root", "x = 1\n", "foo", 0, id="stub_root_resolution"),
@@ -933,7 +1262,10 @@ _STUB_RESOLUTION_CASES: list[pytest.Param] = [
 
 
 def walk_stub_resolution_layout(
-    tmp_path: Path, layout_kind: str, code: str, module_name: str,
+    tmp_path: Path,
+    layout_kind: str,
+    code: str,
+    module_name: str,
 ) -> list:
     """Materialise the on-disk ``.py`` / ``.pyi`` layout per ``layout_kind`` and
     walk ``StubChecker`` (open/walk/close) over the resulting module.
@@ -950,7 +1282,7 @@ def walk_stub_resolution_layout(
     """
     from python_setup_lint.checkers.stub_checker import StubChecker
 
-    tc = _make_tc_factory(StubChecker)
+    tc = _make_tc_factory(StubChecker)  # type: ignore[no-untyped-call]
     if layout_kind == "empty":
         tc.checker.open()
         tc.checker.close()
@@ -997,7 +1329,7 @@ def walk_stub_resolution_layout(
 #   - ``"stub_root"`` → src/mod.py + stubs/mod.pyi
 # ``expected_kind`` selects the assertion branch: ``"returns_pyi"``,
 # ``"returns_none"``.
-_RESOLVE_STUB_CASES: list[pytest.Param] = [
+_RESOLVE_STUB_CASES: list[Any] = [
     pytest.param("inline", "returns_pyi", id="inline_stub"),
     pytest.param("package", "returns_pyi", id="package_init_stub"),
     pytest.param("no_stub", "returns_none", id="no_stub_returns_none"),
@@ -1005,7 +1337,7 @@ _RESOLVE_STUB_CASES: list[pytest.Param] = [
 ]
 
 
-def materialize_resolve_stub_layout(tmp_path: Path, layout_kind: str):
+def materialize_resolve_stub_layout(tmp_path: Path, layout_kind: str) -> tuple:
     """Build the .py / .pyi layout per ``layout_kind`` and return the tuple
     ``(checker, py_path, expected_pyi_path_or_None)`` for the resolve_stub test."""
     if layout_kind == "inline":
@@ -1039,7 +1371,8 @@ def materialize_resolve_stub_layout(tmp_path: Path, layout_kind: str):
     stub_path = stub_root / "mod.pyi"
     stub_path.write_text("x: int\n")
     checker, _tc = make_coverage_checker(
-        source_roots=[str(src)], stub_roots=[str(stub_root)],
+        source_roots=[str(src)],
+        stub_roots=[str(stub_root)],
     )
     return checker, py_path, stub_path
 
@@ -1053,15 +1386,18 @@ def materialize_resolve_stub_layout(tmp_path: Path, layout_kind: str):
 #   - ``"no_missing"``          — stub_missing is empty ⇒ 0 emitted.
 #   - ``"skip_module_not_in_index"`` — stub_missing={"ghost_module"} (NOT in
 #     module_index) ⇒ 0 emitted (skipped).
-_EMIT_COVERAGE_CASES: list[pytest.Param] = [
+_EMIT_COVERAGE_CASES: list[Any] = [
     pytest.param("in_index", "mod_a", 1, id="one_missing_module"),
     pytest.param("no_missing", "", 0, id="no_missing_emits_nothing"),
-    pytest.param("skip_module_not_in_index", "ghost_module", 0,
-                 id="skip_module_not_in_index"),
+    pytest.param(
+        "skip_module_not_in_index", "ghost_module", 0, id="skip_module_not_in_index"
+    ),
 ]
 
 
-def make_emit_coverage_state(tmp_path: Path, setup_kind: str, stub_missing_module: str):
+def make_emit_coverage_state(
+    tmp_path: Path, setup_kind: str, stub_missing_module: str
+) -> tuple:
     """Build a ``CheckerTestCase`` for ``emit_coverage_violations`` tests.
 
     ``setup_kind`` selects the module-index setup:
@@ -1084,7 +1420,8 @@ def make_emit_coverage_state(tmp_path: Path, setup_kind: str, stub_missing_modul
         tc.checker._coverage.stub_missing = set()
     elif setup_kind == "in_index":
         tc.checker._coverage.module_index[stub_missing_module] = (
-            tmp_path / f"{stub_missing_module}.py", mock_node,
+            tmp_path / f"{stub_missing_module}.py",
+            mock_node,
         )
         tc.checker._coverage.stub_missing = {stub_missing_module}
     else:
@@ -1131,8 +1468,19 @@ source-roots = ["{src}"]
     )
     env = {**os.environ, "PYTHONPATH": str(project_src)}
     result = subprocess.run(
-        [sys.executable, "-m", "pylint", str(src), "--disable=all", f"--enable={enable}"],
-        capture_output=True, text=True, cwd=tmp_path, env=env,
+        [
+            sys.executable,
+            "-m",
+            "pylint",
+            str(src),
+            "--disable=all",
+            f"--enable={enable}",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=tmp_path,
+        env=env,
+        check=False,
     )
     return result.stdout + result.stderr
 
@@ -1141,46 +1489,60 @@ source-roots = ["{src}"]
 # Each row corresponds to one of the 5 pre-T14 narrow ``test_integration_*``
 # methods (now parametrised). Includes the impl-missing-annotation W97B5 row
 # that was previously ``test_integration_impl_missing_annotation``.
-_CLASS_FIDELITY_INTEGRATION_CASES: list[pytest.Param] = [
+_CLASS_FIDELITY_INTEGRATION_CASES: list[Any] = [
     pytest.param(
         "x: int = 1\n",
         "\nx: int\nclass Foo: ...\n",
-        "stub-symbol-missing", "E97B1", id="integration_stub_symbol_missing",
+        "stub-symbol-missing",
+        "E97B1",
+        id="integration_stub_symbol_missing",
     ),
     pytest.param(
         "Foo: int = 1\n",
         "class Foo: ...\n",
-        "symbol-kind-mismatch", "E97B2", id="integration_kind_mismatch",
+        "symbol-kind-mismatch",
+        "E97B2",
+        id="integration_kind_mismatch",
     ),
     pytest.param(
         "\nclass Foo:\n    x: int = 1\n",
         "\nclass Foo(BaseModel):\n    x: int\n",
-        "annotation-mismatch", "E97B4", id="integration_base_class_mismatch",
+        "annotation-mismatch",
+        "E97B4",
+        id="integration_base_class_mismatch",
     ),
     pytest.param(
         "x: str = 'hello'\n",
         "x: int\n",
-        "annotation-mismatch", "E97B4", id="integration_variable_annotation_mismatch",
+        "annotation-mismatch",
+        "E97B4",
+        id="integration_variable_annotation_mismatch",
     ),
     pytest.param(
         "x = 1\n",
         "x: int\n",
-        "impl-missing-annotation", "W97B5", id="integration_impl_missing_annotation",
+        "impl-missing-annotation",
+        "W97B5",
+        id="integration_impl_missing_annotation",
     ),
 ]
 
 
 # Callable-fidelity end-to-end rows: ``(mod_py, mod_pyi, enable, expected_code)``.
-_CALLABLE_FIDELITY_INTEGRATION_CASES: list[pytest.Param] = [
+_CALLABLE_FIDELITY_INTEGRATION_CASES: list[Any] = [
     pytest.param(
         "\ndef foo(x: int, y: str) -> None: ...\n",
         "\ndef foo(x: int) -> None: ...\n",
-        "signature-mismatch", "E97B3", id="signature_mismatch",
+        "signature-mismatch",
+        "E97B3",
+        id="signature_mismatch",
     ),
     pytest.param(
         "\ndef foo() -> int: ...\n",
         "\ndef foo() -> str: ...\n",
-        "annotation-mismatch", "E97B4", id="return_annotation_mismatch",
+        "annotation-mismatch",
+        "E97B4",
+        id="return_annotation_mismatch",
     ),
 ]
 
@@ -1189,7 +1551,10 @@ _CALLABLE_FIDELITY_INTEGRATION_CASES: list[pytest.Param] = [
 
 
 def walk_stub_checker_with_pair(
-    tmp_path: Path, py_code: str, pyi_code: str, module_name: str = "mod_a",
+    tmp_path: Path,
+    py_code: str,
+    pyi_code: str,
+    module_name: str = "mod_a",
 ) -> list:
     """Walk StubChecker over a paired impl(.py) + stub(.pyi) under
     ``tmp_path/src`` and return the released message list.
@@ -1203,7 +1568,7 @@ def walk_stub_checker_with_pair(
     src.mkdir()
     (src / f"{module_name}.py").write_text(py_code)
     (src / f"{module_name}.pyi").write_text(pyi_code)
-    tc = _make_tc_factory(StubChecker)
+    tc = _make_tc_factory(StubChecker)  # type: ignore[no-untyped-call]
     tc.linter.config.source_roots = [str(src)]
     tc.checker.open()
     module = astroid.parse(py_code, module_name=module_name)
@@ -1225,7 +1590,7 @@ def setup_and_emit_import_contract(
     symbol: str | None,
     is_star: bool,
     star_policy: str | None,
-):
+) -> tuple:
     """Build a pre-populated ``StubChecker`` state per the row parameters and
     call ``emit_import_contract_violations``. Returns ``(tc, msgs)`` so the
     caller asserts on the emitted msg ids / counts.
@@ -1263,7 +1628,7 @@ def setup_and_emit_import_contract(
 # ── stub_checker: registered message codes table ───────────────────
 
 # ``(code, expected_symbol)`` — verifies each registered E97A* message id.
-_STUB_CHECKER_MSGS_CASES: list[pytest.Param] = [
+_STUB_CHECKER_MSGS_CASES: list[Any] = [
     pytest.param("E97A0", "missing-module-stub", id="E97A0"),
     pytest.param("E97A1", "missing-import-declaration", id="E97A1"),
     pytest.param("E97A2", "missing-module-stub-for-import", id="E97A2"),

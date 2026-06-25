@@ -14,8 +14,10 @@ exemption: an ``__init__.py`` with logic requires a ``.pyi``).
 """
 
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from python_setup_lint.checkers.stub_checker import StubChecker
 
 from .annotation import _emit_variable_fidelity
 from .kind import _emit_stub_symbol_check

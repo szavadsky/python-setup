@@ -25,7 +25,6 @@ from pylint.checkers import BaseChecker
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
 
-
 class BeartypeCoverageChecker(BaseChecker):
     """AST visitor that inventories @beartype coverage on public functions."""
 
@@ -33,9 +32,7 @@ class BeartypeCoverageChecker(BaseChecker):
 
     def __init__(self, linter: PyLinter) -> None: ...
     def open(self) -> None: ...
-
     def visit_functiondef(self, node: nodes.FunctionDef) -> None: ...
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None: ...
-
 
 def register(linter: PyLinter) -> None: ...

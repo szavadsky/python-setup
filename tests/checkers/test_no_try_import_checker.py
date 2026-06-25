@@ -7,6 +7,7 @@ try/except+import patterns. All fixture src strings live in
 
 from __future__ import annotations
 
+
 import pytest
 
 from python_setup_lint.checkers.no_try_import_checker import NoTryImportChecker
@@ -18,11 +19,13 @@ from tests.checkers._factories import (
 
 
 @pytest.mark.parametrize(
-    "code, expected_count, expected_args",
+    ("code", "expected_count", "expected_args"),
     _NO_TRY_DETECT_CASES,
 )
 def test_detects_no_try_import(
-    code: str, expected_count: int, expected_args: tuple,
+    code: str,
+    expected_count: int,
+    expected_args: tuple,
 ) -> None:
     """Checker must flag all flagged-pattern rows with the expected message count.
 
@@ -35,10 +38,12 @@ def test_detects_no_try_import(
     )
     if expected_args:
         assert msgs[0].msg_id == "no-try-import"
-        assert msgs[0].args == expected_args, f"args={msgs[0].args!r} (expected {expected_args!r})"
+        assert msgs[0].args == expected_args, (
+            f"args={msgs[0].args!r} (expected {expected_args!r})"
+        )
 
 
-@pytest.mark.parametrize("code", _NO_TRY_DO_NOT_DETECT_CASES)
+@pytest.mark.parametrize(("code",), _NO_TRY_DO_NOT_DETECT_CASES)
 def test_does_not_detect_no_try_import(code: str) -> None:
     """Checker must NOT flag the listed valid-code rows."""
     msgs = _walk_and_release(code, NoTryImportChecker)

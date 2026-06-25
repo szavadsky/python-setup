@@ -10,7 +10,7 @@ The package is consumed as a git dependency (e.g., `consultant-mcp`) and is **no
 
 ### High-level structure
 
-```
+```text
 pyproject.toml  ──→  [project.scripts] lint → runner.cli:main
                      [project.scripts] install → setup:main
                      [project.scripts] python-setup-test-checked → testing:test_checked_main
@@ -191,7 +191,7 @@ uv run python-setup-test-checked
 
 ### Module layout
 
-```
+```text
 mypackage/
 ├── __init__.py   # public API, __all__, module-level docs. No .pyi.
 ├── py.typed      # PEP 561 (empty, required)

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import inspect
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import astroid
 import pytest
@@ -41,13 +41,13 @@ if TYPE_CHECKING:
 PROJECT_SRC = Path(__file__).resolve().parents[3] / "src"
 
 
-def _parse_func(code: str):
+def _parse_func(code: str) -> Any:
     """Parse a function source string and return the function astroid node."""
     module = astroid.parse(code, module_name="test")
     return module.body[0]
 
 
-def _extract(func_node, *, strip_self: bool = False):
+def _extract(func_node, *, strip_self: bool = False) -> Any:
     """Wrap ``_extract_param_descriptors`` for short test bodies."""
     return _extract_param_descriptors(func_node.args, strip_self=strip_self)
 
@@ -65,12 +65,14 @@ def _p(name: str, ann: str | None = None) -> ParamDescriptor:
 def _build_descs(rows: list) -> list[ParamDescriptor]:
     """Build a list of ``ParamDescriptor`` from a row-tuple list."""
     return [
-        ParamDescriptor(name=r[0], kind=r[1], has_default=r[2], annotation_normalized=None)
+        ParamDescriptor(
+            name=r[0], kind=r[1], has_default=r[2], annotation_normalized=None
+        )
         for r in rows
     ]
 
 
-def _returns_from_src(return_src: str | None):
+def _returns_from_src(return_src: str | None) -> Any:
     """Parse ``def foo() -> <return_src>: ...`` and return the returns node (or None)."""
     if return_src is None:
         return None
@@ -83,8 +85,10 @@ def _returns_from_src(return_src: str | None):
 
 def test_param_descriptor_fields() -> None:
     p = ParamDescriptor(
-        name="x", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
-        has_default=True, annotation_normalized="int",
+        name="x",
+        kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        has_default=True,
+        annotation_normalized="int",
     )
     assert p.name == "x"
     assert p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
@@ -94,8 +98,10 @@ def test_param_descriptor_fields() -> None:
 
 def test_param_descriptor_no_annotation() -> None:
     p = ParamDescriptor(
-        name="y", kind=inspect.Parameter.KEYWORD_ONLY,
-        has_default=False, annotation_normalized=None,
+        name="y",
+        kind=inspect.Parameter.KEYWORD_ONLY,
+        has_default=False,
+        annotation_normalized=None,
     )
     assert p.annotation_normalized is None
 
@@ -103,9 +109,13 @@ def test_param_descriptor_no_annotation() -> None:
 # ── _extract_param_descriptors ─────────────────────────────────────
 
 
-@pytest.mark.parametrize("func_src, expected_names, expected_kinds", _EXTRACT_PARAM_CASES)
+@pytest.mark.parametrize(
+    ("func_src", "expected_names", "expected_kinds"), _EXTRACT_PARAM_CASES
+)
 def test_extract_param_descriptors(
-    func_src: str, expected_names: list[str], expected_kinds: list,
+    func_src: str,
+    expected_names: list[str],
+    expected_kinds: list,
 ) -> None:
     """Each row exercises a distinct parameter-kind classification path."""
     descs = _extract(_parse_func(func_src))
@@ -114,30 +124,38 @@ def test_extract_param_descriptors(
 
 
 @pytest.mark.parametrize(
-    "func_src, expected_per_param_defaults", _EXTRACT_DEFAULT_CASES,
+    ("func_src", "expected_per_param_defaults"),
+    _EXTRACT_DEFAULT_CASES,
 )
 def test_extract_default_presence_detected(
-    func_src: str, expected_per_param_defaults: list[bool],
+    func_src: str,
+    expected_per_param_defaults: list[bool],
 ) -> None:
     descs = _extract(_parse_func(func_src))
     assert [d.has_default for d in descs] == expected_per_param_defaults
 
 
 @pytest.mark.parametrize(
-    "func_src, strip_self, expected_names", _EXTRACT_STRIP_SELF_CASES,
+    ("func_src", "strip_self", "expected_names"),
+    _EXTRACT_STRIP_SELF_CASES,
 )
 def test_extract_strip_self(
-    func_src: str, strip_self: bool, expected_names: list[str],
+    func_src: str,
+    strip_self: bool,
+    expected_names: list[str],
 ) -> None:
     descs = _extract(_parse_func(func_src), strip_self=strip_self)
     assert [d.name for d in descs] == expected_names
 
 
 @pytest.mark.parametrize(
-    "func_src, needle_in_first, _needle_in_second", _EXTRACT_ANNOTATION_CASES,
+    ("func_src", "needle_in_first", "_needle_in_second"),
+    _EXTRACT_ANNOTATION_CASES,
 )
 def test_extract_annotations(
-    func_src: str, needle_in_first: str | None, _needle_in_second: str | None,
+    func_src: str,
+    needle_in_first: str | None,
+    _needle_in_second: str | None,
 ) -> None:
     """Each row exercises annotation extraction — asserts substring presence."""
     descs = _extract(_parse_func(func_src))
@@ -148,10 +166,13 @@ def test_extract_annotations(
 
 
 @pytest.mark.parametrize(
-    "a_rows, b_rows, expected_failure", _COMPARE_DESCRIPTOR_CASES,
+    ("a_rows", "b_rows", "expected_failure"),
+    _COMPARE_DESCRIPTOR_CASES,
 )
 def test_compare_callable_descriptors(
-    a_rows: list, b_rows: list, expected_failure: str | None,
+    a_rows: list,
+    b_rows: list,
+    expected_failure: str | None,
 ) -> None:
     """Each row exercises a distinct mismatch kind (count/name/kind/default)."""
     a = _build_descs(a_rows)
@@ -160,7 +181,7 @@ def test_compare_callable_descriptors(
     if expected_failure is None:
         assert result is None
     else:
-        assert expected_failure in result, (
+        assert expected_failure in result, (  # type: ignore[operator]
             f"result={result!r} (expected substring {expected_failure!r})"
         )
 
@@ -169,11 +190,14 @@ def test_compare_callable_descriptors(
 
 
 @pytest.mark.parametrize(
-    "a_anns, b_anns, expected_count, expected_first_arg_name",
+    ("a_anns", "b_anns", "expected_count", "expected_first_arg_name"),
     _COMPARE_ANNOTATION_CASES,
 )
 def test_compare_callable_annotations(
-    a_anns: list, b_anns: list, expected_count: int, expected_first_arg_name: str | None,
+    a_anns: list,
+    b_anns: list,
+    expected_count: int,
+    expected_first_arg_name: str | None,
 ) -> None:
     a = [_p(name, ann) for name, ann in zip(["x", "y", "x"], a_anns, strict=False)]
     b = [_p(name, ann) for name, ann in zip(["x", "y", "x"], b_anns, strict=False)]
@@ -193,7 +217,8 @@ def test_compare_callable_annotations_empty() -> None:
 
 
 @pytest.mark.parametrize(
-    "stub_src, impl_src, assert_mode, expected_eq", _COMPARE_RETURN_CASES,
+    ("stub_src", "impl_src", "assert_mode", "expected_eq"),
+    _COMPARE_RETURN_CASES,
 )
 def test_compare_return_annotations(
     stub_src: str | None,
@@ -243,10 +268,15 @@ def test_callable_comparison_ctx_fields() -> None:
 
 
 @pytest.mark.parametrize(
-    "mod_py, mod_pyi, enable, expected_code", _CALLABLE_FIDELITY_INTEGRATION_CASES,
+    ("mod_py", "mod_pyi", "enable", "expected_code"),
+    _CALLABLE_FIDELITY_INTEGRATION_CASES,
 )
 def test_integration_callable(
-    tmp_path: Path, mod_py: str, mod_pyi: str, enable: str, expected_code: str,
+    tmp_path: Path,
+    mod_py: str,
+    mod_pyi: str,
+    enable: str,
+    expected_code: str,
 ) -> None:
     """End-to-end subprocess run: pylint surfaces the expected E97B code."""
     combined = _run_pylint(tmp_path, mod_py, mod_pyi, enable, project_src=PROJECT_SRC)

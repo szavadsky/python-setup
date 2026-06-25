@@ -14,6 +14,7 @@ from __future__ import annotations
 import resource
 import time
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -40,7 +41,7 @@ def _make_synthetic_project(root: Path) -> None:
         "class Greeter:\n    def __init__(self, prefix: str = 'Hello') -> None:\n"
         "        self.prefix = prefix\n"
         "    def greet(self, name: str) -> str:\n"
-        '        return f\'{self.prefix} {name}\'\n'
+        "        return f'{self.prefix} {name}'\n"
     )
     (root / "pyproject.toml").write_text(
         "[project]\nname = 'bench-test'\nversion = '0.1.0'\n"
@@ -58,9 +59,7 @@ def _peak_rss_self() -> int:
     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024
 
 
-def _measure_tool(
-    cmd: list[str], *, cwd: Path, label: str
-) -> tuple[float, int, int]:
+def _measure_tool(cmd: list[str], *, cwd: Path, label: str) -> tuple[float, int, int]:
     """Run a single tool command and return (walltime_s, peak_rss_children_delta, exit_code).
 
     Measures child RSS delta by sampling RUSAGE_CHILDREN before and after.
@@ -124,7 +123,7 @@ def test_bench_runner_overhead(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
     cwd = tmp_path
     config = RunnerConfig(cwd=cwd, package_name="bench_test")
 
-    rows: list[dict] = []
+    rows: list[dict[str, Any]] = []
 
     # ── 1. Per-tool individual measurements ─────────────────────
     for spec in TOOLS:
@@ -152,9 +151,7 @@ def test_bench_runner_overhead(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
                     }
                 )
         else:
-            elapsed, rss_delta, exit_code = _measure_tool(
-                cmd, cwd=cwd, label=spec.name
-            )
+            elapsed, rss_delta, exit_code = _measure_tool(cmd, cwd=cwd, label=spec.name)
             rows.append(
                 {
                     "tool": spec.name,
@@ -188,7 +185,9 @@ def test_bench_runner_overhead(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
     runner_rss_kb = round((rss_self_after - rss_self_before) / 1024, 1)
 
     overhead_pct_before = (
-        (runner_overhead_before / total_wall_before * 100) if total_wall_before > 0 else 0.0
+        (runner_overhead_before / total_wall_before * 100)
+        if total_wall_before > 0
+        else 0.0
     )
 
     # ── 3. Write artifact ──────────────────────────────────────
@@ -248,5 +247,7 @@ def test_bench_runner_overhead(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
 
     artifact_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\n[bench] Artifact written to {artifact_path}")
-    print(f"[bench] Runner overhead: {runner_overhead_before:.3f}s ({overhead_pct_before:.1f}%)")
-    print(f"[bench] Per-tool measurements: {len(rows)} rows")
+    print(
+        f"[bench] Runner overhead: {runner_overhead_before:.3f}s ({overhead_pct_before:.1f}%)"
+    )
+    print(f"[bench] Per-tool measurements: {len(rows)} rows")  # type: ignore[arg-type]

@@ -57,7 +57,7 @@ def _write_shipped_config(path: Path, *, body: str) -> Path:
 
 
 _SHIPPED_BODY = (
-    '{\n'
+    "{\n"
     '    "venvPath": ".",\n'
     '    "venv": ".venv",\n'
     '    "reportAttributeAccessIssue": "none",\n'
@@ -68,8 +68,8 @@ _SHIPPED_BODY = (
     '        "**/.*",\n'
     '        "build/",\n'
     '        "tests/data/"\n'
-    '    ]\n'
-    '}\n'
+    "    ]\n"
+    "}\n"
 )
 
 
@@ -99,7 +99,9 @@ class TestComposePyrightConfigNoRewrite:
         shared.write_text(json.dumps({"venv": ".venv"}))
         assert _compose_pyright_config(tmp_path, shared) == shared
 
-    def test_returns_shared_unreadable_file_does_not_raise(self, tmp_path: Path) -> None:
+    def test_returns_shared_unreadable_file_does_not_raise(
+        self, tmp_path: Path
+    ) -> None:
         """Missing or unreadable shipped config ⇒ shared returned unchanged."""
         shared = tmp_path / "does_not_exist.json"
         # The helper must not crash the runner; pyright surfaces the missing
@@ -147,7 +149,9 @@ class TestComposePyrightConfigRewrites:
         assert '"venv": ".venv"' in text
         assert '"reportAttributeAccessIssue": "none"' in text
 
-    def test_rewrites_each_relative_exclude_to_absolute_cwd(self, tmp_path: Path) -> None:
+    def test_rewrites_each_relative_exclude_to_absolute_cwd(
+        self, tmp_path: Path
+    ) -> None:
         """Every relative ``exclude`` entry becomes an absolute ``cwd`` prefix.
 
         Includes plain paths (``.venv``, ``build/``, ``tests/data/``) AND
@@ -193,9 +197,7 @@ class TestComposePyrightConfigRewrites:
     def test_skips_non_string_exclude_entries(self, tmp_path: Path) -> None:
         """Non-string exclude entries (e.g. numeric ``42``, ``null``) pass through."""
         shared = tmp_path / "shared_pyrightconfig.json"
-        shared.write_text(
-            json.dumps({"venvPath": ".", "exclude": [42, None, ".venv"]})
-        )
+        shared.write_text(json.dumps({"venvPath": ".", "exclude": [42, None, ".venv"]}))
         cwd = tmp_path / "project"
         cwd.mkdir()
         composed = _compose_pyright_config(cwd, shared)
@@ -285,12 +287,12 @@ class TestRunLintConsumesPyrightDefaultCompose:
     ) -> None:
         """After ``run_lint``, ``config.config_paths["pyright check"]`` ≠ shipped."""
         config = self._config_with_shipped(tmp_path)
-        shipped_before = config.config_paths["pyright check"]
+        shipped_before = config.config_paths["pyright check"]  # type: ignore[index]
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
-        assert config.config_paths["pyright check"] != shipped_before
-        assert "python_setup_lint_pyright_" in str(config.config_paths["pyright check"])
+        assert config.config_paths["pyright check"] != shipped_before  # type: ignore[index]
+        assert "python_setup_lint_pyright_" in str(config.config_paths["pyright check"])  # type: ignore[index]
 
     def test_pyright_command_uses_composed_project(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -300,9 +302,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
-        pyright_rec = next(
-            (r for r in fake.calls if r.cmd[:1] == ["pyright"]), None
-        )
+        pyright_rec = next((r for r in fake.calls if r.cmd[:1] == ["pyright"]), None)
         assert pyright_rec is not None, (
             f"pyright not dispatched; calls={[r.cmd[:2] for r in fake.calls[:3]]}"
         )
@@ -323,11 +323,9 @@ class TestRunLintConsumesPyrightDefaultCompose:
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         # Override takes precedence — config_paths now points at the override.
-        assert config.config_paths["pyright check"] == override
+        assert config.config_paths["pyright check"] == override  # type: ignore[index]
         # And the dispatched cmd uses the override, not a tmp path.
-        pyright_rec = next(
-            (r for r in fake.calls if r.cmd[:1] == ["pyright"]), None
-        )
+        pyright_rec = next((r for r in fake.calls if r.cmd[:1] == ["pyright"]), None)
         assert pyright_rec is not None
         proj_idx = pyright_rec.cmd.index("--project")
         assert pyright_rec.cmd[proj_idx + 1] == str(override)
@@ -345,7 +343,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         # No tmp pyright config written.
-        assert "pyright check" not in config.config_paths
+        assert "pyright check" not in config.config_paths  # type: ignore[operator]
         out_dir = _temp_root() / f"python_setup_lint_pyright_{tmp_path.name}"
         assert not out_dir.exists()
 
@@ -376,8 +374,8 @@ class TestRunLintConsumesPyrightDefaultCompose:
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         # Both composed paths land.
-        assert "python_setup_lint_ruff_" in str(config.config_paths["ruff check"])
-        assert "python_setup_lint_pyright_" in str(config.config_paths["pyright check"])
+        assert "python_setup_lint_ruff_" in str(config.config_paths["ruff check"])  # type: ignore[index]
+        assert "python_setup_lint_pyright_" in str(config.config_paths["pyright check"])  # type: ignore[index]
 
 
 # ── live downstream-integration smoke (gated on pyright installed) ──
@@ -422,7 +420,7 @@ class TestLiveSmokePyrightConfigCollapse:
             " ".join(f'"{c}"' if " " in c else c for c in cmd) + "\n"
         )
         result = subprocess.run(
-            cmd, cwd=cwd, capture_output=True, text=True, timeout=240
+            cmd, cwd=cwd, capture_output=True, text=True, timeout=240, check=False
         )
         (artifact / f"{label}.stdout.json").write_text(result.stdout)
         (artifact / f"{label}.stderr.txt").write_text(result.stderr)
@@ -460,9 +458,7 @@ class TestLiveSmokePyrightConfigCollapse:
             "stderr": result.stderr,
         }
 
-    def test_runner_compose_collapses_venv_noise(
-        self, tmp_path: Path
-    ) -> None:
+    def test_runner_compose_collapses_venv_noise(self, tmp_path: Path) -> None:
         """End-to-end: ``run_lint`` wires the composed path and live pyright
         collapses the ``.venv`` walk to ``filesAnalyzed ≤ 100`` with zero
         ``.venv``-path diagnostics.
@@ -496,10 +492,9 @@ class TestLiveSmokePyrightConfigCollapse:
         after = self._run(composed, _PS_ROOT, artifact=artifact, label="AFTER")
         out_dir = composed.parent
         try:
-            assert (
-                ("filesAnalyzed" in after["summary"])
-                and after["summary"]["filesAnalyzed"] <= 100
-            ), after["summary"]
+            assert ("filesAnalyzed" in after["summary"]) and after["summary"][
+                "filesAnalyzed"
+            ] <= 100, after["summary"]
             assert len(after["venv"]) == 0, after["venv"][:5]
         finally:
             # Clean up the composed tmp dir — leaving it around would
@@ -508,9 +503,7 @@ class TestLiveSmokePyrightConfigCollapse:
 
             _shutil.rmtree(out_dir, ignore_errors=True)
 
-    def test_compose_helper_collapses_venv_noise_direct(
-        self, tmp_path: Path
-    ) -> None:
+    def test_compose_helper_collapses_venv_noise_direct(self, tmp_path: Path) -> None:
         """Direct invocation: ``_compose_pyright_config`` produces a config the
         runner-built command shape honors — ``filesAnalyzed ≤ 100`` +
         zero ``.venv`` diagnostics."""
@@ -538,7 +531,12 @@ class TestLiveSmokePyrightConfigCollapse:
         )
         # And execute the command.
         r = subprocess.run(
-            cmd_built, cwd=_PS_ROOT, capture_output=True, text=True, timeout=240
+            cmd_built,
+            cwd=_PS_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=240,
+            check=False,
         )
         (artifact / "AFTER.stdout.json").write_text(r.stdout)
         (artifact / "AFTER.stderr.txt").write_text(r.stderr)

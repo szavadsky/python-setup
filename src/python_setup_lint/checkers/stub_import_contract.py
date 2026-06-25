@@ -95,7 +95,9 @@ def emit_import_contract_violations(checker: StubChecker) -> None:
         if target not in c.module_index:
             continue
 
-        importer_node = c.module_index.get(usage.importer_module, (None, (None, None)))[1]
+        importer_node = c.module_index.get(usage.importer_module, (None, (None, None)))[
+            1
+        ]
 
         # Check if target has a stub
         if target not in c.stub_index:
