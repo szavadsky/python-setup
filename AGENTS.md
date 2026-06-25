@@ -214,7 +214,6 @@ mypackage/
 | `config/ty.toml` | Ty type checker config |
 | `config/.yamllint` | YAML lint config |
 | `CodingRules.md` | Python coding conventions (shipped to consumers) |
-| `decisions.md` | Conscious baselines for lint findings that cannot be fixed |
 | `lint.baseline` | Frozen baseline of pre-existing violations |
 | `tach.toml` | Module dependency boundaries |
 | `.secrets.baseline` | detect-secrets baseline |
