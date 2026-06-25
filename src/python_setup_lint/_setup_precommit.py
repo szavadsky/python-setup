@@ -15,10 +15,10 @@ if TYPE_CHECKING:
 
 # ── Constants ───────────────────────────────────────────────────────
 
-_AGENTS_SENTINEL = "<!-- python-setup:pre-commit -->"
-_AGENTS_SENTINEL_END = "<!-- /python-setup:pre-commit -->"
+_AGENTS_SENTINEL: str = "<!-- python-setup:pre-commit -->"
+_AGENTS_SENTINEL_END: str = "<!-- /python-setup:pre-commit -->"
 
-_PRECOMMIT_TEMPLATE = """\
+_PRECOMMIT_TEMPLATE: str = """\
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
@@ -38,7 +38,7 @@ repos:
         pass_filenames: false
 """
 
-_AGENTS_SNIPPET = """\
+_AGENTS_SNIPPET: str = """\
 
 {open_sentinel}
 ## Pre-commit hooks
