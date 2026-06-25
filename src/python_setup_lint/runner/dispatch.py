@@ -125,13 +125,11 @@ class LintTool:
     def __init__(self, spec: ToolSpec) -> None:
         self.spec = spec
 
-    # pylint: disable=missing-beartype  # beartype would require importing beartype at module level, undesirable for a strategy registry
     @property
-    def name(self) -> str:
+    def name(self) -> str:  # pylint: disable=missing-beartype
         return self.spec.name
 
-    # pylint: disable=missing-beartype  # beartype would require importing beartype at module level, undesirable for a strategy registry
-    def build_command(
+    def build_command(  # pylint: disable=missing-beartype
         self,
         *,
         config: RunnerConfig,
@@ -143,12 +141,10 @@ class LintTool:
             self.spec, config=config, fix=fix, path=path, exclude=exclude
         )
 
-    # pylint: disable=missing-beartype  # beartype would require importing beartype at module level, undesirable for a strategy registry
-    def statistics_flags(self) -> list[str]:
+    def statistics_flags(self) -> list[str]:  # pylint: disable=missing-beartype
         return _build_statistics_flags(self.spec)
 
-    # pylint: disable=missing-beartype  # beartype would require importing beartype at module level, undesirable for a strategy registry
-    def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]:
+    def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]:  # pylint: disable=missing-beartype
         parser = _STATISTICS_PARSERS.get(self.spec.name)
         if parser is None:
             return []
@@ -163,8 +159,7 @@ class LintTool:
 
 
 class _StubtestLintTool(LintTool):
-    # pylint: disable=missing-beartype  # beartype would require importing beartype at module level, undesirable for a strategy registry
-    def build_command(
+    def build_command(  # pylint: disable=missing-beartype
         self,
         *,
         config: RunnerConfig,
@@ -193,8 +188,7 @@ class _StubtestLintTool(LintTool):
 
 
 class _VerifyTypesLintTool(LintTool):
-    # pylint: disable=missing-beartype  # beartype would require importing beartype at module level, undesirable for a strategy registry
-    def build_command(
+    def build_command(  # pylint: disable=missing-beartype
         self,
         *,
         config: RunnerConfig,
@@ -213,8 +207,7 @@ class _VerifyTypesLintTool(LintTool):
 
 
 class _DetectSecretsLintTool(LintTool):
-    # pylint: disable=missing-beartype  # beartype would require importing beartype at module level, undesirable for a strategy registry
-    def build_command(
+    def build_command(  # pylint: disable=missing-beartype
         self,
         *,
         config: RunnerConfig,
@@ -244,8 +237,7 @@ class _PylintLintTool(LintTool):
     def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
         return _resolve_pylintrc(config_paths, cwd)
 
-    # pylint: disable=missing-beartype  # beartype would require importing beartype at module level, undesirable for a strategy registry
-    def build_command(
+    def build_command(  # pylint: disable=missing-beartype
         self,
         *,
         config: RunnerConfig,
@@ -311,8 +303,7 @@ class GenericLintTool(LintTool):
         self._parser = parser
         self._config_flag = config_flag
 
-    # pylint: disable=missing-beartype  # beartype would require importing beartype at module level, undesirable for a strategy registry
-    def build_command(
+    def build_command(  # pylint: disable=missing-beartype
         self,
         *,
         config: RunnerConfig,
@@ -329,13 +320,12 @@ class GenericLintTool(LintTool):
             config_flag_override=self._config_flag,
         )
 
-    # pylint: disable=missing-beartype  # beartype would require importing beartype at module level, undesirable for a strategy registry
-    def statistics_flags(self) -> list[str]:
+    def statistics_flags(self) -> list[str]:  # pylint: disable=missing-beartype
         if self._statistics_flag is not None:
             return list(self._statistics_flag)
         return _build_statistics_flags(self.spec)
 
-    def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]:
+    def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]:  # pylint: disable=missing-beartype
         if self._parser is not None:
             return self._parser(stdout, stderr)
         parser = _STATISTICS_PARSERS.get(self.spec.name)
@@ -358,7 +348,7 @@ def _strategy_for(name: str, spec: ToolSpec) -> LintTool:
     return GenericLintTool(spec)
 
 
-def register_lint_tool(
+def register_lint_tool(  # pylint: disable=missing-beartype
     tool: ToolSpec,
     *,
     statistics_flag: list[str] | None = None,
