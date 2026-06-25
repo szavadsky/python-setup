@@ -31,7 +31,6 @@ from python_setup_lint.runner import (
 from python_setup_lint.runner.cmd_build import _load_pyproject_toml
 from python_setup_lint.testing import fake_run_cmd_factory
 
-
 # ── RunnerConfig default-off + explicit-on ──────────────────────
 
 

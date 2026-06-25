@@ -5,7 +5,7 @@
 The `lint` console-script's `--fix` flag now runs autofix across ALL
 `supports_fix=True` tools (ruff, rumdl, ty), not just the standalone
 `ruff-fix` pre-commit hook. The pre-commit template's `lint` local hook
-entry is `python-setup lint --fix --no-fail-fast --baseline .lint.baseline`
+entry is `python-setup lint --fix --no-fail-fast --baseline lint.baseline`
 — the full pipeline now runs on `git commit` (no `pre-push` hook), autofixes
 all supported tools, then re-runs the baseline-gated verification pass.
 Autofix is courtesy, never blocks. Three conflict-tolerance mechanisms:

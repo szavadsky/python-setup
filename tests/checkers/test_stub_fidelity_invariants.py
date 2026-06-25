@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import inspect
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import astroid
 
@@ -41,10 +40,6 @@ from python_setup_lint.checkers.stub_fidelity import (
     emit_fidelity_violations,
 )
 from python_setup_lint.testing import _make_tc as _make_tc_factory
-
-if TYPE_CHECKING:
-    pass
-
 
 _make_tc = lambda: _make_tc_factory(StubChecker)
 

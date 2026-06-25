@@ -146,7 +146,7 @@ def _parse_rumdl_records(stdout: str) -> list[Record]:
     ``baseline.py``.
     """
 
-def _parse_pyright_records(data: Any) -> list[Record]:
+def _parse_pyright_records(data: object) -> list[Record]:
     """Parse the pre-loaded pyright ``--outputjson`` dict into sorted records.
 
     Pyright lines/cols are 0-indexed; converted to 1-indexed to match the

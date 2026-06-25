@@ -147,3 +147,27 @@ public members, no `_`-prefix symbols). Verified: `pylint
 --load-plugins=…stub_docstring_checker… --enable=docstring-in-impl` reports
 0 W9700 on edited files. Listed here only to record the category is
 **resolved**, not baselined.
+
+## D8 — `package_name` inferred from hatch `packages[0]` (T1b)
+
+- **Rule:** when neither CLI `--package-name` nor caller `RunnerConfig.package_name`
+  is supplied, `main()` infers `package_name` from
+  `pyproject.toml [tool.hatch.build.targets.wheel].packages[0]`, stripping the
+  leading `src/` prefix. If the pyproject is missing, unreadable, malformed, or
+  has no hatch packages table, `package_name` stays `None` (stubtest/verifytypes
+  skip gracefully, no crash).
+- **Why not a new config table:** the existing `--package-name` CLI flag + caller
+  `RunnerConfig.package_name` already cover overrides. Adding a
+  `[tool.python-setup-lint]` table for this single field would be premature
+  abstraction (≥2 use sites required). The hatch packages table is the canonical
+  source of the package name for any hatch-built project.
+- **Action:** documented inference rule; no baseline entry needed (not a lint finding).
+
+All prod `docstring-in-impl` findings (149) were fixed across T9-1..T9-4 by
+moving usage docstrings to companion `.pyi` stubs (public members) or
+converting private-helper docstrings to implementation `#` comments (per
+CodingRules: `.py` keeps implementation comments only; `.pyi` exposes only
+public members, no `_`-prefix symbols). Verified: `pylint
+--load-plugins=…stub_docstring_checker… --enable=docstring-in-impl` reports
+0 W9700 on edited files. Listed here only to record the category is
+**resolved**, not baselined.

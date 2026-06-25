@@ -10,6 +10,7 @@ declaratively (``mypy.stubtest``, ``pyright verify types``, ``detect-secrets``,
 
 from __future__ import annotations
 
+import json
 import tempfile
 import tomllib
 from pathlib import Path
@@ -23,6 +24,7 @@ from .types import RunnerConfig, ToolSpec
 __all__ = [
     "_build_command",
     "_build_statistics_flags",
+    "_compose_pyright_config",
     "_compose_ruff_config",
     "_config_flag_for",
     "_expand_globs",
@@ -144,7 +146,7 @@ def _load_pyproject_toml(path: Path) -> dict:
     if cached is not None:
         return cached
     try:
-        with open(resolved, "rb") as f:  # noqa: SIM115
+        with open(resolved, "rb") as f:
             data = tomllib.load(f)
     except (OSError, tomllib.TOMLDecodeError) as exc:
         raise SystemExit(
@@ -229,6 +231,109 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
     effective = out_dir / "ruff.toml"
     effective.write_text("\n".join(lines), encoding="utf-8")
     return effective
+
+
+def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
+    """Build an effective pyright config rooted at *cwd*.
+
+    ``pyright --project <shared>`` resolves ``venvPath``/``exclude`` **relative
+    to the directory containing the config file**, not ``cwd``.  When the
+    shipped config lives outside the project root (python-setup ships it at
+    ``config/pyrightconfig.json`` next to the source distribution),
+    ``venvPath: "."`` therefore resolves to the config dir — pyright finds
+    no venv there, falls back to no-virtualenv semantics, and walks the
+    entire tree including ``.venv/lib/...site-packages`` (~10k files,
+    ~17k diagnostics on python-setup itself).
+
+    This helper copies *shared_config* into a tmp dir, rewrites
+    ``venvPath`` to the absolute ``cwd`` and every ``exclude`` entry to an
+    absolute ``cwd``-rooted path, and returns the tmp ``pyrightconfig.json``
+    path so the runner passes it as ``--project``.  Pyright then discovers
+    ``cwd/.venv`` correctly and truncates the walk to the package source.
+
+    No-rewrite fast path: when the config has no ``venvPath`` and no
+    ``exclude`` entries that need rewriting (absent, already-absolute, or
+    rooted at ``cwd``), returns *shared_config* unchanged — no temp file
+    written.  Idempotent across invocations: same tmp dir + file per
+    ``{cwd_name}``; a second call overwrites the prior tmp file in place.
+
+    The shipped ``config/pyrightconfig.json`` is never mutated — only the
+    tmp copy is.  This keeps the shipped config portable across machines
+    while letting the runner resolve paths against the actual project
+    ``cwd`` at run time.
+
+    Args:
+        cwd: Project root pyright is invoked from (resolves ``venvPath`` +
+            ``exclude``).
+        shared_config: Shipped ``pyrightconfig.json`` (the rewriting source).
+
+    Returns:
+        Path to the composed ``pyrightconfig.json`` rooted at *cwd*, or
+        *shared_config* unchanged when no rewriting is needed.
+    """
+    try:
+        raw = shared_config.read_text(encoding="utf-8")
+    except OSError:
+        # Unreadable/missing shipped config — nothing to rewrite; let the
+        # downstream pyright invocation surface the failure (preserves the
+        # prior behaviour).
+        return shared_config
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        # Not JSON (could be a hand-authored config or a symlink to a
+        # pyproject.toml via ``pyright_project_override``).  Defer to the
+        # caller's existing semantics — do not synthesise a broken tmp file.
+        return shared_config
+    if not isinstance(data, dict):
+        return shared_config
+
+    abs_cwd = cwd.resolve()
+
+    def _abs_rel(value: object) -> str | None:
+        """Rewrite a relative exclude/venv path to an absolute cwd-rooted one.
+
+        Returns ``None`` when *value* is not a string or is already an
+        absolute path (whether equal to ``cwd`` or not).
+        """
+        if not isinstance(value, str) or not value:
+            return None
+        p = Path(value)
+        if p.is_absolute():
+            return None
+        return str((abs_cwd / p))
+
+    changed = False
+    venv_path = data.get("venvPath")
+    new_venv_path = _abs_rel(venv_path)
+    if new_venv_path is not None:
+        data["venvPath"] = new_venv_path
+        changed = True
+
+    new_excludes: list[str] = []
+    exclude_entries = data.get("exclude")
+    if isinstance(exclude_entries, list):
+        for entry in exclude_entries:
+            rewritten = _abs_rel(entry)
+            if rewritten is not None:
+                new_excludes.append(rewritten)
+                changed = True
+            else:
+                # Preserve verbatim: non-string, empty, or already absolute.
+                new_excludes.append(entry if isinstance(entry, str) else entry)
+        if changed:
+            data["exclude"] = new_excludes
+
+    if not changed:
+        return shared_config
+
+    out_dir = Path(tempfile.gettempdir()) / f"python_setup_lint_pyright_{abs_cwd.name}"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    composed = out_dir / "pyrightconfig.json"
+    composed.write_text(
+        json.dumps(data, indent=4, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    return composed
 
 
 def _build_command(

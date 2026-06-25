@@ -44,11 +44,11 @@ import pytest
 
 import python_setup_lint.runner as _runner_module
 from python_setup_lint.runner import (
+    _AUTOFIX_ENV_VAR,
     LINT_TOOLS,
     LintResult,
     RunnerConfig,
     ToolSpec,
-    _AUTOFIX_ENV_VAR,
     _apply_autofix_conflict_aware,
     _autofix_target_paths,
     _git_changed_files,
@@ -56,7 +56,6 @@ from python_setup_lint.runner import (
     run_lint,
 )
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
-
 from tests.runner._factories import (
     canned_results_all_tools,
     tmp_config,
@@ -75,7 +74,7 @@ _FIX_TOOL_NAMES: frozenset[str] = frozenset(
 """All built-in tools that carry ``supports_fix=True`` — ``{ruff check,
 rumdl check, ty check}``.  T4 autofix route applies to exactly these."""
 
-assert _FIX_TOOL_NAMES == {"ruff check", "rumdl check", "ty check"}, (
+assert {"ruff check", "rumdl check", "ty check"} == _FIX_TOOL_NAMES, (
     f"Built-in supports_fix set drifted: {_FIX_TOOL_NAMES!r}"
 )
 

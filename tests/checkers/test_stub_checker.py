@@ -29,7 +29,6 @@ from python_setup_lint.checkers.stub_import_contract import (
 )
 from python_setup_lint.checkers.stub_normalizer import AnnotationNormalizer
 from python_setup_lint.testing import _make_tc as _make_tc_factory
-
 from tests.checkers._factories import (
     _IMPORT_CONTRACT_CASES,
     _IMPORT_USAGE_FIELD_CASES,

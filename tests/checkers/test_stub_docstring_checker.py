@@ -13,14 +13,12 @@ import pytest
 
 from python_setup_lint.checkers.stub_docstring_checker import StubDocstringChecker
 from python_setup_lint.testing import _make_tc as _make_tc_factory
-
 from tests.checkers._factories import (
     _DOCSTRING_DETECT_CASES,
     _DOCSTRING_DOES_NOT_DETECT_CASES,
     _DOCSTRING_NO_COMPANION_CASES,
     walk_both_release_for_pyi,
 )
-
 
 _make_tc = lambda: _make_tc_factory(StubDocstringChecker)
 

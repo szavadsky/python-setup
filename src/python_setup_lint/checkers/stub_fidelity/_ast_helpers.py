@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import inspect
+
     from astroid import nodes
 
     from python_setup_lint.checkers.stub_checker import StubChecker

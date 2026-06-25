@@ -25,16 +25,18 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = [
     "PARSE_STRATEGIES",
-    "Record",
     "_BUILTIN_PARSE_STRATEGY_TO_PARSER",
     "_RECORD_PARSERS",
     "_STATISTICS_PARSERS",
+    "Record",
     "_compare_records_key",
     "_parse_detect_secrets_json",
     "_parse_mypy_records",
@@ -60,29 +62,6 @@ __all__ = [
 
 @dataclass(frozen=True)
 class Record:
-    """A single lint violation, order-tolerant + multiset-accurate.
-
-    Invariant (enforced by :func:`_compare_records_key`): records are kept
-    sorted by ``(file, line, col, rule)`` so a baseline diff reduces to a
-    walk-merge over two sorted lists → O(n log n) after sort, O(n) merge.
-    The ``msg`` slot participates in equality so identical
-    ``(file,line,col,rule)`` with a *different* message counts as a real
-    change (regression), but two records with the same key are distinct
-    multiset members (count preserved).  ``file``/``line``/``col`` are
-    ``None`` for tools that emit no position (e.g. pylint ``R0801``/
-    ``R0401`` whose identity is the signature-encoded ``rule``).
-
-    Attributes:
-        file: Source file path (relative to project root) or ``None``.
-        line: 1-indexed source line or ``None``.
-        col: 1-indexed source column or ``None``.
-        rule: Rule / error code.  For pylint R0801/R0401 this is the
-            canonical collapse signature (``R0801:...``, ``R0401:...``)
-            so a duplicate-region reorder is byte-identical pre/post.
-        msg: Human-readable violation message; participates in record
-            equality (multiset-aware: a same-key rewrite of the message
-            still flags as a regression).
-    """
 
     file: str | None
     line: int | None
@@ -92,38 +71,17 @@ class Record:
 
 
 def _compare_records_key(rec: Record) -> tuple[Any, Any, Any, str]:
-    """Stable sort key for the O(n log n) walk-merge.
-
-    ``(file, line, col, rule)``; ``None`` sorts BELOW every real value so
-    ``None``-position records (e.g. R0801 collapse) cluster together.
-    ``None`` is coerced to a sentinel tuple member so heterogeneous
-    comparisons (``None`` vs ``str`` / ``int``) do not raise — Python
-    refuses ``None < "x"`` even though it tolerates ``None == None``.
-    The sentinel is the empty tuple ``()`` which compares less than any
-    non-empty tuple at the same position, so a ``None`` in *file* sorts
-    ahead of a real file string at *file*.
-    """
-    file_k: tuple = () if rec.file is None else (rec.file,)
-    line_k: tuple = () if rec.line is None else (rec.line,)
-    col_k: tuple = () if rec.col is None else (rec.col,)
+    file_k: tuple[Any, ...] = () if rec.file is None else (rec.file,)
+    line_k: tuple[Any, ...] = () if rec.line is None else (rec.line,)
+    col_k: tuple[Any, ...] = () if rec.col is None else (rec.col,)
     return (file_k, line_k, col_k, rec.rule)
 
 
 def _records_unchanged(a: list[Record], b: list[Record]) -> bool:
-    """True iff sorted multiset of *a* equals sorted multiset of *b*.
-
-    Cheap reference equality used by the baseline diff to short-circuit
-    the no-delta case.  Both sides must already be sorted (callers sort
-    once at capture / load boundary).
-    """
     return len(a) == len(b) and all(x == y for x, y in zip(a, b, strict=True))
 
 
 def _parse_ruff_statistics(stdout: str, stderr: str) -> list[tuple[str, int]]:
-    """Parse ruff --statistics output.
-
-    Each non-header line: ``<count>\t<rule>\t``.
-    """
     _ = stderr
     counts: dict[str, int] = {}
     for line in stdout.splitlines():
@@ -138,12 +96,6 @@ def _parse_ruff_statistics(stdout: str, stderr: str) -> list[tuple[str, int]]:
 
 
 def _parse_rumdl_statistics(stdout: str, stderr: str) -> list[tuple[str, int]]:
-    """Parse rumdl check output.
-
-    rumdl has no ``--statistics`` flag.  Its per-violation output format
-    is ``file:line:col: [RULE] message``.  This parser aggregates
-    violations by rule code (e.g. ``MD041``).
-    """
     _ = stderr
     counts: dict[str, int] = {}
     for line in stdout.splitlines():
@@ -159,12 +111,6 @@ def _parse_rumdl_statistics(stdout: str, stderr: str) -> list[tuple[str, int]]:
 
 
 def _parse_pylint_json2(stdout: str, stderr: str) -> list[tuple[str, int]]:
-    """Parse pylint --output-format=json2 output.
-
-    Accepts both the legacy JSON array shape (``[{...}, ...]``) and the
-    modern dict shape (``{"messages": [{...}, ...], "status": ...}``).
-    Each message dict has a ``symbol`` key.
-    """
     _ = stderr
     try:
         raw: Any = json.loads(stdout)
@@ -188,10 +134,6 @@ def _parse_pylint_json2(stdout: str, stderr: str) -> list[tuple[str, int]]:
 
 
 def _parse_pyright_outputjson(stdout: str, stderr: str) -> list[tuple[str, int]]:
-    """Parse pyright --outputjson output.
-
-    JSON object with ``generalDiagnostics`` array, each with a ``rule`` key.
-    """
     _ = stderr
     try:
         data = json.loads(stdout)
@@ -211,12 +153,6 @@ def _parse_pyright_outputjson(stdout: str, stderr: str) -> list[tuple[str, int]]
 
 
 def _parse_pyright_verify_types(stdout: str, stderr: str) -> list[tuple[str, int]]:
-    """Parse pyright --verifytypes JSON output.
-
-    JSON object with ``typeCompleteness`` containing per-symbol results.
-    Reports any ``symbolName`` with completeness < 1.0 as
-    ``verifytypes:incomplete``.
-    """
     _ = stderr
     try:
         data = json.loads(stdout)
@@ -240,11 +176,6 @@ def _parse_pyright_verify_types(stdout: str, stderr: str) -> list[tuple[str, int
 
 
 def _parse_mypy_stderr(stdout: str, stderr: str) -> list[tuple[str, int]]:
-    """Parse mypy stderr for error-code statistics.
-
-    Each error line: ``file:line: error: message [error-code]`` — extracts
-    the ``[error-code]`` from the end of each line.
-    """
     _ = stdout
     counts: dict[str, int] = {}
     for line in stderr.splitlines():
@@ -256,11 +187,6 @@ def _parse_mypy_stderr(stdout: str, stderr: str) -> list[tuple[str, int]]:
 
 
 def _parse_ty_concise(stdout: str, stderr: str) -> list[tuple[str, int]]:
-    """Parse ty --output-format concise output.
-
-    Lines: ``file:line:col: error_code message`` — the error code is the
-    first non-numeric token after the colon-space.
-    """
     _ = stderr
     counts: dict[str, int] = {}
     for line in stdout.splitlines():
@@ -277,10 +203,6 @@ def _parse_ty_concise(stdout: str, stderr: str) -> list[tuple[str, int]]:
 
 
 def _parse_tach_json(stdout: str, stderr: str) -> list[tuple[str, int]]:
-    """Parse tach --output json output.
-
-    JSON object with ``errors`` list.
-    """
     _ = stderr
     try:
         data = json.loads(stdout)
@@ -295,10 +217,6 @@ def _parse_tach_json(stdout: str, stderr: str) -> list[tuple[str, int]]:
 
 
 def _parse_yamllint_parsable(stdout: str, stderr: str) -> list[tuple[str, int]]:
-    """Parse yamllint -f parsable output.
-
-    Format: ``file:line:col:rule_id:message``.
-    """
     _ = stderr
     counts: dict[str, int] = {}
     for line in stdout.splitlines():
@@ -315,11 +233,6 @@ def _parse_yamllint_parsable(stdout: str, stderr: str) -> list[tuple[str, int]]:
 
 
 def _parse_stubtest_stderr(stdout: str, stderr: str) -> list[tuple[str, int]]:
-    """Parse mypy.stubtest stderr for error codes.
-
-    Lines: ``error: <code>`` — extracts the code after ``error: `` and
-    before the first space.
-    """
     _ = stdout
     counts: dict[str, int] = {}
     for line in stderr.splitlines():
@@ -331,11 +244,6 @@ def _parse_stubtest_stderr(stdout: str, stderr: str) -> list[tuple[str, int]]:
 
 
 def _parse_detect_secrets_json(stdout: str, stderr: str) -> list[tuple[str, int]]:
-    """Parse detect-secrets --json output.
-
-    JSON object with ``results`` dict mapping filename to list of secrets,
-    each with a ``type`` key.
-    """
     _ = stderr
     try:
         data = json.loads(stdout)
@@ -371,7 +279,6 @@ def _parse_detect_secrets_json(stdout: str, stderr: str) -> list[tuple[str, int]
 
 
 def _parse_int(text: str) -> int | None:
-    """Parse a leading integer; ``None`` when not an int (no exception)."""
     try:
         return int(text)
     except (TypeError, ValueError):
@@ -401,21 +308,6 @@ _PYLINT_R0401_RE = re.compile(r"Cyclic import \((?P<cycle>[^)]+)\)")
 
 
 def _parse_pylint_records(stdout: str) -> list[Record]:
-    """Parse pylint *text* output (non-JSON mode) into sorted records.
-
-    R0801/R0401 collapse: a duplicate-region or cyclic-import message
-    maps to ONE record whose ``rule`` carries the canonical signature
-    (``R0801:<sorted-spans>``, ``R0401:<cycle>``) and ``file``/``line``/
-    ``col`` are ``None``.  The R0801 header spans multiple lines (a
-    ``Similar lines in N files`` banner followed by one or two
-    ``==file:[l:c]`` span marker lines); this parser scans for spans on
-    the banner line AND any immediately-following span-marker lines,
-    then emits one collapse record per consecutive pair (pylint always
-    emits exactly two spans per similar-region report).  Remaining
-    message lines follow the standard ``path:line:col: CODE: msg
-    (symbol)`` shape; ``rule`` is the symbol when present, the bare
-    code otherwise.
-    """
     records: list[Record] = []
     lines = stdout.splitlines()
     i = 0
@@ -478,10 +370,6 @@ _RUFF_LINE_RE = re.compile(
 
 
 def _parse_ruff_records(stdout: str) -> list[Record]:
-    """Parse ruff *text* output into sorted records (default compact renderer).
-
-    Format: ``path:line:col: CODE msg`` (col optional).
-    """
     records: list[Record] = []
     for line in stdout.splitlines():
         m = _RUFF_LINE_RE.match(line.rstrip())
@@ -508,7 +396,6 @@ _MYPY_LINE_RE = re.compile(
 
 
 def _parse_mypy_records(stdout: str) -> list[Record]:
-    """Parse mypy stdout into sorted records.  Lines without a code are skipped."""
     records: list[Record] = []
     for line in stdout.splitlines():
         m = _MYPY_LINE_RE.match(line.rstrip())
@@ -540,12 +427,6 @@ _TY_CONCISE_RE = re.compile(
 
 
 def _parse_ty_records(stdout: str) -> list[Record]:
-    """Parse ty ``--output-format concise`` AND the default multiline output.
-
-    The concise form is ``path:line:col: code msg`` (one record per line).
-    The default multiline form is ``error[code]: msg`` followed by
-    ``--> path:line:col`` — the arrow carries the position.
-    """
     records: list[Record] = []
     pending_code: str | None = None
     pending_msg: str | None = None
@@ -591,13 +472,6 @@ _YAMLLINT_RE = re.compile(
 
 
 def _parse_yamllint_records(stdout: str) -> list[Record]:
-    """Parse yamllint ``-f parsable`` output into sorted records.
-
-    Format: ``file:line:col:rule_id:message`` (tolerant of an optional
-    space before the rule id).  Message is whitespace-stripped both ends
-    so a literal-space-after-colon in yamllint's renderer does not leak
-    into the stored record.
-    """
     records: list[Record] = []
     for line in stdout.splitlines():
         m = _YAMLLINT_RE.match(line.rstrip())
@@ -622,13 +496,6 @@ _RUMDL_LINE_RE = re.compile(
 
 
 def _parse_rumdl_records(stdout: str) -> list[Record]:
-    """Parse rumdl check text output into sorted records.
-
-    Multiline ``Found N issues in M files (XXXms)`` footer is filtered out.
-    Note: rumdl JSON output is consumed directly in
-    :mod:`python_setup_lint.runner.baseline` (it already emits
-    ``diagnostics``); this parser handles the legacy text path only.
-    """
     records: list[Record] = []
     for line in stdout.splitlines():
         m = _RUMDL_LINE_RE.match(line.rstrip())
@@ -648,14 +515,7 @@ def _parse_rumdl_records(stdout: str) -> list[Record]:
 # Pyright --outputjson: ``{generalDiagnostics:[{file,rule,message,range:{start:{line,col}}}]}``.
 # Pyright lines are 0-indexed; convert to 1-indexed so the sort key is
 # consistent with all the other tools (which are 1-indexed).
-def _parse_pyright_records(data: Any) -> list[Record]:
-    """Parse the pre-loaded pyright ``--outputjson`` dict into sorted records.
-
-    ``data`` is the JSON object (already ``json.loads``-ed by the caller).
-    Returns ``[]`` when the shape is unexpected (defensive — the caller
-    falls back to the legacy set-diff path if the records list is empty
-    AND the source stdout was non-empty).
-    """
+def _parse_pyright_records(data: object) -> list[Record]:
     if not isinstance(data, dict):
         return []
     diags = data.get("generalDiagnostics", [])

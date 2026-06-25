@@ -23,7 +23,6 @@ from python_setup_lint.checkers.stub_fidelity import (
     _compare_return_annotations,
     _extract_param_descriptors,
 )
-
 from tests.checkers._factories import (
     _CALLABLE_FIDELITY_INTEGRATION_CASES,
     _COMPARE_ANNOTATION_CASES,

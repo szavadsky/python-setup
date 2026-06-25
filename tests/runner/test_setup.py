@@ -1,22 +1,44 @@
 """Unit tests for ``python_setup_lint.setup``."""
 from __future__ import annotations
+
 import inspect
 import json
 import os
 import re
 import textwrap
 from pathlib import Path
+
 import pytest
 
 from python_setup_lint._setup_precommit import (
-    _AGENTS_SENTINEL, _AGENTS_SENTINEL_END, _AGENTS_SNIPPET, _PRECOMMIT_TEMPLATE,
-    _atomic_write, _step_agents_snippet, _step_precommit,
+    _AGENTS_SENTINEL,
+    _AGENTS_SENTINEL_END,
+    _AGENTS_SNIPPET,
+    _PRECOMMIT_TEMPLATE,
+    _atomic_write,
+    _step_agents_snippet,
+    _step_precommit,
 )
 from python_setup_lint.setup import (
-    _STATE_FILE, SetupState, _compute_checksums, _discover_checkers, _get_dev_deps,
-    _get_package_dir, _get_pylint_load_plugins, _has_python_setup_dep, _read_pyproject_toml,
-    _run_uv, _save_state, _set_pylint_load_plugins, _step_add_dep, _step_coding_rules,
-    _step_pylint_plugins, _write_pyproject_toml, install, main, update,
+    _STATE_FILE,
+    SetupState,
+    _compute_checksums,
+    _discover_checkers,
+    _get_dev_deps,
+    _get_package_dir,
+    _get_pylint_load_plugins,
+    _has_python_setup_dep,
+    _read_pyproject_toml,
+    _run_uv,
+    _save_state,
+    _set_pylint_load_plugins,
+    _step_add_dep,
+    _step_coding_rules,
+    _step_pylint_plugins,
+    _write_pyproject_toml,
+    install,
+    main,
+    update,
 )
 
 # ── Helper ──────────────────────────────────────────────────────────
@@ -420,8 +442,8 @@ class TestSetPylintLoadPluginsMerge:
 class TestDownstreamIntegration:
     @pytest.mark.slow
     def test_install_then_lint(self) -> None:
-        import subprocess
         import shutil
+        import subprocess
         c = Path.home() / ".tmp" / "t15-downstream"
         if c.exists():
             shutil.rmtree(c)
@@ -452,5 +474,5 @@ class TestDownstreamIntegration:
         assert (c / ".pre-commit-config.yaml").exists()
         assert (c / "CodingRules.md").exists()
         assert "<!-- python-setup:pre-commit -->" in (c / "AGENTS.md").read_text()
-        from python_setup_lint.runner import run_lint, RunnerConfig
+        from python_setup_lint.runner import RunnerConfig, run_lint
         assert run_lint(config=RunnerConfig(cwd=c, tools_override=["tach check", "ruff check", "mypy", "ty check", "pyright check", "pylint"]), no_fail_fast=True) == 0

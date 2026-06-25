@@ -10,14 +10,12 @@ import astroid
 import pytest
 
 from python_setup_lint.checkers.stub_normalizer import AnnotationNormalizer
-
 from tests.checkers._factories import (
     _APPLY_REWRITES_CASES,
     _AST_STRING_CASES,
     _NORMALIZER_INFER_CASES,
     _SPLIT_OUTER_COMMAS_CASES,
 )
-
 
 # ── infer() phase ──────────────────────────────────────────────────
 

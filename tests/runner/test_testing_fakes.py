@@ -21,14 +21,12 @@ from python_setup_lint.testing import (
     fake_run_cmd_factory,
     make_lint_result,
 )
-
 from tests.runner._factories import (
     CALLS_CAPTURED_CASES,
     DISPATCH_CASES,
     RUN_LINT_FAKE_INVARIANT_CASES,
     canned_results_all_tools,
 )
-
 
 # ── make_lint_result ────────────────────────────────────────────────
 # Factory defaults sanity + full-override round-trip; the factory is thin

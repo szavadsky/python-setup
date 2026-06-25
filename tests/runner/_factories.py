@@ -106,7 +106,7 @@ def write_baseline(tmp_path: Path, entries: list[dict[str, Any]], name: str = "b
 
 def diff_baseline_with(
     tmp_path: Path,
-    saved: "dict[str, Any] | list[dict[str, Any]]",
+    saved: dict[str, Any] | list[dict[str, Any]],
     current: Iterable[LintResult],
     *,
     baseline_name: str = "baseline.json",
@@ -155,8 +155,7 @@ def baseline_entry_for_tool(entries: list[dict[str, Any]], tool: str) -> dict[st
 # list of ``pytest.param(...)`` rows so the ``id`` of the failing row is
 # meaningful.
 
-import pytest  # noqa: E402  (collected-after-helper-defs per module layout)
-
+import pytest
 
 # ``_build_command`` rows — one row per (tool spec, kwargs, expected cmd).
 # Previously ~20 separate ``TestBuildCommand`` tests each varied a single
@@ -550,7 +549,7 @@ DIFF_BASELINE_POST_ASSERTS: dict[str, Callable[..., None]] = {
 }
 
 
-def build_current_results(saved_baseline: "dict[str, Any] | list[dict[str, Any]]",
+def build_current_results(saved_baseline: dict[str, Any] | list[dict[str, Any]],
                            current_map: dict[str, Any]) -> list[LintResult]:
     """Construct ``LintResult`` list from a matrix row's compact ``current_map``.
 

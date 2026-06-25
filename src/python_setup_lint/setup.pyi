@@ -10,7 +10,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-
 # ── Constants ───────────────────────────────────────────────────────
 
 _PACKAGE_NAME: str

@@ -1,6 +1,7 @@
 # T8 Violation Manifest (post-T1b/T5 regen)
 
 ## src/ violating files
+
 - src/python_setup_lint/checkers/asyncio_timeout_checker.py  (pylint)
 - src/python_setup_lint/checkers/beartype_checker.py  (pylint)
 - src/python_setup_lint/checkers/no_try_import_checker.py  (pylint)
@@ -33,6 +34,7 @@
 - src/python_setup_lint/testing.pyi  (ruff check)
 
 ## tests/ violating files
+
 - tests/checkers/_factories.py  (mypy, pylint)
 - tests/checkers/test_asyncio_timeout_checker.py  (mypy, ruff check)
 - tests/checkers/test_beartype_checker.py  (mypy, pylint, pyright check, ruff check)
@@ -61,6 +63,7 @@
 - tests/runner/test_testing_fakes.py  (mypy, pylint, pyright check, ruff check, ty check)
 
 ## Per-tool summary
+
 - mypy: 3 src files, 22 test files
 - pylint: 22 src files, 24 test files
 - pyright check: 9 src files, 20 test files

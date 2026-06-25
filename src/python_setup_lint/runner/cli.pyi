@@ -23,9 +23,9 @@ T4 — conflict-tolerant autofix surface:
   :class:`python_setup_lint.runner.types.LintResult`.
 """
 
+import re
 from collections.abc import Callable
 from pathlib import Path
-import re
 
 from .types import LintResult, RunnerConfig, ToolSpec
 

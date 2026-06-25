@@ -21,7 +21,6 @@ from python_setup_lint.checkers.stub_fidelity import (
     _normalize_bases,
 )
 from python_setup_lint.testing import _make_tc as _make_tc_factory
-
 from tests.checkers._factories import (
     _CLASS_FIDELITY_INTEGRATION_CASES,
     _IS_PUBLIC_METHOD_CASES,
