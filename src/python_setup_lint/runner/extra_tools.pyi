@@ -78,7 +78,9 @@ def _compile_regex_count(pattern: str) -> re.Pattern[str]:
             exactly one capture group.
     """
 
-def _parse_regex_count(stdout: str, stderr: str, *, regex: str) -> list[tuple[str, int]]:
+def _parse_regex_count(
+    stdout: str, stderr: str, *, regex: str
+) -> list[tuple[str, int]]:
     """Count distinct capture-group values across all stdout+stderr lines.
 
     The regex MUST have exactly one capture group; the captured text is the

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import beartype
 
@@ -15,11 +15,10 @@ from .parsers import (
     _records_unchanged,
 )
 
+from .types import LintResult
+
 if TYPE_CHECKING:
     from pathlib import Path
-    from typing import Any
-
-    from .types import LintResult
 
 __all__ = ["_capture_baseline", "_compare_sorted", "_diff_baseline"]
 
@@ -52,7 +51,9 @@ def peek_fallback_tools() -> frozenset[str]:
     return frozenset(_FALLBACK_TOOLS)
 
 
-def _compare_sorted(a: list[Record], b: list[Record]) -> tuple[list[Record], list[Record]]:
+def _compare_sorted(
+    a: list[Record], b: list[Record]
+) -> tuple[list[Record], list[Record]]:
     added: list[Record] = []
     removed: list[Record] = []
     i = j = 0
@@ -144,7 +145,7 @@ def _capture_one(r: LintResult) -> dict[str, Any]:
     if r.tool_name in _JSON_DIAGNOSTIC_TOOLS and r.stdout:
         try:
             diag = json.loads(r.stdout)
-        except (json.JSONDecodeError, ValueError):
+        except json.JSONDecodeError, ValueError:
             diag = None
         if isinstance(diag, dict):
             _strip_pyright_volatile(diag)
@@ -155,7 +156,7 @@ def _capture_one(r: LintResult) -> dict[str, Any]:
         # rumdl prefers JSON when its stdout parses cleanly.
         try:
             diag = json.loads(r.stdout)
-        except (json.JSONDecodeError, ValueError):
+        except json.JSONDecodeError, ValueError:
             diag = None
         if isinstance(diag, (dict, list)):
             entry["diagnostics"] = diag
@@ -187,6 +188,7 @@ def _capture_one(r: LintResult) -> dict[str, Any]:
     return entry
 
 
+@beartype.beartype
 def _capture_baseline(results: list[LintResult]) -> list[dict[str, Any]]:
     return [_capture_one(r) for r in results]
 
@@ -309,7 +311,7 @@ def _compare_diagnostics(
     violations: list[str] = []
     try:
         current_diag = json.loads(r.stdout) if r.stdout else None
-    except (json.JSONDecodeError, ValueError):
+    except json.JSONDecodeError, ValueError:
         current_diag = None
 
     # D4: saved has diagnostics (dict) but current stdout is
@@ -360,10 +362,7 @@ def _compare_records_path(
             nonblank_saved_lines = sum(
                 1 for ln in saved_output.splitlines() if ln.strip()
             )
-            partial_parse = (
-                saved_records
-                and len(saved_records) < nonblank_saved_lines
-            )
+            partial_parse = saved_records and len(saved_records) < nonblank_saved_lines
             if not saved_records or partial_parse:
                 legacy_save_fallback = True
                 _FALLBACK_TOOLS.add(r.tool_name)

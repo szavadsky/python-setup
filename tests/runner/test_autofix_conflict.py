@@ -1160,7 +1160,10 @@ class TestAutofixRealGitIntegration:
         _write_file(tmp_path, "f.py", "z = 3\n")
         staged_blob = subprocess.run(
             ["git", "show", "HEAD:f.py"],
-            cwd=tmp_path, capture_output=True, text=True, check=True,
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            check=True,
         ).stdout
         fake = fake_run_cmd_factory(self._make_canned())
         _apply_autofix_conflict_aware(
@@ -1175,7 +1178,10 @@ class TestAutofixRealGitIntegration:
         # The staged blob (HEAD:f.py) is untouched — the fix tool never ran.
         post_staged_blob = subprocess.run(
             ["git", "show", "HEAD:f.py"],
-            cwd=tmp_path, capture_output=True, text=True, check=True,
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            check=True,
         ).stdout
         assert post_staged_blob == staged_blob, (
             f"staged blob changed: was {staged_blob!r}, now {post_staged_blob!r}"
@@ -1248,9 +1254,7 @@ class TestAutofixRealGitIntegration:
         assert "autofix reverted src/main.py: E999 after fix" in captured.err
         # (a) The fix pass modified the file.
         after_fix = wrapped.snapshots_after_label("ruff check")
-        assert after_fix == post_fix, (
-            f"fix pass did not modify file: got {after_fix!r}"
-        )
+        assert after_fix == post_fix, f"fix pass did not modify file: got {after_fix!r}"
         # (b) Final on-disk state equals original — revert worked.
         assert target.read_text() == original
 

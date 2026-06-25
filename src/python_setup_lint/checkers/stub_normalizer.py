@@ -5,6 +5,7 @@ Phase 2: AST-string walking + rewrite rules — fallback for Uninferable (~6%).
 """
 
 from __future__ import annotations
+from beartype import beartype
 
 import re
 
@@ -31,6 +32,7 @@ class AnnotationNormalizer:
     """
 
     @staticmethod
+    @beartype
     def normalize(ann_node: nodes.NodeNG | None) -> str | None:
         """Normalize *ann_node* to a comparable string, or None on failure."""
         if ann_node is None:

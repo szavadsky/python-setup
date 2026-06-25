@@ -17,6 +17,7 @@ import json
 from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+import pytest
 
 from python_setup_lint.runner import (
     TOOLS,
@@ -54,8 +55,10 @@ def canned_results_all_tools(
     # Late import to avoid any conftest-collection ordering surprise.
     from python_setup_lint.testing import make_lint_result
 
-    base = {name: make_lint_result(tool_name=name, exit_code=exit_code, stdout=stdout)
-            for name in ALL_TOOL_NAMES}
+    base = {
+        name: make_lint_result(tool_name=name, exit_code=exit_code, stdout=stdout)
+        for name in ALL_TOOL_NAMES
+    }
     if overrides:
         base.update(overrides)
     return base
@@ -83,21 +86,27 @@ def install_fake_runner(
     cfg = RunnerConfig(
         cwd=Path.cwd(),
         package_name=package_name,
-        default_py_dirs=default_py_dirs if default_py_dirs is not None else ["src", "scripts", "tests"],
+        default_py_dirs=default_py_dirs
+        if default_py_dirs is not None
+        else ["src", "scripts", "tests"],
     )
     return fake, cfg
 
 
 def tmp_config(tmp_path: Path, **overrides: Any) -> RunnerConfig:
     """Build a default test ``RunnerConfig`` rooted at *tmp_path*; *overrides* win."""
-    defaults: dict[str, Any] = dict(
-        cwd=tmp_path, package_name="python_setup_lint", default_py_dirs=["src", "scripts", "tests"],
-    )
+    defaults: dict[str, Any] = {
+        "cwd": tmp_path,
+        "package_name": "python_setup_lint",
+        "default_py_dirs": ["src", "scripts", "tests"],
+    }
     defaults.update(overrides)
     return RunnerConfig(**defaults)
 
 
-def write_baseline(tmp_path: Path, entries: list[dict[str, Any]], name: str = "baseline.json") -> Path:
+def write_baseline(
+    tmp_path: Path, entries: list[dict[str, Any]], name: str = "baseline.json"
+) -> Path:
     """Write a JSON baseline file under *tmp_path* and return its path."""
     path = tmp_path / name
     path.write_text(json.dumps(entries))
@@ -155,71 +164,130 @@ def baseline_entry_for_tool(entries: list[dict[str, Any]], tool: str) -> dict[st
 # list of ``pytest.param(...)`` rows so the ``id`` of the failing row is
 # meaningful.
 
-import pytest
 
 # ``_build_command`` rows — one row per (tool spec, kwargs, expected cmd).
 # Previously ~20 separate ``TestBuildCommand`` tests each varied a single
 # flag. The rows below cover the exact same surface (path/no-path, fix per
 # tool, exclude per tool, override-default-paths, no-support flags).
-BUILD_COMMAND_CASES: list[pytest.Param] = [
+BUILD_COMMAND_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(
-        dict(name="test", command=["tool", "check"], supports_path=True, default_paths=["src/"]),
-        {}, ["tool", "check", "src/"], id="default_no_flags",
+        {
+            "name": "test",
+            "command": ["tool", "check"],
+            "supports_path": True,
+            "default_paths": ["src/"],
+        },
+        {},
+        ["tool", "check", "src/"],
+        id="default_no_flags",
     ),
     pytest.param(
-        dict(name="test", command=["tool", "check"]), {}, ["tool", "check"], id="no_default_paths",
+        {"name": "test", "command": ["tool", "check"]},
+        {},
+        ["tool", "check"],
+        id="no_default_paths",
     ),
     pytest.param(
-        dict(name="test", command=["tool"], supports_path=False),
-        dict(path="src/"), ["tool"], id="path_no_support",
+        {"name": "test", "command": ["tool"], "supports_path": False},
+        {"path": "src/"},
+        ["tool"],
+        id="path_no_support",
     ),
     pytest.param(
-        dict(name="test", command=["tool"], supports_path=True),
-        dict(path="src/python_setup_lint"), ["tool", "src/python_setup_lint"], id="path_with_support",
+        {"name": "test", "command": ["tool"], "supports_path": True},
+        {"path": "src/python_setup_lint"},
+        ["tool", "src/python_setup_lint"],
+        id="path_with_support",
     ),
     pytest.param(
-        dict(name="test", command=["tool"], supports_path=True, default_paths=["."]),
-        dict(path="src/"), ["tool", "src/"], id="path_overrides_default",
+        {
+            "name": "test",
+            "command": ["tool"],
+            "supports_path": True,
+            "default_paths": ["."],
+        },
+        {"path": "src/"},
+        ["tool", "src/"],
+        id="path_overrides_default",
     ),
     pytest.param(
-        dict(name="test", command=["tool"], supports_fix=False),
-        dict(fix=True), ["tool"], id="fix_no_support",
+        {"name": "test", "command": ["tool"], "supports_fix": False},
+        {"fix": True},
+        ["tool"],
+        id="fix_no_support",
     ),
     pytest.param(
-        dict(name="ruff check", command=["ruff", "check"], supports_fix=True,
-             fix_flags=("--fix", "--exit-non-zero-on-fix")),
-        dict(fix=True), ["ruff", "check", "--fix", "--exit-non-zero-on-fix"], id="fix_ruff",
+        {
+            "name": "ruff check",
+            "command": ["ruff", "check"],
+            "supports_fix": True,
+            "fix_flags": ("--fix", "--exit-non-zero-on-fix"),
+        },
+        {"fix": True},
+        ["ruff", "check", "--fix", "--exit-non-zero-on-fix"],
+        id="fix_ruff",
     ),
     pytest.param(
-        dict(name="rumdl check", command=["rumdl", "check"], supports_fix=True, fix_flags=("--fix",)),
-        dict(fix=True), ["rumdl", "check", "--fix"], id="fix_rumdl",
+        {
+            "name": "rumdl check",
+            "command": ["rumdl", "check"],
+            "supports_fix": True,
+            "fix_flags": ("--fix",),
+        },
+        {"fix": True},
+        ["rumdl", "check", "--fix"],
+        id="fix_rumdl",
     ),
     pytest.param(
-        dict(name="ty check", command=["ty", "check"], supports_fix=True, fix_flags=("--fix",)),
-        dict(fix=True), ["ty", "check", "--fix"], id="fix_ty",
+        {
+            "name": "ty check",
+            "command": ["ty", "check"],
+            "supports_fix": True,
+            "fix_flags": ("--fix",),
+        },
+        {"fix": True},
+        ["ty", "check", "--fix"],
+        id="fix_ty",
     ),
     pytest.param(
-        dict(name="test", command=["tool"], supports_exclude=False),
-        dict(exclude="tests/"), ["tool"], id="exclude_no_support",
+        {"name": "test", "command": ["tool"], "supports_exclude": False},
+        {"exclude": "tests/"},
+        ["tool"],
+        id="exclude_no_support",
     ),
     pytest.param(
-        dict(name="tach check", command=["tach", "check"], supports_exclude=True, exclude_flag="-e"),
-        dict(exclude="tests/"), ["tach", "check", "-e", "tests/"], id="exclude_tach",
+        {
+            "name": "tach check",
+            "command": ["tach", "check"],
+            "supports_exclude": True,
+            "exclude_flag": "-e",
+        },
+        {"exclude": "tests/"},
+        ["tach", "check", "-e", "tests/"],
+        id="exclude_tach",
     ),
     pytest.param(
-        dict(name="ruff check", command=["ruff", "check"], supports_exclude=True),
-        dict(exclude="tests/"), ["ruff", "check", "--exclude", "tests/"], id="exclude_other",
+        {"name": "ruff check", "command": ["ruff", "check"], "supports_exclude": True},
+        {"exclude": "tests/"},
+        ["ruff", "check", "--exclude", "tests/"],
+        id="exclude_other",
     ),
     pytest.param(
-        dict(name="ruff check", command=["ruff", "check"], supports_path=True, supports_exclude=True),
-        dict(path="src/", exclude="tests/"),
-        ["ruff", "check", "src/", "--exclude", "tests/"], id="exclude_with_path",
+        {
+            "name": "ruff check",
+            "command": ["ruff", "check"],
+            "supports_path": True,
+            "supports_exclude": True,
+        },
+        {"path": "src/", "exclude": "tests/"},
+        ["ruff", "check", "src/", "--exclude", "tests/"],
+        id="exclude_with_path",
     ),
 ]
 
 
 # ``_build_statistics_flags`` rows — one row per (tool name, expected flag list).
-STATISTICS_FLAG_CASES: list[pytest.Param] = [
+STATISTICS_FLAG_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param("ruff check", ["--statistics"], id="ruff_native"),
     pytest.param("rumdl check", ["--statistics"], id="rumdl_native"),
     pytest.param("pylint", ["--output-format=json2"], id="pylint_json2"),
@@ -235,31 +303,75 @@ STATISTICS_FLAG_CASES: list[pytest.Param] = [
 # test. All share the same ``fake installed + main(args)`` scaffolding; the
 # only thing that varies is the CLI args list. The assertion is just that
 # the call didn't raise (returns int) — i.e. the flag parses.
-MAIN_ARGPARSE_CASES: list[pytest.Param] = [
+MAIN_ARGPARSE_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(["--path", "src/python_setup_lint/runner.py"], id="main_path"),
     pytest.param(["--fix", "--path", "src/python_setup_lint/runner.py"], id="main_fix"),
-    pytest.param(["--no-fail-fast", "--path", "src/python_setup_lint/runner.py"], id="main_no_fail_fast"),
-    pytest.param(["--exclude", "tests/", "--path", "src/python_setup_lint/runner.py"], id="main_exclude"),
-    pytest.param(["--package-name", "python_setup_lint", "--path", "src/python_setup_lint/runner.py"],
-                 id="main_package_name"),
-    pytest.param(["--tools", "ruff check,mypy", "--path", "src/python_setup_lint/runner.py"], id="main_tools"),
-    pytest.param(["--default-py-dirs", "src,tests", "--path", "src/python_setup_lint/runner.py"],
-                 id="main_default_py_dirs"),
+    pytest.param(
+        ["--no-fail-fast", "--path", "src/python_setup_lint/runner.py"],
+        id="main_no_fail_fast",
+    ),
+    pytest.param(
+        ["--exclude", "tests/", "--path", "src/python_setup_lint/runner.py"],
+        id="main_exclude",
+    ),
+    pytest.param(
+        [
+            "--package-name",
+            "python_setup_lint",
+            "--path",
+            "src/python_setup_lint/runner.py",
+        ],
+        id="main_package_name",
+    ),
+    pytest.param(
+        ["--tools", "ruff check,mypy", "--path", "src/python_setup_lint/runner.py"],
+        id="main_tools",
+    ),
+    pytest.param(
+        ["--default-py-dirs", "src,tests", "--path", "src/python_setup_lint/runner.py"],
+        id="main_default_py_dirs",
+    ),
     pytest.param([], id="main_no_args_backward_compat"),
 ]
 
 
 # ``main([... --statistics ...])`` flag-acceptance rows for T7 group/sort.
-MAIN_GROUP_SORT_CASES: list[pytest.Param] = [
-    pytest.param(["--statistics", "--group", "tool", "--path", "src/python_setup_lint/runner.py"],
-                 id="group_tool"),
-    pytest.param(["--statistics", "--group", "rule", "--path", "src/python_setup_lint/runner.py"],
-                 id="group_rule"),
-    pytest.param(["--statistics", "--sort-by-rule", "--path", "src/python_setup_lint/runner.py"],
-                 id="sort_by_rule"),
+MAIN_GROUP_SORT_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(
-        ["--statistics", "--group", "rule", "--sort-by-rule", "--path", "src/python_setup_lint/runner.py"],
-        id="group_and_sort_by_rule"),
+        [
+            "--statistics",
+            "--group",
+            "tool",
+            "--path",
+            "src/python_setup_lint/runner.py",
+        ],
+        id="group_tool",
+    ),
+    pytest.param(
+        [
+            "--statistics",
+            "--group",
+            "rule",
+            "--path",
+            "src/python_setup_lint/runner.py",
+        ],
+        id="group_rule",
+    ),
+    pytest.param(
+        ["--statistics", "--sort-by-rule", "--path", "src/python_setup_lint/runner.py"],
+        id="sort_by_rule",
+    ),
+    pytest.param(
+        [
+            "--statistics",
+            "--group",
+            "rule",
+            "--sort-by-rule",
+            "--path",
+            "src/python_setup_lint/runner.py",
+        ],
+        id="group_and_sort_by_rule",
+    ),
 ]
 
 
@@ -271,84 +383,167 @@ MAIN_GROUP_SORT_CASES: list[pytest.Param] = [
 # The cases use the parsers' direct call signature (parser(stdout, stderr)).
 # They are dispatched from the test body via ``_STATISTICS_PARSERS[tool]``.
 ParserRow = tuple[str, str, str, list[tuple[str, int]]]
-PARSER_STATISTICS_CASES: list[pytest.Param] = [
+PARSER_STATISTICS_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     # ruff
-    pytest.param("ruff check",
+    pytest.param(
+        "ruff check",
         "Count\tCode\tDescription\n------\t----\t-----------\n3\tF401\tmodule imported but unused\n1\tE501\tline too long\n",
-        "", [("F401", 3), ("E501", 1)], id="ruff_typical"),
+        "",
+        [("F401", 3), ("E501", 1)],
+        id="ruff_typical",
+    ),
     pytest.param("ruff check", "", "", [], id="ruff_empty"),
     pytest.param("ruff check", "No violations found\n", "", [], id="ruff_no_header"),
-    pytest.param("ruff check",
+    pytest.param(
+        "ruff check",
         "Count\tCode\tDescription\n------\t----\t-----------\n2\tF401\tsomething\n2\tF401\tsomething else\n",
-        "", [("F401", 4)], id="ruff_multiline_grouped"),
+        "",
+        [("F401", 4)],
+        id="ruff_multiline_grouped",
+    ),
     # rumdl (per-violation format — no --statistics flag)
-    pytest.param("rumdl check",
+    pytest.param(
+        "rumdl check",
         "f.md:1:1: [MD041] First line in file should be a level 1 heading\nf.md:3:1: [MD012] Multiple consecutive blank lines\n",
-        "", [("MD041", 1), ("MD012", 1)], id="rumdl_typical"),
-    pytest.param("rumdl check",
+        "",
+        [("MD041", 1), ("MD012", 1)],
+        id="rumdl_typical",
+    ),
+    pytest.param(
+        "rumdl check",
         "f.md:1:1: [MD041] First line\nf.md:2:1: [MD041] Another\n",
-        "", [("MD041", 2)], id="rumdl_multiple_same_rule"),
+        "",
+        [("MD041", 2)],
+        id="rumdl_multiple_same_rule",
+    ),
     pytest.param("rumdl check", "", "", [], id="rumdl_empty"),
-    pytest.param("rumdl check", "Success: No issues found in 1 file (12ms)\n", "", [], id="rumdl_no_issues"),
+    pytest.param(
+        "rumdl check",
+        "Success: No issues found in 1 file (12ms)\n",
+        "",
+        [],
+        id="rumdl_no_issues",
+    ),
     # pylint json2
-    pytest.param("pylint",
+    pytest.param(
+        "pylint",
         '[{"symbol":"unused-import"},{"symbol":"unused-import"},{"symbol":"too-complex"}]',
-        "", [("unused-import", 2), ("too-complex", 1)], id="pylint_typical"),
+        "",
+        [("unused-import", 2), ("too-complex", 1)],
+        id="pylint_typical",
+    ),
     pytest.param("pylint", "[]", "", [], id="pylint_empty_array"),
     pytest.param("pylint", "not json", "", [], id="pylint_invalid_json"),
     pytest.param("pylint", '{"key":"val"}', "", [], id="pylint_non_list"),
-    pytest.param("pylint",
+    pytest.param(
+        "pylint",
         '{"messages":[{"symbol":"unused-import"},{"symbol":"too-complex"}],"status":1}',
-        "", [("unused-import", 1), ("too-complex", 1)], id="pylint_json2_dict_shape"),
-    pytest.param("pylint",
-        '{"messages":[],"status":0}',
-        "", [], id="pylint_json2_dict_empty"),
-    pytest.param("pylint",
+        "",
+        [("unused-import", 1), ("too-complex", 1)],
+        id="pylint_json2_dict_shape",
+    ),
+    pytest.param(
+        "pylint", '{"messages":[],"status":0}', "", [], id="pylint_json2_dict_empty"
+    ),
+    pytest.param(
+        "pylint",
         '{"messages":[{"symbol":"unused-import"},{"symbol":"unused-import"}],"status":1}',
-        "", [("unused-import", 2)], id="pylint_json2_dict_duplicates"),
+        "",
+        [("unused-import", 2)],
+        id="pylint_json2_dict_duplicates",
+    ),
     # pyright outputjson
-    pytest.param("pyright check",
+    pytest.param(
+        "pyright check",
         '{"generalDiagnostics":[{"rule":"reportGeneralTypeIssues"},{"rule":"reportGeneralTypeIssues"},{"rule":"reportOptionalMemberAccess"}]}',
-        "", [("reportGeneralTypeIssues", 2), ("reportOptionalMemberAccess", 1)], id="pyright_typical"),
-    pytest.param("pyright check", '{"generalDiagnostics":[]}', "", [], id="pyright_empty_diagnostics"),
+        "",
+        [("reportGeneralTypeIssues", 2), ("reportOptionalMemberAccess", 1)],
+        id="pyright_typical",
+    ),
+    pytest.param(
+        "pyright check",
+        '{"generalDiagnostics":[]}',
+        "",
+        [],
+        id="pyright_empty_diagnostics",
+    ),
     pytest.param("pyright check", '{"summary":{}}', "", [], id="pyright_missing_key"),
     pytest.param("pyright check", "bad", "", [], id="pyright_invalid_json"),
     # pyright verify types
-    pytest.param("pyright verify types",
+    pytest.param(
+        "pyright verify types",
         '{"typeCompleteness":{"symbols":[{"symbolName":"Foo","completeness":0.5},{"symbolName":"Bar","completeness":1.0}]}}',
-        "", [("verifytypes:incomplete", 1)], id="verifytypes_with_incomplete"),
-    pytest.param("pyright verify types",
+        "",
+        [("verifytypes:incomplete", 1)],
+        id="verifytypes_with_incomplete",
+    ),
+    pytest.param(
+        "pyright verify types",
         '{"typeCompleteness":{"symbols":[{"symbolName":"Foo","completeness":1.0}]}}',
-        "", [], id="verifytypes_all_complete"),
+        "",
+        [],
+        id="verifytypes_all_complete",
+    ),
     pytest.param("pyright verify types", "bad", "", [], id="verifytypes_invalid_json"),
-    pytest.param("pyright verify types", "{}", "", [], id="verifytypes_missing_type_completeness"),
+    pytest.param(
+        "pyright verify types", "{}", "", [], id="verifytypes_missing_type_completeness"
+    ),
     # mypy stderr
-    pytest.param("mypy", "",
+    pytest.param(
+        "mypy",
+        "",
         "file.py:1: error: Unused import [no-unused-import]\nfile.py:2: error: Not callable [operator]\n",
-        [("no-unused-import", 1), ("operator", 1)], id="mypy_typical"),
+        [("no-unused-import", 1), ("operator", 1)],
+        id="mypy_typical",
+    ),
     pytest.param("mypy", "", "", [], id="mypy_empty"),
     # ty concise
-    pytest.param("ty check", "file.py:1:1: X001 some message\nfile.py:2:2: X002 another\n",
-        "", [("X001", 1), ("X002", 1)], id="ty_typical"),
+    pytest.param(
+        "ty check",
+        "file.py:1:1: X001 some message\nfile.py:2:2: X002 another\n",
+        "",
+        [("X001", 1), ("X002", 1)],
+        id="ty_typical",
+    ),
     pytest.param("ty check", "", "", [], id="ty_empty"),
     # tach json
-    pytest.param("tach check", '{"errors":[{"message":"bad import"}]}',
-        "", [("tach:error", 1)], id="tach_with_errors"),
+    pytest.param(
+        "tach check",
+        '{"errors":[{"message":"bad import"}]}',
+        "",
+        [("tach:error", 1)],
+        id="tach_with_errors",
+    ),
     pytest.param("tach check", '{"errors":[]}', "", [], id="tach_no_errors"),
     pytest.param("tach check", "bad", "", [], id="tach_invalid_json"),
     # yamllint parsable
-    pytest.param("yamllint", "f.yaml:1:1:trailing-spaces: message 1\nf.yaml:2:2:trailing-spaces: message 2\n",
-        "", [("trailing-spaces", 2)], id="yamllint_typical"),
+    pytest.param(
+        "yamllint",
+        "f.yaml:1:1:trailing-spaces: message 1\nf.yaml:2:2:trailing-spaces: message 2\n",
+        "",
+        [("trailing-spaces", 2)],
+        id="yamllint_typical",
+    ),
     pytest.param("yamllint", "", "", [], id="yamllint_empty"),
     # stubtest stderr
-    pytest.param("mypy.stubtest", "",
+    pytest.param(
+        "mypy.stubtest",
+        "",
         "error: X001 first error\nerror: X001 second error\nerror: X002 third error\n",
-        [("X001", 2), ("X002", 1)], id="stubtest_typical"),
-    pytest.param("mypy.stubtest", "info: something\n", "", [], id="stubtest_no_error_prefix"),
+        [("X001", 2), ("X002", 1)],
+        id="stubtest_typical",
+    ),
+    pytest.param(
+        "mypy.stubtest", "info: something\n", "", [], id="stubtest_no_error_prefix"
+    ),
     # detect-secrets json
-    pytest.param("detect-secrets",
+    pytest.param(
+        "detect-secrets",
         '{"results":{"file.py":[{"type":"Secret A"},{"type":"Secret A"},{"type":"Secret B"}]}}',
-        "", [("Secret A", 2), ("Secret B", 1)], id="detect_secrets_typical"),
+        "",
+        [("Secret A", 2), ("Secret B", 1)],
+        id="detect_secrets_typical",
+    ),
     pytest.param("detect-secrets", '{"results":{}}', "", [], id="detect_secrets_empty"),
     pytest.param("detect-secrets", "bad", "", [], id="detect_secrets_invalid_json"),
 ]
@@ -366,33 +561,46 @@ PARSER_STATISTICS_CASES: list[pytest.Param] = [
 # ``post_assert_id``: selects a small post-diff assertion closure over the
 #                reloaded baseline JSON. ``"no_post"`` ⇒ no extra assertion.
 
-DIFF_BASELINE_CASES: list[pytest.Param] = [
+DIFF_BASELINE_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     # ── pure shrinkage auto-records silently ───────────────────
     pytest.param(
-        {"tool": "ruff check", "exit_code": 0,
-         "output": "src/a.py:1: error A\nsrc/b.py:2: error B"},
+        {
+            "tool": "ruff check",
+            "exit_code": 0,
+            "output": "src/a.py:1: error A\nsrc/b.py:2: error B",
+        },
         {"ruff check": "src/a.py:1: error A", "mypy": "src/c.py:3: error C"},
-        "no_violations", "ruff_shrunk_b_removed",
+        "no_violations",
+        "ruff_shrunk_b_removed",
         id="pure_shrinkage_auto_records",
     ),
     pytest.param(
         {"tool": "ruff check", "exit_code": 0, "output": "src/a.py:1: error A"},
         {"ruff check": "src/a.py:1: error A\nsrc/b.py:2: error B"},
-        "output changed", "no_post",  # baseline UNCHANGED for additions
+        "output changed",
+        "no_post",  # baseline UNCHANGED for additions
         id="pure_addition_flags_regression",
     ),
     pytest.param(
-        {"tool": "ruff check", "exit_code": 0,
-         "output": "src/a.py:1: error A\nsrc/b.py:2: error B"},
+        {
+            "tool": "ruff check",
+            "exit_code": 0,
+            "output": "src/a.py:1: error A\nsrc/b.py:2: error B",
+        },
         {"ruff check": "src/a.py:1: error A\nsrc/c.py:3: error C"},
-        "output changed", "b_removed_c_not_added",  # mixed: shrink records, addition flags
+        "output changed",
+        "b_removed_c_not_added",  # mixed: shrink records, addition flags
         id="mixed_shrinkage_and_addition",
     ),
     pytest.param(
-        {"tool": "pylint", "exit_code": 0,
-         "output": "1 src/a.py:1:1: W0611: unused-import\n1 src/b.py:2:2: C0114: missing-module-docstring"},
+        {
+            "tool": "pylint",
+            "exit_code": 0,
+            "output": "1 src/a.py:1:1: W0611: unused-import\n1 src/b.py:2:2: C0114: missing-module-docstring",
+        },
         {"pylint": "src/a.py:1:1: W0611: unused-import"},
-        "no_violations", "c0114_removed",
+        "no_violations",
+        "c0114_removed",
         id="pylint_shrinkage_auto_records",
     ),
     # The exit_code_shrink case (saved exit_code=1 output non-empty →
@@ -402,69 +610,101 @@ DIFF_BASELINE_CASES: list[pytest.Param] = [
     pytest.param(
         {"tool": "ruff check", "exit_code": 0, "output": "ok"},
         {"ruff check": "ok"},  # mypy in baseline but absent from current
-        "no_violations", "mypy_removed",
+        "no_violations",
+        "mypy_removed",
         id="tool_removed_shrinkage_auto_records",
     ),
     pytest.param(
-        {"tool": "pyright check", "exit_code": 0,
-         "diagnostics": {"summary": {"errorCount": 2, "warningCount": 0}}},
+        {
+            "tool": "pyright check",
+            "exit_code": 0,
+            "diagnostics": {"summary": {"errorCount": 2, "warningCount": 0}},
+        },
         {"pyright check": {"summary": {"errorCount": 1, "warningCount": 0}}},
-        "no_violations", "diag_count_1",
+        "no_violations",
+        "diag_count_1",
         id="diagnostics_shrinkage_auto_records",
     ),
     pytest.param(
-        {"tool": "pylint", "exit_code": 0, "output": "1 src/a.py:1:1: W0611: unused-import"},
-        {"pylint": "src/a.py:1:1: W0611: unused-import\nsrc/b.py:2:2: C0114: missing-module-docstring"},
-        "output changed", "no_post",
+        {
+            "tool": "pylint",
+            "exit_code": 0,
+            "output": "1 src/a.py:1:1: W0611: unused-import",
+        },
+        {
+            "pylint": "src/a.py:1:1: W0611: unused-import\nsrc/b.py:2:2: C0114: missing-module-docstring"
+        },
+        "output changed",
+        "no_post",
         id="pylint_addition_flags_regression",
     ),
     pytest.param(
-        {"tool": "rumdl check", "exit_code": 0,
-         "output": "src/a.md:1 MD012 (10ms)\nsrc/b.md:3 MD013 (20ms)"},
+        {
+            "tool": "rumdl check",
+            "exit_code": 0,
+            "output": "src/a.md:1 MD012 (10ms)\nsrc/b.md:3 MD013 (20ms)",
+        },
         {"rumdl check": "src/a.md:1 MD012 (5ms)"},
-        "no_violations", "md013_removed",
+        "no_violations",
+        "md013_removed",
         id="rumdl_shrinkage_auto_records_ignoring_timing",
     ),
     pytest.param(
         {"tool": "mypy", "exit_code": 0, "output": "src/a.py:1: error"},
         {"mypy": ""},
-        "no_violations", "output_emptied",
+        "no_violations",
+        "output_emptied",
         id="output_to_empty_shrinkage",
     ),
     # ── D6/D7 invariants ─────────────────────────────────────
     pytest.param(
-        {"tool": "mypy", "exit_code": 0, "output": "src/a.py:1: error A  \nsrc/b.py:2: error B  "},
+        {
+            "tool": "mypy",
+            "exit_code": 0,
+            "output": "src/a.py:1: error A  \nsrc/b.py:2: error B  ",
+        },
         {"mypy": "src/a.py:1: error A\nsrc/b.py:2: error B"},
-        "no_violations", "no_post",  # D6: trailing whitespace only → not flagged
+        "no_violations",
+        "no_post",  # D6: trailing whitespace only → not flagged
         id="whitespace_normalization_d6",
     ),
     pytest.param(
         {"tool": "mypy", "exit_code": 0, "output": "src/a.py:1: error A"},
         {"mypy": "src/a.py:1: error A\nsrc/a.py:1: error A\nsrc/a.py:1: error A"},
-        "no_violations", "no_post",  # D7: set semantics — count increase not flagged
+        "no_violations",
+        "no_post",  # D7: set semantics — count increase not flagged
         id="duplicate_line_count_set_semantics_d7",
     ),
     # ── ruff ordering-insensitivity (line-sort baseline) ─────
     pytest.param(
-        {"tool": "ruff check", "exit_code": 0,
-         "output": "src/a.py:1: error A\nsrc/b.py:2: error B"},
+        {
+            "tool": "ruff check",
+            "exit_code": 0,
+            "output": "src/a.py:1: error A\nsrc/b.py:2: error B",
+        },
         {"ruff check": "src/b.py:2: error B\nsrc/a.py:1: error A"},
-        "no_violations", "no_post",
+        "no_violations",
+        "no_post",
         id="ruff_ordering_insensitive",
     ),
     # ── diagnostics-loss regression (D4) ──────────────────────
     pytest.param(
-        {"tool": "pyright check", "exit_code": 0,
-         "diagnostics": {"summary": {"errorCount": 1, "warningCount": 0}}},
+        {
+            "tool": "pyright check",
+            "exit_code": 0,
+            "diagnostics": {"summary": {"errorCount": 1, "warningCount": 0}},
+        },
         {"pyright check": "non-JSON"},  # current stdout is plain text, not JSON
-        "diagnostics lost", "diag_preserved",
+        "diagnostics lost",
+        "diag_preserved",
         id="diagnostics_lost_regression_d4",
     ),
     # ── duplicate tool in baseline (D3) ──────────────────────
     pytest.param(
         {"tool": "ruff check", "exit_code": 0, "output": "src/a.py:1: error A"},
         {"ruff check": "src/a.py:1: error A"},
-        "no_violations", "all_mypy_dupes_removed",
+        "no_violations",
+        "all_mypy_dupes_removed",
         id="duplicate_tool_in_baseline_d3",
     ),
 ]
@@ -475,12 +715,15 @@ DIFF_BASELINE_CASES: list[pytest.Param] = [
 # Keys are ``post_assert_id`` strings; values are callables
 # ``reloaded -\u003e None`` raising AssertionError on failure.
 
+
 def _entries_for_tool(entries: list[dict[str, Any]], tool: str) -> list[dict[str, Any]]:
     return [e for e in entries if e["tool"] == tool]
 
 
 def _assert_removed(entries: list[dict[str, Any]], tool: str) -> None:
-    assert not _entries_for_tool(entries, tool), f"{tool!r} should be removed from {entries!r}"
+    assert not _entries_for_tool(entries, tool), (
+        f"{tool!r} should be removed from {entries!r}"
+    )
 
 
 def _no_op(_reloaded: list) -> None:
@@ -516,7 +759,9 @@ def _diag_count_1(reloaded: list) -> None:
 
 
 def _md013_removed(reloaded: list) -> None:
-    assert "MD013" not in baseline_entry_for_tool(reloaded, "rumdl check").get("output", "")
+    assert "MD013" not in baseline_entry_for_tool(reloaded, "rumdl check").get(
+        "output", ""
+    )
 
 
 def _output_emptied(reloaded: list) -> None:
@@ -549,8 +794,9 @@ DIFF_BASELINE_POST_ASSERTS: dict[str, Callable[..., None]] = {
 }
 
 
-def build_current_results(saved_baseline: dict[str, Any] | list[dict[str, Any]],
-                           current_map: dict[str, Any]) -> list[LintResult]:
+def build_current_results(
+    saved_baseline: dict[str, Any] | list[dict[str, Any]], current_map: dict[str, Any]
+) -> list[LintResult]:
     """Construct ``LintResult`` list from a matrix row's compact ``current_map``.
 
     The matrix rows carry the current state as a ``{tool_name: stdout_or_diag}``
@@ -568,12 +814,13 @@ def build_current_results(saved_baseline: dict[str, Any] | list[dict[str, Any]],
     construct the ``LintResult`` list directly (e.g. the ``exit_code_shrink``
     rows test an exit-code-1→0 transition).
     """
-    from python_setup_lint.testing import make_lint_result  # local import per original layout
+    from python_setup_lint.testing import (
+        make_lint_result,
+    )  # local import per original layout
 
-    if isinstance(saved_baseline, dict):
-        saved_entries = [saved_baseline]
-    else:
-        saved_entries = saved_baseline
+    saved_entries = (
+        [saved_baseline] if isinstance(saved_baseline, dict) else saved_baseline
+    )
 
     current: list[LintResult] = []
     for entry in saved_entries:
@@ -591,17 +838,22 @@ def build_current_results(saved_baseline: dict[str, Any] | list[dict[str, Any]],
 def diff_violation_kind(violations: list[str], want: str) -> None:
     """Assert *want* substring is in any violation (case-insensitive)."""
     lowered = [v.lower() for v in violations]
-    assert any(want in v for v in lowered), f"Expected {want!r} in violations; got {violations!r}"
+    assert any(want in v for v in lowered), (
+        f"Expected {want!r} in violations; got {violations!r}"
+    )
 
 
 def extra_block(entries: str) -> str:
     """Wrap one-or-more ``[[tool.python-setup-lint.extra-tools]]`` body lines."""
-    return f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{entries}"
+    return (
+        f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{entries}"
+    )
 
 
 def write_pyproject(tmp_path: Path, body: str) -> Path:
     """Write a synthetic ``pyproject.toml`` body under *tmp_path*, reset extras cache, return resolved path."""
     from python_setup_lint.runner import _reset_extra_tools_cache
+
     pyproject = tmp_path / "pyproject.toml"
     pyproject.write_text(body, encoding="utf-8")
     _reset_extra_tools_cache()
@@ -632,83 +884,130 @@ EMPTY_LOADER_CASES: list = [
 # Combined R4 reason-match table — one pytest.param per previously-distinct
 # named test. (body, reason_want, want_kind) where want_kind is "exact" or
 # "starts_with". Locked per DESIGN-8 D6 — production code is source-of-truth.
-R4_EXACT_REASON_CASES: list[pytest.Param] = [
+R4_EXACT_REASON_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(
         extra_block('name = "x"\ncommand = ["x"]\nbogus_field = 1\n'),
-        "unknown field: ", "starts_with", id="unknown_field",
+        "unknown field: ",
+        "starts_with",
+        id="unknown_field",
     ),
     pytest.param(
-        extra_block('name = "x"\n'), "missing required field: command", "exact",
+        extra_block('name = "x"\n'),
+        "missing required field: command",
+        "exact",
         id="missing_required_field",
     ),
     pytest.param(
         extra_block('name = "x"\ncommand = ["x"]\nparse_strategy = "regex_count"\n'),
-        "missing required field: parse_regex", "starts_with",
+        "missing required field: parse_regex",
+        "starts_with",
         id="regex_count_requires_parse_regex",
     ),
     pytest.param(
-        extra_block('name = "x"\ncommand = ["x"]\nparse_strategy = "regex_count"\n'
-                    'parse_regex = "no_groups_here"\n'),
-        "regex missing or != 1 capture group", "starts_with",
+        extra_block(
+            'name = "x"\ncommand = ["x"]\nparse_strategy = "regex_count"\n'
+            'parse_regex = "no_groups_here"\n'
+        ),
+        "regex missing or != 1 capture group",
+        "starts_with",
         id="regex_count_bad_group_count",
     ),
     pytest.param(
         extra_block('name = "dup"\ncommand = ["x"]\n')
         + "[[tool.python-setup-lint.extra-tools]]\n"
         + 'name = "dup"\ncommand = ["x"]\n',
-        "duplicate within file: dup", "exact",
+        "duplicate within file: dup",
+        "exact",
         id="duplicate_within_file",
     ),
     pytest.param(
         extra_block(f'name = "{BUILTIN_NAME}"\ncommand = ["x"]\n'),
-        f"duplicate vs built-in: {BUILTIN_NAME}", "exact",
+        f"duplicate vs built-in: {BUILTIN_NAME}",
+        "exact",
         id="duplicate_vs_builtin",
     ),
     pytest.param(
         extra_block('name = 123\ncommand = ["x"]\n'),
-        "wrong type: name must be non-empty str", "exact", id="name_non_str",
+        "wrong type: name must be non-empty str",
+        "exact",
+        id="name_non_str",
     ),
     pytest.param(
         extra_block('name = "   "\ncommand = ["x"]\n'),
-        "wrong type: name must be non-empty str", "exact", id="name_whitespace",
+        "wrong type: name must be non-empty str",
+        "exact",
+        id="name_whitespace",
     ),
     pytest.param(
         extra_block('name = "x"\ncommand = "ruff"\n'),
-        "wrong type: command must be non-empty list[str]", "exact", id="command_scalar",
+        "wrong type: command must be non-empty list[str]",
+        "exact",
+        id="command_scalar",
     ),
     pytest.param(
         extra_block('name = "x"\ncommand = ["x", 1]\n'),
-        "wrong type: command must be list[str]", "exact", id="command_non_str_parts",
+        "wrong type: command must be list[str]",
+        "exact",
+        id="command_non_str_parts",
     ),
 ]
 
 
 # Wrong-type flag fields (boolean / list / scalar shapes) — each row follows
 # the valid `name = "x"`/`command = ["x"]` prefix; the flag varies.
-R4_FLAG_WRONG_TYPE_CASES: list[pytest.Param] = [
-    pytest.param('supports_fix = "yes"\n', "wrong type: supports_fix must be bool", id="supports_fix"),
-    pytest.param("supports_path = 1\n", "wrong type: supports_path must be bool", id="supports_path"),
-    pytest.param('supports_exclude = "no"\n', "wrong type: supports_exclude must be bool",
-                id="supports_exclude"),
-    pytest.param('default_paths = "src/"\n', "wrong type: default_paths must be list[str]",
-                id="default_paths_scalar"),
-    pytest.param('default_paths = ["x", 1]\n', "wrong type: default_paths must be list[str]",
-                id="default_paths_non_str_parts"),
-    pytest.param("config_flag = 12\n", "wrong type: config_flag must be str | list[str]",
-                id="config_flag_int"),
-    pytest.param('config_flag = ["--x", 1]\n', "wrong type: config_flag must be str | list[str]",
-                id="config_flag_non_str_parts"),
-    pytest.param("parse_strategy = 7\n", "wrong type: parse_strategy must be str",
-                id="parse_strategy_int"),
-    pytest.param('parse_strategy = "bogus"\n', "bad enum: parse_strategy 'bogus'",
-                id="parse_strategy_bad_enum"),
+R4_FLAG_WRONG_TYPE_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
+    pytest.param(
+        'supports_fix = "yes"\n',
+        "wrong type: supports_fix must be bool",
+        id="supports_fix",
+    ),
+    pytest.param(
+        "supports_path = 1\n",
+        "wrong type: supports_path must be bool",
+        id="supports_path",
+    ),
+    pytest.param(
+        'supports_exclude = "no"\n',
+        "wrong type: supports_exclude must be bool",
+        id="supports_exclude",
+    ),
+    pytest.param(
+        'default_paths = "src/"\n',
+        "wrong type: default_paths must be list[str]",
+        id="default_paths_scalar",
+    ),
+    pytest.param(
+        'default_paths = ["x", 1]\n',
+        "wrong type: default_paths must be list[str]",
+        id="default_paths_non_str_parts",
+    ),
+    pytest.param(
+        "config_flag = 12\n",
+        "wrong type: config_flag must be str | list[str]",
+        id="config_flag_int",
+    ),
+    pytest.param(
+        'config_flag = ["--x", 1]\n',
+        "wrong type: config_flag must be str | list[str]",
+        id="config_flag_non_str_parts",
+    ),
+    pytest.param(
+        "parse_strategy = 7\n",
+        "wrong type: parse_strategy must be str",
+        id="parse_strategy_int",
+    ),
+    pytest.param(
+        'parse_strategy = "bogus"\n',
+        "bad enum: parse_strategy 'bogus'",
+        id="parse_strategy_bad_enum",
+    ),
 ]
 
 
 REGEX_BAD_GROUP_CASES: list[str] = [
-    "no_groups_here",   # zero capture groups
-    "(a)(b)",           # two capture groups
-    "(unclosed",        # unparseable regex
+    "no_groups_here",  # zero capture groups
+    "(a)(b)",  # two capture groups
+    "(unclosed",  # unparseable regex
 ]
 
 
@@ -717,7 +1016,7 @@ REGEX_BLOCK = (
     'name = "regextool"\n'
     'command = ["fake-regex-cli"]\n'
     "supports_path = true\n"
-    'default_paths = []\n'
+    "default_paths = []\n"
     'parse_strategy = "regex_count"\n'
     'parse_regex = "^(?P<rule>[A-Z]+[0-9]+): .*"\n'
 )
@@ -726,19 +1025,23 @@ NONE_BLOCK = (
     'name = "nonestattool"\n'
     'command = ["fake-none-cli"]\n'
     "supports_path = true\n"
-    'default_paths = []\n'
+    "default_paths = []\n"
     'parse_strategy = "none"\n'
 )
 
-DOWNSTREAM_CASES: list[pytest.Param] = [
+DOWNSTREAM_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(
-        REGEX_BLOCK, "regextool", ["fake-regex-cli"],
+        REGEX_BLOCK,
+        "regextool",
+        ["fake-regex-cli"],
         "RC1: bad line\nRC2: worse line\nRC1: another",
         [("regextool", "RC1", 2), ("regextool", "RC2", 1)],
         id="regex_count_extra_emits_rule_counts",
     ),
     pytest.param(
-        NONE_BLOCK, "nonestattool", ["fake-none-cli"],
+        NONE_BLOCK,
+        "nonestattool",
+        ["fake-none-cli"],
         "noise\nthat has no rule ids\nRC1: ignored too\n",
         [],
         id="parse_strategy_none_skips_aggregate",
@@ -756,32 +1059,37 @@ EXTRA_OBSERV_NAME = "regextool"
 # Each row: (pyproject_body, expected_reason_or_substring, exact_match).
 # When ``exact_match`` is True the reason matches exactly; otherwise it
 # matches the listed substring. All rows assert ``err.location == str(pyproject)``.
-MALFORMATION_CASES: list[pytest.Param] = [
+MALFORMATION_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(
         '[tool.python-setup-lint]\nextra-tools = "not-a-list"\n',
-        "wrong type: extra-tools must be a list of tables", True,
+        "wrong type: extra-tools must be a list of tables",
+        True,
         id="malformed_extra_tools_section",
     ),
     pytest.param(
         '[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\nname = "no-command"\n',
-        "missing required field: command", True,
+        "missing required field: command",
+        True,
         id="missing_required_key",
     ),
     pytest.param(
-        '[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n'
+        "[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n"
         'name = "my-tool"\ncommand = ["tool"]\nfoo = "bar"\n',
-        "unknown field: ['foo']; allowed:", False,
+        "unknown field: ['foo']; allowed:",
+        False,
         id="unknown_field",
     ),
     pytest.param(
-        '[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n'
+        "[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n"
         'name = "my-tool"\ncommand = ["tool"]\nparse_strategy = "invalid-strat"\n',
-        "bad enum: parse_strategy", False,
+        "bad enum: parse_strategy",
+        False,
         id="bad_parse_strategy_enum",
     ),
     pytest.param(
         "[[[\ninvalid toml\n",
-        "pyproject unreadable:", False,
+        "pyproject unreadable:",
+        False,
         id="unreadable_pyproject_toml",
     ),
 ]
@@ -789,11 +1097,14 @@ MALFORMATION_CASES: list[pytest.Param] = [
 
 # ── Grouped statistics output table (moved from test_lint_runner.py) ─
 # Each row: (group, counts, header, header_markers, sum_tokens).
-GROUPED_OUTPUT_CASES: list[pytest.Param] = [
+GROUPED_OUTPUT_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(
         "tool",
-        [ViolationCount("tool_a", "A001", 10), ViolationCount("tool_a", "B001", 5),
-         ViolationCount("tool_b", "A001", 3)],
+        [
+            ViolationCount("tool_a", "A001", 10),
+            ViolationCount("tool_a", "B001", 5),
+            ViolationCount("tool_b", "A001", 3),
+        ],
         "VIOLATION STATISTICS (grouped by tool)",
         ["[tool_a]", "[tool_b]", "Subtotal", "Total"],
         ["15", "3"],  # subtotals (tool_a=15, tool_b=3)
@@ -801,8 +1112,11 @@ GROUPED_OUTPUT_CASES: list[pytest.Param] = [
     ),
     pytest.param(
         "rule",
-        [ViolationCount("tool_a", "Z001", 3), ViolationCount("tool_b", "A001", 7),
-         ViolationCount("tool_b", "A001", 5)],
+        [
+            ViolationCount("tool_a", "Z001", 3),
+            ViolationCount("tool_b", "A001", 7),
+            ViolationCount("tool_b", "A001", 5),
+        ],
         "VIOLATION STATISTICS (grouped by rule)",
         ["[A001]", "[Z001]", "Subtotal"],
         ["12", "3"],  # A001=12, Z001=3
@@ -817,8 +1131,11 @@ GROUPED_OUTPUT_CASES: list[pytest.Param] = [
         id="group_file_aliases_to_tool",
     ),
     pytest.param(
-        "tool", [], "VIOLATION STATISTICS (grouped by tool)",
-        [], ["No violations found"],
+        "tool",
+        [],
+        "VIOLATION STATISTICS (grouped by tool)",
+        [],
+        ["No violations found"],
         id="group_empty_prints_no_violations",
     ),
 ]
@@ -828,21 +1145,28 @@ GROUPED_OUTPUT_CASES: list[pytest.Param] = [
 # (one ``[[...]]`` extra named ``t8-grep-noqa`` using ``parse_strategy=raw_lines``).
 CLEAN_EXTRAS_PYPROJECT_BODY = (
     '[project]\nname = "t8-clean"\nversion = "0.0.1"\n\n'
-    '[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n'
+    "[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n"
     'name = "t8-grep-noqa"\ncommand = ["grep", "-rnE", "noqa: "]\n'
     'supports_path = true\ndefault_paths = ["src/"]\nparse_strategy = "raw_lines"\n'
 )
 
 
-def lint_config(cwd: Path, *, package_name: str | None = "python_setup_lint",
-                tools_override: list[str] | None = None) -> RunnerConfig:
+def lint_config(
+    cwd: Path,
+    *,
+    package_name: str | None = "python_setup_lint",
+    tools_override: list[str] | None = None,
+) -> RunnerConfig:
     """Build a test RunnerConfig rooted at *cwd* with optional tools override."""
-    return RunnerConfig(cwd=cwd, package_name=package_name, tools_override=tools_override)
+    return RunnerConfig(
+        cwd=cwd, package_name=package_name, tools_override=tools_override
+    )
 
 
-def _make_result(tool_name: str, exit_code: int = 0, stdout: str = ""):
+def _make_result(tool_name: str, exit_code: int = 0, stdout: str = "") -> LintResult:
     """Lazy make_lint_result wrapper (avoids eager import of testing module)."""
     from python_setup_lint.testing import make_lint_result
+
     return make_lint_result(tool_name=tool_name, exit_code=exit_code, stdout=stdout)
 
 
@@ -850,60 +1174,75 @@ def _make_result(tool_name: str, exit_code: int = 0, stdout: str = ""):
 # Each row: (factory_kind, results_for_factory, calls_to_make,
 #           expected_exit_per_call, expected_tool_name_per_call).
 # ``factory_kind`` picks which ``fake_run_cmd_factory`` shape to exercise.
-DISPATCH_CASES: list[pytest.Param] = [
+DISPATCH_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(
         "dict",
         {"ruff check": _make_result("ruff check", exit_code=1, stdout="issues")},
         [(["ruff", "check", "src/"], "ruff check")],
-        [1], ["ruff check"], id="dict_known_label_returns_canned",
+        [1],
+        ["ruff check"],
+        id="dict_known_label_returns_canned",
     ),
     pytest.param(
         "dict",
         {"ruff check": _make_result("ruff check")},
         [(["python", "-m", "mypy.stubtest"], "mypy.stubtest")],
-        [0], ["mypy.stubtest"], id="dict_unknown_label_returns_zero_exit_empty",
+        [0],
+        ["mypy.stubtest"],
+        id="dict_unknown_label_returns_zero_exit_empty",
     ),
     pytest.param(
         "dict",
         {},
         [(["ruff", "check", "."], "ruff check")],
-        [0], ["ruff check"], id="dict_empty_returns_zero_exit_empty",
+        [0],
+        ["ruff check"],
+        id="dict_empty_returns_zero_exit_empty",
     ),
     pytest.param(
         "list",
         [_make_result("ruff check", exit_code=0), _make_result("mypy", exit_code=1)],
         [(["ruff", "check", "."], "ruff check"), (["mypy", "."], "mypy")],
-        [0, 1], ["ruff check", "mypy"], id="list_returns_results_in_order",
+        [0, 1],
+        ["ruff check", "mypy"],
+        id="list_returns_results_in_order",
     ),
     pytest.param(
         "list",
         [],
         [(["ruff", "check", "."], "ruff check")],
-        [0], ["ruff check"], id="list_empty_returns_zero_exit_empty",
+        [0],
+        ["ruff check"],
+        id="list_empty_returns_zero_exit_empty",
     ),
 ]
 
 
 # Cmd + label capture table — shared by dict + list modes (moved from test_testing_fakes.py).
 # Each row: (results_for_factory, calls_to_make, expected_records [{cmd, label}]).
-CALLS_CAPTURED_CASES: list[pytest.Param] = [
+CALLS_CAPTURED_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(
         {"ruff check": _make_result("ruff check")},
         [(["ruff", "check", "src/", "--fix"], "ruff check")],
-        [dict(label="ruff check", cmd=["ruff", "check", "src/", "--fix"])],
+        [{"label": "ruff check", "cmd": ["ruff", "check", "src/", "--fix"]}],
         id="dict_single",
     ),
     pytest.param(
-        {"ruff check": _make_result("ruff check"), "mypy": _make_result("mypy", exit_code=1)},
+        {
+            "ruff check": _make_result("ruff check"),
+            "mypy": _make_result("mypy", exit_code=1),
+        },
         [(["ruff", "check", "."], "ruff check"), (["mypy", "."], "mypy")],
-        [dict(label="ruff check", cmd=["ruff", "check", "."]),
-         dict(label="mypy", cmd=["mypy", "."])],
+        [
+            {"label": "ruff check", "cmd": ["ruff", "check", "."]},
+            {"label": "mypy", "cmd": ["mypy", "."]},
+        ],
         id="dict_multiple",
     ),
     pytest.param(
         [_make_result("ruff check")],
         [(["ruff", "check", "--fix"], "ruff check")],
-        [dict(label="ruff check", cmd=["ruff", "check", "--fix"])],
+        [{"label": "ruff check", "cmd": ["ruff", "check", "--fix"]}],
         id="list_single",
     ),
 ]
@@ -912,25 +1251,45 @@ CALLS_CAPTURED_CASES: list[pytest.Param] = [
 # Smoke-integration invariant table for ``test_testing_fakes`` — rows:
 # (run_lint_kwargs, predicate(FakeRunCmd) → bool). Covers tool count, --fix
 # propagation, --exclude propagation, package_name=None skip.
-RUN_LINT_FAKE_INVARIANT_CASES: list[pytest.Param] = [
+RUN_LINT_FAKE_INVARIANT_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     # every tool dispatched, each cmd non-empty
-    pytest.param(dict(path="src/python_setup_lint/runner.py"),
-        lambda f: len(f.calls) == 11 and all(len(c.cmd) > 0 and c.label for c in f.calls),
-        id="all_11_tools_dispatched"),
+    pytest.param(
+        {"path": "src/python_setup_lint/runner.py"},
+        lambda f: (
+            len(f.calls) == 11 and all(len(c.cmd) > 0 and c.label for c in f.calls)
+        ),
+        id="all_11_tools_dispatched",
+    ),
     # --fix propagates to ruff/rumdl/ty
-    pytest.param(dict(path="src/python_setup_lint/runner.py", fix=True),
-        lambda f: all("--fix" in c.cmd for c in f.calls if c.label in {"ruff check", "rumdl check", "ty check"}),
-        id="fix_flag_propagates_to_supports_fix_labels"),
+    pytest.param(
+        {"path": "src/python_setup_lint/runner.py", "fix": True},
+        lambda f: all(
+            "--fix" in c.cmd
+            for c in f.calls
+            if c.label in {"ruff check", "rumdl check", "ty check"}
+        ),
+        id="fix_flag_propagates_to_supports_fix_labels",
+    ),
     # --exclude propagates to tach/ruff/rumdl/ty
-    pytest.param(dict(path="src/python_setup_lint/runner.py", exclude="tests/"),
-        lambda f: all(("--exclude" in c.cmd or "-e" in c.cmd)
-                      for c in f.calls if c.label in {"tach check", "ruff check", "rumdl check", "ty check"}),
-        id="exclude_flag_propagates_to_supports_exclude_labels"),
+    pytest.param(
+        {"path": "src/python_setup_lint/runner.py", "exclude": "tests/"},
+        lambda f: all(
+            ("--exclude" in c.cmd or "-e" in c.cmd)
+            for c in f.calls
+            if c.label in {"tach check", "ruff check", "rumdl check", "ty check"}
+        ),
+        id="exclude_flag_propagates_to_supports_exclude_labels",
+    ),
     # package_name=None skips stubtest + verifytypes → 9 dispatched
-    pytest.param(dict(package_name=None, path="src/python_setup_lint/runner.py"),
-        lambda f: (len(f.calls) == 9 and "mypy.stubtest" not in {c.label for c in f.calls}
-                   and "pyright verify types" not in {c.label for c in f.calls}),
-        id="package_name_none_skips_stubtest_verifytypes"),
+    pytest.param(
+        {"package_name": None, "path": "src/python_setup_lint/runner.py"},
+        lambda f: (
+            len(f.calls) == 9
+            and "mypy.stubtest" not in {c.label for c in f.calls}
+            and "pyright verify types" not in {c.label for c in f.calls}
+        ),
+        id="package_name_none_skips_stubtest_verifytypes",
+    ),
 ]
 
 
@@ -942,46 +1301,72 @@ RUN_LINT_FAKE_INVARIANT_CASES: list[pytest.Param] = [
 
 # timeInSec skip / diagnostics-present / identical saved=current → no violation.
 # Row: (saved, current_map, want_kind).
-DIFF_EDGE_CASES: list[pytest.Param] = [
+DIFF_EDGE_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(
-        {"tool": "pyright check", "exit_code": 0,
-         "diagnostics": {"summary": {"errorCount": 1, "timeInSec": 10.0, "filesAnalyzed": 100}}},
-        {"pyright check": {"summary": {"errorCount": 1, "timeInSec": 15.0, "filesAnalyzed": 100}}},
-        "no_violations", id="pyright_ignores_time_in_sec",
+        {
+            "tool": "pyright check",
+            "exit_code": 0,
+            "diagnostics": {
+                "summary": {"errorCount": 1, "timeInSec": 10.0, "filesAnalyzed": 100}
+            },
+        },
+        {
+            "pyright check": {
+                "summary": {"errorCount": 1, "timeInSec": 15.0, "filesAnalyzed": 100}
+            }
+        },
+        "no_violations",
+        id="pyright_ignores_time_in_sec",
     ),
     pytest.param(
-        {"tool": "pyright check", "exit_code": 0, "diagnostics": {"summary": {"errorCount": 1}}},
+        {
+            "tool": "pyright check",
+            "exit_code": 0,
+            "diagnostics": {"summary": {"errorCount": 1}},
+        },
         {"pyright check": {"summary": {"errorCount": 1}}},
-        "no_violations", id="diagnostics_used_when_present",
+        "no_violations",
+        id="diagnostics_used_when_present",
     ),
     pytest.param(
         {"tool": "test", "exit_code": 0, "output": "ok"},
-        {"test": "ok"}, "no_violations", id="identical",
+        {"test": "ok"},
+        "no_violations",
+        id="identical",
     ),
 ]
 
 
 # Exit-code changed / shrinkage / new-tool rows — each builds LintResult directly.
 # Row: (saved, results, want_kind).
-DIFF_EDGE_INVARIANTS: list[pytest.Param] = [
+DIFF_EDGE_INVARIANTS: list[pytest.Param] = [  # type: ignore[name-defined]
     # exit_code 0→1 (other fields identical) → flags ``exit code``
-    pytest.param({"tool": "test", "exit_code": 0, "output": "ok"},
-                 [_make_result("test", exit_code=1, stdout="ok")],
-                 "exit code", id="exit_code_changed_flags_regression"),
+    pytest.param(
+        {"tool": "test", "exit_code": 0, "output": "ok"},
+        [_make_result("test", exit_code=1, stdout="ok")],
+        "exit code",
+        id="exit_code_changed_flags_regression",
+    ),
     # exit_code 1→0 (output empties) → silent auto-record, exit_code rewritten to 0
-    pytest.param({"tool": "mypy", "exit_code": 1, "output": "some error"},
-                 [_make_result("mypy", exit_code=0, stdout="")],
-                 "no_violations", id="exit_code_shrinkage_auto_records"),
+    pytest.param(
+        {"tool": "mypy", "exit_code": 1, "output": "some error"},
+        [_make_result("mypy", exit_code=0, stdout="")],
+        "no_violations",
+        id="exit_code_shrinkage_auto_records",
+    ),
     # new tool in current (no baseline entry) → ``no baseline entry``
-    pytest.param({"tool": "tool_a", "exit_code": 0, "output": ""},
-                 [_make_result("tool_a"), _make_result("tool_b")],
-                 "no baseline entry", id="new_tool_flags_regression"),
+    pytest.param(
+        {"tool": "tool_a", "exit_code": 0, "output": ""},
+        [_make_result("tool_a"), _make_result("tool_b")],
+        "no baseline entry",
+        id="new_tool_flags_regression",
+    ),
 ]
 
 
 # Baseline path error rows — (baseline_setup_kind, body_or_None, want_substr_or_None).
 # kind: "missing" / "invalid" / "empty".
-DIFF_BASELINE_PATH_ERRORS: list[pytest.Param] = [
+DIFF_BASELINE_PATH_ERRORS: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param("missing", None, "not found", id="no_baseline_file"),
     pytest.param("invalid", "not valid json", "Cannot read", id="invalid_json"),
     pytest.param("empty", "[]", None, id="empty_baseline_no_current"),
@@ -992,8 +1377,10 @@ DIFF_BASELINE_PATH_ERRORS: list[pytest.Param] = [
 
 
 # Print result format rows: (exit_code, stdout, stderr, want_tokens).
-PRINT_FORMAT_CASES: list[pytest.Param] = [
-    pytest.param(0, "all good\n", None, ["[mytool]", "PASSED", "all good"], id="passed"),
+PRINT_FORMAT_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
+    pytest.param(
+        0, "all good\n", None, ["[mytool]", "PASSED", "all good"], id="passed"
+    ),
     pytest.param(2, None, "error: x\n", ["FAILED", "exit=2", "error: x"], id="failed"),
 ]
 
@@ -1019,16 +1406,20 @@ GROUPED_SORT_BY_RULE_COUNTS: list[ViolationCount] = [
 
 
 # ``TestRunCmd`` rows: (cmd, label, exit_predicate, stdout_want_or_None).
-RUN_CMD_CASES: list[pytest.Param] = [
+RUN_CMD_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(["echo", "hello"], "echo", lambda c: c == 0, "hello\n", id="success"),
     pytest.param(["false"], "false", lambda c: c != 0, None, id="failure"),
 ]
 
 
 # ``TestPathHelpers._find_py_files`` boundary rows: (paths, expected).
-FIND_PY_FILES_BOUNDARY_CASES: list[pytest.Param] = [
+FIND_PY_FILES_BOUNDARY_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(["nonexistent_dir_xyz"], [], id="nonexistent_dir"),
-    pytest.param(["src/python_setup_lint/runner/types.py"], ["src/python_setup_lint/runner/types.py"], id="single_file"),
+    pytest.param(
+        ["src/python_setup_lint/runner/types.py"],
+        ["src/python_setup_lint/runner/types.py"],
+        id="single_file",
+    ),
 ]
 
 
@@ -1045,7 +1436,7 @@ def _is_empty(r: list[str]) -> bool:
     return r == []
 
 
-EXPAND_GLOBS_CASES: list[pytest.Param] = [
+EXPAND_GLOBS_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(["src/python_setup_lint"], _is_passthrough, id="passthrough"),
     pytest.param(["src/**/*.py"], _is_py_glob, id="expands_glob"),
     pytest.param(["*.nonexistent_ext_xyz"], _is_empty, id="empty_match"),
@@ -1053,30 +1444,42 @@ EXPAND_GLOBS_CASES: list[pytest.Param] = [
 
 
 # ``TestStrategyBuildCommand`` stubtest+verifytypes rows.
-STRATEGY_TOKENS_CASES: list[pytest.Param] = [
-    pytest.param("mypy.stubtest", "python_setup_lint",
-                 ["python_setup_lint", "--concise", "--ignore-missing-stub"], id="stubtest"),
-    pytest.param("pyright verify types", "python_setup_lint",
-                 ["python_setup_lint", "--ignoreexternal", "--outputjson"], id="verifytypes"),
+STRATEGY_TOKENS_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
+    pytest.param(
+        "mypy.stubtest",
+        "python_setup_lint",
+        ["python_setup_lint", "--concise", "--ignore-missing-stub"],
+        id="stubtest",
+    ),
+    pytest.param(
+        "pyright verify types",
+        "python_setup_lint",
+        ["python_setup_lint", "--ignoreexternal", "--outputjson"],
+        id="verifytypes",
+    ),
 ]
 
 
 # ``TestRunLintOrchestration.test_package_name_governs_stubtest_verifytypes`` rows.
-PACKAGE_NAME_STUBTEST_CASES: list[pytest.Param] = [
-    pytest.param(None, False, -2, id="package_name_none_skips"),  # skips stubtest + verifytypes (9 dispatched)
-    pytest.param("python_setup_lint", True, 0, id="package_name_set_runs"),  # set → 11 dispatched
+PACKAGE_NAME_STUBTEST_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
+    pytest.param(
+        None, False, -2, id="package_name_none_skips"
+    ),  # skips stubtest + verifytypes (9 dispatched)
+    pytest.param(
+        "python_setup_lint", True, 0, id="package_name_set_runs"
+    ),  # set → 11 dispatched
 ]
 
 
 # ``TestMainCLI.test_main_exit_codes`` rows: (args, want_code_zero).
-MAIN_EXIT_CODE_CASES: list[pytest.Param] = [
+MAIN_EXIT_CODE_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(["--help"], True, id="help_exits_zero"),
     pytest.param(["--nonexistent-flag"], False, id="unknown_flag_exits_nonzero"),
 ]
 
 
 # ``TestRunLintIntegration.test_run_lint_baseline_capture_with_ruff`` rows.
-RUFF_BASELINE_FIX_CASES: list[pytest.Param] = [
+RUFF_BASELINE_FIX_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(False, "no issues", id="ruff_present_in_baseline"),
     pytest.param(True, None, id="run_lint_fix"),
 ]

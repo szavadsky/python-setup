@@ -86,7 +86,9 @@ def _resolve_stub(checker: StubChecker, py_path: Path) -> Path | None:
     3. Configured *stub-roots*.
     """
 
-def _index_stub_declarations(checker: StubChecker, module_name: str, stub_path: Path) -> None:
+def _index_stub_declarations(
+    checker: StubChecker, module_name: str, stub_path: Path
+) -> None:
     """Parse a .pyi stub file and index its top-level declarations."""
 
 def emit_coverage_violations(checker: StubChecker) -> None:

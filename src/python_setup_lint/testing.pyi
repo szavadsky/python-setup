@@ -26,13 +26,11 @@ if TYPE_CHECKING:
 
     from python_setup_lint.runner import LintResult
 
-
 def _make_tc(checker_class: type[BaseChecker]) -> CheckerTestCase:
     """Create a ``CheckerTestCase`` for *checker_class*.
 
     Sets ``CHECKER_CLASS``, calls ``setup_method()``, returns the test case.
     """
-
 
 def _walk_and_release(
     code: str,
@@ -47,9 +45,7 @@ def _walk_and_release(
     test classification) and *module_name* for the astroid module name.
     """
 
-
 # ── Lint-runner fakes ──────────────────────────────────────────────
-
 
 def make_lint_result(
     tool_name: str = "ruff check",
@@ -64,7 +60,6 @@ def make_lint_result(
     and *exit_code* are commonly varied in tests.
     """
 
-
 @dataclass
 class _FakeRunCmdRecord:
     """Record of a single call captured by a fake ``_run_cmd``.
@@ -76,7 +71,6 @@ class _FakeRunCmdRecord:
 
     cmd: list[str]
     label: str
-
 
 @dataclass
 class FakeRunCmd:
@@ -94,9 +88,10 @@ class FakeRunCmd:
     results: dict[str, LintResult] | list[LintResult]
     calls: list[_FakeRunCmdRecord] = ...
 
-    def __call__(self, cmd: list[str], *, cwd: Path = ..., label: str = "") -> LintResult:
+    def __call__(
+        self, cmd: list[str], *, cwd: Path = ..., label: str = ""
+    ) -> LintResult:
         """Match ``_run_cmd(cmd, *, cwd, label) -> LintResult`` signature."""
-
 
 def fake_run_cmd_factory(
     results: dict[str, LintResult] | list[LintResult],
@@ -118,9 +113,7 @@ def fake_run_cmd_factory(
     After the test, inspect ``fake.calls`` to assert on constructed commands.
     """
 
-
 # ── Consumer-agnostic health checks ───────────────────────────────
-
 
 def test_checked_main() -> None:
     """Run pytest with typeguard enabled (``-p typeguard -q tests/unit``).
@@ -131,14 +124,12 @@ def test_checked_main() -> None:
     "python_setup_lint.testing:test_checked_main"`` and delete local wrappers.
     """
 
-
 def assert_precommit_config_valid(repo_root: Path) -> None:
     """Assert ``.pre-commit-config.yaml`` is valid YAML + passes ``validate-config``.
 
     Works against any ``python-setup``-generated config.  Requires
     ``pre-commit`` installed in the active env.
     """
-
 
 def assert_precommit_hooks_shape(
     repo_root: Path,

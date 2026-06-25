@@ -47,7 +47,8 @@ class _FidelityState:
         default_factory=dict
     )
     impl_annotations: dict[
-        str, dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]]
+        str,
+        dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]],
     ] = field(default_factory=dict)
     stub_callable_nodes: dict[
         str, dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef]

@@ -87,13 +87,25 @@ class TestToolSpec:
 
     def test_known_tools_present(self) -> None:
         assert {t.name for t in TOOLS} == {
-            "tach check", "ruff check", "rumdl check", "mypy", "yamllint",
-            "ty check", "mypy.stubtest", "pyright check", "pyright verify types",
-            "pylint", "detect-secrets",
+            "tach check",
+            "ruff check",
+            "rumdl check",
+            "mypy",
+            "yamllint",
+            "ty check",
+            "mypy.stubtest",
+            "pyright check",
+            "pyright verify types",
+            "pylint",
+            "detect-secrets",
         }
 
     def test_autofix_and_no_duplicate_names(self) -> None:
-        assert {t.name for t in TOOLS if t.supports_fix} == {"ruff check", "rumdl check", "ty check"}
+        assert {t.name for t in TOOLS if t.supports_fix} == {
+            "ruff check",
+            "rumdl check",
+            "ty check",
+        }
         assert all(t.name for t in TOOLS)
         assert len({t.name for t in TOOLS}) == len(TOOLS) == 11
 
@@ -114,7 +126,8 @@ class TestRegisterLintToolIdentity:
     def test_extra_tools_imports_dispatch_register(self) -> None:
         """extra_tools.register_lint_tool is dispatch.register_lint_tool (re-export)."""
         from python_setup_lint.runner.dispatch import register_lint_tool as dispatch_reg
-        from python_setup_lint.runner.extra_tools import register_lint_tool as extra_reg
+        from python_setup_lint.runner.extra_tools import register_lint_tool as extra_reg  # type: ignore[attr-defined]
+
         assert dispatch_reg is extra_reg, (
             "extra_tools.register_lint_tool must be the same function object "
             "as dispatch.register_lint_tool"
@@ -123,6 +136,7 @@ class TestRegisterLintToolIdentity:
     def test_runner_init_exports_dispatch_register(self) -> None:
         """``python_setup_lint.runner.register_lint_tool`` is dispatch.register_lint_tool."""
         from python_setup_lint.runner.dispatch import register_lint_tool as dispatch_reg
+
         assert register_lint_tool is dispatch_reg, (
             "runner.__init__ must re-export dispatch.register_lint_tool"
         )
@@ -132,7 +146,9 @@ class TestRegisterLintToolIdentity:
 
 
 @pytest.mark.parametrize("spec_kwargs,build_kwargs,expected", BUILD_COMMAND_CASES)
-def test_build_command(spec_kwargs: dict, build_kwargs: dict, expected: list[str]) -> None:
+def test_build_command(
+    spec_kwargs: dict[str, Any], build_kwargs: dict[str, Any], expected: list[str]
+) -> None:
     """Covers path/fix/exclude/override-defaults — one row per (spec, kwargs, cmd)."""
     spec = ToolSpec(**spec_kwargs)
     assert _build_command(spec, config=_CONFIG, **build_kwargs) == expected
@@ -143,8 +159,10 @@ class TestStrategyBuildCommand:
 
     def test_pylint_strategy_expands_py_files(self) -> None:
         from python_setup_lint.runner import _PylintLintTool
-        cmd = _PylintLintTool(ToolSpec("pylint", ["pylint"], supports_path=True)).build_command(
-            config=_CONFIG, path="src/python_setup_lint")
+
+        cmd = _PylintLintTool(
+            ToolSpec("pylint", ["pylint"], supports_path=True)
+        ).build_command(config=_CONFIG, path="src/python_setup_lint")
         assert cmd[0] == "pylint"
         # Auto-discovery may inject --rcfile <path> before .py files; skip those.
         py_files = [a for a in cmd[1:] if a.endswith(".py")]
@@ -153,8 +171,9 @@ class TestStrategyBuildCommand:
     def test_pylint_rcfile_auto_discovery(self) -> None:
         """_resolve_pylintrc discovers config/.pylintrc when no explicit path given."""
         from python_setup_lint.runner.dispatch import _PylintLintTool
+
         cwd = Path.cwd()
-        rcfile = _PylintLintTool._resolve_pylintrc({}, cwd)
+        rcfile = _PylintLintTool._resolve_pylintrc({}, cwd)  # type: ignore[attr-defined]
         assert rcfile is not None, "Expected auto-discovered rcfile"
         assert rcfile.name == ".pylintrc"
         assert rcfile.is_file()
@@ -162,23 +181,26 @@ class TestStrategyBuildCommand:
     def test_pylint_rcfile_explicit_override(self, tmp_path: Path) -> None:
         """_resolve_pylintrc returns explicit config_paths entry when provided."""
         from python_setup_lint.runner.dispatch import _PylintLintTool
+
         fake_rc = tmp_path / "custom.pylintrc"
         fake_rc.write_text("[MASTER]\n")
-        rcfile = _PylintLintTool._resolve_pylintrc({"pylint": fake_rc}, Path.cwd())
+        rcfile = _PylintLintTool._resolve_pylintrc({"pylint": fake_rc}, Path.cwd())  # type: ignore[attr-defined]
         assert rcfile == fake_rc
 
     def test_pylint_rcfile_none_when_missing(self, tmp_path: Path) -> None:
         """_resolve_pylintrc returns None when no rcfile exists."""
         from python_setup_lint.runner.dispatch import _PylintLintTool
-        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)
+
+        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)  # type: ignore[attr-defined]
         assert rcfile is None
 
     def test_pylint_rcfile_project_root_fallback(self, tmp_path: Path) -> None:
         """_resolve_pylintrc falls back to project-root .pylintrc when config/.pylintrc missing."""
         from python_setup_lint.runner.dispatch import _PylintLintTool
+
         # Create only project-root .pylintrc, NOT config/.pylintrc
         (tmp_path / ".pylintrc").write_text("[MASTER]\n")
-        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)
+        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)  # type: ignore[attr-defined]
         assert rcfile is not None
         assert rcfile == tmp_path / ".pylintrc"
         assert rcfile.is_file()
@@ -186,19 +208,22 @@ class TestStrategyBuildCommand:
     def test_pylint_rcfile_prefers_config_over_root(self, tmp_path: Path) -> None:
         """_resolve_pylintrc prefers config/.pylintrc over project-root .pylintrc."""
         from python_setup_lint.runner.dispatch import _PylintLintTool
+
         config_dir = tmp_path / "config"
         config_dir.mkdir()
         (config_dir / ".pylintrc").write_text("[MASTER]\nconfig\n")
         (tmp_path / ".pylintrc").write_text("[MASTER]\nroot\n")
-        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)
+        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)  # type: ignore[attr-defined]
         assert rcfile == config_dir / ".pylintrc"
         assert rcfile.read_text() == "[MASTER]\nconfig\n"
 
     def test_pylint_build_command_injects_rcfile(self) -> None:
         """build_command includes --rcfile when auto-discovered."""
         from python_setup_lint.runner import _PylintLintTool
-        cmd = _PylintLintTool(ToolSpec("pylint", ["pylint"], supports_path=True)).build_command(
-            config=_CONFIG, path="src/python_setup_lint")
+
+        cmd = _PylintLintTool(
+            ToolSpec("pylint", ["pylint"], supports_path=True)
+        ).build_command(config=_CONFIG, path="src/python_setup_lint")
         assert "--rcfile" in cmd, f"Expected --rcfile in {cmd!r}"
         rcfile_idx = cmd.index("--rcfile")
         assert rcfile_idx + 1 < len(cmd)
@@ -208,15 +233,29 @@ class TestStrategyBuildCommand:
 
     def test_yamllint_strategy_expands_glob(self) -> None:
         cmd = _build_command(
-            ToolSpec("yamllint", ["yamllint"], supports_path=True, default_paths=["src/**/*.py"]),
-            config=_CONFIG)
-        assert cmd[0] == "yamllint" and len(cmd) > 1 and all(a.endswith(".py") for a in cmd[1:])
+            ToolSpec(
+                "yamllint",
+                ["yamllint"],
+                supports_path=True,
+                default_paths=["src/**/*.py"],
+            ),
+            config=_CONFIG,
+        )
+        assert (
+            cmd[0] == "yamllint"
+            and len(cmd) > 1
+            and all(a.endswith(".py") for a in cmd[1:])
+        )
 
     @pytest.mark.parametrize(
-        "strategy_name,package_name,expected_tokens", STRATEGY_TOKENS_CASES,
+        "strategy_name,package_name,expected_tokens",
+        STRATEGY_TOKENS_CASES,
     )
     def test_stubtest_and_verifytypes_strategy_with_package_name(
-        self, strategy_name: str, package_name: str, expected_tokens: list[str],
+        self,
+        strategy_name: str,
+        package_name: str,
+        expected_tokens: list[str],
     ) -> None:
         config = RunnerConfig(cwd=Path.cwd(), package_name=package_name)
         cmd = STRATEGIES[strategy_name].build_command(config=config)
@@ -224,7 +263,9 @@ class TestStrategyBuildCommand:
             assert tok in cmd, f"expected {tok!r} in {cmd!r}"
 
     def test_detect_secrets_strategy_bash_pipeline(self) -> None:
-        cmd = STRATEGIES["detect-secrets"].build_command(config=RunnerConfig(cwd=Path.cwd()))
+        cmd = STRATEGIES["detect-secrets"].build_command(
+            config=RunnerConfig(cwd=Path.cwd())
+        )
         assert cmd[:2] == ["bash", "-c"]
         assert "detect-secrets-hook" in cmd[2] and "--baseline" in cmd[2]
 
@@ -237,22 +278,33 @@ class TestPathHelpers:
 
     def test_find_py_files_in_dir(self) -> None:
         files = _find_py_files(["src/python_setup_lint"], cwd=Path.cwd())
-        assert files and all(f.endswith(".py") for f in files) and all(not Path(f).is_absolute() for f in files)
+        assert (
+            files
+            and all(f.endswith(".py") for f in files)
+            and all(not Path(f).is_absolute() for f in files)
+        )
 
     def test_find_py_files_sorted_and_dedupe(self) -> None:
-        files = _find_py_files(["src/python_setup_lint", "src/python_setup_lint"], cwd=Path.cwd())
+        files = _find_py_files(
+            ["src/python_setup_lint", "src/python_setup_lint"], cwd=Path.cwd()
+        )
         assert files == sorted(files) and len(files) == len(set(files))
 
     @pytest.mark.parametrize("paths,expected", FIND_PY_FILES_BOUNDARY_CASES)
-    def test_find_py_files_boundary(self, paths: list[str], expected: list[str]) -> None:
+    def test_find_py_files_boundary(
+        self, paths: list[str], expected: list[str]
+    ) -> None:
         assert _find_py_files(paths, cwd=Path.cwd()) == expected
 
     def test_find_py_files_ignores_non_py(self) -> None:
         # ``src/python_setup_lint`` has both .py and .pyi — only .py kept.
-        assert all(f.endswith(".py") for f in _find_py_files(["src/python_setup_lint"], cwd=Path.cwd()))
+        assert all(
+            f.endswith(".py")
+            for f in _find_py_files(["src/python_setup_lint"], cwd=Path.cwd())
+        )
 
     @pytest.mark.parametrize("paths,check", EXPAND_GLOBS_CASES)
-    def test_expand_globs(self, paths: list[str], check) -> None:
+    def test_expand_globs(self, paths: list[str], check) -> None:  # type: ignore[no-untyped-def]
         assert check(_expand_globs(paths, cwd=Path.cwd()))
 
     def test_expand_globs_yamllint_config_glob(self, tmp_path: Path) -> None:
@@ -281,9 +333,11 @@ class TestDetectSecretsBootstrap:
     def test_bootstrap_when_baseline_missing(self, tmp_path: Path) -> None:
         """When ``.secrets.baseline`` does not exist, build_command returns a bootstrap scan command."""
         from python_setup_lint.runner.dispatch import _DetectSecretsLintTool
+
         config = RunnerConfig(cwd=tmp_path)
-        cmd = _DetectSecretsLintTool(ToolSpec("detect-secrets", ["detect-secrets-hook"])).build_command(
-            config=config)
+        cmd = _DetectSecretsLintTool(
+            ToolSpec("detect-secrets", ["detect-secrets-hook"])
+        ).build_command(config=config)
         assert cmd[:2] == ["bash", "-c"]
         assert "detect-secrets scan" in cmd[2]
         assert ".secrets.baseline" in cmd[2]
@@ -291,10 +345,12 @@ class TestDetectSecretsBootstrap:
     def test_standard_pipeline_when_baseline_exists(self, tmp_path: Path) -> None:
         """When ``.secrets.baseline`` exists, build_command returns the standard git-ls-files pipeline."""
         from python_setup_lint.runner.dispatch import _DetectSecretsLintTool
+
         (tmp_path / ".secrets.baseline").write_text("{}")
         config = RunnerConfig(cwd=tmp_path)
-        cmd = _DetectSecretsLintTool(ToolSpec("detect-secrets", ["detect-secrets-hook"])).build_command(
-            config=config)
+        cmd = _DetectSecretsLintTool(
+            ToolSpec("detect-secrets", ["detect-secrets-hook"])
+        ).build_command(config=config)
         assert cmd[:2] == ["bash", "-c"]
         assert "git ls-files" in cmd[2]
         assert "detect-secrets-hook" in cmd[2]
@@ -303,9 +359,11 @@ class TestDetectSecretsBootstrap:
     def test_bootstrap_with_custom_baseline_path(self, tmp_path: Path) -> None:
         """Custom ``secrets_baseline`` path is respected in bootstrap command."""
         from python_setup_lint.runner.dispatch import _DetectSecretsLintTool
+
         config = RunnerConfig(cwd=tmp_path, secrets_baseline="config/secrets.baseline")
-        cmd = _DetectSecretsLintTool(ToolSpec("detect-secrets", ["detect-secrets-hook"])).build_command(
-            config=config)
+        cmd = _DetectSecretsLintTool(
+            ToolSpec("detect-secrets", ["detect-secrets-hook"])
+        ).build_command(config=config)
         assert "config/secrets.baseline" in cmd[2]
 
 
@@ -324,6 +382,7 @@ class TestTachConfig:
     def test_tach_toml_has_source_roots(self) -> None:
         """tach.toml declares source_roots so tach check can run."""
         import tomllib
+
         project_root = Path(__file__).resolve().parent.parent.parent
         tach_toml = project_root / "tach.toml"
         data = tomllib.loads(tach_toml.read_text())
@@ -354,11 +413,13 @@ class TestPylintrcNoMaxComplexity:
 class TestObservabilitySkipLines:
     """Stderr skip lines for tools that legitimately cannot run."""
 
-    def test_package_name_none_emits_stderr_skip(self, capsys: pytest.CaptureFixture[str],
-                                                  monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_package_name_none_emits_stderr_skip(
+        self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """``package_name=None`` prints SKIPPED lines to stderr for stubtest+verifytypes."""
         from python_setup_lint.testing import fake_run_cmd_factory
         from tests.runner._factories import canned_results_all_tools
+
         fake = fake_run_cmd_factory(canned_results_all_tools())
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         config = RunnerConfig(cwd=Path.cwd(), package_name=None)
@@ -368,11 +429,13 @@ class TestObservabilitySkipLines:
         assert "[mypy.stubtest]" in captured.err
         assert "[pyright verify types]" in captured.err
 
-    def test_fix_na_emits_stderr(self, capsys: pytest.CaptureFixture[str],
-                                  monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_fix_na_emits_stderr(
+        self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """``--fix`` on a tool that does not support autofix prints N/A to stderr."""
         from python_setup_lint.testing import fake_run_cmd_factory
         from tests.runner._factories import canned_results_all_tools
+
         fake = fake_run_cmd_factory(canned_results_all_tools())
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
@@ -380,11 +443,13 @@ class TestObservabilitySkipLines:
         captured = capsys.readouterr()
         assert "--fix: N/A" in captured.err
 
-    def test_path_na_emits_stderr(self, capsys: pytest.CaptureFixture[str],
-                                   monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_path_na_emits_stderr(
+        self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """``--path`` on a tool that does not support path scoping prints N/A to stderr."""
         from python_setup_lint.testing import fake_run_cmd_factory
         from tests.runner._factories import canned_results_all_tools
+
         fake = fake_run_cmd_factory(canned_results_all_tools())
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
@@ -392,11 +457,13 @@ class TestObservabilitySkipLines:
         captured = capsys.readouterr()
         assert "--path: N/A" in captured.err
 
-    def test_exclude_na_emits_stderr(self, capsys: pytest.CaptureFixture[str],
-                                      monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_exclude_na_emits_stderr(
+        self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """``--exclude`` on a tool that does not support exclude prints N/A to stderr."""
         from python_setup_lint.testing import fake_run_cmd_factory
         from tests.runner._factories import canned_results_all_tools
+
         fake = fake_run_cmd_factory(canned_results_all_tools())
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
@@ -412,7 +479,9 @@ class TestRunCmd:
     """Subprocess runner returns structured results (quick commands only)."""
 
     @pytest.mark.parametrize("cmd,label,exit_pred,stdout_want", RUN_CMD_CASES)
-    def test_run_cmd_success_and_failure(self, cmd, label, exit_pred, stdout_want) -> None:
+    def test_run_cmd_success_and_failure(  # type: ignore[no-untyped-def]
+        self, cmd, label, exit_pred, stdout_want
+    ) -> None:
         r = _run_cmd(cmd, cwd=Path.cwd(), label=label)
         assert exit_pred(r.exit_code) and r.tool_name == label and r.elapsed >= 0
         if stdout_want is not None:
@@ -430,10 +499,14 @@ class TestCaptureBaseline:
     """``_capture_baseline`` snapshot serialisation."""
 
     def test_capture_basic(self) -> None:
-        baseline = _capture_baseline([
-            make_lint_result(tool_name="ruff check", exit_code=0, stdout="no issues"),
-            make_lint_result(tool_name="mypy", exit_code=1, stdout="error: x"),
-        ])
+        baseline = _capture_baseline(
+            [
+                make_lint_result(
+                    tool_name="ruff check", exit_code=0, stdout="no issues"
+                ),
+                make_lint_result(tool_name="mypy", exit_code=1, stdout="error: x"),
+            ]
+        )
         assert len(baseline) == 2
         assert baseline[0]["tool"] == "ruff check" and baseline[0]["exit_code"] == 0
         assert baseline[1]["exit_code"] == 1
@@ -441,23 +514,53 @@ class TestCaptureBaseline:
     @pytest.mark.parametrize(
         "tool,stdout,want_in,want_not_in",
         [
-            ("pyright check", json.dumps({"summary": {"errorCount": 1}}),
-             {"diagnostics": {"summary": {"errorCount": 1}}}, []),
-            ("pyright check", json.dumps({"summary": {"errorCount": 1, "timeInSec": 12.5, "filesAnalyzed": 100}}),
-             None, ["timeInSec"]),  # volatile timeInSec stripped; filesAnalyzed kept
-            ("rumdl check", "\nSuccess: No issues found in 47 files (12ms)\n",
-             {"output": "\nSuccess: No issues found in 47 files (XXXms)\n"}, []),
+            (
+                "pyright check",
+                json.dumps({"summary": {"errorCount": 1}}),
+                {"diagnostics": {"summary": {"errorCount": 1}}},
+                [],
+            ),
+            (
+                "pyright check",
+                json.dumps(
+                    {
+                        "summary": {
+                            "errorCount": 1,
+                            "timeInSec": 12.5,
+                            "filesAnalyzed": 100,
+                        }
+                    }
+                ),
+                None,
+                ["timeInSec"],
+            ),  # volatile timeInSec stripped; filesAnalyzed kept
+            (
+                "rumdl check",
+                "\nSuccess: No issues found in 47 files (12ms)\n",
+                {"output": "\nSuccess: No issues found in 47 files (XXXms)\n"},
+                [],
+            ),
         ],
-        ids=["pyright_diagnostics", "pyright_strips_time_in_sec", "rumdl_strips_timing"],
+        ids=[
+            "pyright_diagnostics",
+            "pyright_strips_time_in_sec",
+            "rumdl_strips_timing",
+        ],
     )
-    def test_capture_strips_volatile_fields(self, tool: str, stdout: str, want_in, want_not_in) -> None:
+    def test_capture_strips_volatile_fields(  # type: ignore[no-untyped-def]
+        self, tool: str, stdout: str, want_in, want_not_in
+    ) -> None:
         baseline = _capture_baseline([make_lint_result(tool_name=tool, stdout=stdout)])
         if want_in is not None:
             for key, want_val in want_in.items():
-                assert baseline[0][key] == want_val, f"{key}: got {baseline[0][key]!r}, want {want_val!r}"
-        for stripped_key in (want_not_in or []):
+                assert baseline[0][key] == want_val, (
+                    f"{key}: got {baseline[0][key]!r}, want {want_val!r}"
+                )
+        for stripped_key in want_not_in or []:
             diag = baseline[0].get("diagnostics", {})
-            assert stripped_key not in diag.get("summary", {}), f"{stripped_key} should be stripped: {diag!r}"
+            assert stripped_key not in diag.get("summary", {}), (
+                f"{stripped_key} should be stripped: {diag!r}"
+            )
 
 
 # ── _diff_baseline parametrised shrinkage/addition/mixed matrix ───
@@ -492,7 +595,11 @@ class TestDiffBaselineEdgeCases:
 
     @pytest.mark.parametrize("saved,current,want_kind", DIFF_EDGE_CASES)
     def test_diff_edge_case_matrix(
-        self, tmp_path: Path, saved: dict[str, Any], current: dict[str, Any], want_kind: str,
+        self,
+        tmp_path: Path,
+        saved: dict[str, Any],
+        current: dict[str, Any],
+        want_kind: str,
     ) -> None:
         """timeInSec skip / diagnostics-present / identical saved=current → no violation."""
         results = build_current_results([saved], current)
@@ -504,7 +611,11 @@ class TestDiffBaselineEdgeCases:
 
     @pytest.mark.parametrize("saved,results,want_kind", DIFF_EDGE_INVARIANTS)
     def test_diff_edge_invariants(
-        self, tmp_path: Path, saved: dict[str, Any], results: list[LintResult], want_kind: str,
+        self,
+        tmp_path: Path,
+        saved: dict[str, Any],
+        results: list[LintResult],
+        want_kind: str,
     ) -> None:
         """Exit-code changed / shrinkage / new-tool rows — each needs direct LintResult construction."""
         violations, reloaded = diff_baseline_with(tmp_path, saved, results)
@@ -512,15 +623,21 @@ class TestDiffBaselineEdgeCases:
             assert violations == [], f"Expected no violations, got {violations!r}"
             # shrinkage path: exit_code rewritten in baseline.
             if saved.get("exit_code") == 1:
-                assert baseline_entry_for_tool(reloaded, saved["tool"])["exit_code"] == 0
+                assert (
+                    baseline_entry_for_tool(reloaded, saved["tool"])["exit_code"] == 0
+                )
         else:
             diff_violation_kind(violations, want_kind)
 
     @pytest.mark.parametrize("kind,body,want_substr", DIFF_BASELINE_PATH_ERRORS)
-    def test_diff_baseline_path_errors(self, tmp_path: Path, kind: str, body, want_substr) -> None:
+    def test_diff_baseline_path_errors(  # type: ignore[no-untyped-def]
+        self, tmp_path: Path, kind: str, body, want_substr
+    ) -> None:
         """Missing baseline → 'not found'; invalid JSON → 'Cannot read'; empty + empty → no violation."""
         if kind == "missing":
-            violations = _diff_baseline([make_lint_result()], Path("/nonexistent/baseline.json"))
+            violations = _diff_baseline(
+                [make_lint_result()], Path("/nonexistent/baseline.json")
+            )
             assert len(violations) == 1 and want_substr in violations[0]
         elif kind == "invalid":
             baseline_path = tmp_path / "baseline.json"
@@ -534,20 +651,38 @@ class TestDiffBaselineEdgeCases:
     def test_diff_unwritable_baseline_returns_violation(self, tmp_path: Path) -> None:
         """D5: unwritable baseline + shrinkage triggers write → graceful violation, not crash."""
         baseline_path = tmp_path / "readonly.json"
-        baseline_path.write_text(json.dumps([
-            {"tool": "ruff check", "exit_code": 0, "output": "src/a.py:1: error A\nsrc/b.py:2: error B"}
-        ]))
+        baseline_path.write_text(
+            json.dumps(
+                [
+                    {
+                        "tool": "ruff check",
+                        "exit_code": 0,
+                        "output": "src/a.py:1: error A\nsrc/b.py:2: error B",
+                    }
+                ]
+            )
+        )
         baseline_path.chmod(0o444)
         try:
-            results = [make_lint_result(tool_name="ruff check", exit_code=0, stdout="src/a.py:1: error A")]
+            results = [
+                make_lint_result(
+                    tool_name="ruff check", exit_code=0, stdout="src/a.py:1: error A"
+                )
+            ]
             violations = _diff_baseline(results, baseline_path)
-            assert any("cannot write baseline" in v.lower() for v in violations), violations
+            assert any("cannot write baseline" in v.lower() for v in violations), (
+                violations
+            )
         finally:
             baseline_path.chmod(0o644)
 
     def test_peek_fallback_tools_snapshot(self) -> None:
         """peek_fallback_tools returns a frozen snapshot of the per-run fallback set."""
-        from python_setup_lint.runner.baseline import _FALLBACK_TOOLS, peek_fallback_tools
+        from python_setup_lint.runner.baseline import (  # type: ignore[attr-defined]
+            _FALLBACK_TOOLS,
+            peek_fallback_tools,
+        )
+
         snapshot = peek_fallback_tools()
         assert isinstance(snapshot, frozenset)
         _FALLBACK_TOOLS.add("test_tool")
@@ -558,13 +693,19 @@ class TestDiffBaselineEdgeCases:
 
     def test_peek_fallback_tools_cleared_per_diff(self, tmp_path: Path) -> None:
         """_diff_baseline clears _FALLBACK_TOOLS at the start of each call."""
-        from python_setup_lint.runner.baseline import _FALLBACK_TOOLS, peek_fallback_tools
+        from python_setup_lint.runner.baseline import (  # type: ignore[attr-defined]
+            _FALLBACK_TOOLS,
+            peek_fallback_tools,
+        )
+
         _FALLBACK_TOOLS.add("stale_tool")
         baseline_path = tmp_path / "empty_baseline.json"
         baseline_path.write_text("[]")
         # Diff with empty baseline + empty current → no fallback triggers
         _diff_baseline([], baseline_path)
-        assert "stale_tool" not in peek_fallback_tools(), "Fallback set should be cleared per diff call"
+        assert "stale_tool" not in peek_fallback_tools(), (
+            "Fallback set should be cleared per diff call"
+        )
 
 
 # ── overwrite-baseline coverage (D11) ──────────────────────────────
@@ -573,33 +714,60 @@ class TestDiffBaselineEdgeCases:
 class TestOverwriteBaseline:
     """``--overwrite-baseline`` rewrites an existing baseline file (with fakes)."""
 
-    def test_overwrite_via_main_and_run_lint(self, tmp_path: Path, capsys: pytest.CaptureFixture[str],
-                                             monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_overwrite_via_main_and_run_lint(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """``main --overwrite-baseline`` rewrites an existing baseline + emits banner; ``run_lint`` does the same."""
         baseline_file = tmp_path / "overwrite.json"
         _, cfg = install_fake_runner(monkeypatch, default_py_dirs=None)
         main(["--path", "src/main.py", "--baseline", str(baseline_file)], config=cfg)
         install_fake_runner(monkeypatch)
-        main(["--overwrite-baseline", "--baseline", str(baseline_file), "--path", "src/main.py"], config=cfg)
+        main(
+            [
+                "--overwrite-baseline",
+                "--baseline",
+                str(baseline_file),
+                "--path",
+                "src/main.py",
+            ],
+            config=cfg,
+        )
         assert "Overwriting baseline" in capsys.readouterr().out
-        baseline_file2 = tmp_path / "overwrite2.json"  # run_lint(): same behavior via the API
+        baseline_file2 = (
+            tmp_path / "overwrite2.json"
+        )  # run_lint(): same behavior via the API
         install_fake_runner(monkeypatch)
         run_lint(path="src/main.py", baseline=str(baseline_file2))
         install_fake_runner(monkeypatch)
-        run_lint(path="src/main.py", baseline=str(baseline_file2), overwrite_baseline=True)
-        assert json.loads(baseline_file2.read_text()) and json.loads(baseline_file.read_text())
+        run_lint(
+            path="src/main.py", baseline=str(baseline_file2), overwrite_baseline=True
+        )
+        assert json.loads(baseline_file2.read_text()) and json.loads(
+            baseline_file.read_text()
+        )
 
-    def test_no_overwrite_without_flag(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_no_overwrite_without_flag(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Without ``--overwrite-baseline``, an existing baseline is diffed, not rewritten."""
         baseline_file = tmp_path / "no_overwrite.json"
         saved = [{"tool": "ruff check", "exit_code": 0, "output": "first output"}]
         baseline_file.write_text(json.dumps(saved))
-        fake = fake_run_cmd_factory({
-            "ruff check": make_lint_result(tool_name="ruff check", exit_code=0, stdout="first output"),
-        })
+        fake = fake_run_cmd_factory(
+            {
+                "ruff check": make_lint_result(
+                    tool_name="ruff check", exit_code=0, stdout="first output"
+                ),
+            }
+        )
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
-        main(["--baseline", str(baseline_file), "--path", "src/main.py"],
-             config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"))
+        main(
+            ["--baseline", str(baseline_file), "--path", "src/main.py"],
+            config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
+        )
         data = json.loads(baseline_file.read_text())
         assert len(data) == 1 and data[0]["output"] == "first output"
 
@@ -611,19 +779,34 @@ class TestPrintResult:
     """``_print_result`` produces expected output format."""
 
     @pytest.mark.parametrize("exit_code,stdout,stderr,want_tokens", PRINT_FORMAT_CASES)
-    def test_print_format(self, capsys: pytest.CaptureFixture[str], exit_code, stdout, stderr,
-                          want_tokens) -> None:
+    def test_print_format(  # type: ignore[no-untyped-def]
+        self, capsys: pytest.CaptureFixture[str], exit_code, stdout, stderr, want_tokens
+    ) -> None:
         """One row per PASSED/FAILED — each asserts expected markers + content surface."""
-        _print_result(make_lint_result(tool_name="mytool", exit_code=exit_code,
-                                       stdout=stdout or "", stderr=stderr or ""))
+        _print_result(
+            make_lint_result(
+                tool_name="mytool",
+                exit_code=exit_code,
+                stdout=stdout or "",
+                stderr=stderr or "",
+            )
+        )
         out = capsys.readouterr().out
         for tok in want_tokens:
             assert tok in out, f"expected {tok!r} in output: {out!r}"
 
-    def test_print_stderr_before_stdout(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_print_stderr_before_stdout(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """stderr line always renders before stdout line in ``_print_result`` output."""
-        _print_result(make_lint_result(tool_name="mytool", exit_code=1,
-                                       stderr="stderr line\n", stdout="stdout line\n"))
+        _print_result(
+            make_lint_result(
+                tool_name="mytool",
+                exit_code=1,
+                stderr="stderr line\n",
+                stdout="stdout line\n",
+            )
+        )
         out = capsys.readouterr().out
         assert out.index("stderr line") < out.index("stdout line")
 
@@ -634,30 +817,50 @@ class TestPrintResult:
 class TestRunLintOrchestration:
     """Fake-driven ``run_lint``: --no-fail-fast, tools_override, package_name."""
 
-    def test_no_fail_fast_captures_all_tools_and_returns_int(self, tmp_path: Path,
-                                                             monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_no_fail_fast_captures_all_tools_and_returns_int(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         fake, _ = install_fake_runner(monkeypatch)
         baseline_file = tmp_path / "noff.json"
-        rc = run_lint(config=tmp_config(tmp_path), baseline=str(baseline_file), no_fail_fast=True)
+        rc = run_lint(
+            config=tmp_config(tmp_path), baseline=str(baseline_file), no_fail_fast=True
+        )
         assert isinstance(rc, int)
         assert {c.label for c in fake.calls} == {t.name for t in TOOLS}
         assert len(json.loads(baseline_file.read_text())) == len(TOOLS)
 
-    def test_tools_override_limits_tools(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_tools_override_limits_tools(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         install_fake_runner(monkeypatch)
         baseline_file = tmp_path / "tools_override.json"
-        run_lint(config=tmp_config(tmp_path, tools_override=["ruff check", "mypy"]),
-                 baseline=str(baseline_file), no_fail_fast=True)
-        assert {e["tool"] for e in json.loads(baseline_file.read_text())} == {"ruff check", "mypy"}
+        run_lint(
+            config=tmp_config(tmp_path, tools_override=["ruff check", "mypy"]),
+            baseline=str(baseline_file),
+            no_fail_fast=True,
+        )
+        assert {e["tool"] for e in json.loads(baseline_file.read_text())} == {
+            "ruff check",
+            "mypy",
+        }
 
-    @pytest.mark.parametrize("package_name,want_stubtest,want_count_delta", PACKAGE_NAME_STUBTEST_CASES)
+    @pytest.mark.parametrize(
+        "package_name,want_stubtest,want_count_delta", PACKAGE_NAME_STUBTEST_CASES
+    )
     def test_package_name_governs_stubtest_verifytypes(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
-        package_name: str | None, want_stubtest: bool, want_count_delta: int,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        package_name: str | None,
+        want_stubtest: bool,
+        want_count_delta: int,
     ) -> None:
         fake, _ = install_fake_runner(monkeypatch, package_name=package_name)
-        run_lint(config=RunnerConfig(cwd=tmp_path, package_name=package_name),
-                 baseline=str(tmp_path / "pkg.json"), no_fail_fast=True)
+        run_lint(
+            config=RunnerConfig(cwd=tmp_path, package_name=package_name),
+            baseline=str(tmp_path / "pkg.json"),
+            no_fail_fast=True,
+        )
         dispatched = {c.label for c in fake.calls}
         assert ("mypy.stubtest" in dispatched) == want_stubtest
         assert ("pyright verify types" in dispatched) == want_stubtest
@@ -669,7 +872,9 @@ class TestRunLintOrchestration:
 
 @pytest.mark.parametrize("args", MAIN_ARGPARSE_CASES)
 def test_main_argparse_accepts_flag(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, args: list[str],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    args: list[str],
 ) -> None:
     """One row per CLI flag — ``main(args, config=...)`` returns int (parsing succeeds)."""
     cfg = install_fake_runner(monkeypatch)[1]
@@ -698,34 +903,64 @@ class TestRunLintIntegration:
 
     @pytest.mark.parametrize("fix,override_stdout", RUFF_BASELINE_FIX_CASES)
     def test_run_lint_baseline_capture_with_ruff(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fix: bool, override_stdout: str | None,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        fix: bool,
+        override_stdout: str | None,
     ) -> None:
         """Baseline capture path: optional --fix; ruff check entry present in baseline JSON."""
-        ruff_result = (None if override_stdout is None
-                       else make_lint_result(tool_name="ruff check", exit_code=0, stdout=override_stdout))
+        ruff_result = (
+            None
+            if override_stdout is None
+            else make_lint_result(
+                tool_name="ruff check", exit_code=0, stdout=override_stdout
+            )
+        )
         if ruff_result is not None:
             fake = fake_run_cmd_factory({"ruff check": ruff_result})
             monkeypatch.setattr(_runner_module, "_run_cmd", fake)
         else:
             install_fake_runner(monkeypatch)
         baseline_file = tmp_path / "test_baseline.json"
-        run_lint(config=tmp_config(tmp_path), fix=fix, baseline=str(baseline_file), no_fail_fast=True)
-        assert any(e["tool"] == "ruff check" for e in json.loads(baseline_file.read_text()))
+        run_lint(
+            config=tmp_config(tmp_path),
+            fix=fix,
+            baseline=str(baseline_file),
+            no_fail_fast=True,
+        )
+        assert any(
+            e["tool"] == "ruff check" for e in json.loads(baseline_file.read_text())
+        )
 
-    def test_baseline_create_and_diff_paths(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_baseline_create_and_diff_paths(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Baseline create → diff round-trip: entries have tool/exit_code; second run matches → exit 0."""
         install_fake_runner(monkeypatch)
         baseline_file = tmp_path / "test_baseline.json"
         run_lint(config=tmp_config(tmp_path), baseline=str(baseline_file))  # create
         data = json.loads(baseline_file.read_text())
-        assert isinstance(data, list) and data and all("tool" in e and "exit_code" in e for e in data)
-        assert run_lint(config=tmp_config(tmp_path), baseline=str(baseline_file)) == 0  # re-diff matches
+        assert (
+            isinstance(data, list)
+            and data
+            and all("tool" in e and "exit_code" in e for e in data)
+        )
+        assert (
+            run_lint(config=tmp_config(tmp_path), baseline=str(baseline_file)) == 0
+        )  # re-diff matches
 
     def test_baseline_exits_nonzero_on_new_violation(self, tmp_path: Path) -> None:
         """Stored baseline with no issues + current new ruff issue → ``_diff_baseline`` returns truthy."""
         baseline_file = tmp_path / "test_baseline_new_violation.json"
-        baseline_file.write_text(json.dumps([{"tool": "ruff check", "exit_code": 0, "output": "no issues"}]))
-        results = [make_lint_result(tool_name="ruff check", exit_code=1, stdout="error: unused import")]
+        baseline_file.write_text(
+            json.dumps([{"tool": "ruff check", "exit_code": 0, "output": "no issues"}])
+        )
+        results = [
+            make_lint_result(
+                tool_name="ruff check", exit_code=1, stdout="error: unused import"
+            )
+        ]
         assert _diff_baseline(results, baseline_file)
 
 
@@ -736,23 +971,31 @@ class TestRunLintIntegration:
 def test_build_statistics_flags(tool_name: str, expected: list[str]) -> None:
     """One row per (tool name, expected flag list); also exercises no-stat tools + cmd propagation."""
     spec = ToolSpec(tool_name, ["tool"])
-    assert _build_statistics_flags(spec) == expected, f"{tool_name}: got {_build_statistics_flags(spec)!r}"
+    assert _build_statistics_flags(spec) == expected, (
+        f"{tool_name}: got {_build_statistics_flags(spec)!r}"
+    )
 
 
-def test_statistics_flag_appended_to_build_command_and_empty_for_no_stat_tools() -> None:
+def test_statistics_flag_appended_to_build_command_and_empty_for_no_stat_tools() -> (
+    None
+):
     """``_build_command`` + ``_build_statistics_flags(spec)`` propagate ``--statistics``; no-stat tools get ``[]``."""
     cmd = _build_command(ToolSpec("ruff check", ["ruff", "check"]), config=_CONFIG)
     cmd.extend(_build_statistics_flags(ToolSpec("ruff check", ["ruff", "check"])))
     assert "--statistics" in cmd
     for name in ("mypy.stubtest", "detect-secrets", "pyright verify types"):
-        assert _build_statistics_flags(ToolSpec(name, ["tool"])) == [], f"{name} should have no flags"
+        assert _build_statistics_flags(ToolSpec(name, ["tool"])) == [], (
+            f"{name} should have no flags"
+        )
 
 
 # ── Statistics: per-tool parsers (parametrised) ───────────────────
 
 
 @pytest.mark.parametrize("tool_name,stdout,stderr,expected", PARSER_STATISTICS_CASES)
-def test_statistics_parser(tool_name: str, stdout: str, stderr: str, expected: list[tuple[str, int]]) -> None:
+def test_statistics_parser(
+    tool_name: str, stdout: str, stderr: str, expected: list[tuple[str, int]]
+) -> None:
     """One row per (tool, raw input, expected (rule, count) pairs) — dispatched via ``_STATISTICS_PARSERS``."""
     parser = _STATISTICS_PARSERS[tool_name]
     result = parser(stdout, stderr)
@@ -770,9 +1013,16 @@ def test_parse_strategies_includes_all_keys() -> None:
     """``PARSE_STRATEGIES`` includes the 11 built-in stat parsers + T11 generic + ``none`` sentinel."""
     assert {"regex_count", "raw_lines", "none"} <= set(PARSE_STRATEGIES)
     assert {
-        "ruff_statistics", "rumdl_statistics", "pylint_json2",
-        "pyright_outputjson", "pyright_verify_types", "mypy_stderr",
-        "ty_concise", "tach_json", "yamllint_parsable", "stubtest_stderr",
+        "ruff_statistics",
+        "rumdl_statistics",
+        "pylint_json2",
+        "pyright_outputjson",
+        "pyright_verify_types",
+        "mypy_stderr",
+        "ty_concise",
+        "tach_json",
+        "yamllint_parsable",
+        "stubtest_stderr",
         "detect_secrets_json",
     } <= set(PARSE_STRATEGIES)
 
@@ -788,13 +1038,16 @@ class TestLintToolRegistry:
         [STRATEGIES, {t.name: t for t in LINT_TOOLS}],
         ids=["STRATEGIES", "LINT_TOOLS"],
     )
-    def test_registry_mirrors_builtins(self, registry: dict) -> None:
+    def test_registry_mirrors_builtins(self, registry: dict[str, Any]) -> None:
         assert set(registry) == {t.name for t in TOOLS} and len(registry) == len(TOOLS)
 
     def test_strategies_are_lint_tool_instances_with_matching_names(self) -> None:
         from python_setup_lint.runner import LintTool
+
         for name, strategy in STRATEGIES.items():
-            assert isinstance(strategy, LintTool), f"Strategy {strategy!r} is not a LintTool"
+            assert isinstance(strategy, LintTool), (
+                f"Strategy {strategy!r} is not a LintTool"
+            )
             assert strategy.name == name and strategy.spec.name == name
 
 
@@ -803,19 +1056,28 @@ class TestRegisterLintTool:
 
     def test_register_appends_extra(self, isolated_runner_registries: None) -> None:
         from python_setup_lint.runner import GenericLintTool
+
         extra = ToolSpec("t4-extra-test-tool", ["t4extra", "check"], supports_path=True)
         register_lint_tool(extra, statistics_flag=[], parser=None, config_flag=None)
         assert any(t.name == "t4-extra-test-tool" for t in LINT_TOOLS)
         assert isinstance(STRATEGIES.get("t4-extra-test-tool"), GenericLintTool)
 
-    def test_register_idempotent_same_name(self, isolated_runner_registries: None) -> None:
+    def test_register_idempotent_same_name(
+        self, isolated_runner_registries: None
+    ) -> None:
         register_lint_tool(ToolSpec("t4-idempotent-tool", ["t4ida"]))
         count_after_first = len(LINT_TOOLS)
-        register_lint_tool(ToolSpec("t4-idempotent-tool", ["t4idb"]))  # update-in-place, no growth
+        register_lint_tool(
+            ToolSpec("t4-idempotent-tool", ["t4idb"])
+        )  # update-in-place, no growth
         assert len(LINT_TOOLS) == count_after_first
-        assert next(t for t in LINT_TOOLS if t.name == "t4-idempotent-tool").command == ["t4idb"]
+        assert next(
+            t for t in LINT_TOOLS if t.name == "t4-idempotent-tool"
+        ).command == ["t4idb"]
 
-    def test_register_does_not_replace_builtin_strategy(self, isolated_runner_registries: None) -> None:
+    def test_register_does_not_replace_builtin_strategy(
+        self, isolated_runner_registries: None
+    ) -> None:
         original_strategy = STRATEGIES["ruff check"]
         register_lint_tool(ToolSpec("ruff check", ["ruff", "duplicate"]))
         assert STRATEGIES["ruff check"] is original_strategy
@@ -826,12 +1088,25 @@ class TestGenericLintTool:
 
     def test_build_command_composes_fix_path_exclude(self) -> None:
         from python_setup_lint.runner import GenericLintTool
-        spec = ToolSpec("t4-generic-tool", ["t4g", "check"], supports_fix=True,
-                        supports_path=True, supports_exclude=True, default_paths=["src/"])
+
+        spec = ToolSpec(
+            "t4-generic-tool",
+            ["t4g", "check"],
+            supports_fix=True,
+            supports_path=True,
+            supports_exclude=True,
+            default_paths=["src/"],
+        )
         g = GenericLintTool(spec, statistics_flag=[], parser=None, config_flag=None)
-        assert g.build_command(config=RunnerConfig(cwd=Path("/tmp")),
-                               fix=True, path=None, exclude="tests/") == [
-            "t4g", "check", "--fix", "src/", "--exclude", "tests/",
+        assert g.build_command(
+            config=RunnerConfig(cwd=Path("/tmp")), fix=True, path=None, exclude="tests/"
+        ) == [
+            "t4g",
+            "check",
+            "--fix",
+            "src/",
+            "--exclude",
+            "tests/",
         ]
 
     @pytest.mark.parametrize(
@@ -841,16 +1116,28 @@ class TestGenericLintTool:
         ],
         ids=["stats_override_wins"],
     )
-    def test_statistics_flags_use_override(self, override: list[str], expected: list[str]) -> None:
+    def test_statistics_flags_use_override(
+        self, override: list[str], expected: list[str]
+    ) -> None:
         from python_setup_lint.runner import GenericLintTool
-        g = GenericLintTool(ToolSpec("t4-stats-tool", ["t4s"]),
-                            statistics_flag=override, parser=None, config_flag=None)
+
+        g = GenericLintTool(
+            ToolSpec("t4-stats-tool", ["t4s"]),
+            statistics_flag=override,
+            parser=None,
+            config_flag=None,
+        )
         assert g.statistics_flags() == expected
 
     def test_statistics_flags_fall_back_to_module_lookup(self) -> None:
         from python_setup_lint.runner import GenericLintTool
-        g = GenericLintTool(ToolSpec("ruff check", ["ruff", "check"]),
-                            statistics_flag=None, parser=None, config_flag=None)
+
+        g = GenericLintTool(
+            ToolSpec("ruff check", ["ruff", "check"]),
+            statistics_flag=None,
+            parser=None,
+            config_flag=None,
+        )
         assert g.statistics_flags() == ["--statistics"]
 
     def test_parse_statistics_uses_override(self) -> None:
@@ -859,14 +1146,23 @@ class TestGenericLintTool:
         def custom_parser(stdout: str, stderr: str) -> list[tuple[str, int]]:
             return [("custom-rule", 7)]
 
-        g = GenericLintTool(ToolSpec("t4-parse-tool", ["t4p"]),
-                            statistics_flag=None, parser=custom_parser, config_flag=None)
+        g = GenericLintTool(
+            ToolSpec("t4-parse-tool", ["t4p"]),
+            statistics_flag=None,
+            parser=custom_parser,
+            config_flag=None,
+        )
         assert g.parse_statistics("ignored", "also-ignored") == [("custom-rule", 7)]
 
     def test_parse_statistics_falls_back_to_module_lookup(self) -> None:
         from python_setup_lint.runner import GenericLintTool
-        g = GenericLintTool(ToolSpec("ruff check", ["ruff", "check"]),
-                            statistics_flag=None, parser=None, config_flag=None)
+
+        g = GenericLintTool(
+            ToolSpec("ruff check", ["ruff", "check"]),
+            statistics_flag=None,
+            parser=None,
+            config_flag=None,
+        )
         out = "Count\tCode\tDescription\n------\t----\t-----------\n3\tF401\tmodule imported but unused\n"
         assert ("F401", 3) in g.parse_statistics(out, "")
 
@@ -875,19 +1171,27 @@ class TestStrategyForFallback:
     """``_strategy_for`` default-aware fallback (unknown names → GenericLintTool)."""
 
     def test_returns_cached_builtin(self) -> None:
-        from python_setup_lint.runner import _strategy_for
+        from python_setup_lint.runner import _strategy_for  # type: ignore[attr-defined]
+
         original = STRATEGIES["ruff check"]
-        assert _strategy_for("ruff check", ToolSpec("ruff check", ["ruff", "check"])) is original
+        assert (
+            _strategy_for("ruff check", ToolSpec("ruff check", ["ruff", "check"]))
+            is original
+        )
 
     def test_unknown_name_returns_generic(self) -> None:
-        from python_setup_lint.runner import GenericLintTool, _strategy_for
+        from python_setup_lint.runner import GenericLintTool, _strategy_for  # type: ignore[attr-defined]
+
         fake_spec = ToolSpec("t4-unknown-fallback", ["t4fake"])
         got = _strategy_for("t4-unknown-fallback", fake_spec)
         assert isinstance(got, GenericLintTool) and got.spec is fake_spec
 
     def test_unknown_name_does_not_mutate_strategies(self) -> None:
-        from python_setup_lint.runner import _strategy_for
-        _strategy_for("t4-no-cache-fallback", ToolSpec("t4-no-cache-fallback", ["t4nc"]))
+        from python_setup_lint.runner import _strategy_for  # type: ignore[attr-defined]
+
+        _strategy_for(
+            "t4-no-cache-fallback", ToolSpec("t4-no-cache-fallback", ["t4nc"])
+        )
         assert "t4-no-cache-fallback" not in STRATEGIES
 
 
@@ -903,7 +1207,11 @@ class TestSortCounts:
 
     def test_sort_by_rule(self) -> None:
         result = _sort_counts(SORT_BY_RULE_COUNTS, sort_by_rule=True)
-        assert result[0].rule == "A001" and result[0].tool == "tool_a" and result[0].count == 10
+        assert (
+            result[0].rule == "A001"
+            and result[0].tool == "tool_a"
+            and result[0].count == 10
+        )
         assert result[2].rule == "Z001"
 
     def test_empty_list(self) -> None:
@@ -912,7 +1220,9 @@ class TestSortCounts:
 
 @pytest.mark.parametrize("args", MAIN_GROUP_SORT_CASES)
 def test_main_group_and_sort_by_rule_accepted(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, args: list[str],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    args: list[str],
 ) -> None:
     """One row per ``--group`` / ``--sort-by-rule`` permutation; ``main(args, ...)`` returns int."""
     install_fake_runner(monkeypatch)
@@ -923,8 +1233,12 @@ def test_main_group_and_sort_by_rule_accepted(
 def test_run_lint_group_sort_by_rule_forwarded(monkeypatch: pytest.MonkeyPatch) -> None:
     """``run_lint(group=..., sort_by_rule=True)`` is accepted."""
     install_fake_runner(monkeypatch)
-    rc = run_lint(config=RunnerConfig(cwd=Path("/tmp"), package_name="python_setup_lint"),
-                  statistics=True, group="tool", sort_by_rule=True)
+    rc = run_lint(
+        config=RunnerConfig(cwd=Path("/tmp"), package_name="python_setup_lint"),
+        statistics=True,
+        group="tool",
+        sort_by_rule=True,
+    )
     assert isinstance(rc, int)
 
 
@@ -936,8 +1250,13 @@ class TestGroupedOutput:
 
     @pytest.mark.parametrize("group,counts,header,markers,tokens", GROUPED_OUTPUT_CASES)
     def test_group_format_and_subtotals(
-        self, capsys: pytest.CaptureFixture[str], group: str, counts: list[ViolationCount],
-        header: str, markers: list[str], tokens: list[str],
+        self,
+        capsys: pytest.CaptureFixture[str],
+        group: str,
+        counts: list[ViolationCount],
+        header: str,
+        markers: list[str],
+        tokens: list[str],
     ) -> None:
         _print_statistics_grouped(counts, group=group)
         out = capsys.readouterr().out
@@ -948,9 +1267,13 @@ class TestGroupedOutput:
         for token in tokens:
             assert token in out
 
-    def test_group_rule_with_sort_by_rule_orders_sections(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_group_rule_with_sort_by_rule_orders_sections(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """``--group rule --sort-by-rule`` orders rule sections alphabetically."""
-        _print_statistics_grouped(GROUPED_SORT_BY_RULE_COUNTS, group="rule", sort_by_rule=True)
+        _print_statistics_grouped(
+            GROUPED_SORT_BY_RULE_COUNTS, group="rule", sort_by_rule=True
+        )
         out = capsys.readouterr().out
         assert out.index("[A001]") < out.index("[Z001]")
 
@@ -974,8 +1297,13 @@ class TestT8FailFastConfig:
 
     @pytest.mark.parametrize("body,reason_want,exact_match", MALFORMATION_CASES)
     def test_malformed_pyproject_raises(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
-        isolated_runner_registries: None, body: str, reason_want: str, exact_match: bool,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        isolated_runner_registries: None,
+        body: str,
+        reason_want: str,
+        exact_match: bool,
     ) -> None:
         """Each T8 malformation row asserts ``ExtraToolsConfigError`` carries file path + locked reason."""
         pyproject = write_pyproject(tmp_path, body)
@@ -983,14 +1311,23 @@ class TestT8FailFastConfig:
         with pytest.raises(ExtraToolsConfigError) as exc_info:
             run_lint(config=lint_config(tmp_path), no_fail_fast=True)
         err = exc_info.value
-        assert err.location == str(pyproject), f"location: got {err.location!r}, want {str(pyproject)!r}"
+        assert err.location == str(pyproject), (
+            f"location: got {err.location!r}, want {str(pyproject)!r}"
+        )
         if exact_match:
-            assert err.reason == reason_want, f"reason: got {err.reason!r}, want {reason_want!r}"
+            assert err.reason == reason_want, (
+                f"reason: got {err.reason!r}, want {reason_want!r}"
+            )
         else:
-            assert reason_want in err.reason, f"reason: got {err.reason!r}, want substring {reason_want!r}"
+            assert reason_want in err.reason, (
+                f"reason: got {err.reason!r}, want substring {reason_want!r}"
+            )
 
     def test_unknown_config_tool_id(
-        self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch,
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
         isolated_runner_registries: None,
     ) -> None:
         """Unknown ``--config bogus=...`` exits code 2, lists supported tools, not in _SUPPORTED_CONFIG_KEYS."""
@@ -1001,13 +1338,26 @@ class TestT8FailFastConfig:
         err = capsys.readouterr().err
         assert "bogus" in err and "ruff" in err and "pyright" in err
         assert "bogus" not in _SUPPORTED_CONFIG_KEYS
-        assert {"ruff", "mypy", "pylint", "pyright", "rumdl", "ty"} <= _SUPPORTED_CONFIG_KEYS
+        assert {
+            "ruff",
+            "mypy",
+            "pylint",
+            "pyright",
+            "rumdl",
+            "ty",
+        } <= _SUPPORTED_CONFIG_KEYS
 
-    def test_bad_tools_list(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
-                            isolated_runner_registries: None) -> None:
+    def test_bad_tools_list(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        isolated_runner_registries: None,
+    ) -> None:
         """Unknown tool name in ``tools_override`` → ExtraToolsConfigError with ``unknown tool name:`` reason."""
         install_fake_runner(monkeypatch)
-        config = RunnerConfig(cwd=tmp_path, tools_override=["ruff check", "bogus-tool-name"])
+        config = RunnerConfig(
+            cwd=tmp_path, tools_override=["ruff check", "bogus-tool-name"]
+        )
         with pytest.raises(ExtraToolsConfigError) as exc_info:
             run_lint(config=config, no_fail_fast=True)
         assert exc_info.value.reason.startswith("unknown tool name: 'bogus-tool-name'")
@@ -1015,13 +1365,19 @@ class TestT8FailFastConfig:
         assert exc_info.value.location == "<RunnerConfig.tools_override>"
 
     def test_clean_pyproject_extras_merge_runs_clean(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None,
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        isolated_runner_registries: None,
     ) -> None:
         """A clean extras-merge pyproject with valid ``t8-grep-noqa`` tool runs to an int exit code."""
         write_pyproject(tmp_path, CLEAN_EXTRAS_PYPROJECT_BODY)
         (tmp_path / "src").mkdir(exist_ok=True)
         (tmp_path / "src" / "__init__.py").write_text("", encoding="utf-8")
         install_fake_runner(monkeypatch)
-        config = lint_config(tmp_path, package_name="t8_clean",
-                             tools_override=["ruff check", "t8-grep-noqa"])
+        config = lint_config(
+            tmp_path,
+            package_name="t8_clean",
+            tools_override=["ruff check", "t8-grep-noqa"],
+        )
         assert isinstance(run_lint(config=config, no_fail_fast=True), int)

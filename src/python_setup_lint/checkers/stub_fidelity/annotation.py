@@ -125,7 +125,9 @@ def _compare_class_methods(ctx: ClassComparisonCtx) -> None:
 
 def _compare_class_attrs(ctx: ClassComparisonCtx) -> None:
     stub_attrs: dict[str, nodes.AnnAssign] = {}
-    impl_attrs: dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]] = {}
+    impl_attrs: dict[
+        str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]
+    ] = {}
     for child in ctx.stub_class.body:
         if isinstance(child, nodes.AnnAssign) and isinstance(
             child.target, nodes.AssignName

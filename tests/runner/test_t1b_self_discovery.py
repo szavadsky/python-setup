@@ -10,7 +10,11 @@ from pathlib import Path
 
 import pytest
 
-from python_setup_lint.runner import _config_flag_for, _default_config_paths, _infer_package_name
+from python_setup_lint.runner import (
+    _config_flag_for,
+    _default_config_paths,
+    _infer_package_name,
+)
 
 
 class TestDefaultConfigPaths:
@@ -32,19 +36,34 @@ class TestDefaultConfigPaths:
             (config_dir / fname).write_text("")
         return init
 
-    def test_returns_shipped_configs(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_returns_shipped_configs(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """When config dir has all shipped files, returns all labels."""
         import python_setup_lint
+
         init = self._make_fake_package(
             tmp_path,
-            ["ruff.toml", "mypy.ini", ".pylintrc", "pyrightconfig.json",
-             "rumdl.toml", "ty.toml", ".yamllint"],
+            [
+                "ruff.toml",
+                "mypy.ini",
+                ".pylintrc",
+                "pyrightconfig.json",
+                "rumdl.toml",
+                "ty.toml",
+                ".yamllint",
+            ],
         )
         monkeypatch.setattr(python_setup_lint, "__file__", str(init))
         result = _default_config_paths(Path.cwd())
         expected_labels = {
-            "ruff check", "mypy", "pylint", "pyright check",
-            "rumdl check", "ty check", "yamllint",
+            "ruff check",
+            "mypy",
+            "pylint",
+            "pyright check",
+            "rumdl check",
+            "ty check",
+            "yamllint",
         }
         assert expected_labels.issubset(result.keys()), (
             f"Missing shipped configs. Got: {set(result)}"
@@ -52,25 +71,34 @@ class TestDefaultConfigPaths:
         for label, path in result.items():
             assert path.is_file(), f"Config {label} -> {path} does not exist"
 
-    def test_yamllint_config_present(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_yamllint_config_present(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """yamllint shipped config is discovered."""
         import python_setup_lint
+
         init = self._make_fake_package(tmp_path, [".yamllint"])
         monkeypatch.setattr(python_setup_lint, "__file__", str(init))
         result = _default_config_paths(Path.cwd())
         assert "yamllint" in result
         assert result["yamllint"].name == ".yamllint"
 
-    def test_returns_empty_when_package_not_installed(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_returns_empty_when_package_not_installed(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """When ``python_setup_lint.__file__`` is ``None``, returns empty dict."""
         import python_setup_lint
+
         monkeypatch.setattr(python_setup_lint, "__file__", None)
         result = _default_config_paths(tmp_path)
         assert result == {}
 
-    def test_returns_empty_when_config_dir_missing(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_returns_empty_when_config_dir_missing(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         """When the config dir does not exist, returns empty dict."""
         import python_setup_lint
+
         # Point __file__ to a fake location with no config/ sibling.
         fake_pkg = tmp_path / "python_setup_lint" / "__init__.py"
         fake_pkg.parent.mkdir(parents=True)

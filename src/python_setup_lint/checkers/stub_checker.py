@@ -5,13 +5,14 @@ and signatures must match .py counterparts after normalization.
 """
 
 from __future__ import annotations
+from beartype import beartype
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
+from pylint.lint import PyLinter  # noqa: TC002
 
 from python_setup_lint.checkers.stub_coverage import (
     _CoverageState,
@@ -25,7 +26,10 @@ from python_setup_lint.checkers.stub_coverage import (
     _resolve_stub,
     emit_coverage_violations,
 )
-from python_setup_lint.checkers.stub_fidelity import _FidelityState, emit_fidelity_violations
+from python_setup_lint.checkers.stub_fidelity import (
+    _FidelityState,
+    emit_fidelity_violations,
+)
 from python_setup_lint.checkers.stub_import_contract import (
     ImportUsage,
     _in_type_checking_block,
@@ -33,8 +37,6 @@ from python_setup_lint.checkers.stub_import_contract import (
     emit_import_contract_violations,
 )
 
-if TYPE_CHECKING:
-    from pylint.lint import PyLinter
 
 log = logging.getLogger(__name__)
 
@@ -160,11 +162,16 @@ class StubChecker(BaseChecker):
         self._coverage = _CoverageState()
         self._fidelity = _FidelityState()
 
+    @beartype
     def open(self) -> None:
         c = self._coverage
         config = self.linter.config
         raw_roots = getattr(config, "source_roots", None)
-        c.source_roots = [Path(r).resolve() for r in raw_roots if r] if raw_roots else [Path("src").resolve()]
+        c.source_roots = (
+            [Path(r).resolve() for r in raw_roots if r]
+            if raw_roots
+            else [Path("src").resolve()]
+        )
         raw_patterns = getattr(config, "test_patterns", None)
         c.test_patterns = (
             list(raw_patterns)
@@ -185,6 +192,7 @@ class StubChecker(BaseChecker):
         raw_missing = getattr(config, "impl_missing_annotation", None) or "warn"
         c.impl_missing_policy = str(raw_missing)
 
+    @beartype
     def visit_module(self, node: nodes.Module) -> None:
         raw_file: str | None = getattr(node, "file", None)
         if not raw_file:
@@ -199,15 +207,25 @@ class StubChecker(BaseChecker):
 
         # ── conftest.py always exempt ─────────────────────────────────────
         if py_path.name == "conftest.py":
-            log.info("Exempt %s: conftest.py (always exempt from stub requirement)", module_name)
+            log.info(
+                "Exempt %s: conftest.py (always exempt from stub requirement)",
+                module_name,
+            )
             return
 
         # ── trivial test data modules (outside source root) exempt ────────
         if _is_trivial_test_data(node) and not _is_under_source_root(self, py_path):
-            log.info("Exempt %s: trivial test data module (only literal assignments)", module_name)
+            log.info(
+                "Exempt %s: trivial test data module (only literal assignments)",
+                module_name,
+            )
             return
 
-        if _is_test_file(self, py_path) or not _is_under_source_root(self, py_path) or _is_opted_out(self, py_path):
+        if (
+            _is_test_file(self, py_path)
+            or not _is_under_source_root(self, py_path)
+            or _is_opted_out(self, py_path)
+        ):
             return
         if not module_name:
             return
@@ -232,6 +250,7 @@ class StubChecker(BaseChecker):
             c.stub_missing.add(module_name)
         self._index_impl_annotations(module_name, node)
 
+    @beartype
     def visit_import(self, node: nodes.Import) -> None:
         c = self._coverage
         if c.current_module_name is None or c.current_module_name not in c.module_index:
@@ -239,7 +258,9 @@ class StubChecker(BaseChecker):
         if _in_type_checking_block(node):
             return
         for alias in node.names:
-            name, asname = alias if isinstance(alias, tuple) else (alias.name, alias.asname)
+            name, asname = (
+                alias if isinstance(alias, tuple) else (alias.name, alias.asname)
+            )
             c.import_usages.append(
                 ImportUsage(
                     importer_module=c.current_module_name,
@@ -251,13 +272,17 @@ class StubChecker(BaseChecker):
                 )
             )
 
+    @beartype
     def visit_importfrom(self, node: nodes.ImportFrom) -> None:
         c = self._coverage
         if c.current_module_name is None or c.current_module_name not in c.module_index:
             return
         if _in_type_checking_block(node):
             return
-        is_package = c.current_file_path is not None and c.current_file_path.name == "__init__.py"
+        is_package = (
+            c.current_file_path is not None
+            and c.current_file_path.name == "__init__.py"
+        )
         level = node.level or 0
         target_module = _resolve_relative(
             c.current_module_name,
@@ -266,7 +291,9 @@ class StubChecker(BaseChecker):
             is_package=is_package,
         )
         for alias in node.names:
-            name, asname = alias if isinstance(alias, tuple) else (alias.name, alias.asname)
+            name, asname = (
+                alias if isinstance(alias, tuple) else (alias.name, alias.asname)
+            )
             is_star = name == "*"
             c.import_usages.append(
                 ImportUsage(
@@ -279,6 +306,7 @@ class StubChecker(BaseChecker):
                 )
             )
 
+    @beartype
     def close(self) -> None:
         c = self._coverage
         # For each main-module candidate, check if any import_usages target it.
@@ -315,7 +343,9 @@ class StubChecker(BaseChecker):
         impl_names: set[str] = set()
 
         for child in py_node.body:
-            if isinstance(child, nodes.AnnAssign) and isinstance(child.target, nodes.AssignName):
+            if isinstance(child, nodes.AnnAssign) and isinstance(
+                child.target, nodes.AssignName
+            ):
                 impl_ann[child.target.name] = (child.annotation, child)
                 impl_names.add(child.target.name)
             elif isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):

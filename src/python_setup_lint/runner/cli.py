@@ -38,6 +38,8 @@ import sys
 import tomllib
 from pathlib import Path
 
+import beartype
+
 from .cmd_build import (
     _compose_pyright_config,
     _compose_ruff_config,
@@ -73,18 +75,6 @@ _SHIPPED_CONFIG_FILES: dict[str, str] = {
 
 
 def _default_config_paths(cwd: Path) -> dict[str, Path]:
-    """Discover shipped config files under the installed ``python_setup_lint/config/``.
-
-    Resolves the shipped config directory via
-    ``python_setup_lint.__file__.resolve().parent / "config"`` — the same
-    pattern ``consultant_mcp._lint_scripts._config_dir()`` uses.  Falls back
-    to ``cwd / "config"`` when the installed config dir is missing (editable
-    install / source-tree development).  Returns a mapping of canonical tool
-    labels to config file paths for every shipped config that actually exists
-    on disk.  Returns an empty dict when neither location has config files.
-
-    Pure helper — no side effects, no ``main`` dependency.
-    """
     import python_setup_lint
 
     candidates: list[Path] = []
@@ -110,32 +100,25 @@ def _default_config_paths(cwd: Path) -> dict[str, Path]:
 
 
 def _infer_package_name(cwd: Path) -> str | None:
-    """Infer the package name from ``pyproject.toml`` ``[tool.hatch.build.targets.wheel].packages[0]``.
-
-    Strips the leading ``src/`` prefix from the first packages entry.
-    Returns ``None`` when the pyproject is missing, unreadable, malformed,
-    or has no hatch packages table — callers (stubtest, verifytypes) skip
-    gracefully when ``package_name`` is ``None``.
-
-    Pure helper — no side effects, no ``main`` dependency.
-    """
     pyproject = cwd / "pyproject.toml"
     if not pyproject.is_file():
         return None
     try:
         with open(pyproject, "rb") as f:
             data = tomllib.load(f)
-    except (OSError, tomllib.TOMLDecodeError):
+    except OSError, tomllib.TOMLDecodeError:
         return None
     try:
-        packages: list[str] = data["tool"]["hatch"]["build"]["targets"]["wheel"]["packages"]  # type: ignore[index]
-    except (KeyError, TypeError):
+        packages: list[str] = data["tool"]["hatch"]["build"]["targets"]["wheel"][
+            "packages"
+        ]  # type: ignore[index]
+    except KeyError, TypeError:
         return None
     if not packages:
         return None
     raw = packages[0]
     if raw.startswith("src/"):
-        return raw[len("src/"):]
+        return raw[len("src/") :]
     return raw
 
 
@@ -192,54 +175,13 @@ __all__ = [
 # owns staging.
 
 _AUTOFIX_ENV_VAR: str = "PYTHON_SETUP_LINT_NO_AUTOFIX"
-"""Honoured by :func:`run_lint` before the tool loop; forces ``fix=False``.
-
-The env-var is consulted at the top of :func:`run_lint` and printed to
-stderr once when the override activates (so the user sees autofix was
-suppressed).  The CLI ``--fix`` arg still parses unchanged — the override
-flips the internal flag post-parse.
-"""
-
 _E999_RULE: str = "E999"
-"""Ruff's ``E999`` (syntax error) is the parseability-canary signal.
-
-A prior tool's fix breaking parseability surfaces as ``E999`` from the
-canary pass.  ``_ruff_parseability_errors`` returns the set of file paths
-that emitted ``E999`` so :func:`_apply_autofix_conflict_aware` reverts
-exactly those files from their in-memory snapshots.
-"""
-
 _E999_LINE_RE: re.Pattern[str] = re.compile(
     r"^(?P<path>.+?):(?P<line>\d+):(?P<col>\d+):\s*" + _E999_RULE + r"\b"
 )
-"""Ruff E999 line parser — tolerant of Windows drive-letter colons in path.
-
-Matches ``path:line:col: E999[ message]`` where ``path`` is greedy so a
-``C:\\foo\\bar.py`` prefix is absorbed whole and only the trailing
-``:INT:INT: E999`` shape is split off.  ``\\b`` after the rule code prevents
-a hypothetical ``E9990`` rule (none ships today) from matching.
-"""
 
 
 def _git_changed_files(cwd: Path, *, staged: bool) -> set[str]:
-    """Return paths that differ between index/worktree and HEAD.
-
-    Args:
-        cwd: Working directory the lint run is rooted at.
-        staged: ``True`` → ``git diff --name-only --cached`` (index vs HEAD);
-            ``False`` → ``git diff --name-only`` (worktree vs index).
-
-    Returns:
-        Set of repository-relative paths, one per newline-separated line of
-        ``git diff`` output.  Empty set on any git failure (non-git cwd,
-        uninitialised repo, ``git`` missing) — treated as
-        "nothing staged" so autofix applies unconditionally in a non-git
-        project.  Logs nothing on the absent-git path; callers handle the
-        empty set uniformly.
-
-    Tolerates ``FileNotFoundError`` when ``git`` is not on ``PATH``
-    (per envelope: non-git cwd → treat as all-unstaged).
-    """
     cmd = (
         ["git", "diff", "--name-only", "--cached"]
         if staged
@@ -261,35 +203,8 @@ def _git_changed_files(cwd: Path, *, staged: bool) -> set[str]:
     return {line for line in proc.stdout.splitlines() if line.strip()}
 
 
-def _ruff_parseability_errors(cwd: Path, paths: list[str], run_cmd) -> set[str]:
-    """Return paths in *paths* that ruff reports ``E999`` syntax errors on.
-
-    Single extra ``ruff check --no-fix`` invocation (the canary).  Dispatched
-    through *run_cmd* — the same package-namespace-resolution callable
-    :func:`run_lint` uses for the tool pass — so a test monkey-patching
-    ``python_setup_lint.runner._run_cmd`` controls canary behaviour too.
-    The label ``"python-setup:autofix-canary"`` distinguishes the canary call
-    from the spec's own ruff pass (same ``"ruff check"`` label would collide
-    in dict-mode fakes).
-
-    Args:
-        cwd: Working directory the lint run is rooted at; ruff is invoked
-            here so the file paths are repo-relative as the lint runner
-            produces them.
-        paths: Repo-relative paths to include in the canary.  Caller filters
-            to files the prior fix tool would have touched.
-        run_cmd: Callable matching ``_run_cmd(cmd, *, cwd, label) -> LintResult``.
-            The canary is invoked with ``cwd=cwd`` and the canary label so
-            a single faked ``_run_cmd`` can return E999-marked output for ONLY
-            the canary while letting the spec's own pass return its canned
-            result.
-
-    Returns:
-        Set of paths (relative to *cwd*) that produced ``E999`` output.
-        Empty set when *paths* is empty, when ruff is unavailable
-        (``FileNotFoundError`` propagated from run_cmd is swallowed), or
-        when no ``E999`` line is found in the canary's stdout.
-    """
+@beartype.beartype
+def _ruff_parseability_errors(cwd: Path, paths: list[str], run_cmd: object) -> set[str]:
     if not paths:
         return set()
     cmd = ["ruff", "check", "--no-fix", *paths]
@@ -297,18 +212,6 @@ def _ruff_parseability_errors(cwd: Path, paths: list[str], run_cmd) -> set[str]:
         result = run_cmd(cmd, cwd=cwd, label="python-setup:autofix-canary")
     except FileNotFoundError:
         return set()
-    # ``--no-fix`` may still report non-E999 issues; filter to E999 explicitly
-    # so a pre-existing F401 line does NOT trigger a revert of an unrelated
-    # tool's fix pass.
-    #
-    # Ruff emits ``path:line:col: RULE_CODE message``.  The path may itself
-    # contain ``:`` on Windows drive-letter prefixes (``C:\\foo\\bar.py:5:1:
-    # E999 ...``) — a left-most ``split(":", 1)`` would yield ``C`` (garbage).
-    # The regex anchors on the trailing ``:LINE:COL: E999`` shape with a
-    # greedy path group, so the drive-letter colon is absorbed into the path
-    # and only genuine ``file:line:col: E999`` lines match.  Lines that do
-    # not match (no E999 rule, or missing line/col) are skipped cleanly — no
-    # garbage short-path lands in the result set.
     e999: set[str] = set()
     for line in result.stdout.splitlines():
         m = _E999_LINE_RE.match(line)
@@ -317,51 +220,14 @@ def _ruff_parseability_errors(cwd: Path, paths: list[str], run_cmd) -> set[str]:
     return e999
 
 
-def _apply_autofix_conflict_aware(spec, *, config, paths_to_check, run_cmd):
-    """Run *spec* in fix mode with conflict-tolerant skip + E999-canary revert.
-
-    Pre-conditions:
-    * *spec* is a :class:`ToolSpec` with ``supports_fix=True``.
-    * ``paths_to_check`` is the list of repo-relative files the tool's fix
-      pass would touch — used (a) to skip staged+unstaged files (the runner
-      never applies a fix there), and (b) to compute the in-memory byte
-      snapshot for the E999-canary revert.
-
-    Side effects:
-    * Runs the tool (via *run_cmd*) with ``fix=True``.
-    * Restores any file in *paths_to_check* that the subsequent ruff canary
-      reports ``E999`` on — restoring overwrites the post-fix bytes with
-      the pre-fix snapshot captured here.
-    * Emits one stderr log line per skipped file (``[<tool>] autofix skipped
-      for <file>: staged+unstaged conflict``) and per reverted file
-      (``[<tool>] autofix reverted <file>: E999 after fix``).  No sensitive
-      data; observability only.
-
-    Args:
-        spec: The tool to run with ``fix=True``.
-        config: :class:`RunnerConfig` — ``config.cwd`` is the git root for
-            the staged/unstaged snapshot and the cwd the tool is invoked in.
-        paths_to_check: Repo-relative files to skip-check (staged+unstaged)
-            and snapshot for revert.  Filtered before invocation to only
-            files that exist on disk; both helpers tolerate absent paths.
-            Computed by the caller (:func:`run_lint`) via
-            :func:`_autofix_target_paths` so the helper is testable in
-            isolation.
-        run_cmd: Callable matching ``_run_cmd(cmd, *, cwd, label) -> LintResult``
-            (resolved by :func:`run_lint` through the package namespace so
-            test monkey-patches take effect).  Accepts the strategy-built
-            command; ALSO used by the E999-canary (see
-            :func:`_ruff_parseability_errors` — the canary call carries the
-            ``"python-setup:autofix-canary"`` label so a dict-mode fake can
-            return E999-marked output for ONLY the canary).
-
-    Returns:
-        The :class:`LintResult` produced by the tool's fix pass.  Reverts
-        happen AFTER the result is returned; callers see the post-fix
-        ``exit_code`` regardless of revert (the result line still reflects
-        that ruff fixed N things; the revert only undoes the file bytes, not
-        the tool's own log).
-    """
+@beartype.beartype
+def _apply_autofix_conflict_aware(
+    spec: ToolSpec,
+    *,
+    config: RunnerConfig,
+    paths_to_check: list[str],
+    run_cmd: object,
+) -> LintResult:
     staged_set = _git_changed_files(config.cwd, staged=True)
     unstaged_set = _git_changed_files(config.cwd, staged=False)
     # Skip files that would conflict with the staged blob if autofixed.
@@ -407,39 +273,9 @@ def _apply_autofix_conflict_aware(spec, *, config, paths_to_check, run_cmd):
     return result
 
 
-def _autofix_target_paths(spec, *, config, path: str | None) -> list[str]:
-    """Return the file paths *spec* would touch on a fix pass.
-
-    Mirrors the path-resolution logic in
-    :func:`python_setup_lint.runner.cmd_build._build_command` for the
-    common-case shape (the three ``supports_fix`` tools — ruff, rumdl, ty —
-    all use the generic ``_build_command``, NOT the four tool-specific
-    strategies).  The resolved list is used by
-    :func:`_apply_autofix_conflict_aware` to (a) skip staged+unstaged
-    files and (b) snapshot bytes for the E999-canary revert.
-
-    The expansion goes one step beyond ``_build_command``: directory paths
-    (e.g. ruff's ``default_paths=["src/", "tests/"]``) are recursively
-    walked to individual ``.py`` files via :func:`_find_py_files`.  This is
-    load-bearing because the conflict-skip + bytes-snapshot operate at the
-    file level (``git diff --name-only`` returns files, not dirs; a
-    directory's ``read_bytes()`` raises ``IsADirectoryError`` which the
-    snapshot loop silently drops).  Without the recursive walk, a fresh
-    repo where the user only creates ``src/foo.py`` would never have its F401
-    skip-check fire — the conflict-aware autofix would silently pass-through
-    the unenumerated directory.
-
-    Returns:
-        Repo-relative path strings for the individual files the tool would
-        touch.  When the spec has no ``default_paths`` and no explicit
-        ``--path`` was passed, returns an empty list — the
-        conflict-aware autofix helper treats an empty list as "no files to
-        skip-check or snapshot", so the tool still runs (it'll target the
-        whole repo per its own defaults), and no files are eligible for
-        the in-memory revert.  This is a documented conservative behaviour:
-        when we cannot enumerate target files, we cannot conflict-skip OR
-        revert, but the tool still applies its fix pass.
-    """
+def _autofix_target_paths(
+    spec: ToolSpec, *, config: RunnerConfig, path: str | None
+) -> list[str]:
     if path is not None and spec.supports_path:
         paths = [path]
     elif spec.default_paths:
@@ -467,50 +303,24 @@ def run_lint(
     group: str = "none",
     sort_by_rule: bool = False,
 ) -> int:
-    """Run the full lint pipeline.
-
-    Returns 0 if all tools pass, non-zero on any failure.  See the runner
-    package ``__init__`` docstring for the CLI surface.
-    """
     if config is None:
         config = RunnerConfig(cwd=Path.cwd())
 
     # ── T7 — ruff compose + pyright project override ──────────────
     # Apply the two declarative ``RunnerConfig`` override fields before any
     # tool runs so they mutate ``config.config_paths`` exactly once.
-    # ``ruff_project_overrides`` composes a temp ``ruff.toml`` extending the
-    # shared ``config_paths["ruff check"]`` (port of cm's
-    # ``_ruff_config_with_project_overrides``).  ``pyright_project_override``
-    # takes precedence over any ``config_paths["pyright check"]`` entry.
-    # Both default off → python-setup's own run unchanged.  CLI ``--config``
-    # entries (already merged into ``config.config_paths`` by ``main``)
-    # still win for non-override tools; ruff's compose source is whatever
-    # path currently occupies the ruff slot (typically the shipped config).
     if config.ruff_project_overrides:
         shared_ruff = config.config_paths.get("ruff check")
         if shared_ruff is not None:
             composed = _compose_ruff_config(config.cwd, shared_ruff)
             if composed != shared_ruff:
-                # Mutate in place so downstream strategy dispatch reads the
-                # composed path without a config-clone hop.
                 config.config_paths["ruff check"] = composed
     if config.pyright_project_override is not None:
         config.config_paths["pyright check"] = config.pyright_project_override
-    elif config.config_paths is not None and config.config_paths.get("pyright check") is not None:
-        # T9.7 — default path: compose a cwd-rooted pyright config when no
-        # explicit override is wired.  The shipped config lives at
-        # ``config/pyrightconfig.json`` (outside the project cwd), so pyright
-        # resolves its relative ``venvPath``/``exclude`` entries against the
-        # config FILE dir → wrong venv → ~10k ``.venv`` files walked (~17k
-        # diagnostics).  ``_compose_pyright_config`` rewrites ``venvPath`` +
-        # ``exclude`` to absolute ``cwd``-rooted paths and writes a tmp
-        # ``pyrightconfig.json`` passed via ``--project``.  Idempotent across
-        # invocations and a no-op when the shipped config already resolves
-        # against ``cwd`` (returns the shared path unchanged).
-        # ``config_paths`` is bound to a typed alias here so mypy does not
-        # flag the union-narrowing pattern that the ruff block above inherits
-        # from ``config.config_paths`` being ``dict[str, Path] | None`` — the
-        # alias collapses the ``None`` arm via the preceding ``is not None``.
+    elif (
+        config.config_paths is not None
+        and config.config_paths.get("pyright check") is not None
+    ):
         paths = config.config_paths
         shared_pyright = paths["pyright check"]
         composed_pyright = _compose_pyright_config(config.cwd, shared_pyright)
@@ -518,11 +328,6 @@ def run_lint(
             paths["pyright check"] = composed_pyright
 
     # ── T4 — env-var autofix opt-out ─────────────────────────────
-    # ``PYTHON_SETUP_LINT_NO_AUTOFIX=1`` flips ``fix=False`` BEFORE the tool
-    # loop so no tool sees ``fix=True`` and no conflict-aware helper runs.
-    # Print to stderr ONCE so the user sees the override took effect — no
-    # silent skip.  This does NOT change ``--fix`` arg parsing; the override
-    # flips the internal flag post-parse so the CLI surface is unchanged.
     if fix and os.environ.get(_AUTOFIX_ENV_VAR) == "1":
         print(
             f"[autofix] {_AUTOFIX_ENV_VAR}=1 set — disabling autofix for this run",
@@ -531,24 +336,13 @@ def run_lint(
         fix = False
 
     # ── Extras merge (T11 v1) ─────────────────────────────────────
-    # Load + validate ``[[tool.python-setup-lint.extra-tools]]`` from the
-    # project's ``pyproject.toml`` and register each entry as a live
-    # :class:`ToolSpec` via :func:`register_lint_tool`.  Idempotent per
-    # ``tool.name`` so a re-invocation in the same process is a no-op.
-    # ``ExtraToolsConfigError`` is NOT caught here — it propagates uncaught
-    # to the caller (T8 R4: per-entry validation errors surface as a
-    # traceback + non-zero exit, not silent fallback).
     extras = _load_extra_tools(config.cwd)
     cwd_resolved = config.cwd.resolve()
     if extras and cwd_resolved not in _EXTRA_TOOLS_REGISTERED_PATHS:
         _register_extra_tools(extras)
         _EXTRA_TOOLS_REGISTERED_PATHS.add(cwd_resolved)
 
-    # Resolve which tools to run.  ``tools_override=None`` → iterate the
-    # live registry (:data:`LINT_TOOLS`); with a list, each name MUST resolve
-    # against the live registry — an unknown name raises
-    # :class:`ExtraToolsConfigError` (T8 fail-fast, location
-    # ``<RunnerConfig.tools_override>``) rather than silently running a subset.
+    # Resolve which tools to run.
     selected: list[ToolSpec] = []
     if config.tools_override is not None:
         lint_tools_by_name = {t.name: t for t in LINT_TOOLS}
@@ -568,18 +362,9 @@ def run_lint(
     overall_rc = 0
     cwd = config.cwd
 
-    # Resolve the subprocess + display helpers through the package namespace
-    # at call time so tests that monkey-patch ``python_setup_lint.runner._run_cmd``
-    # (string or ``setattr(_runner_module, "_run_cmd", ...)``) take effect.
-    # Both patch forms target the re-export in
-    # :mod:`python_setup_lint.runner`'s ``__init__``; an early ``from .output
-    # import _run_cmd`` would bind the unpatched callable and miss the patch.
     from python_setup_lint import runner as _pkg
 
     for spec in selected:
-        # Skip tools that require package_name when none configured.
-        # Per DESIGN-0 D14: this skip stays in run_lint (NOT inside
-        # strategies) so strategies stay config-agnostic.
         if (
             spec.name in ("mypy.stubtest", "pyright verify types")
             and config.package_name is None
@@ -587,7 +372,6 @@ def run_lint(
             print(f"  [{spec.name}] SKIPPED: --package-name not set", file=sys.stderr)
             continue
 
-        # Report unsupported flags before running — use stderr so --statistics --format json is not polluted
         if fix and not spec.supports_fix:
             print(
                 f"  [{spec.name}] --fix: N/A (tool does not support autofix)",
@@ -604,15 +388,8 @@ def run_lint(
                 file=sys.stderr,
             )
 
-        # Default-aware dispatch — unknown names synthesise a GenericLintTool.
         strategy = _strategy_for(spec.name, spec)
         if fix and spec.supports_fix and not statistics:
-            # ── T4 — conflict-tolerant autofix path ────────────
-            # ``supports_fix=True`` tools run through the conflict-aware
-            # helper: snapshot staged/unstaged sets, skip staged+unstaged
-            # files, run the fix pass, then run the E999-canary and revert
-            # any file the prior fix broke parseability on.  Returns the
-            # ``LintResult`` of the fix pass.
             file_targets = _autofix_target_paths(spec, config=config, path=path)
             result = _apply_autofix_conflict_aware(
                 spec,
@@ -697,24 +474,6 @@ def _print_config_status(
     cwd: Path,
     ruff_composed: bool,
 ) -> None:
-    """Print per-tool config origin.
-
-    Iterates all built-in tools (from :data:`LINT_TOOLS`) and prints the
-    resolved config path and origin category for each.  Origin categories:
-
-    * ``shipped, from python-setup v<VERSION>`` — the tool uses the config
-      file shipped with the installed python-setup package.
-    * ``overridden via --config`` — the user passed ``--config TOOL=PATH``
-      on the CLI.
-    * ``overridden (RunnerConfig)`` — the caller supplied a
-      :class:`RunnerConfig` with an explicit ``config_paths`` entry.
-    * ``auto-discovered, project-local`` — no explicit config, but a
-      project-local file was found (currently only pylint's ``.pylintrc``).
-    * ``generated (composed)`` — a temp config was composed from the
-      shipped config + project overrides (currently only ruff when
-      ``ruff_project_overrides`` is active).
-    * ``not configured`` — no config file resolved for this tool.
-    """
     import importlib.metadata
 
     try:
@@ -743,7 +502,10 @@ def _print_config_status(
             origin = "overridden via --config"
         elif name in caller_config_paths:
             origin = "overridden (RunnerConfig)"
-        elif name in shipped_paths and config_path.resolve() == shipped_paths[name].resolve():
+        elif (
+            name in shipped_paths
+            and config_path.resolve() == shipped_paths[name].resolve()
+        ):
             origin = f"shipped, from python-setup v{version}"
         elif ruff_composed and name == "ruff check":
             origin = "generated (composed)"
@@ -754,13 +516,6 @@ def _print_config_status(
 
 
 def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -> int:
-    """CLI entry point for ``uv run lint``.
-
-    When *config* is provided, CLI flags still override the pre-built
-    configuration (cwd, package-name, default-py-dirs, tools, config-paths
-    can all be set on the command line).  This lets thin wrappers construct a
-    default configuration while still exposing the full CLI surface.
-    """
     parser = argparse.ArgumentParser(
         description="Run the python-setup lint pipeline",
     )
@@ -880,24 +635,15 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
         if "=" not in raw:
             parser.error(f"--config must be TOOL=PATH, got: {raw!r}")
         tool_id, path_str = raw.split("=", 1)
-        # T8 fail-fast: validate tool_id against the closed config-key set.
-        # Previously a typo silently produced an entry :func:`_config_flag_for`
-        # never read; now exits ``SystemExit(2)`` naming the offending key.
         if tool_id not in _SUPPORTED_CONFIG_KEYS:
             parser.error(
                 f"--config: unknown tool id {tool_id!r}; "
                 f"supported (canonical labels + short aliases): "
                 f"{sorted(_SUPPORTED_CONFIG_KEYS)}"
             )
-        # Normalise short alias → canonical label.  ``args.config`` is
-        # ``Namespace[Any]`` so ``tool_id`` is ``Any``; ``or tool_id`` coalesces
-        # the widened ``dict.get(Any, Any) -> str | None`` to ``str``.
         canonical = _CONFIG_KEY_ALIASES.get(tool_id) or tool_id
         config_paths[canonical] = Path(path_str)
 
-    # T8 fail-fast: ``--tools`` syntax (empty pieces, blank list) exits
-    # ``SystemExit(2)`` here.  Unknown-but-non-empty names are deferred to
-    # ``run_lint`` — the valid-name set is open (extras come from pyproject).
     if cli_tools_override is not None:
         if not cli_tools_override:
             parser.error("--tools: empty tool list")
@@ -906,18 +652,11 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
                 parser.error(f"--tools: empty name in {args.tools!r}")
 
     # ── T1b — self-discovery fallback ──────────────────────────
-    # When neither CLI ``--package-name`` nor caller config supplies
-    # ``package_name``, infer from pyproject.toml hatch packages.
     if package_name is None:
         package_name = _infer_package_name(cwd)
 
-    # When no CLI ``--config`` flags were given AND the caller did not
-    # supply ``config_paths``, self-discover shipped config files.
     if not args.config and (config is None or not config.config_paths):
         discovered = _default_config_paths(cwd)
-        # CLI ``--config`` entries still win over discovered ones, but
-        # since we only enter this branch when ``args.config`` is empty,
-        # discovered entries are the sole source.
         for k, v in discovered.items():
             if k not in config_paths:
                 config_paths[k] = v
@@ -936,9 +675,8 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
         )
         shipped_paths = _default_config_paths(cwd)
         ruff_composed = (
-            (config is not None and config.ruff_project_overrides)
-            and "ruff check" in shipped_paths
-        )
+            config is not None and config.ruff_project_overrides
+        ) and "ruff check" in shipped_paths
         _print_config_status(
             config_paths=config_paths,
             cli_overridden=frozenset(cli_overridden),
@@ -958,12 +696,12 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
         secrets_baseline=config.secrets_baseline
         if config is not None
         else ".secrets.baseline",
-        # T7 — declarative override fields propagate through CLI merge:
-        # no CLI flag overrides these (defaults off keep python-setup's
-        # own run unchanged); callers like consultant.mcp set both via the
-        # ``config=`` argument.
-        ruff_project_overrides=config.ruff_project_overrides if config is not None else False,
-        pyright_project_override=config.pyright_project_override if config is not None else None,
+        ruff_project_overrides=config.ruff_project_overrides
+        if config is not None
+        else False,
+        pyright_project_override=config.pyright_project_override
+        if config is not None
+        else None,
     )
 
     return run_lint(

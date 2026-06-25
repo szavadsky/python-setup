@@ -69,12 +69,14 @@ def tmp_baseline(tmp_path: Path) -> Callable[..., Path]:
 
     def _write(entries: list[dict[str, object]], name: str = "baseline.json") -> Path:
         return write_baseline(tmp_path, entries, name=name)
+
     return _write
 
 
 @pytest.fixture
 def runner_config_factory(tmp_path: Path) -> Callable[..., RunnerConfig]:
     """Build a ``RunnerConfig`` rooted at *tmp_path* with sensible test defaults."""
+
     def _make(
         *,
         cwd: Path | None = None,
@@ -86,10 +88,13 @@ def runner_config_factory(tmp_path: Path) -> Callable[..., RunnerConfig]:
         return RunnerConfig(
             cwd=cwd if cwd is not None else tmp_path,
             package_name=package_name,
-            default_py_dirs=default_py_dirs if default_py_dirs is not None else ["src", "scripts", "tests"],
+            default_py_dirs=default_py_dirs
+            if default_py_dirs is not None
+            else ["src", "scripts", "tests"],
             tools_override=tools_override,
             config_paths=config_paths or {},
         )
+
     return _make
 
 

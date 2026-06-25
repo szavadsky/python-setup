@@ -17,9 +17,12 @@ unknown names, and :func:`_strategy_for` synthesises a
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 import sys
-from collections.abc import Callable
-from pathlib import Path
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 from .cmd_build import (
     _build_command,
@@ -118,21 +121,6 @@ TOOLS_BY_NAME: dict[str, ToolSpec] = {t.name: t for t in TOOLS}
 
 
 class LintTool:
-    """Strategy for a single lint tool.
-
-    Implementations encapsulate per-tool command construction, statistics
-    flags, and statistics parsing.  Config-agnostic: the
-    ``package_name is None`` skip for ``mypy.stubtest`` /
-    ``pyright verify types`` stays in :func:`python_setup_lint.runner.cli.run_lint`,
-    not here.
-
-    Subclasses override :meth:`build_command` / :meth:`statistics_flags`
-    / :meth:`parse_statistics` to specialise per-tool behaviour.  The
-    default implementations consult the module-level dispatch tables
-    (``_build_command`` / ``_build_statistics_flags`` /
-    ``_STATISTICS_PARSERS``) so built-in behaviour stays verbatim.
-    """
-
     spec: ToolSpec
 
     def __init__(self, spec: ToolSpec) -> None:
@@ -140,7 +128,6 @@ class LintTool:
 
     @property
     def name(self) -> str:
-        """Tool label — mirrors the spec's name."""
         return self.spec.name
 
     def build_command(
@@ -151,27 +138,14 @@ class LintTool:
         path: str | None = None,
         exclude: str | None = None,
     ) -> list[str]:
-        """Build the full command list for this tool given runtime flags.
-
-        Default: delegates to the module-level :func:`_build_command`,
-        which is the authoritative literal specification of each built-in
-        tool's command shape.
-        """
-        return _build_command(self.spec, config=config, fix=fix, path=path, exclude=exclude)
+        return _build_command(
+            self.spec, config=config, fix=fix, path=path, exclude=exclude
+        )
 
     def statistics_flags(self) -> list[str]:
-        """Extra CLI flags for statistics output mode.
-
-        Default: delegates to :func:`_build_statistics_flags`.
-        """
         return _build_statistics_flags(self.spec)
 
     def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]:
-        """Parse this tool's stdout/stderr into ``(rule, count)`` pairs.
-
-        Default: looks up the parser in :data:`_STATISTICS_PARSERS`.
-        Returns an empty list when no parser is registered.
-        """
         parser = _STATISTICS_PARSERS.get(self.spec.name)
         if parser is None:
             return []
@@ -186,8 +160,6 @@ class LintTool:
 
 
 class _StubtestLintTool(LintTool):
-    """Strategy for ``mypy.stubtest`` — builds command from ``package_name`` + optional allowlist."""
-
     def build_command(
         self,
         *,
@@ -217,8 +189,6 @@ class _StubtestLintTool(LintTool):
 
 
 class _VerifyTypesLintTool(LintTool):
-    """Strategy for ``pyright verify types`` — builds command from ``package_name`` + optional project."""
-
     def build_command(
         self,
         *,
@@ -238,15 +208,6 @@ class _VerifyTypesLintTool(LintTool):
 
 
 class _DetectSecretsLintTool(LintTool):
-    """Strategy for ``detect-secrets`` — wraps in ``bash -c`` pipeline over git-ls-files.
-
-    When the baseline file already exists, runs the standard pipeline
-    (``git ls-files | detect-secrets-hook --baseline <path>``).  When the
-    baseline is missing, bootstraps by running ``detect-secrets scan`` and
-    redirecting output to the baseline path — this creates the baseline on
-    first invocation so subsequent runs have a reference point.
-    """
-
     def build_command(
         self,
         *,
@@ -273,26 +234,8 @@ class _DetectSecretsLintTool(LintTool):
 
 
 class _PylintLintTool(LintTool):
-    """Strategy for ``pylint`` — always resolves ``_find_py_files()`` for path expansion.
-
-    Pylint expects file arguments, not directory paths.  Unlike other tools
-    that accept a directory and recurse internally, pylint needs an explicit
-    list of ``.py`` files.  This strategy always calls ``_find_py_files``
-    regardless of whether ``spec.default_paths`` is empty, ensuring pylint
-    never runs with an empty file list.
-
-    Auto-discovers ``.pylintrc`` when ``config_paths`` has no ``pylint``
-    entry: checks ``config/.pylintrc`` (shipped config dir) then
-    ``.pylintrc`` (project root).  Delegates to
-    :func:`python_setup_lint.runner.cmd_build._resolve_pylintrc`.
-    """
-
     @staticmethod
     def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
-        """Return the pylint rcfile path, or ``None`` if none found.
-
-        Delegates to :func:`python_setup_lint.runner.cmd_build._resolve_pylintrc`.
-        """
         return _resolve_pylintrc(config_paths, cwd)
 
     def build_command(
@@ -342,24 +285,12 @@ _STRATEGY_CLASSES: dict[str, type[LintTool]] = {
     "detect-secrets": _DetectSecretsLintTool,
     "pylint": _PylintLintTool,
 }
-STRATEGIES: dict[str, LintTool] = {spec.name: (_STRATEGY_CLASSES.get(spec.name) or LintTool)(spec) for spec in TOOLS}
+STRATEGIES: dict[str, LintTool] = {
+    spec.name: (_STRATEGY_CLASSES.get(spec.name) or LintTool)(spec) for spec in TOOLS
+}
 
 
 class GenericLintTool(LintTool):
-    """Minimal strategy for extras registered via :func:`register_lint_tool`.
-
-    Carries three optional declarative fields supplied at registration:
-
-    * ``statistics_flag`` — explicit CLI flag(s) for statistics output.
-    * ``parser`` — callable returning ``list[tuple[str, int]]`` for stats.
-    * ``config_flag`` — explicit CLI flag(s) for external config file.
-
-    Unset fields fall back to the generic ``_build_command`` /
-    ``_build_statistics_flags`` / ``_STATISTICS_PARSERS`` lookups, mirroring
-    the common-case branches of :func:`_build_command`.  The 11 built-ins
-    keep their own strategies; only extras land on :class:`GenericLintTool`.
-    """
-
     def __init__(
         self,
         spec: ToolSpec,
@@ -381,16 +312,6 @@ class GenericLintTool(LintTool):
         path: str | None = None,
         exclude: str | None = None,
     ) -> list[str]:
-        """Build the command, forwarding the declarative ``config_flag``.
-
-        The 11 built-ins inherit :meth:`LintTool.build_command` which uses
-        :func:`_config_flag_for`'s hardcoded name→flags dict.  Extras declare
-        their own ``config_flag`` (a list like ``["--config"]``) at registration;
-        this override forwards it to :func:`_build_command` via the
-        ``config_flag_override`` seam so the declarative flag actually reaches
-        the constructed command (the dict lookup would otherwise return ``[]``
-        for an unknown name, silently dropping the flag).
-        """
         return _build_command(
             self.spec,
             config=config,
@@ -401,13 +322,11 @@ class GenericLintTool(LintTool):
         )
 
     def statistics_flags(self) -> list[str]:
-        """Return the explicit statistics flag(s) when set; else module-level lookup."""
         if self._statistics_flag is not None:
             return list(self._statistics_flag)
         return _build_statistics_flags(self.spec)
 
     def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]:
-        """Use the explicit parser when set; else module-level lookup."""
         if self._parser is not None:
             return self._parser(stdout, stderr)
         parser = _STATISTICS_PARSERS.get(self.spec.name)
@@ -424,14 +343,6 @@ LINT_TOOLS: list[ToolSpec] = list(TOOLS)
 
 
 def _strategy_for(name: str, spec: ToolSpec) -> LintTool:
-    """Resolve a strategy for *name*, default-aware.
-
-    Lookup uses :data:`STRATEGIES` first.  Unknown names synthesise a
-    :class:`GenericLintTool` for *spec* — this is the default-aware
-    dispatch seam that lets extras reach the pipeline without
-    ``KeyError``.  A cached strategy under :data:`STRATEGIES` (the built-ins
-    or any previously-registered extra) is returned as-is.
-    """
     cached = STRATEGIES.get(name)
     if cached is not None:
         return cached
@@ -445,18 +356,6 @@ def register_lint_tool(
     parser: Callable[..., list[tuple[str, int]]] | None = None,
     config_flag: list[str] | None = None,
 ) -> None:
-    """Append *tool* to the live registry and register its strategy.
-
-    For names not already in :data:`STRATEGIES`, a :class:`GenericLintTool`
-    is synthesised from ``tool`` + the three optional declarative fields
-    and registered under ``STRATEGIES[tool.name]``.  For built-in names
-    (already present in :data:`STRATEGIES`), the existing strategy is kept
-    and only :data:`LINT_TOOLS`'s entry for that name is updated.
-
-    Idempotent per ``tool.name`` — a re-call with the same name is an
-    update-in-place (no duplicate append).  This protects against repeated
-    ``run_lint`` calls accumulating duplicate entries.
-    """
     # Idempotent: replace any existing LINT_TOOLS entry with the same name;
     # otherwise append.
     for i, existing in enumerate(LINT_TOOLS):

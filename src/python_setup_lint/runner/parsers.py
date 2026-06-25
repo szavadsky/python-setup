@@ -62,7 +62,6 @@ __all__ = [
 
 @dataclass(frozen=True)
 class Record:
-
     file: str | None
     line: int | None
     col: int | None
@@ -114,7 +113,7 @@ def _parse_pylint_json2(stdout: str, stderr: str) -> list[tuple[str, int]]:
     _ = stderr
     try:
         raw: Any = json.loads(stdout)
-    except (json.JSONDecodeError, TypeError):
+    except json.JSONDecodeError, TypeError:
         # Py3.14 WARNING: ``except A, B:`` parses as a tuple-handler
         # (``except (A, B):``), NOT Python-2 ``except AExc, target:``.
         # Parenthesise explicitly so future maintainers don't misread it
@@ -281,7 +280,7 @@ def _parse_detect_secrets_json(stdout: str, stderr: str) -> list[tuple[str, int]
 def _parse_int(text: str) -> int | None:
     try:
         return int(text)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
 
@@ -317,7 +316,9 @@ def _parse_pylint_records(stdout: str) -> list[Record]:
         # R0401 cyclic-import: self-contained on one line.
         cyc = _PYLINT_R0401_RE.search(line)
         if cyc:
-            records.append(Record(None, None, None, f"R0401:{cyc.group('cycle')}", line))
+            records.append(
+                Record(None, None, None, f"R0401:{cyc.group('cycle')}", line)
+            )
             i += 1
             continue
         # R0801 similar-lines: gather all ``==file:[l:c]`` spans starting
@@ -326,7 +327,9 @@ def _parse_pylint_records(stdout: str) -> list[Record]:
         # pylint always emits exactly two spans per similar-region report.
         is_banner = "Similar lines in" in line or _PYLINT_R0801_SPAN_RE.search(line)
         if is_banner:
-            collected: list[tuple[str, str, str]] = list(_PYLINT_R0801_SPAN_RE.findall(line))
+            collected: list[tuple[str, str, str]] = list(
+                _PYLINT_R0801_SPAN_RE.findall(line)
+            )
             j = i + 1
             while j < n and len(collected) < 2:
                 nxt = lines[j].rstrip()
@@ -336,12 +339,21 @@ def _parse_pylint_records(stdout: str) -> list[Record]:
                 collected.extend(nxt_spans)
                 j += 1
             if len(collected) >= 2:
-                spans = sorted([
-                    f"{collected[0][0]}:{collected[0][1]}-{collected[0][2]}",
-                    f"{collected[1][0]}:{collected[1][1]}-{collected[1][2]}",
-                ])
-                records.append(Record(None, None, None, f"R0801:{spans[0]}<->{spans[1]}",
-                                      "Similar lines (R0801)"))
+                spans = sorted(
+                    [
+                        f"{collected[0][0]}:{collected[0][1]}-{collected[0][2]}",
+                        f"{collected[1][0]}:{collected[1][1]}-{collected[1][2]}",
+                    ]
+                )
+                records.append(
+                    Record(
+                        None,
+                        None,
+                        None,
+                        f"R0801:{spans[0]}<->{spans[1]}",
+                        "Similar lines (R0801)",
+                    )
+                )
                 # Consume every line we scanned for spans (banner + spans).
                 i = j
                 continue
@@ -349,13 +361,15 @@ def _parse_pylint_records(stdout: str) -> list[Record]:
         m = _PYLINT_LINE_RE.match(line)
         if m:
             rule = m.group("symbol") or m.group("code")
-            records.append(Record(
-                m.group("file"),
-                _parse_int(m.group("line")),
-                _parse_int(m.group("col")),
-                rule,
-                m.group("msg").rstrip(),
-            ))
+            records.append(
+                Record(
+                    m.group("file"),
+                    _parse_int(m.group("line")),
+                    _parse_int(m.group("col")),
+                    rule,
+                    m.group("msg").rstrip(),
+                )
+            )
         i += 1
     records.sort(key=_compare_records_key)
     return records
@@ -375,13 +389,15 @@ def _parse_ruff_records(stdout: str) -> list[Record]:
         m = _RUFF_LINE_RE.match(line.rstrip())
         if not m:
             continue
-        records.append(Record(
-            m.group("file"),
-            _parse_int(m.group("line")),
-            _parse_int(m.group("col")) if m.group("col") else None,
-            m.group("code"),
-            m.group("msg").rstrip(),
-        ))
+        records.append(
+            Record(
+                m.group("file"),
+                _parse_int(m.group("line")),
+                _parse_int(m.group("col")) if m.group("col") else None,
+                m.group("code"),
+                m.group("msg").rstrip(),
+            )
+        )
     records.sort(key=_compare_records_key)
     return records
 
@@ -401,13 +417,15 @@ def _parse_mypy_records(stdout: str) -> list[Record]:
         m = _MYPY_LINE_RE.match(line.rstrip())
         if not m or not m.group("code") or m.group("sev") != "error":
             continue
-        records.append(Record(
-            m.group("file"),
-            _parse_int(m.group("line")),
-            None,
-            m.group("code"),
-            m.group("msg").rstrip(),
-        ))
+        records.append(
+            Record(
+                m.group("file"),
+                _parse_int(m.group("line")),
+                None,
+                m.group("code"),
+                m.group("msg").rstrip(),
+            )
+        )
     records.sort(key=_compare_records_key)
     return records
 
@@ -415,12 +433,8 @@ def _parse_mypy_records(stdout: str) -> list[Record]:
 # Ty concise: ``path:line:col: error_code msg`` OR the multiline-renderer
 # ``error[code]: msg\n   --> path:line:col`` shape.  Tolerate both by
 # anchoring on the ``--> path:line:col`` marker when present.
-_TY_LONG_RE = re.compile(
-    r"^error\[(?P<code>[^\]]+)\]:\s*(?P<msg>.*?)\s*$"
-)
-_TY_ARROW_RE = re.compile(
-    r"^\s*-->\s*(?P<file>\S+?):(?P<line>\d+):(?P<col>\d+)"
-)
+_TY_LONG_RE = re.compile(r"^error\[(?P<code>[^\]]+)\]:\s*(?P<msg>.*?)\s*$")
+_TY_ARROW_RE = re.compile(r"^\s*-->\s*(?P<file>\S+?):(?P<line>\d+):(?P<col>\d+)")
 _TY_CONCISE_RE = re.compile(
     r"^(?P<file>\S+?):(?P<line>\d+):(?P<col>\d+):\s+(?P<code>\S+)\s+(?P<msg>.*?)\s*$"
 )
@@ -434,13 +448,15 @@ def _parse_ty_records(stdout: str) -> list[Record]:
         line = line.rstrip()
         concise = _TY_CONCISE_RE.match(line)
         if concise:
-            records.append(Record(
-                concise.group("file"),
-                _parse_int(concise.group("line")),
-                _parse_int(concise.group("col")),
-                concise.group("code"),
-                concise.group("msg").rstrip(),
-            ))
+            records.append(
+                Record(
+                    concise.group("file"),
+                    _parse_int(concise.group("line")),
+                    _parse_int(concise.group("col")),
+                    concise.group("code"),
+                    concise.group("msg").rstrip(),
+                )
+            )
             continue
         long_form = _TY_LONG_RE.match(line)
         if long_form:
@@ -449,13 +465,15 @@ def _parse_ty_records(stdout: str) -> list[Record]:
             continue
         arrow = _TY_ARROW_RE.match(line)
         if arrow and pending_code is not None:
-            records.append(Record(
-                arrow.group("file"),
-                _parse_int(arrow.group("line")),
-                _parse_int(arrow.group("col")),
-                pending_code,
-                pending_msg or "",
-            ))
+            records.append(
+                Record(
+                    arrow.group("file"),
+                    _parse_int(arrow.group("line")),
+                    _parse_int(arrow.group("col")),
+                    pending_code,
+                    pending_msg or "",
+                )
+            )
             pending_code = None
             pending_msg = None
     records.sort(key=_compare_records_key)
@@ -477,13 +495,15 @@ def _parse_yamllint_records(stdout: str) -> list[Record]:
         m = _YAMLLINT_RE.match(line.rstrip())
         if not m:
             continue
-        records.append(Record(
-            m.group("file"),
-            _parse_int(m.group("line")),
-            _parse_int(m.group("col")),
-            m.group("rule"),
-            m.group("msg").strip(),
-        ))
+        records.append(
+            Record(
+                m.group("file"),
+                _parse_int(m.group("line")),
+                _parse_int(m.group("col")),
+                m.group("rule"),
+                m.group("msg").strip(),
+            )
+        )
     records.sort(key=_compare_records_key)
     return records
 
@@ -501,13 +521,15 @@ def _parse_rumdl_records(stdout: str) -> list[Record]:
         m = _RUMDL_LINE_RE.match(line.rstrip())
         if not m:
             continue
-        records.append(Record(
-            m.group("file"),
-            _parse_int(m.group("line")),
-            _parse_int(m.group("col")),
-            m.group("rule"),
-            m.group("msg").rstrip(),
-        ))
+        records.append(
+            Record(
+                m.group("file"),
+                _parse_int(m.group("line")),
+                _parse_int(m.group("col")),
+                m.group("rule"),
+                m.group("msg").rstrip(),
+            )
+        )
     records.sort(key=_compare_records_key)
     return records
 
@@ -535,13 +557,17 @@ def _parse_pyright_records(data: object) -> list[Record]:
         col_raw = start.get("character") if isinstance(start, dict) else None
         line_int = _parse_int(str(line_raw)) if line_raw is not None else None
         col_int = _parse_int(str(col_raw)) if col_raw is not None else None
-        records.append(Record(
-            file if isinstance(file, str) else None,
-            (line_int + 1) if line_int is not None else None,
-            (col_int + 1) if col_int is not None else None,
-            rule,
-            (d.get("message") or "").rstrip() if isinstance(d.get("message"), str) else "",
-        ))
+        records.append(
+            Record(
+                file if isinstance(file, str) else None,
+                (line_int + 1) if line_int is not None else None,
+                (col_int + 1) if col_int is not None else None,
+                rule,
+                (d.get("message") or "").rstrip()
+                if isinstance(d.get("message"), str)
+                else "",
+            )
+        )
     records.sort(key=_compare_records_key)
     return records
 

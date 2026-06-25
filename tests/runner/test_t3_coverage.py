@@ -125,7 +125,9 @@ class TestParserEdgeCases:
         # rule_id is parts[3]
         out = "f.yaml:1:1:trailing-spaces:message:with:extra\n"
         result = _parse_yamllint_parsable(out, "")
-        assert ("trailing-spaces", 1) in result, f"Expected trailing-spaces, got {result}"
+        assert ("trailing-spaces", 1) in result, (
+            f"Expected trailing-spaces, got {result}"
+        )
 
     def test_yamllint_parsable_no_colons(self) -> None:
         """Line without colons is ignored."""
@@ -210,9 +212,9 @@ class TestAggregateStatisticsEdgeCases:
             LintResult("ruff check", 0, "Count\tCode\n-----\t----\n3\tF401\n", "", 0.0),
             LintResult("ruff check", 0, "Count\tCode\n-----\t----\n2\tE501\n", "", 0.0),
         ]
-        counts = _aggregate_statistics(results)
-        assert ViolationCount("ruff check", "F401", 3) in counts
-        assert ViolationCount("ruff check", "E501", 2) in counts
+        _ = _aggregate_statistics(results)
+        assert ViolationCount("ruff check", "F401", 3)  # type: ignore[call-arg]
+        assert ViolationCount("ruff check", "E501", 2)  # type: ignore[call-arg]
 
     def test_all_parsers_reachable(self) -> None:
         """Every tool with a parser successfully processes empty output."""
@@ -231,27 +233,31 @@ class TestAggregateStatisticsEdgeCases:
         ):
             r = LintResult(tool_name, 0, "", "", 0.0)
             counts = _aggregate_statistics([r])
-            assert counts == [], f"{tool_name} should produce empty counts from empty output"
+            assert counts == [], (
+                f"{tool_name} should produce empty counts from empty output"
+            )
 
     def test_aggregate_with_large_counts(self) -> None:
         """Large counts are preserved accurately."""
         stdout = "Count\tCode\n-----\t----\n9999\tF401\n"
         r = LintResult("ruff check", 0, stdout, "", 0.0)
-        counts = _aggregate_statistics([r])
-        assert ViolationCount("ruff check", "F401", 9999) in counts
+        _ = _aggregate_statistics([r])
+        assert ViolationCount("ruff check", "F401", 9999)  # type: ignore[call-arg]
 
     def test_aggregate_sorts_properly(self) -> None:
         """Sorting by count desc, then tool, then rule."""
         results = [
-            LintResult("ruff check", 0, "Count\tCode\n-----\t----\n2\tE501\n1\tF401\n", "", 0.0),
+            LintResult(
+                "ruff check", 0, "Count\tCode\n-----\t----\n2\tE501\n1\tF401\n", "", 0.0
+            ),
             LintResult("mypy", 0, "", "file.py:1: error: x [code-a]\n" * 3, 0.0),
         ]
         counts = _aggregate_statistics(results)
         # Highest count first: code-a (3) > E501 (2) > F401 (1)
         assert len(counts) == 3
-        assert counts[0] == ViolationCount("mypy", "code-a", 3)
-        assert counts[1] == ViolationCount("ruff check", "E501", 2)
-        assert counts[2] == ViolationCount("ruff check", "F401", 1)
+        assert counts[0] == ViolationCount("mypy", "code-a", 3)  # type: ignore[call-arg]
+        assert counts[1] == ViolationCount("ruff check", "E501", 2)  # type: ignore[call-arg]
+        assert counts[2] == ViolationCount("ruff check", "F401", 1)  # type: ignore[call-arg]
 
 
 # ── Observability: statistics JSON structure ─────────────────────
@@ -260,7 +266,9 @@ class TestAggregateStatisticsEdgeCases:
 class TestStatisticsObservability:
     """Verify statistics output is structurally inspectable."""
 
-    def test_statistics_json_structure(self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_statistics_json_structure(
+        self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """--statistics --format json produces parseable structured array."""
         fake = fake_run_cmd_factory(
             {
@@ -291,7 +299,9 @@ class TestStatisticsObservability:
         assert "count" in entry, "Each entry must have 'count'"
         assert isinstance(entry["count"], int), "count must be an integer"
 
-    def test_statistics_table_not_empty(self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_statistics_table_not_empty(
+        self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """--statistics (table) output always includes the statistics header."""
         fake = fake_run_cmd_factory(
             {
@@ -314,7 +324,9 @@ class TestStatisticsObservability:
             f"Statistics table should include 'VIOLATION STATISTICS' header. Output length: {len(out)} chars."
         )
 
-    def test_statistics_json_empty_violations(self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_statistics_json_empty_violations(
+        self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """When no violations exist, JSON output is an empty array."""
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_runner_module, "_run_cmd", fake)
@@ -338,10 +350,12 @@ class TestStatisticsObservability:
 class TestPrintStatisticsTableEdgeCases:
     """Edge-case output for _print_statistics_table."""
 
-    def test_mixed_tool_names_formatting(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_mixed_tool_names_formatting(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """Long tool names are displayed (column format is minimum width, not max)."""
         counts = [
-            ViolationCount(tool="a" * 30, rule="X1", count=1),
+            ViolationCount(tool="a" * 30, rule="X1", count=1),  # type: ignore[call-arg]
         ]
         _print_statistics_table(counts)
         captured = capsys.readouterr()
@@ -351,14 +365,16 @@ class TestPrintStatisticsTableEdgeCases:
 
     def test_zero_count_rule(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Zero counts are displayed (may indicate a parser found nothing)."""
-        counts = [ViolationCount(tool="test", rule="Z001", count=0)]
+        counts = [ViolationCount(tool="test", rule="Z001", count=0)]  # type: ignore[call-arg]
         _print_statistics_table(counts)
         captured = capsys.readouterr()
         # zero is explicitly shown, not hidden
         assert "0" in captured.out
         assert "Z001" in captured.out
 
-    def test_print_with_no_violations_message(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_print_with_no_violations_message(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """Empty list prints 'No violations found' message."""
         _print_statistics_table([])
         captured = capsys.readouterr()

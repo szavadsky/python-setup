@@ -6,7 +6,10 @@ Fixture src rows live in ``tests/checkers/_factories.py`` (free LOC).
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 import astroid
 import pytest
@@ -20,26 +23,28 @@ from tests.checkers._factories import (
     walk_both_release_for_pyi,
 )
 
-_make_tc = lambda: _make_tc_factory(StubDocstringChecker)
+
+def _make_tc() -> Any:
+    return _make_tc_factory(StubDocstringChecker)
 
 
-def _walk_and_release(code: str, file_path: str = "/workspace/src/mod.py") -> list:
+def _walk_and_release(code: str, file_path: str = "/workspace/src/mod.py") -> list[Any]:
     """Walk only ``StubDocstringChecker`` (no .pyi companion required)."""
-    tc = _make_tc()
+    tc = _make_tc()  # type: ignore[no-untyped-call]
     module = astroid.parse(code)
     module.file = file_path
     tc.walk(module)
     return tc.linter.release_messages()
 
 
-def _doc_msg_count(msgs: list) -> int:
+def _doc_msg_count(msgs: list[Any]) -> int:
     return sum(1 for m in msgs if m.msg_id == "docstring-in-impl")
 
 
 # ── No companion .pyi → no docstring-in-impl messages ──────────────
 
 
-@pytest.mark.parametrize("code, expected_count", _DOCSTRING_NO_COMPANION_CASES)
+@pytest.mark.parametrize(("code", "expected_count"), _DOCSTRING_NO_COMPANION_CASES)
 def test_no_companion_stub_no_message(code: str, expected_count: int) -> None:
     """When no companion .pyi exists, ``docstring-in-impl`` MUST NOT fire."""
     msgs = _walk_and_release(code)
@@ -49,7 +54,7 @@ def test_no_companion_stub_no_message(code: str, expected_count: int) -> None:
 # ── Does NOT detect — negative cases ────────────────────────────────
 
 
-@pytest.mark.parametrize("code", _DOCSTRING_DOES_NOT_DETECT_CASES)
+@pytest.mark.parametrize(("code",), _DOCSTRING_DOES_NOT_DETECT_CASES)
 def test_does_not_detect(code: str) -> None:
     """W9700 must NOT fire for the listed valid cases."""
     msgs = _walk_and_release(code)
@@ -59,7 +64,9 @@ def test_does_not_detect(code: str) -> None:
 # ── Detects: companion .pyi exists → W9700 fires ────────────────────
 
 
-@pytest.mark.parametrize("code, expected_count, expected_args1", _DOCSTRING_DETECT_CASES)
+@pytest.mark.parametrize(
+    ("code", "expected_count", "expected_args1"), _DOCSTRING_DETECT_CASES
+)
 def test_detects_docstring_in_impl(
     tmp_path: Path,
     code: str,
@@ -74,7 +81,9 @@ def test_detects_docstring_in_impl(
     py_path = tmp_path / "src" / "mod.py"
     py_path.parent.mkdir(exist_ok=True)
     msgs = walk_both_release_for_pyi(
-        code, py_path=py_path, source_roots=[str(tmp_path / "src")],
+        code,
+        py_path=py_path,
+        source_roots=[str(tmp_path / "src")],
     )
     doc_msgs = [m for m in msgs if m.msg_id == "docstring-in-impl"]
     assert len(doc_msgs) == expected_count

@@ -7,11 +7,12 @@ asyncio.timeout() / anyio.fail_after() wrapping patterns.
 from __future__ import annotations
 
 import pytest
+from typing import Any
 
 from python_setup_lint.checkers.asyncio_timeout_checker import AsyncTimeoutChecker
 from python_setup_lint.testing import _walk_and_release
 
-_DETECT_CASES: list[pytest.Param] = [
+_DETECT_CASES: list[Any] = [
     pytest.param(
         "async def f():\n    async with httpx.AsyncClient() as c:\n        resp = await c.get('https://example.com')\n",
         "c.get",
@@ -39,8 +40,7 @@ _DETECT_CASES: list[pytest.Param] = [
     ),
 ]
 
-
-_DO_NOT_DETECT_CASES: list[pytest.Param] = [
+_DO_NOT_DETECT_CASES: list[Any] = [
     pytest.param(
         "async def f():\n    async with asyncio.timeout(5):\n        async with httpx.AsyncClient() as c:\n            resp = await c.get('https://example.com')\n",
         id="asyncio_timeout_wrapping_async_client",
@@ -76,7 +76,7 @@ _DO_NOT_DETECT_CASES: list[pytest.Param] = [
 ]
 
 
-@pytest.mark.parametrize("code, expected_first_arg", _DETECT_CASES)
+@pytest.mark.parametrize(("code", "expected_first_arg"), _DETECT_CASES)
 def test_detects_missing_timeout(code: str, expected_first_arg: str) -> None:
     """Checker must flag await calls missing enclosing timeout."""
     msgs = _walk_and_release(code, AsyncTimeoutChecker)
@@ -87,7 +87,7 @@ def test_detects_missing_timeout(code: str, expected_first_arg: str) -> None:
     )
 
 
-@pytest.mark.parametrize("code", _DO_NOT_DETECT_CASES)
+@pytest.mark.parametrize(("code",), _DO_NOT_DETECT_CASES)
 def test_does_not_detect(code: str) -> None:
     """Checker must NOT flag code with proper timeout wrapping."""
     msgs = _walk_and_release(code, AsyncTimeoutChecker)

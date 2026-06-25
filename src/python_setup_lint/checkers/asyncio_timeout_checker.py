@@ -11,24 +11,34 @@ Per CodingRules External Call Requirements:
 """
 
 from __future__ import annotations
+from beartype import beartype
 
-from typing import TYPE_CHECKING
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
+from pylint.lint import PyLinter  # noqa: TC002
 
-if TYPE_CHECKING:
-    from pylint.lint import PyLinter
 
-_HTTP_METHODS: frozenset[str] = frozenset({
-    "get", "post", "put", "patch", "delete", "request", "stream", "send",
-})
+_HTTP_METHODS: frozenset[str] = frozenset(
+    {
+        "get",
+        "post",
+        "put",
+        "patch",
+        "delete",
+        "request",
+        "stream",
+        "send",
+    }
+)
 
-_KNOWN_TIMEOUT_FUNCS: frozenset[str] = frozenset({
-    "asyncio.timeout",
-    "anyio.fail_after",
-    "anyio.move_on_after",
-})
+_KNOWN_TIMEOUT_FUNCS: frozenset[str] = frozenset(
+    {
+        "asyncio.timeout",
+        "anyio.fail_after",
+        "anyio.move_on_after",
+    }
+)
 
 
 class AsyncTimeoutChecker(BaseChecker):
@@ -43,6 +53,7 @@ class AsyncTimeoutChecker(BaseChecker):
         ),
     }
 
+    @beartype
     def visit_await(self, node: nodes.Await) -> None:
         if not isinstance(node.value, nodes.Call):
             return
@@ -78,7 +89,9 @@ class AsyncTimeoutChecker(BaseChecker):
                     if AsyncTimeoutChecker._is_timeout_call(expr):
                         return True
                 # Don't stop here — keep walking up past non-timeout AsyncWith
-            if isinstance(parent, (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.Module)):
+            if isinstance(
+                parent, (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.Module)
+            ):
                 return False
             parent = parent.parent
         return False

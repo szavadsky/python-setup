@@ -16,8 +16,11 @@ from __future__ import annotations
 
 import logging
 import subprocess
+from typing import TYPE_CHECKING
 import time
-from pathlib import Path
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 from .dispatch import STRATEGIES
 from .parsers import _STATISTICS_PARSERS
@@ -36,11 +39,6 @@ logger = logging.getLogger(__name__)
 
 
 def _aggregate_statistics(results: list[LintResult]) -> list[ViolationCount]:
-    """Aggregate violation counts per tool per rule from all tool results.
-
-    Returns a list sorted by count descending, then tool, then rule.  Only
-    tools with a registered parser are included.
-    """
     counts: list[ViolationCount] = []
     for result in results:
         # Default-aware dispatch: prefer the strategy registered for this
@@ -73,7 +71,6 @@ def _aggregate_statistics(results: list[LintResult]) -> list[ViolationCount]:
 
 
 def _print_statistics_table(counts: list[ViolationCount]) -> None:
-    """Print violation counts as an aligned human-readable table."""
     if not counts:
         print("\nNo violations found.")
         return
@@ -91,11 +88,6 @@ def _sort_counts(
     *,
     sort_by_rule: bool = False,
 ) -> list[ViolationCount]:
-    """Return *counts* in the requested sort order.
-
-    Default sort (``sort_by_rule=False``): count descending, then tool, then rule.
-    ``sort_by_rule=True``: rule ascending, then tool, then count descending.
-    """
     if sort_by_rule:
         return sorted(counts, key=lambda v: (v.rule, v.tool, -v.count))
     return sorted(counts)
@@ -107,12 +99,6 @@ def _print_statistics_grouped(
     group: str = "tool",
     sort_by_rule: bool = False,
 ) -> None:
-    """Print violation counts grouped by *group* key.
-
-    * ``"tool"`` — section per tool.
-    * ``"rule"`` — section per rule, showing per-tool counts.
-    * ``"file"`` — same layout as ``"tool"`` (no per-file data in statistics).
-    """
     if not counts:
         print("\nNo violations found.")
         return
@@ -162,7 +148,6 @@ def _print_statistics_grouped(
 
 
 def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
-    """Run a single command and return its result."""
     start = time.monotonic()
     proc = subprocess.run(  # noqa: S603  # commands are constructed from internal ToolSpec, not user input
         cmd,
@@ -183,7 +168,6 @@ def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
 
 
 def _print_result(result: LintResult) -> None:
-    """Print a formatted result to stdout."""
     status = "PASSED" if result.exit_code == 0 else f"FAILED (exit={result.exit_code})"
     print(f"\n{'=' * 60}")
     print(f"[{result.tool_name}] {status} [{result.elapsed:.1f}s]")

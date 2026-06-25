@@ -6,17 +6,17 @@ those belong in .pyi. Implementation comments (why, tricks) stay in .py.
 """
 
 from __future__ import annotations
+from beartype import beartype
 
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
+from astroid import nodes
 from pylint.checkers import BaseChecker
+from pylint.lint import PyLinter  # noqa: TC002
 
 if TYPE_CHECKING:
-    from astroid import nodes
-    from pylint.lint import PyLinter
-
     from python_setup_lint.checkers.stub_checker import StubChecker
 
 log = logging.getLogger(__name__)
@@ -76,6 +76,7 @@ class StubDocstringChecker(BaseChecker):
         self._enabled_for_module = False
         self._current_module_name: str | None = None
 
+    @beartype
     def visit_module(self, node: nodes.Module) -> None:
         self._enabled_for_module = False
         self._current_module_name = None
@@ -93,7 +94,9 @@ class StubDocstringChecker(BaseChecker):
         stub_checker = _get_stub_checker(self.linter)
         if stub_checker is not None:
             if module_name and module_name not in stub_checker._coverage.module_index:
-                log.debug("Skip %s: not in stub_checker module_index (exempted)", module_name)
+                log.debug(
+                    "Skip %s: not in stub_checker module_index (exempted)", module_name
+                )
                 return
 
         # Skip files without a companion .pyi
@@ -102,11 +105,13 @@ class StubDocstringChecker(BaseChecker):
 
         self._enabled_for_module = True
 
+    @beartype
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         if not self._enabled_for_module:
             return
         self._emit_if_docstring(node)
 
+    @beartype
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
         if not self._enabled_for_module:
             return

@@ -5,16 +5,14 @@ manual ``tempfile`` calls that leak directories.
 """
 
 from __future__ import annotations
+from beartype import beartype
 
 import fnmatch
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
-
-if TYPE_CHECKING:
-    from pylint.lint import PyLinter
+from pylint.lint import PyLinter  # noqa: TC002
 
 
 class TempFileChecker(BaseChecker):
@@ -47,6 +45,7 @@ class TempFileChecker(BaseChecker):
         super().__init__(linter)
         self._test_patterns: list[str] = []
 
+    @beartype
     def open(self) -> None:
         config = self.linter.config
         raw_patterns = getattr(config, "test_patterns", None)
@@ -56,6 +55,7 @@ class TempFileChecker(BaseChecker):
             else ["tests/", "test_*.py", "*_test.py", "conftest.py"]
         )
 
+    @beartype
     def visit_call(self, node: nodes.Call) -> None:
         if not self._is_tempfile_call(node):
             return
@@ -75,8 +75,7 @@ class TempFileChecker(BaseChecker):
         if node.func.attrname not in self._TEMP_FILE_FUNCS:
             return False
         return (
-            isinstance(node.func.expr, nodes.Name)
-            and node.func.expr.name == "tempfile"
+            isinstance(node.func.expr, nodes.Name) and node.func.expr.name == "tempfile"
         )
 
     @staticmethod
@@ -112,7 +111,10 @@ class TempFileChecker(BaseChecker):
     def _matches_path(str_path: str, patterns: list[str]) -> bool:
         for pattern in patterns:
             if "/" in pattern or "\\" in pattern:
-                if str_path.startswith(pattern) or f"/{pattern.lstrip('/')}" in str_path:
+                if (
+                    str_path.startswith(pattern)
+                    or f"/{pattern.lstrip('/')}" in str_path
+                ):
                     return True
             elif fnmatch.fnmatch(str_path, pattern) or fnmatch.fnmatch(
                 Path(str_path).name, pattern

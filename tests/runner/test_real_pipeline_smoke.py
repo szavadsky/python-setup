@@ -15,7 +15,9 @@ from python_setup_lint.runner import TOOLS, RunnerConfig, run_lint
 
 
 @pytest.mark.slow
-def test_consolidated_real_pipeline_smoke(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
+def test_consolidated_real_pipeline_smoke(
+    tmp_path: Path, capsys: pytest.CaptureFixture
+) -> None:
     """Run the full lint pipeline on a minimal synthetic project.
 
     Asserts:
@@ -25,9 +27,13 @@ def test_consolidated_real_pipeline_smoke(tmp_path: Path, capsys: pytest.Capture
     src = tmp_path / "src"
     src.mkdir()
     (src / "__init__.py").write_text("")
-    (src / "main.py").write_text("def greet(name: str) -> str:\n    return f'hello {name}'\n")
+    (src / "main.py").write_text(
+        "def greet(name: str) -> str:\n    return f'hello {name}'\n"
+    )
 
-    (tmp_path / "pyproject.toml").write_text("[project]\nname = 'smoke-test'\nversion = '0.1.0'\n")
+    (tmp_path / "pyproject.toml").write_text(
+        "[project]\nname = 'smoke-test'\nversion = '0.1.0'\n"
+    )
     (tmp_path / ".secrets.baseline").write_text("{}")
 
     config = RunnerConfig(cwd=tmp_path, package_name="smoke_test")
@@ -36,7 +42,7 @@ def test_consolidated_real_pipeline_smoke(tmp_path: Path, capsys: pytest.Capture
     assert isinstance(rc, int), f"Expected int exit code, got {type(rc)}: {rc}"
 
     captured = capsys.readouterr()
-    tool_names = {t.name for t in TOOLS}
+    tool_names = {t.name for t in TOOLS}  # type: ignore[type-arg]
     for name in tool_names:
         assert f"[{name}]" in captured.out, (
             f"Expected tool '{name}' output in lint output. "

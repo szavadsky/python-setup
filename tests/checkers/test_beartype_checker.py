@@ -6,6 +6,8 @@ Uses synthetic code strings parsed via astroid, walked over
 """
 
 from __future__ import annotations
+from typing import Any
+from pylint.testutils import CheckerTestCase
 
 import astroid
 import pytest
@@ -18,10 +20,12 @@ from tests.checkers._factories import (
     _BEARTYPE_SOURCE_ROOT_CASES,
 )
 
-_make_tc = lambda: _make_tc_factory(BeartypeCoverageChecker)
+
+def _make_tc() -> CheckerTestCase:
+    return _make_tc_factory(BeartypeCoverageChecker)
 
 
-def _walk_and_release(code: str, *, file_path: str = "src/test_mod.py") -> list:
+def _walk_and_release(code: str, *, file_path: str = "src/test_mod.py") -> list[Any]:
     tc = _make_tc()
     tc.checker.open()
     module = astroid.parse(code)
@@ -30,10 +34,13 @@ def _walk_and_release(code: str, *, file_path: str = "src/test_mod.py") -> list:
     return tc.linter.release_messages()
 
 
-@pytest.mark.parametrize("code, expected_count, expected_first_arg",
-                         _BEARTYPE_MISS_CASES)
+@pytest.mark.parametrize(
+    ("code", "expected_count", "expected_first_arg"), _BEARTYPE_MISS_CASES
+)
 def test_detects_missing_beartype(
-    code: str, expected_count: int, expected_first_arg: str | None,
+    code: str,
+    expected_count: int,
+    expected_first_arg: str | None,
 ) -> None:
     """Checker emits ``missing-beartype`` for the listed public-function rows.
 
@@ -50,7 +57,7 @@ def test_detects_missing_beartype(
         assert missing[0].args[0] == expected_first_arg
 
 
-@pytest.mark.parametrize("code, expected_missing_count", _BEARTYPE_SKIP_CASES)
+@pytest.mark.parametrize(("code", "expected_missing_count"), _BEARTYPE_SKIP_CASES)
 def test_skips(code: str, expected_missing_count: int) -> None:
     """Rows that should NOT trigger missing-beartype (or only the public one).
 
@@ -64,11 +71,18 @@ def test_skips(code: str, expected_missing_count: int) -> None:
 
 
 @pytest.mark.parametrize(
-    "decorator_expr",
+    ("decorator_expr",),
     [
-        pytest.param("from beartype import beartype\n@beartype\n", id="beartype_decorator"),
-        pytest.param("from typing import no_type_check\n@no_type_check\n", id="no_type_check_decorator"),
-        pytest.param("import typing\n@typing.no_type_check\n", id="typing_no_type_check"),
+        pytest.param(
+            "from beartype import beartype\n@beartype\n", id="beartype_decorator"
+        ),
+        pytest.param(
+            "from typing import no_type_check\n@no_type_check\n",
+            id="no_type_check_decorator",
+        ),
+        pytest.param(
+            "import typing\n@typing.no_type_check\n", id="typing_no_type_check"
+        ),
     ],
 )
 def test_decorated_skipped(decorator_expr: str) -> None:
@@ -87,8 +101,9 @@ def test_mixed_decorated_and_undecorated() -> None:
     assert missing[0].args[0] == "bar"
 
 
-@pytest.mark.parametrize("code, file_path, expected_count",
-                         _BEARTYPE_SOURCE_ROOT_CASES)
+@pytest.mark.parametrize(
+    ("code", "file_path", "expected_count"), _BEARTYPE_SOURCE_ROOT_CASES
+)
 def test_source_root_filtering(code: str, file_path: str, expected_count: int) -> None:
     """File under ``src/`` is checked; file under ``tests/`` is skipped."""
     msgs = _walk_and_release(code, file_path=file_path)

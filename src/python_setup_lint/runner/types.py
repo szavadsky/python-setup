@@ -8,8 +8,10 @@ contract without pulling in ``argparse`` / ``subprocess`` transitively.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 __all__ = ["LintResult", "RunnerConfig", "ToolSpec", "ViolationCount"]
 

@@ -17,7 +17,6 @@ from astroid import nodes
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub_checker import StubChecker
     from python_setup_lint.checkers.stub_import_contract import ImportUsage
-
 log = logging.getLogger(__name__)
 
 
@@ -57,7 +56,9 @@ def _matches_path(str_path: str, patterns: list[str]) -> bool:
             # Directory prefix pattern
             if str_path.startswith(pattern) or f"/{pattern.lstrip('/')}" in str_path:
                 return True
-        elif fnmatch.fnmatch(str_path, pattern) or fnmatch.fnmatch(Path(str_path).name, pattern):
+        elif fnmatch.fnmatch(str_path, pattern) or fnmatch.fnmatch(
+            Path(str_path).name, pattern
+        ):
             return True
     return False
 
@@ -115,7 +116,9 @@ def _is_init_exempt(node: nodes.Module) -> bool:
 
 def _is_trivial_test_data(node: nodes.Module) -> bool:
     for child in node.body:
-        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef)):
+        if isinstance(
+            child, (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef)
+        ):
             return False
         if isinstance(child, (nodes.Import, nodes.ImportFrom)):
             return False
@@ -137,7 +140,11 @@ def _has_main_block(node: nodes.Module) -> bool:
         if isinstance(child, nodes.If):
             test = child.test
             # __name__ == '__main__' or __name__ == "__main__"
-            if isinstance(test, nodes.Compare) and len(test.ops) >= 1 and test.ops[0][0] == "==":
+            if (
+                isinstance(test, nodes.Compare)
+                and len(test.ops) >= 1
+                and test.ops[0][0] == "=="
+            ):
                 left = test.left
                 right = test.ops[0][1]
                 if (
@@ -198,7 +205,9 @@ def _resolve_stub(checker: StubChecker, py_path: Path) -> Path | None:
 # ── Declaration indexing ──────────────────────────────────────────────────────
 
 
-def _index_stub_declarations(checker: StubChecker, module_name: str, stub_path: Path) -> None:
+def _index_stub_declarations(
+    checker: StubChecker, module_name: str, stub_path: Path
+) -> None:
     try:
         stub_module = astroid.parse(stub_path.read_text(), module_name=module_name)
     except SyntaxError:
@@ -207,7 +216,9 @@ def _index_stub_declarations(checker: StubChecker, module_name: str, stub_path: 
 
     declarations: set[str] = set()
     for child in stub_module.body:
-        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef)):
+        if isinstance(
+            child, (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef)
+        ):
             declarations.add(child.name)
         elif isinstance(child, nodes.Assign):
             for target in child.targets:
@@ -227,7 +238,9 @@ def _index_stub_declarations(checker: StubChecker, module_name: str, stub_path: 
     stub_callables: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     stub_classes: dict[str, nodes.ClassDef] = {}
     for child in stub_module.body:
-        if isinstance(child, nodes.AnnAssign) and isinstance(child.target, nodes.AssignName):
+        if isinstance(child, nodes.AnnAssign) and isinstance(
+            child.target, nodes.AssignName
+        ):
             stub_vars[child.target.name] = child
         elif isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
             stub_callables[child.name] = child

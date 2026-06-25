@@ -47,6 +47,7 @@ _BUNDLED_CONFIGS: tuple[str, ...] = (
 
 # ── Data structures ─────────────────────────────────────────────────
 
+
 @dataclass
 class SetupState:
     """Tracks what was done for idempotency reporting."""
@@ -69,6 +70,7 @@ class SetupState:
 
 
 # ── Helpers ─────────────────────────────────────────────────────────
+
 
 def _compute_checksums(config_dir: Path, files: Sequence[str]) -> dict[str, str]:
     """Compute SHA-256 checksums for *files* relative to *config_dir*."""
@@ -98,6 +100,7 @@ def _discover_checkers() -> list[str]:
                 result.append(m.name)
         except ImportError as e:
             import warnings
+
             warnings.warn(
                 f"Failed to import checker module {m.name}: {e}",
                 ImportWarning,
@@ -214,6 +217,7 @@ def _get_package_dir() -> Path:
 
 # ── Install steps ────────────────────────────────────────────────────
 
+
 def _step_add_dep(
     state: SetupState,
     project_dir: Path,
@@ -233,7 +237,11 @@ def _step_add_dep(
         return
 
     # Add the dependency — path is the package argument itself
-    args = ["add", "--dev", dev_path] if dev_path else ["add", "--dev", f"python-setup @ {_GIT_URL}"]
+    args = (
+        ["add", "--dev", dev_path]
+        if dev_path
+        else ["add", "--dev", f"python-setup @ {_GIT_URL}"]
+    )
 
     rc, stdout, stderr = _run_uv(args, cwd=project_dir)
     if rc != 0:
@@ -307,6 +315,7 @@ def _save_state(project_dir: Path) -> None:
 
 # ── Install command ──────────────────────────────────────────────────
 
+
 def install(
     project_dir: Path,
     *,
@@ -371,6 +380,7 @@ def install(
 
 # ── Update command ───────────────────────────────────────────────────
 
+
 def update(project_dir: Path) -> int:
     """Update python-setup in *project_dir* and report config drift.
 
@@ -404,8 +414,10 @@ def update(project_dir: Path) -> int:
         try:
             saved = json.loads(state_path.read_text(encoding="utf-8"))
             saved_checksums: dict[str, str] = saved.get("config_checksums", {})
-        except (json.JSONDecodeError, KeyError):
-            print("  [config] .python-setup-state.json unreadable — skipping drift check")
+        except json.JSONDecodeError, KeyError:
+            print(
+                "  [config] .python-setup-state.json unreadable — skipping drift check"
+            )
         else:
             pkg_dir = _get_package_dir()
             config_dir = pkg_dir / "config"
@@ -439,6 +451,7 @@ def update(project_dir: Path) -> int:
 
 # ── CLI entry point ──────────────────────────────────────────────────
 
+
 def _build_parser() -> argparse.ArgumentParser:
     """Build the argument parser for ``python-setup install`` / ``update``."""
     parser = argparse.ArgumentParser(
@@ -448,7 +461,9 @@ def _build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     # install
-    install_p = sub.add_parser("install", help="Idempotently install python-setup tooling")
+    install_p = sub.add_parser(
+        "install", help="Idempotently install python-setup tooling"
+    )
     install_p.add_argument(
         "--path",
         type=Path,
@@ -461,7 +476,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
 
     # update
-    update_p = sub.add_parser("update", help="Update python-setup and check config drift")
+    update_p = sub.add_parser(
+        "update", help="Update python-setup and check config drift"
+    )
     update_p.add_argument(
         "--path",
         type=Path,
