@@ -5,24 +5,32 @@ Phase 2: AST-string walking + rewrite rules — fallback for Uninferable (~6%).
 """
 
 from __future__ import annotations
-from beartype import beartype
 
 import re
+from typing import TYPE_CHECKING
 
 import astroid
-from astroid import nodes
+from astroid import bases, nodes
+from beartype import beartype
 
-# Rewrite-rule table: old-style typing → native syntax.
-# These are forward-looking infrastructure; the current codebase uses
-# native syntax exclusively (per T3a spike report).
+if TYPE_CHECKING:
+    from astroid.typing import SuccessfulInferenceResult
+
+# Rewrite-rule table: old-style typing -> native syntax
+
+## These are forward-looking infrastructure; the current codebase uses
+
+## native syntax exclusively (per T3a spike report)
+
 _REWRITE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"^typing\.List\[(.+)\]$"), r"list[\1]"),
     (re.compile(r"^typing\.Dict\[(.+),\s*(.+)\]$"), r"dict[\1, \2]"),
     (re.compile(r"^typing\.Optional\[(.+)\]$"), r"\1 | None"),
 ]
-# Union rewrite is handled separately (comma-splitting + rejoin with ` | `)
-_UNION_RE = re.compile(r"^typing\.Union\[(.+)\]$")
 
+## Union rewrite is handled separately (comma-splitting + rejoin with ` | `)
+
+_UNION_RE = re.compile(r"^typing\.Union\[(.+)\]$")
 
 class AnnotationNormalizer:
     """Two-phase annotation normalizer for stub-vs-impl comparison.
@@ -81,13 +89,16 @@ class AnnotationNormalizer:
         return None
 
     @staticmethod
-    def _ast_string(node: nodes.NodeNG) -> str | None:
+    def _ast_string(node: SuccessfulInferenceResult) -> str | None:
         """Walk the AST subtree and produce a canonical string form.
 
         Returns None if an unsupported node type is encountered.
         """
+        # Const is a subclass of Proxy in astroid, so check it first.
+        if isinstance(node, nodes.Const):
+            return repr(node.value)
         if isinstance(node, nodes.Name):
-            return node.name  # type: ignore[no-any-return]
+            return node.name
         if isinstance(node, nodes.Subscript):
             value_s = AnnotationNormalizer._ast_string(node.value)
             slice_s = AnnotationNormalizer._ast_string(node.slice)
@@ -106,17 +117,21 @@ class AnnotationNormalizer:
                 return None
             return f"{expr_s}.{node.attrname}"
         if isinstance(node, nodes.Tuple):
-            elts = [AnnotationNormalizer._ast_string(e) for e in node.elts]
-            if any(e is None for e in elts):
-                return None
-            return f"({', '.join(elts)})"  # type: ignore[arg-type]
-        if isinstance(node, nodes.Const):
-            return repr(node.value)
+            tuple_elts: list[str] = []
+            for e in node.elts:
+                s = AnnotationNormalizer._ast_string(e)
+                if s is None:
+                    return None
+                tuple_elts.append(s)
+            return f"({', '.join(tuple_elts)})"
         if isinstance(node, nodes.List):
-            elts = [AnnotationNormalizer._ast_string(e) for e in node.elts]
-            if any(e is None for e in elts):
-                return None
-            return f"[{', '.join(elts)}]"  # type: ignore[arg-type]
+            list_elts: list[str] = []
+            for e in node.elts:
+                s = AnnotationNormalizer._ast_string(e)
+                if s is None:
+                    return None
+                list_elts.append(s)
+            return f"[{', '.join(list_elts)}]"
         if isinstance(node, nodes.UnaryOp):
             operand_s = AnnotationNormalizer._ast_string(node.operand)
             if operand_s is None:
@@ -143,6 +158,11 @@ class AnnotationNormalizer:
             if test_s is None or body_s is None or orelse_s is None:
                 return None
             return f"{body_s} if {test_s} else {orelse_s}"
+        # Proxy is not a NodeNG; extract the proxied node and recurse.
+        # NOTE: This check must come AFTER all specific node type checks
+        # because Tuple, List, Dict, Set, and Const all inherit from Proxy.
+        if isinstance(node, bases.Proxy):
+            return AnnotationNormalizer._ast_string(node._proxied)
         return None
 
     @staticmethod
