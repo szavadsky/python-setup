@@ -4,24 +4,24 @@
 
 | Tool | Wall-time (s) | Peak RSS (KB) | Exit code |
 |------|--------------:|--------------:|----------:|
-| tach check | 0.206 | 0.0 | 1 |
-| ruff check | 0.013 | 0.0 | 1 |
+| tach check | 0.157 | 0.0 | 1 |
+| ruff check | 0.01 | 0.0 | 1 |
 | rumdl check | 0.005 | 0.0 | 0 |
-| mypy | 0.741 | 0.0 | 0 |
-| yamllint | 0.074 | 0.0 | 0 |
-| ty check | 0.043 | 0.0 | 0 |
-| pyright check | 0.568 | 0.0 | 0 |
-| pylint (no plugins) | 0.442 | 0.0 | 24 |
-| pylint (stdlib only) | 0.43 | 0.0 | 24 |
-| pylint (all custom) | 0.508 | 0.0 | 30 |
-| detect-secrets | 0.17 | 0.0 | 0 |
+| mypy | 0.589 | 0.0 | 0 |
+| yamllint | 0.057 | 0.0 | 0 |
+| ty check | 0.035 | 0.0 | 0 |
+| pyright check | 0.475 | 0.0 | 0 |
+| pylint (no plugins) | 0.284 | 0.0 | 24 |
+| pylint (stdlib only) | 0.285 | 0.0 | 24 |
+| pylint (all custom) | 0.314 | 0.0 | 30 |
+| detect-secrets | 0.116 | 0.0 | 0 |
 
 ## Runner Overhead (before optimisation)
 
 | Metric | Value |
 |--------|------:|
-| Total `run_lint` wall-time | 2.693s |
-| Sum of per-tool subprocess time | 2.691s |
+| Total `run_lint` wall-time | 2.012s |
+| Sum of per-tool subprocess time | 2.010s |
 | **Runner Python overhead** | **0.001s** |
 | Runner overhead as % of total | **0.1%** |
 | Runner process peak RSS | 0.0 KB |

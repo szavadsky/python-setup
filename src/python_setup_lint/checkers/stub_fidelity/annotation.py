@@ -101,13 +101,15 @@ def _compare_class_methods(ctx: ClassComparisonCtx) -> None:
     stub_methods: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     impl_methods: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     for child in ctx.stub_class.body:
-        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
-            if _is_public_method(child.name):
-                stub_methods[child.name] = child
+        if isinstance(
+            child, (nodes.FunctionDef, nodes.AsyncFunctionDef)
+        ) and _is_public_method(child.name):
+            stub_methods[child.name] = child
     for child in ctx.impl_class.body:
-        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
-            if _is_public_method(child.name):
-                impl_methods[child.name] = child
+        if isinstance(
+            child, (nodes.FunctionDef, nodes.AsyncFunctionDef)
+        ) and _is_public_method(child.name):
+            impl_methods[child.name] = child
 
     for mname, stub_method in stub_methods.items():
         impl_method = impl_methods.get(mname)
@@ -125,7 +127,9 @@ def _compare_class_methods(ctx: ClassComparisonCtx) -> None:
 
 def _compare_class_attrs(ctx: ClassComparisonCtx) -> None:
     stub_attrs: dict[str, nodes.AnnAssign] = {}
-    impl_attrs: dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]] = {}
+    impl_attrs: dict[
+        str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]
+    ] = {}
     for child in ctx.stub_class.body:
         if isinstance(child, nodes.AnnAssign) and isinstance(
             child.target, nodes.AssignName

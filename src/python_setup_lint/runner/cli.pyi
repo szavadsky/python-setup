@@ -57,6 +57,43 @@ non-E999 issues and unparseable lines are skipped cleanly — no garbage
 short-path lands in the result set.
 """
 
+def _default_config_paths(cwd: Path) -> dict[str, Path]:
+    """Discover config file paths for each lint tool.
+
+    Args:
+        cwd: Working directory the lint run is rooted at.
+
+    Returns:
+        Mapping of tool name → config file path.
+    """
+
+def _infer_package_name(cwd: Path) -> str | None:
+    """Infer package name from ``pyproject.toml``.
+
+    Args:
+        cwd: Working directory the lint run is rooted at.
+
+    Returns:
+        Package name or ``None`` if not found.
+    """
+
+def _print_config_status(
+    *,
+    config_paths: dict[str, Path],
+    cli_overridden: frozenset[str],
+    caller_config_paths: dict[str, Path],
+    shipped_paths: dict[str, Path],
+    cwd: Path,
+    ruff_composed: bool,
+) -> None:
+    """Print config file status to stderr.
+
+    Args:
+        config_paths: Mapping of tool name → config file path.
+        cli_overridden: Set of tool names overridden via CLI.
+        caller_config_paths: Config paths from the caller.
+    """
+
 def _git_changed_files(cwd: Path, *, staged: bool) -> set[str]:
     """Return repo-relative paths reported by ``git diff --name-only``.
 
