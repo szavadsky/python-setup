@@ -22,13 +22,13 @@ import tomllib
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-    from pathlib import Path
-
 from .dispatch import TOOLS_BY_NAME, register_lint_tool
 from .parsers import _BUILTIN_PARSE_STRATEGY_TO_PARSER, PARSE_STRATEGIES
 from .types import ToolSpec
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 __all__ = [
     "_EXTRA_TOOLS_CACHE",
@@ -51,6 +51,9 @@ __all__ = [
 
 
 class ExtraToolsConfigError(Exception):
+    location: str
+    reason: str
+
     def __init__(self, location: str, reason: str) -> None:
         self.location = location
         self.reason = reason
