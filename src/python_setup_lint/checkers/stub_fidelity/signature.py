@@ -7,6 +7,7 @@ compares parameter and return annotations, and emits E97B3
 (``annotation-unverifiable``) via the checker.
 
 Functions:
+
 - :func:`_extract_param_descriptors` — Astroid ``Arguments`` →
   :class:`ParamDescriptor` list, all 5 parameter kinds, optional
   ``self``/``cls`` strip.
@@ -47,7 +48,6 @@ __all__ = [
     "_extract_param_descriptors",
 ]
 
-
 def _extract_param_descriptors(
     args: nodes.Arguments,
     *,
@@ -55,10 +55,10 @@ def _extract_param_descriptors(
 ) -> list[ParamDescriptor]:
     descriptors: list[ParamDescriptor] = []
 
-    n_pos = len(args.posonlyargs)
-    n_args = len(args.args)
+    n_pos = len(args.posonlyargs or [])
+    n_args = len(args.args or [])
     n_regular = n_pos + n_args
-    n_defaults = len(args.defaults)
+    n_defaults = len(args.defaults or [])
 
     def _has_default(idx: int) -> bool:
         # True if param at index *idx* (across posonlyargs + args) has a default.
@@ -66,7 +66,7 @@ def _extract_param_descriptors(
         return n_defaults > 0 and idx >= n_regular - n_defaults
 
     # Positional-only parameters
-    for i, p in enumerate(args.posonlyargs):
+    for i, p in enumerate(args.posonlyargs or []):
         ann = (args.posonlyargs_annotations or [None] * n_pos)[i]
         descriptors.append(
             ParamDescriptor(
@@ -80,7 +80,7 @@ def _extract_param_descriptors(
         )
 
     # Positional-or-keyword parameters
-    for i, p in enumerate(args.args):
+    for i, p in enumerate(args.args or []):
         idx = n_pos + i
         ann = (args.annotations or [None] * n_args)[i]
         descriptors.append(
@@ -146,7 +146,6 @@ def _extract_param_descriptors(
 
     return descriptors
 
-
 def _compare_callable_descriptors(
     stub_params: list[ParamDescriptor],
     impl_params: list[ParamDescriptor],
@@ -165,7 +164,6 @@ def _compare_callable_descriptors(
 
     return None
 
-
 def _compare_callable_annotations(
     stub_params: list[ParamDescriptor],
     impl_params: list[ParamDescriptor],
@@ -182,7 +180,6 @@ def _compare_callable_annotations(
                 )
     return mismatches
 
-
 def _compare_return_annotations(
     stub_returns: nodes.NodeNG | None,
     impl_returns: nodes.NodeNG | None,
@@ -193,7 +190,6 @@ def _compare_return_annotations(
     stub_norm = AnnotationNormalizer.normalize(stub_returns)
     impl_norm = AnnotationNormalizer.normalize(impl_returns)
     return (stub_norm, impl_norm)
-
 
 def _emit_callable_fidelity_issues(ctx: CallableComparisonCtx) -> None:
     if ctx.impl_func is None:
@@ -280,7 +276,6 @@ def _emit_callable_fidelity_issues(ctx: CallableComparisonCtx) -> None:
             node=ctx.msg_node,
             args=(ctx.func_name, ctx.module_name),
         )
-
 
 def _emit_callable_fidelity(checker: StubChecker, module_name: str) -> None:
     f = checker._fidelity
