@@ -157,6 +157,9 @@ class StubChecker(BaseChecker):
         ),
     )
 
+    _coverage: _CoverageState
+    _fidelity: _FidelityState
+
     def __init__(self, linter: PyLinter) -> None:
         super().__init__(linter)
         self._coverage = _CoverageState()
@@ -366,5 +369,7 @@ class StubChecker(BaseChecker):
         f.impl_all_names[module_name] = impl_names
 
 
-def register(linter: PyLinter) -> None:
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype
+    # beartype omitted: register is a pylint plugin entrypoint called from
+    # pyproject.toml; beartype would introduce a circular import at load time.
     linter.register_checker(StubChecker(linter))
