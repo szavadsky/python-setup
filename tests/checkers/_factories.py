@@ -14,11 +14,10 @@ build astroid modules from source / assert message ids live here too.
 """
 
 from __future__ import annotations
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import inspect
 from pathlib import Path
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import astroid

@@ -19,12 +19,13 @@ import subprocess
 from typing import TYPE_CHECKING
 import time
 
-if TYPE_CHECKING:
-    from pathlib import Path
-
 from .dispatch import STRATEGIES
 from .parsers import _STATISTICS_PARSERS
 from .types import LintResult, ViolationCount
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 __all__ = [
     "_aggregate_statistics",

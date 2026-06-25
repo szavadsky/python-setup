@@ -5,11 +5,9 @@ Fixture src rows live in ``tests/checkers/_factories.py`` (free LOC).
 """
 
 from __future__ import annotations
+from pathlib import Path
 
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from pathlib import Path
+from typing import Any
 
 import astroid
 import pytest
