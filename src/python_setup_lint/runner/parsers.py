@@ -291,7 +291,7 @@ def _parse_int(text: str) -> int | None:
 # does not cause a spurious diff as long as the symbol is stable.
 _PYLINT_LINE_RE = re.compile(
     r"^(?P<file>\S+?):(?P<line>\d+):(?P<col>\d+):\s*"
-    r"(?P<code>[A-Za-z]\d+): (?P<msg>.*?)"
+    r"(?P<code>[A-Za-z]\d+[A-Z]?\d*): (?P<msg>.*?)"
     r"(?:\s+\((?P<symbol>[\w-]+)\))?\s*$"
 )
 
