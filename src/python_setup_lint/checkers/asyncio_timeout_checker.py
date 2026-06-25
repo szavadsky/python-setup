@@ -56,7 +56,7 @@ class AsyncTimeoutChecker(BaseChecker):
     }
 
     @beartype
-    def visit_await(self, node: nodes.Await) -> None:
+    def visit_await(self, node: nodes.Await) -> None:  # pylint: disable=docstring-in-impl  # brief one-liner, not usage docs
         """Flag await calls on HTTP methods missing enclosing timeout context."""
         if not isinstance(node.value, nodes.Call):
             return
@@ -113,6 +113,6 @@ class AsyncTimeoutChecker(BaseChecker):
         return False
 
 
-def register(linter: PyLinter) -> None:
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype,docstring-in-impl  # pylint entry point, signature fixed by pylint API; one-liner, not usage docs
     """Register the checker with the linter."""
     linter.register_checker(AsyncTimeoutChecker(linter))
