@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from beartype import beartype
 from pylint.checkers import BaseChecker
 
-from python_setup_lint.checkers._base import check_if_meaningful
+from python_setup_lint.checkers._base import MessageDef, check_if_meaningful
 
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
@@ -31,11 +31,11 @@ class SuppressionJustificationChecker(BaseChecker):
     """AST visitor that flags unjustified suppression comments."""
 
     name: str = "suppression-justification"
-    msgs: dict[str, tuple[str, str, str]] = {
-        "W9704": (
-            "Suppression comment without technical justification: %s",
-            "unjustified-suppression",
-            (
+    msgs: dict[str, MessageDef] = {
+        "W9704": MessageDef(
+            message="Suppression comment without technical justification: %s",
+            symbol="unjustified-suppression",
+            description=(
                 "Suppression comments (# pylint: disable=..., # noqa, "
                 "# type: ignore) must be accompanied by a technical reason "
                 "on the same line or the preceding line."

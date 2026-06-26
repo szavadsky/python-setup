@@ -1,3 +1,11 @@
+# 
+Mid session user override 
+WRONG: All `sentence_transformers` imports are inside the function / a lazy loader so
+that without the extra, `import python_setup_lint` never imports it. Guard with
+`ImportError` → fallback to heuristic. Models download on first use (cache in
+HF cache); tests must not require network.
+
+
 
 # _ symbols
 Apply  CodingRules.md

@@ -13,7 +13,7 @@ import fnmatch
 from pathlib import Path
 from typing import NamedTuple, NewType
 
-from astroid import nodes  # noqa: TC002
+from astroid import nodes  # noqa: TC002  # astroid is a pylint dependency, only used for type checking in this module
 
 
 
@@ -75,11 +75,14 @@ def check_if_meaningful(
     """Check if a suppression justification is meaningful.
 
     Heuristic: non-empty, non-boilerplate, contains a noun not equal to the rule symbol.
+    Uses *comment* as the primary text if provided; falls back to *text*.
+    *rule* and *code_context* are reserved for future semantic analysis (Track B).
     """
-    if not text or len(text.strip()) < 5:
+    primary = (comment or text).strip()
+    if not primary or len(primary) < 5:
         return False
-    text = text.strip().lower()
+    primary_lower = primary.lower()
     boilerplate = {"noqa", "ignore", "suppress", "disable", "skip", "todo", "fixme", "hack"}
-    if text in boilerplate:
+    if primary_lower in boilerplate:
         return False
     return True

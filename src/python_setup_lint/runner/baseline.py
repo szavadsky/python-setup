@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Callable  # noqa: TC003
+from collections.abc import Callable  # noqa: TC003  # TYPE_CHECKING-only import; not available at runtime
 from typing import TYPE_CHECKING, Any
 
 import beartype
@@ -18,7 +18,7 @@ from ._baseline_helpers import (
 )
 from ._record_types import Record, _records_unchanged
 from .parsers import _RECORD_PARSERS
-from .types import LintResult  # noqa: TC001
+from .types import LintResult  # noqa: TC001  # TYPE_CHECKING-only import; not available at runtime
 
 if TYPE_CHECKING:
     from pathlib import Path

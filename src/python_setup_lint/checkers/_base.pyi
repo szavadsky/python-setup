@@ -39,3 +39,17 @@ def _is_under_source_root(path: Path, source_roots: list[Path]) -> bool:
 
 def _get_file_path(node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> Path | None:
     """Resolve the file path for an AST node's module."""
+
+def check_if_meaningful(
+    text: str,
+    *,
+    rule: str | None = None,
+    code_context: str | None = None,
+    comment: str | None = None,
+) -> bool:
+    """Check if a suppression justification is meaningful.
+
+    Heuristic: non-empty, non-boilerplate, contains a noun not equal to the rule symbol.
+    Uses *comment* as the primary text if provided; falls back to *text*.
+    *rule* and *code_context* are reserved for future semantic analysis.
+    """
