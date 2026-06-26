@@ -11,16 +11,18 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
+from python_setup_lint.checkers._base import MessageDef
+
 
 class NoTryImportChecker(BaseChecker):
     """AST visitor that flags try blocks containing imports caught by ImportError / ModuleNotFoundError."""
 
     name: str = "no-try-import"
-    msgs = {
-        "W9001": (
-            "Explicit handling of failed import via try/except %s",
-            "no-try-import",
-            "Imports must be unconditional. Use dependency management instead of try/except ImportError guards.",
+    msgs: dict[str, MessageDef] = {
+        "W9001": MessageDef(
+            message="Explicit handling of failed import via try/except %s",
+            symbol="no-try-import",
+            description="Imports must be unconditional. Use dependency management instead of try/except ImportError guards.",
         ),
     }
 

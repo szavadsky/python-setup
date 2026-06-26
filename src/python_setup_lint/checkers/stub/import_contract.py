@@ -77,7 +77,7 @@ def _resolve_relative(
 
 # ── Public API ─────────────────────────────────────────────────────────────────
 
-def emit_import_contract_violations(checker: StubChecker) -> None:  # pylint: disable=missing-beartype
+def emit_import_contract_violations(checker: StubChecker) -> None:  # pylint: disable=missing-beartype  # StubChecker is TYPE_CHECKING-only; beartype can't resolve at runtime
     c = checker._coverage
     for usage in c.import_usages:
         target = usage.target_module

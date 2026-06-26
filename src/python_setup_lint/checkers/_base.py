@@ -1,6 +1,7 @@
 """Shared utilities for pylint checkers.
 
 Consolidates duplicate code across checker modules:
+- ``MessageDef`` — named representation for checker message definitions.
 - ``_matches_path`` — glob/directory path matching (was in stub_coverage.py and tmp_path_checker.py).
 - ``_is_under_source_root`` — source-root containment check (was in beartype_checker.py and stub_coverage.py).
 - ``_get_file_path`` — resolve a node's file path (was in beartype_checker.py).
@@ -10,8 +11,24 @@ from __future__ import annotations
 
 import fnmatch
 from pathlib import Path
+from typing import NamedTuple, NewType
 
 from astroid import nodes  # noqa: TC002
+
+
+
+LintRuleId = NewType("LintRuleId", str)
+
+class MessageDef(NamedTuple):
+    """Named representation for a pylint checker message definition.
+
+    Replaces bare ``(message, symbol, description)`` tuples in checker
+    ``msgs`` dicts with a typed, self-documenting record.
+    """
+
+    message: str
+    symbol: str
+    description: str
 
 
 def _matches_path(str_path: str, patterns: list[str]) -> bool:
@@ -46,3 +63,23 @@ def _get_file_path(node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> Path | N
         return Path(file_val)
     except (AttributeError, TypeError):
         return None
+
+
+def check_if_meaningful(
+    text: str,
+    *,
+    rule: str | None = None,
+    code_context: str | None = None,
+    comment: str | None = None,
+) -> bool:
+    """Check if a suppression justification is meaningful.
+
+    Heuristic: non-empty, non-boilerplate, contains a noun not equal to the rule symbol.
+    """
+    if not text or len(text.strip()) < 5:
+        return False
+    text = text.strip().lower()
+    boilerplate = {"noqa", "ignore", "suppress", "disable", "skip", "todo", "fixme", "hack"}
+    if text in boilerplate:
+        return False
+    return True

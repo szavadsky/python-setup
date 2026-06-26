@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -9,7 +8,7 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
-from python_setup_lint.checkers._base import _is_under_source_root
+from python_setup_lint.checkers._base import MessageDef, _is_under_source_root
 
 log = structlog.get_logger(__name__)
 
@@ -17,16 +16,16 @@ log = structlog.get_logger(__name__)
 class StructlogChecker(BaseChecker):
 
     name: str = "structlog-checker"
-    msgs = {
-        "W9710": (
-            "Use structlog.get_logger instead of logging.getLogger in '%s'",
-            "use-structlog",
-            "Prefer structlog over stdlib logging for structured logging.",
+    msgs: dict[str, MessageDef] = {
+        "W9710": MessageDef(
+            message="Use structlog.get_logger instead of logging.getLogger in '%s'",
+            symbol="use-structlog",
+            description="Prefer structlog over stdlib logging for structured logging.",
         ),
-        "W9711": (
-            "Use structured kwargs instead of printf-style formatting in '%s'",
-            "use-structured-logging",
-            "Logger calls should use keyword arguments for structured fields, "
+        "W9711": MessageDef(
+            message="Use structured kwargs instead of printf-style formatting in '%s'",
+            symbol="use-structured-logging",
+            description="Logger calls should use keyword arguments for structured fields, "
             "not printf-style positional args or f-string messages.",
         ),
     }

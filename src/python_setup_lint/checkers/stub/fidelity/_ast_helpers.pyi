@@ -37,7 +37,7 @@ class ParamDescriptor:
     """Canonical parameter form for stub-vs-impl comparison."""
 
     name: str
-    kind: inspect.Parameter.Kind  # type: ignore[name-defined]
+    kind: inspect.Parameter.Kind  # type: ignore[name-defined]  # inspect.Parameter.Kind is not a real type at runtime on Python <3.10
     has_default: bool
     annotation_normalized: str | None
 

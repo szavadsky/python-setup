@@ -14,16 +14,18 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
+from python_setup_lint.checkers._base import MessageDef
+
 
 class TempFileChecker(BaseChecker):
     """AST visitor that flags tempfile leakage in test files."""
 
     name: str = "tempfile-mkdtemp-in-test"
-    msgs = {
-        "W9702": (
-            "Use pytest tmp_path instead of '%s' in test files",
-            "tempfile-mkdtemp-in-test",
-            "Test files should use pytest's built-in tmp_path fixture "
+    msgs: dict[str, MessageDef] = {
+        "W9702": MessageDef(
+            message="Use pytest tmp_path instead of '%s' in test files",
+            symbol="tempfile-mkdtemp-in-test",
+            description="Test files should use pytest's built-in tmp_path fixture "
             "instead of manual tempfile calls that leak directories.",
         ),
     }
