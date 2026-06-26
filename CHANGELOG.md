@@ -1,5 +1,43 @@
 # Changelog
 
+## v0.7.0 (2026-06-26) — Docstring returns-clause rule, checkers reorg, dict-prohibition rules, suppression-justification linter, test perf, sample project
+
+Feature batch covering WS-1 through WS-8:
+
+**WS-1: `_`-symbol test-import convention.** Tests import `_`-prefixed symbols only from
+their defining submodule, never through the package root. New guard test enforces this.
+
+**WS-2: Test perf under 30 s.** Default `pytest` excludes `@pytest.mark.slow` tests
+(benchmarks, real-subprocess runs). Slow-marked `TestPerfBenchmark` class.
+
+**WS-3: Sample project + integration tests.** `test/data/minimal_sample_project/` with
+planted violations. `test/integration.py` with scenario-based E2E tests. `.gitignore`
+updated for setup-generated artifacts.
+
+**WS-4: Checkers reorg.** `checkers/` restructured into `conformance/` and `stub/`
+subfolders. `_checker_base.py` renamed to `_base.py`. `check_if_meaningful` helper
+added to `_base.py`.
+
+**WS-5: Unnamed-tuple dict prohibition.** New `unnamed_tuple_dict_checker` flags `dict`
+values that are bare `tuple`/`Tuple[...]` literals with >1 unnamed positional fields.
+All checker `msgs` dicts migrated to `MessageDef` named type.
+
+**WS-6: Generic-key dict prohibition.** New `generic_key_dict_checker` flags `dict[str, X]`
+annotations where the key represents a typed domain value. `LintRuleId` type introduced.
+Runner helpers and record types migrated.
+
+**WS-7: Justified-suppression linter.** New `suppression_justification_checker` flags
+`# pylint: disable`, `# noqa`, `# type: ignore` without a technical justification.
+`check_if_meaningful` heuristic in `_base.py`.
+
+**WS-8: Docstring rules + version + README + docs/.**
+- `stub_docstring_checker` gains `generic-return-requires-returns` and
+  `internal-helper-docstring-allowed` rules.
+- `CodingRules.md` updated with docstring rule bullets.
+- `README.md` slimmed to user-focused content; detail moved to `docs/overlays.md`
+  and `docs/custom-checks.md`.
+- Version bumped to 0.7.0.
+
 ## v0.6.0 (2026-06-23) — T4 autofix route through the lint wrapper + conflict-tolerant pre-commit hook + E999 canary + env-var opt-out
 
 The `lint` console-script's `--fix` flag now runs autofix across ALL

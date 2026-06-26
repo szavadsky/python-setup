@@ -80,6 +80,11 @@ yields, context manager semantics. No `_`-prefix symbols.
 - `.py`: implementation comments only (why, tricks). `help()` / `.__doc__` empty
   — intentional.
 
+### Docstring Rules
+
+- Generic-typed returns (`-> int/str/bool/...`) require a `Returns` clause describing the value.
+- `_`-prefixed helpers MAY have a docstring (not required).
+
 ## Project Documentation Layout
 
 ### End User
