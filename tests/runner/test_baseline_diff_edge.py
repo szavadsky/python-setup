@@ -64,6 +64,7 @@ class TestMixedSchemaLoad:
 # ── Performance benchmark: 50k-line baseline < 200ms ─────────────
 
 
+@pytest.mark.slow
 class TestPerfBenchmark:
     def test_50k_line_baseline_compares_under_200ms(self) -> None:
         records_saved: list[Record] = []
