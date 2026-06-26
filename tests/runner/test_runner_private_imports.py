@@ -82,3 +82,34 @@ def test_runner_imports_given_init_then_no_private_submodule() -> None:
     )
 
 
+
+def test_tests_import_privates_only_from_defining_submodule() -> None:
+    """Tests MUST import ``_``-prefixed symbols from the defining submodule,
+    not through the package ``__init__``."""
+    import ast
+
+    tests_dir = Path(__file__).resolve().parent.parent
+    violations: list[str] = []
+
+    for pyfile in sorted(tests_dir.rglob("*.py")):
+        if pyfile.name == "__init__.py":
+            continue
+        tree = ast.parse(pyfile.read_text())
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            if node.module is None:
+                continue
+            # Check imports from the runner package root (not a submodule)
+            if node.module == "python_setup_lint.runner":
+                for alias in node.names:
+                    if alias.name.startswith("_"):
+                        rel = pyfile.relative_to(tests_dir)
+                        violations.append(
+                            f"{rel}: from python_setup_lint.runner import {alias.name}"
+                        )
+
+    assert not violations, (
+        "Tests import _-prefixed symbols from runner package root, "
+        "not the defining submodule:\n" + "\n".join(violations)
+    )

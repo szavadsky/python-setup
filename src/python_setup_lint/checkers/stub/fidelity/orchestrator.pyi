@@ -6,7 +6,7 @@ See ``orchestrator.py`` for full docstrings.
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from python_setup_lint.checkers.stub_checker import StubChecker
+    from python_setup_lint.checkers.stub.checker import StubChecker
 
 def emit_fidelity_violations(checker: StubChecker) -> None:
     """Emit all Phase 3 violations for every module in *stub_index*.

@@ -85,7 +85,7 @@ def _discover_checkers() -> list[str]:
 
     result: list[str] = []
     prefix = checkers_pkg.__name__ + "."
-    for m in pkgutil.iter_modules(checkers_pkg.__path__, prefix):
+    for m in pkgutil.walk_packages(checkers_pkg.__path__, prefix):
         # Filter: only modules with a register function
         try:
             mod = __import__(m.name, fromlist=["register"])

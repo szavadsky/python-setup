@@ -17,7 +17,7 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
 if TYPE_CHECKING:
-    from python_setup_lint.checkers.stub_checker import StubChecker
+    from python_setup_lint.checkers.stub.checker import StubChecker
 
 
 log = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def _has_companion_stub(py_path: Path, linter: PyLinter) -> bool:
     # falls back to inline/package check when StubChecker not registered.
     stub_checker = _get_stub_checker(linter)
     if stub_checker is not None:
-        from python_setup_lint.checkers.stub_coverage import _resolve_stub
+        from python_setup_lint.checkers.stub.coverage import _resolve_stub
 
         result = _resolve_stub(stub_checker, py_path)
         return result is not None

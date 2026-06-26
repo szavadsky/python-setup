@@ -12,8 +12,8 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-from python_setup_lint.checkers.stub_coverage import _CoverageState
-from python_setup_lint.checkers.stub_fidelity import _FidelityState
+from python_setup_lint.checkers.stub.coverage import _CoverageState
+from python_setup_lint.checkers.stub.fidelity import _FidelityState
 
 class StubChecker(BaseChecker):
     """Enforce Invariant 1 (coverage), 2 (import contract), 3 (fidelity)."""

@@ -17,16 +17,16 @@ from unittest.mock import MagicMock
 import astroid
 import pytest
 
-from python_setup_lint.checkers.stub_checker import StubChecker
-from python_setup_lint.checkers.stub_fidelity import _is_classvar
-from python_setup_lint.checkers.stub_import_contract import (
+from python_setup_lint.checkers.stub.checker import StubChecker
+from python_setup_lint.checkers.stub.fidelity import _is_classvar
+from python_setup_lint.checkers.stub.import_contract import (
     ImportUsage,
     _in_type_checking_block,
     _is_type_checking_guard,
     _resolve_relative,
     emit_import_contract_violations,
 )
-from python_setup_lint.checkers.stub_normalizer import AnnotationNormalizer
+from python_setup_lint.checkers.stub.normalizer import AnnotationNormalizer
 from python_setup_lint.testing import _make_tc as _make_tc_factory
 from tests.checkers._factories import (
     _IMPORT_CONTRACT_CASES,
@@ -71,7 +71,7 @@ def test_message_codes(code: str, expected_symbol: str) -> None:
 
 
 def test_register_function() -> None:
-    from python_setup_lint.checkers.stub_checker import register
+    from python_setup_lint.checkers.stub.checker import register
 
     mock_linter = MagicMock()
     register(mock_linter)

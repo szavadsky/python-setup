@@ -15,8 +15,8 @@ from typing import Any
 import astroid
 import pytest
 
-from python_setup_lint.checkers.stub_checker import StubChecker
-from python_setup_lint.checkers.stub_fidelity import (
+from python_setup_lint.checkers.stub.checker import StubChecker
+from python_setup_lint.checkers.stub.fidelity import (
     ClassComparisonCtx,
     _is_public_method,
     _normalize_bases,

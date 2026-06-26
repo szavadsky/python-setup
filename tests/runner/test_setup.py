@@ -183,18 +183,18 @@ class TestDiscoverCheckers:
     def test_finds_register_modules(self) -> None:
         m = _discover_checkers()
         for n in (
-            "beartype_checker",
-            "no_try_import_checker",
-            "stub_checker",
-            "stub_docstring_checker",
-            "tmp_path_checker",
+            "conformance.beartype_checker",
+            "conformance.no_try_import_checker",
+            "stub.checker",
+            "stub.docstring_checker",
+            "conformance.tmp_path_checker",
         ):
             assert f"python_setup_lint.checkers.{n}" in m
         for n in (
-            "stub_coverage",
-            "stub_fidelity",
-            "stub_import_contract",
-            "stub_normalizer",
+            "stub.coverage",
+            "stub.fidelity",
+            "stub.import_contract",
+            "stub.normalizer",
         ):
             assert f"python_setup_lint.checkers.{n}" not in m
 

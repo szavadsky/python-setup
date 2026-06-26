@@ -6,7 +6,7 @@ See ``kind.py`` for full docstrings.
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from python_setup_lint.checkers.stub_checker import StubChecker
+    from python_setup_lint.checkers.stub.checker import StubChecker
 
 def _build_stub_kinds(
     stub_vars: dict[str, object],

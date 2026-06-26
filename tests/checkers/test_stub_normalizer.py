@@ -11,7 +11,7 @@ from typing import Any
 import astroid
 import pytest
 
-from python_setup_lint.checkers.stub_normalizer import AnnotationNormalizer
+from python_setup_lint.checkers.stub.normalizer import AnnotationNormalizer
 from tests.checkers._factories import (
     _APPLY_REWRITES_CASES,
     _AST_STRING_CASES,

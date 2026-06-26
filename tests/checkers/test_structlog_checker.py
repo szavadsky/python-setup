@@ -10,7 +10,7 @@ from typing import Any
 import astroid
 import pytest
 
-from python_setup_lint.checkers.structlog_checker import StructlogChecker
+from python_setup_lint.checkers.conformance.structlog_checker import StructlogChecker
 from python_setup_lint.testing import _make_tc as _make_tc_factory
 
 pytestmark = pytest.mark.no_external_api
