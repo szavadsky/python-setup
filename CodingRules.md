@@ -14,6 +14,7 @@
   `MinLen`…), `Unpack`, `assert_never`, `Self` (fluent APIs, classmethod
   constructors), `ParamSpec`, `Concatenate` (preserve call signatures in
   decorators), `TYPE_CHECKING` guard for import-cycle-breaking imports.
+  - Generic-key dict annotations: `dict[str, X]` is allowed when the key is a filename, identifier, path, or display string. Domain-typed values (e.g. `dict[str, MessageDef]`) should use `LintRuleId`, an enum, or a `Literal` type instead.
 - Runtime enforcement: `@beartype` on all first-party public functions/methods.
   Validates `Annotated` predicates at call boundary. No manual `if` guards for
   type contracts.

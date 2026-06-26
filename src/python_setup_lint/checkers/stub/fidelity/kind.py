@@ -60,11 +60,11 @@ def _build_impl_kinds(
 ) -> dict[str, str]:
     impl_kinds: dict[str, str] = {}
     for iname in impl_all:
-        if iname in f.impl_callable_nodes.get(module_name, {}):  # type: ignore[union-attr]
+        if iname in f.impl_callable_nodes.get(module_name, {}):  # type: ignore[union-attr]  # f is a _FidelityState; mypy cannot narrow the generic get
             impl_kinds[iname] = "callable"
-        elif iname in f.impl_class_nodes.get(module_name, {}):  # type: ignore[union-attr]
+        elif iname in f.impl_class_nodes.get(module_name, {}):  # type: ignore[union-attr]  # f is a _FidelityState; mypy cannot narrow the generic get
             impl_kinds[iname] = "class"
-        elif iname in f.impl_annotations.get(module_name, {}):  # type: ignore[union-attr]
+        elif iname in f.impl_annotations.get(module_name, {}):  # type: ignore[union-attr]  # f is a _FidelityState; mypy cannot narrow the generic get
             impl_kinds[iname] = "variable"
         else:
             impl_kinds[iname] = "unknown"
@@ -116,7 +116,7 @@ def _compare_matched_classes(
 ) -> None:
     impl_node = checker._coverage.module_index.get(module_name, (None, None))[1]
     for cname, stub_class in stub_classes.items():
-        impl_class = f.impl_class_nodes.get(module_name, {}).get(cname)  # type: ignore[union-attr]
+        impl_class = f.impl_class_nodes.get(module_name, {}).get(cname)  # type: ignore[union-attr]  # f is a _FidelityState; mypy cannot narrow the generic get
         if impl_class is None:
             continue
         ctx = ClassComparisonCtx(

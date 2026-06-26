@@ -16,6 +16,8 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
+from python_setup_lint.checkers._base import MessageDef
+
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
@@ -64,11 +66,11 @@ class StubDocstringChecker(BaseChecker):
     name: str = "stub-docstring-checker"
     _enabled_for_module: bool
     _current_module_name: str | None
-    msgs = {
-        "W9700": (
-            "Implementation file '%s' has usage docstring for '%s'; move to .pyi",
-            "docstring-in-impl",
-            "Usage docstrings (params, raises, edge cases) belong in .pyi stubs, "
+    msgs: dict[str, MessageDef] = {
+        "W9700": MessageDef(
+            message="Implementation file '%s' has usage docstring for '%s'; move to .pyi",
+            symbol="docstring-in-impl",
+            description="Usage docstrings (params, raises, edge cases) belong in .pyi stubs, "
             "not in .py implementation files. CodingRules.md: '.pyi only: all usage docstrings'.",
         ),
     }

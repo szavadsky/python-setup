@@ -14,6 +14,8 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
+from python_setup_lint.checkers._base import MessageDef
+
 log = logging.getLogger(__name__)
 
 
@@ -21,11 +23,11 @@ class BeartypeCoverageChecker(BaseChecker):
     """AST visitor that inventories @beartype coverage on public functions."""
 
     name: str = "beartype-coverage"
-    msgs = {
-        "W9701": (
-            "Public function '%s' in '%s' is missing @beartype decorator",
-            "missing-beartype",
-            "All public functions should have @beartype for runtime type enforcement.",
+    msgs: dict[str, MessageDef] = {
+        "W9701": MessageDef(
+            message="Public function '%s' in '%s' is missing @beartype decorator",
+            symbol="missing-beartype",
+            description="All public functions should have @beartype for runtime type enforcement.",
         ),
     }
     options = (

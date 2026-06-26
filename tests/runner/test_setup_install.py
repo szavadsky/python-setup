@@ -70,7 +70,7 @@ def _ck_pylint(p: Path) -> None:
     assert d
     plugs = _get_pylint_load_plugins(d)
     assert len(plugs) >= 4
-    assert "python_setup_lint.checkers.beartype_checker" in plugs
+    assert "python_setup_lint.checkers.conformance.beartype_checker" in plugs
 
 
 def _ck_precommit(p: Path) -> None:
@@ -232,7 +232,7 @@ STEP_CASES = [
         lambda s, d: (
             s.pylint_plugins_added
             and "existing.plugin" in _get_pylint_load_plugins(_read_pyproject_toml(d))  # type: ignore[arg-type]
-            and "python_setup_lint.checkers.beartype_checker"
+            and "python_setup_lint.checkers.conformance.beartype_checker"
             in _get_pylint_load_plugins(_read_pyproject_toml(d))  # type: ignore[arg-type]
         ),
         id="pp_mg",

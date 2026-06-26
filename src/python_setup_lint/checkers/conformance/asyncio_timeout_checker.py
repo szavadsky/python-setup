@@ -19,6 +19,9 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
+from python_setup_lint.checkers._base import MessageDef
+
+
 _HTTP_METHODS: frozenset[str] = frozenset(
     {
         "get",
@@ -45,12 +48,12 @@ class AsyncTimeoutChecker(BaseChecker):
     """AST visitor that flags await calls missing enclosing timeout context."""
 
     name: str = "asyncio-timeout"
-    msgs: ClassVar[dict[str, tuple[str, str, str]]] = {
-        "W9703": (
-            "External async call '%s' without enclosing"
+    msgs: ClassVar[dict[str, "MessageDef"]] = {
+        "W9703": MessageDef(
+            message="External async call '%s' without enclosing"
             " asyncio.timeout() / anyio.fail_after()",
-            "asyncio-timeout",
-            "External async calls must be wrapped in"
+            symbol="asyncio-timeout",
+            description="External async calls must be wrapped in"
             " asyncio.timeout() or anyio.fail_after().",
         ),
     }

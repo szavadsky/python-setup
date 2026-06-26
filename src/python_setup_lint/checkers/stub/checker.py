@@ -14,6 +14,7 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
+from python_setup_lint.checkers._base import MessageDef
 from python_setup_lint.checkers.stub.coverage import (
     _CoverageState,
     _has_main_block,
@@ -47,56 +48,56 @@ class StubChecker(BaseChecker):
     """
 
     name = "stub-checker"
-    msgs = {
-        "E97A0": (
-            "Production module '%s' has no companion .pyi stub",
-            "missing-module-stub",
-            "Every production Python module must have a corresponding .pyi stub file.",
+    msgs: dict[str, MessageDef] = {
+        "E97A0": MessageDef(
+            message="Production module '%s' has no companion .pyi stub",
+            symbol="missing-module-stub",
+            description="Every production Python module must have a corresponding .pyi stub file.",
         ),
-        "E97A1": (
-            "Symbol '%s' imported by '%s' is not declared in target stub '%s'",
-            "missing-import-declaration",
-            "Every project-local import must refer to a symbol declared in the target module's .pyi stub.",
+        "E97A1": MessageDef(
+            message="Symbol '%s' imported by '%s' is not declared in target stub '%s'",
+            symbol="missing-import-declaration",
+            description="Every project-local import must refer to a symbol declared in the target module's .pyi stub.",
         ),
-        "E97A2": (
-            "Project-local module '%s' imported by '%s' has no .pyi stub",
-            "missing-module-stub-for-import",
-            "Every imported project-local module must have a .pyi stub.",
+        "E97A2": MessageDef(
+            message="Project-local module '%s' imported by '%s' has no .pyi stub",
+            symbol="missing-module-stub-for-import",
+            description="Every imported project-local module must have a .pyi stub.",
         ),
-        "E97A3": (
-            "Star import from '%s' in '%s' cannot be statically resolved",
-            "star-import-unresolvable",
-            "Star imports from project-local modules are not statically resolvable.",
+        "E97A3": MessageDef(
+            message="Star import from '%s' in '%s' cannot be statically resolved",
+            symbol="star-import-unresolvable",
+            description="Star imports from project-local modules are not statically resolvable.",
         ),
-        "E97B3": (
-            "Signature mismatch on '%s' in module '%s': %s",
-            "signature-mismatch",
-            "Parameter count, name, kind, or default-presence differs between .pyi stub and .py implementation.",
+        "E97B3": MessageDef(
+            message="Signature mismatch on '%s' in module '%s': %s",
+            symbol="signature-mismatch",
+            description="Parameter count, name, kind, or default-presence differs between .pyi stub and .py implementation.",
         ),
-        "E97B4": (
-            "Annotation mismatch on '%s' in module '%s': stub has '%s', impl has '%s'",
-            "annotation-mismatch",
-            "Variable annotation in .pyi differs from the .py implementation after normalization.",
+        "E97B4": MessageDef(
+            message="Annotation mismatch on '%s' in module '%s': stub has '%s', impl has '%s'",
+            symbol="annotation-mismatch",
+            description="Variable annotation in .pyi differs from the .py implementation after normalization.",
         ),
-        "W97B5": (
-            "Implementation of '%s' in '%s' has no annotation (stub annotates)",
-            "impl-missing-annotation",
-            "Variable is annotated in the .pyi stub but the .py implementation has no annotation.",
+        "W97B5": MessageDef(
+            message="Implementation of '%s' in '%s' has no annotation (stub annotates)",
+            symbol="impl-missing-annotation",
+            description="Variable is annotated in the .pyi stub but the .py implementation has no annotation.",
         ),
-        "I97B6": (
-            "Annotation for '%s' in module '%s' could not be normalized",
-            "annotation-unverifiable",
-            "Annotation is too complex to normalize and compare. Manual review needed.",
+        "I97B6": MessageDef(
+            message="Annotation for '%s' in module '%s' could not be normalized",
+            symbol="annotation-unverifiable",
+            description="Annotation is too complex to normalize and compare. Manual review needed.",
         ),
-        "E97B1": (
-            "Stub symbol '%s' in module '%s' has no implementation",
-            "stub-symbol-missing",
-            "Symbol declared in .pyi stub is absent from .py implementation.",
+        "E97B1": MessageDef(
+            message="Stub symbol '%s' in module '%s' has no implementation",
+            symbol="stub-symbol-missing",
+            description="Symbol declared in .pyi stub is absent from .py implementation.",
         ),
-        "E97B2": (
-            "Kind mismatch for '%s' in module '%s': stub declares '%s', implementation has '%s'",
-            "symbol-kind-mismatch",
-            "Symbol exists in both stub and impl but their kinds differ (e.g. class vs function, variable vs class).",
+        "E97B2": MessageDef(
+            message="Kind mismatch for '%s' in module '%s': stub declares '%s', implementation has '%s'",
+            symbol="symbol-kind-mismatch",
+            description="Symbol exists in both stub and impl but their kinds differ (e.g. class vs function, variable vs class).",
         ),
     }
     options = (
@@ -391,7 +392,7 @@ class StubChecker(BaseChecker):
         f.impl_all_names[module_name] = impl_names
 
 
-def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # circular import — PyLinter not available at runtime
     # beartype omitted: register is a pylint plugin entrypoint called from
     # pyproject.toml; beartype would introduce a circular import at load time.
     linter.register_checker(StubChecker(linter))

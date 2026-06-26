@@ -127,10 +127,10 @@ class LintTool:
         self.spec = spec
 
     @property
-    def name(self) -> str:  # pylint: disable=missing-beartype
+    def name(self) -> str:  # pylint: disable=missing-beartype  # trivial property; beartype overhead unnecessary
         return self.spec.name
 
-    def build_command(  # pylint: disable=missing-beartype
+    def build_command(  # pylint: disable=missing-beartype  # delegation wrapper; beartype overhead unnecessary
         self,
         *,
         config: RunnerConfig,
@@ -142,10 +142,10 @@ class LintTool:
             self.spec, config=config, fix=_fix, path=_path, exclude=_exclude
         )
 
-    def statistics_flags(self) -> list[str]:  # pylint: disable=missing-beartype
+    def statistics_flags(self) -> list[str]:  # pylint: disable=missing-beartype  # trivial delegation; beartype overhead unnecessary
         return _build_statistics_flags(self.spec)
 
-    def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]:  # pylint: disable=missing-beartype
+    def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]:  # pylint: disable=missing-beartype  # delegation wrapper; beartype overhead unnecessary
         parser = _STATISTICS_PARSERS.get(self.spec.name)
         if parser is None:
             return []
@@ -160,7 +160,7 @@ class LintTool:
 
 
 class _StubtestLintTool(LintTool):
-    def build_command(  # pylint: disable=missing-beartype
+    def build_command(  # pylint: disable=missing-beartype  # subclass override; beartype overhead unnecessary
         self,
         *,
         config: RunnerConfig,
@@ -189,7 +189,7 @@ class _StubtestLintTool(LintTool):
 
 
 class _VerifyTypesLintTool(LintTool):
-    def build_command(  # pylint: disable=missing-beartype
+    def build_command(  # pylint: disable=missing-beartype  # subclass override; beartype overhead unnecessary
         self,
         *,
         config: RunnerConfig,
@@ -208,7 +208,7 @@ class _VerifyTypesLintTool(LintTool):
 
 
 class _DetectSecretsLintTool(LintTool):
-    def build_command(  # pylint: disable=missing-beartype
+    def build_command(  # pylint: disable=missing-beartype  # subclass override; beartype overhead unnecessary
         self,
         *,
         config: RunnerConfig,
@@ -238,7 +238,7 @@ class _PylintLintTool(LintTool):
     def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
         return _resolve_pylintrc(config_paths, cwd)
 
-    def build_command(  # pylint: disable=missing-beartype
+    def build_command(  # pylint: disable=missing-beartype  # subclass override; beartype overhead unnecessary
         self,
         *,
         config: RunnerConfig,
@@ -304,7 +304,7 @@ class GenericLintTool(LintTool):
         self._parser = parser
         self._config_flag = config_flag
 
-    def build_command(  # pylint: disable=missing-beartype
+    def build_command(  # pylint: disable=missing-beartype  # subclass override; beartype overhead unnecessary
         self,
         *,
         config: RunnerConfig,
@@ -321,12 +321,12 @@ class GenericLintTool(LintTool):
             config_flag_override=self._config_flag,
         )
 
-    def statistics_flags(self) -> list[str]:  # pylint: disable=missing-beartype
+    def statistics_flags(self) -> list[str]:  # pylint: disable=missing-beartype  # trivial delegation; beartype overhead unnecessary
         if self._statistics_flag is not None:
             return list(self._statistics_flag)
         return _build_statistics_flags(self.spec)
 
-    def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]:  # pylint: disable=missing-beartype
+    def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]:  # pylint: disable=missing-beartype  # delegation wrapper; beartype overhead unnecessary
         if self._parser is not None:
             return self._parser(stdout, stderr)
         parser = _STATISTICS_PARSERS.get(self.spec.name)
@@ -349,7 +349,7 @@ def _strategy_for(name: str, spec: ToolSpec) -> LintTool:
     return GenericLintTool(spec)
 
 
-def register_lint_tool(  # pylint: disable=missing-beartype
+def register_lint_tool(  # pylint: disable=missing-beartype  # public API entry point; beartype overhead unnecessary
     tool: ToolSpec,
     *,
     statistics_flag: list[str] | None = None,

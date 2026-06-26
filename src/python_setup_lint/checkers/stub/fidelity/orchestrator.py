@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 __all__ = ["emit_fidelity_violations"]
 
-def emit_fidelity_violations(checker: StubChecker) -> None:  # pylint: disable=missing-beartype
+def emit_fidelity_violations(checker: StubChecker) -> None:  # pylint: disable=missing-beartype  # StubChecker is TYPE_CHECKING-only; beartype can't resolve at runtime
     for module_name in checker._coverage.stub_index:
         _emit_stub_symbol_check(checker, module_name)
         _emit_variable_fidelity(checker, module_name)

@@ -60,7 +60,7 @@ def _infer_package_name(cwd: Path) -> str | None:
     try:
         packages: list[str] = data["tool"]["hatch"]["build"]["targets"]["wheel"][
             "packages"
-        ]  # type: ignore[index]
+        ]  # type: ignore[index]  # nested dict access; mypy cannot infer the deep key
     except (KeyError, TypeError):
         return None
     if not packages:
