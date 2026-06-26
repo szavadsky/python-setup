@@ -93,6 +93,22 @@ def _config_flag_for(spec_name: str, config_path: Path | None) -> list[str]:
     return flags.get(spec_name, [])
 
 
+def _build_config_flags(
+    spec: ToolSpec,
+    config: RunnerConfig,
+    *,
+    config_flag_override: list[str] | None = None,
+) -> list[str]:
+    # Resolve config flags for *spec* from *config* or an explicit override.
+    config_paths = config.config_paths or {}
+    if config_flag_override is not None:
+        extra_cfg = config_paths.get(spec.name)
+        if extra_cfg is not None:
+            return [*config_flag_override, str(extra_cfg)]
+        return []
+    return _config_flag_for(spec.name, config_paths.get(spec.name))
+
+
 def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
     explicit = config_paths.get("pylint")
     if explicit is not None:
@@ -178,6 +194,34 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
     return effective
 
 
+def _abs_rel_path(value: object, abs_cwd: Path) -> str | None:
+    # Convert a relative path to absolute, or return None if invalid/absolute.
+    if not isinstance(value, str) or not value:
+        return None
+    p = Path(value)
+    if p.is_absolute():
+        return None
+    return str(abs_cwd / p)
+
+
+def _resolve_exclude_paths(
+    exclude_entries: object, abs_cwd: Path
+) -> tuple[list[str], bool]:
+    # Resolve exclude paths relative to *abs_cwd*. Returns (resolved, changed).
+    if not isinstance(exclude_entries, list):
+        return [], False
+    new_excludes: list[str] = []
+    changed = False
+    for entry in exclude_entries:
+        rewritten = _abs_rel_path(entry, abs_cwd)
+        if rewritten is not None:
+            new_excludes.append(rewritten)
+            changed = True
+        else:
+            new_excludes.append(entry if isinstance(entry, str) else entry)
+    return new_excludes, changed
+
+
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     try:
         raw = shared_config.read_text(encoding="utf-8")
@@ -191,70 +235,43 @@ def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
         return shared_config
 
     abs_cwd = cwd.resolve()
-
-    def _abs_rel(value: object) -> str | None:
-        if not isinstance(value, str) or not value:
-            return None
-        p = Path(value)
-        if p.is_absolute():
-            return None
-        return str(abs_cwd / p)
-
     changed = False
     venv_path = data.get("venvPath")
-    new_venv_path = _abs_rel(venv_path)
+    new_venv_path = _abs_rel_path(venv_path, abs_cwd)
     if new_venv_path is not None:
         data["venvPath"] = new_venv_path
         changed = True
 
-    new_excludes: list[str] = []
-    exclude_entries = data.get("exclude")
-    if isinstance(exclude_entries, list):
-        for entry in exclude_entries:
-            rewritten = _abs_rel(entry)
-            if rewritten is not None:
-                new_excludes.append(rewritten)
-                changed = True
-            else:
-                new_excludes.append(entry if isinstance(entry, str) else entry)
-        if changed:
-            data["exclude"] = new_excludes
+    new_excludes, exc_changed = _resolve_exclude_paths(data.get("exclude"), abs_cwd)
+    if exc_changed:
+        data["exclude"] = new_excludes
+        changed = True
 
     if not changed:
         return shared_config
 
-    out_dir = Path(tempfile.gettempdir()) / f"python_setup_lint_pyright_{abs_cwd.name}"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = Path(tempfile.mkdtemp(prefix=f"python_setup_lint_pyright_{abs_cwd.name}_"))
     composed = out_dir / "pyrightconfig.json"
     composed.write_text(
         json.dumps(data, indent=4, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     return composed
+def _build_fix_flags(spec: ToolSpec, *, fix: bool) -> list[str]:
+    # Return fix flags if *fix* is requested and the tool supports it.
+    if fix and spec.supports_fix:
+        return list(spec.fix_flags)
+    return []
 
 
-def _build_command(
+def _build_path_and_exclude_args(
     spec: ToolSpec,
     *,
     config: RunnerConfig,
-    fix: bool = False,
     path: str | None = None,
     exclude: str | None = None,
-    config_flag_override: list[str] | None = None,
 ) -> list[str]:
-    cmd = list(spec.command)
-    config_paths = config.config_paths or {}
-
-    # ── Shared config files ───────────────────────────────────
-    if config_flag_override is not None:
-        extra_cfg = config_paths.get(spec.name)
-        if extra_cfg is not None:
-            cmd.extend([*config_flag_override, str(extra_cfg)])
-    else:
-        cmd.extend(_config_flag_for(spec.name, config_paths.get(spec.name)))
-
-    # ── Fix flags (data-driven via ToolSpec.fix_flags) ────────
-    if fix and spec.supports_fix:
-        cmd.extend(spec.fix_flags)
+    # Resolve path scoping and exclude flags for *spec*.
+    result: list[str] = []
 
     # ── Path scoping ───────────────────────────────────────────
     paths: list[str] = []
@@ -267,10 +284,26 @@ def _build_command(
     paths = _expand_globs(paths, cwd=config.cwd)
 
     if paths:
-        cmd.extend(paths)
+        result.extend(paths)
 
     # ── Exclude flags (data-driven via ToolSpec.exclude_flag) ─
     if exclude is not None and spec.supports_exclude:
-        cmd.extend([spec.exclude_flag, exclude])
+        result.extend([spec.exclude_flag, exclude])
 
+    return result
+
+
+def _build_command(
+    spec: ToolSpec,
+    *,
+    config: RunnerConfig,
+    fix: bool = False,
+    path: str | None = None,
+    exclude: str | None = None,
+    config_flag_override: list[str] | None = None,
+) -> list[str]:
+    cmd = list(spec.command)
+    cmd.extend(_build_config_flags(spec, config, config_flag_override=config_flag_override))
+    cmd.extend(_build_fix_flags(spec, fix=fix))
+    cmd.extend(_build_path_and_exclude_args(spec, config=config, path=path, exclude=exclude))
     return cmd

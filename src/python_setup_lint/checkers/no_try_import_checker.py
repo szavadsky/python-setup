@@ -45,7 +45,6 @@ class NoTryImportChecker(BaseChecker):
 
     @staticmethod
     def _get_exception_names(handler: nodes.ExceptHandler) -> set[str]:
-        """Return set of exception class names caught by this handler clause."""
         if handler.type is None:
             return set()
         if isinstance(handler.type, nodes.Tuple):
@@ -56,7 +55,6 @@ class NoTryImportChecker(BaseChecker):
 
     @staticmethod
     def _has_import(stmts: list[nodes.NodeNG]) -> bool:
-        """True if any statement is an Import or ImportFrom node (not a Call)."""
         return any(isinstance(stmt, (nodes.Import, nodes.ImportFrom)) for stmt in stmts)
 
 def register(linter: PyLinter) -> None: # pylint: disable=missing-beartype # PyLinter is a pylint internal type not available at runtime for beartype

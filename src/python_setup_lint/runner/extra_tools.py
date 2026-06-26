@@ -158,12 +158,50 @@ def _extra_tool_parser(
     raise ExtraToolsConfigError(location, f"bad enum: parse_strategy {strategy!r}")
 
 
-def _validate_extra(
-    entry: dict[str, Any],
-    *,
-    location: str,
-    seen_names: set[str],
-) -> _ExtraToolRegistration:
+def _validate_extra_bool_fields(entry: dict[str, Any], location: str) -> tuple[bool, bool, bool]:
+    supports_fix = entry.get("supports_fix", False)
+    if not isinstance(supports_fix, bool):
+        raise ExtraToolsConfigError(location, "wrong type: supports_fix must be bool")
+    supports_path = entry.get("supports_path", False)
+    if not isinstance(supports_path, bool):
+        raise ExtraToolsConfigError(location, "wrong type: supports_path must be bool")
+    supports_exclude = entry.get("supports_exclude", False)
+    if not isinstance(supports_exclude, bool):
+        raise ExtraToolsConfigError(
+            location, "wrong type: supports_exclude must be bool"
+        )
+    return supports_fix, supports_path, supports_exclude
+
+
+def _validate_extra_list_field(entry: dict[str, Any], key: str, location: str) -> list[str]:
+    raw = entry.get(key, [])
+    if not isinstance(raw, list):
+        raise ExtraToolsConfigError(location, f"wrong type: {key} must be list[str]")
+    for part in raw:
+        if not isinstance(part, str):
+            raise ExtraToolsConfigError(location, f"wrong type: {key} must be list[str]")
+    return list(raw)
+
+
+def _validate_extra_config_flag(entry: dict[str, Any], location: str) -> list[str] | None:
+    config_flag_raw = entry.get("config_flag")
+    if config_flag_raw is None:
+        return None
+    if isinstance(config_flag_raw, str):
+        return [config_flag_raw]
+    if isinstance(config_flag_raw, list):
+        for part in config_flag_raw:
+            if not isinstance(part, str):
+                raise ExtraToolsConfigError(
+                    location, "wrong type: config_flag must be str | list[str]"
+                )
+        return list(config_flag_raw)
+    raise ExtraToolsConfigError(
+        location, "wrong type: config_flag must be str | list[str]"
+    )
+
+
+def _validate_extra_fields(entry: dict[str, Any], location: str) -> dict[str, Any]:
     unknown = set(entry) - _EXTRA_TOOL_FIELDS
     if unknown:
         allowed = ", ".join(sorted(_EXTRA_TOOL_FIELDS))
@@ -183,61 +221,16 @@ def _validate_extra(
     name = name_raw.strip()
     if not name:
         raise ExtraToolsConfigError(location, "empty name")
-    if name in TOOLS_BY_NAME:
-        raise ExtraToolsConfigError(location, f"duplicate vs built-in: {name}")
-    if name in seen_names:
-        raise ExtraToolsConfigError(location, f"duplicate within file: {name}")
 
-    command_raw = entry.get("command")
-    if not isinstance(command_raw, list) or not command_raw:
+    command = _validate_extra_list_field(entry, "command", location)
+    if not command:
         raise ExtraToolsConfigError(
             location, "wrong type: command must be non-empty list[str]"
         )
-    for part in command_raw:
-        if not isinstance(part, str):
-            raise ExtraToolsConfigError(
-                location, "wrong type: command must be list[str]"
-            )
 
-    supports_fix = entry.get("supports_fix", False)
-    if not isinstance(supports_fix, bool):
-        raise ExtraToolsConfigError(location, "wrong type: supports_fix must be bool")
-    supports_path = entry.get("supports_path", False)
-    if not isinstance(supports_path, bool):
-        raise ExtraToolsConfigError(location, "wrong type: supports_path must be bool")
-    supports_exclude = entry.get("supports_exclude", False)
-    if not isinstance(supports_exclude, bool):
-        raise ExtraToolsConfigError(
-            location, "wrong type: supports_exclude must be bool"
-        )
-
-    default_paths_raw = entry.get("default_paths", [])
-    if not isinstance(default_paths_raw, list):
-        raise ExtraToolsConfigError(
-            location, "wrong type: default_paths must be list[str]"
-        )
-    for part in default_paths_raw:
-        if not isinstance(part, str):
-            raise ExtraToolsConfigError(
-                location, "wrong type: default_paths must be list[str]"
-            )
-
-    config_flag_raw = entry.get("config_flag")
-    if config_flag_raw is None:
-        config_flag: list[str] | None = None
-    elif isinstance(config_flag_raw, str):
-        config_flag = [config_flag_raw]
-    elif isinstance(config_flag_raw, list):
-        for part in config_flag_raw:
-            if not isinstance(part, str):
-                raise ExtraToolsConfigError(
-                    location, "wrong type: config_flag must be str | list[str]"
-                )
-        config_flag = list(config_flag_raw)
-    else:
-        raise ExtraToolsConfigError(
-            location, "wrong type: config_flag must be str | list[str]"
-        )
+    supports_fix, supports_path, supports_exclude = _validate_extra_bool_fields(entry, location)
+    default_paths = _validate_extra_list_field(entry, "default_paths", location)
+    config_flag = _validate_extra_config_flag(entry, location)
 
     strategy = entry.get("parse_strategy", "none")
     if not isinstance(strategy, str):
@@ -245,23 +238,49 @@ def _validate_extra(
     if strategy not in PARSE_STRATEGIES:
         raise ExtraToolsConfigError(location, f"bad enum: parse_strategy {strategy!r}")
 
-    # Side-effecting validation: parse_regex presence + group count + compiles.
-    parser = _extra_tool_parser(entry=entry, location=location)
+    return {
+        "name": name,
+        "command": command,
+        "supports_fix": supports_fix,
+        "supports_path": supports_path,
+        "supports_exclude": supports_exclude,
+        "default_paths": default_paths,
+        "config_flag": config_flag,
+        "strategy": strategy,
+    }
 
+
+def _validate_extra_name(name: str, seen_names: set[str], location: str) -> str:
+    if name in TOOLS_BY_NAME:
+        raise ExtraToolsConfigError(location, f"duplicate vs built-in: {name}")
+    if name in seen_names:
+        raise ExtraToolsConfigError(location, f"duplicate within file: {name}")
+    return name
+
+
+def _validate_extra(
+    entry: dict[str, Any],
+    *,
+    location: str,
+    seen_names: set[str],
+) -> _ExtraToolRegistration:
+    fields = _validate_extra_fields(entry, location)
+    name = _validate_extra_name(fields["name"], seen_names, location)
+    parser = _extra_tool_parser(entry=entry, location=location)
     seen_names.add(name)
     spec = ToolSpec(
         name=name,
-        command=list(command_raw),
-        supports_fix=supports_fix,
-        supports_path=supports_path,
-        supports_exclude=supports_exclude,
-        default_paths=list(default_paths_raw),
+        command=fields["command"],
+        supports_fix=fields["supports_fix"],
+        supports_path=fields["supports_path"],
+        supports_exclude=fields["supports_exclude"],
+        default_paths=fields["default_paths"],
     )
     return _ExtraToolRegistration(
         spec=spec,
         statistics_flag=None,
         parser=parser,
-        config_flag=config_flag,
+        config_flag=fields["config_flag"],
     )
 
 

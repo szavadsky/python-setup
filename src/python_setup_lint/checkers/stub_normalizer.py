@@ -7,7 +7,7 @@ Phase 2: AST-string walking + rewrite rules — fallback for Uninferable (~6%).
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import astroid
 from astroid import bases, nodes
@@ -42,7 +42,6 @@ class AnnotationNormalizer:
     @staticmethod
     @beartype
     def normalize(ann_node: nodes.NodeNG | None) -> str | None:
-        """Normalize *ann_node* to a comparable string, or None on failure."""
         if ann_node is None:
             return None
 
@@ -59,11 +58,6 @@ class AnnotationNormalizer:
 
     @staticmethod
     def _infer_phase(ann_node: nodes.NodeNG) -> str | None:
-        """Attempt to resolve *ann_node* via Astroid inference.
-
-        Returns the node name for ClassDef results, or ``str(result)``
-        for other resolvable types. Returns None on Uninferable or error.
-        """
         try:
             inferred = ann_node.infer()
             results = list(inferred)
@@ -88,76 +82,21 @@ class AnnotationNormalizer:
         # is unreliable — fall through to Phase 2 (AST-string walking).
         return None
 
+    # -- AST-string dispatch ---------------------------------------------------
+
+    _AST_STRING_DISPATCH: dict[
+        type, Callable[[SuccessfulInferenceResult], str | None]
+    ] = {}
+
     @staticmethod
     def _ast_string(node: SuccessfulInferenceResult) -> str | None:
-        """Walk the AST subtree and produce a canonical string form.
-
-        Returns None if an unsupported node type is encountered.
-        """
         # Const is a subclass of Proxy in astroid, so check it first.
         if isinstance(node, nodes.Const):
             return repr(node.value)
-        if isinstance(node, nodes.Name):
-            return node.name
-        if isinstance(node, nodes.Subscript):
-            value_s = AnnotationNormalizer._ast_string(node.value)
-            slice_s = AnnotationNormalizer._ast_string(node.slice)
-            if value_s is None or slice_s is None:
-                return None
-            return f"{value_s}[{slice_s}]"
-        if isinstance(node, nodes.BinOp) and node.op == "|":
-            left_s = AnnotationNormalizer._ast_string(node.left)
-            right_s = AnnotationNormalizer._ast_string(node.right)
-            if left_s is None or right_s is None:
-                return None
-            return f"{left_s} | {right_s}"
-        if isinstance(node, nodes.Attribute):
-            expr_s = AnnotationNormalizer._ast_string(node.expr)
-            if expr_s is None:
-                return None
-            return f"{expr_s}.{node.attrname}"
-        if isinstance(node, nodes.Tuple):
-            tuple_elts: list[str] = []
-            for e in node.elts:
-                s = AnnotationNormalizer._ast_string(e)
-                if s is None:
-                    return None
-                tuple_elts.append(s)
-            return f"({', '.join(tuple_elts)})"
-        if isinstance(node, nodes.List):
-            list_elts: list[str] = []
-            for e in node.elts:
-                s = AnnotationNormalizer._ast_string(e)
-                if s is None:
-                    return None
-                list_elts.append(s)
-            return f"[{', '.join(list_elts)}]"
-        if isinstance(node, nodes.UnaryOp):
-            operand_s = AnnotationNormalizer._ast_string(node.operand)
-            if operand_s is None:
-                return None
-            return f"{node.op}{operand_s}"
-        if isinstance(node, nodes.Starred):
-            value_s = AnnotationNormalizer._ast_string(node.value)
-            if value_s is None:
-                return None
-            return f"*{value_s}"
-        if isinstance(node, nodes.Dict):
-            pairs = []
-            for k, v in zip(node.keys, node.values, strict=False):
-                ks = AnnotationNormalizer._ast_string(k)
-                vs = AnnotationNormalizer._ast_string(v)
-                if ks is None or vs is None:
-                    return None
-                pairs.append(f"{ks}: {vs}")
-            return "{" + ", ".join(pairs) + "}"
-        if isinstance(node, nodes.IfExp):
-            test_s = AnnotationNormalizer._ast_string(node.test)
-            body_s = AnnotationNormalizer._ast_string(node.body)
-            orelse_s = AnnotationNormalizer._ast_string(node.orelse)
-            if test_s is None or body_s is None or orelse_s is None:
-                return None
-            return f"{body_s} if {test_s} else {orelse_s}"
+        # Try the dispatch table for known NodeNG subclasses.
+        handler = AnnotationNormalizer._AST_STRING_DISPATCH.get(type(node))
+        if handler is not None:
+            return handler(node)
         # Proxy is not a NodeNG; extract the proxied node and recurse.
         # NOTE: This check must come AFTER all specific node type checks
         # because Tuple, List, Dict, Set, and Const all inherit from Proxy.
@@ -166,12 +105,108 @@ class AnnotationNormalizer:
         return None
 
     @staticmethod
-    def _apply_rewrites(s: str) -> str:
-        """Apply the rewrite-rule table to *s* in order.
+    def _string_name(node: SuccessfulInferenceResult) -> str | None:
+        if not isinstance(node, nodes.Name):
+            return None
+        return node.name
 
-        The Union rule is applied last and splits on the outermost comma
-        (not inside brackets) to handle ``Union[A, B, C]`` → ``A | B | C``.
-        """
+    @staticmethod
+    def _string_subscript(node: SuccessfulInferenceResult) -> str | None:
+        if not isinstance(node, nodes.Subscript):
+            return None
+        value_s = AnnotationNormalizer._ast_string(node.value)
+        slice_s = AnnotationNormalizer._ast_string(node.slice)
+        if value_s is None or slice_s is None:
+            return None
+        return f"{value_s}[{slice_s}]"
+
+    @staticmethod
+    def _string_binop(node: SuccessfulInferenceResult) -> str | None:
+        if not isinstance(node, nodes.BinOp) or node.op != "|":
+            return None
+        left_s = AnnotationNormalizer._ast_string(node.left)
+        right_s = AnnotationNormalizer._ast_string(node.right)
+        if left_s is None or right_s is None:
+            return None
+        return f"{left_s} | {right_s}"
+
+    @staticmethod
+    def _string_attribute(node: SuccessfulInferenceResult) -> str | None:
+        if not isinstance(node, nodes.Attribute):
+            return None
+        expr_s = AnnotationNormalizer._ast_string(node.expr)
+        if expr_s is None:
+            return None
+        return f"{expr_s}.{node.attrname}"
+
+    @staticmethod
+    def _string_tuple(node: SuccessfulInferenceResult) -> str | None:
+        if not isinstance(node, nodes.Tuple):
+            return None
+        elts: list[str] = []
+        for e in node.elts:
+            s = AnnotationNormalizer._ast_string(e)
+            if s is None:
+                return None
+            elts.append(s)
+        return f"({', '.join(elts)})"
+
+    @staticmethod
+    def _string_list(node: SuccessfulInferenceResult) -> str | None:
+        if not isinstance(node, nodes.List):
+            return None
+        elts: list[str] = []
+        for e in node.elts:
+            s = AnnotationNormalizer._ast_string(e)
+            if s is None:
+                return None
+            elts.append(s)
+        return f"[{', '.join(elts)}]"
+
+    @staticmethod
+    def _string_unaryop(node: SuccessfulInferenceResult) -> str | None:
+        if not isinstance(node, nodes.UnaryOp):
+            return None
+        operand_s = AnnotationNormalizer._ast_string(node.operand)
+        if operand_s is None:
+            return None
+        return f"{node.op}{operand_s}"
+
+    @staticmethod
+    def _string_starred(node: SuccessfulInferenceResult) -> str | None:
+        if not isinstance(node, nodes.Starred):
+            return None
+        value_s = AnnotationNormalizer._ast_string(node.value)
+        if value_s is None:
+            return None
+        return f"*{value_s}"
+
+    @staticmethod
+    def _string_dict(node: SuccessfulInferenceResult) -> str | None:
+        if not isinstance(node, nodes.Dict):
+            return None
+        pairs: list[str] = []
+        for k, v in zip(node.keys, node.values, strict=False):
+            ks = AnnotationNormalizer._ast_string(k)
+            vs = AnnotationNormalizer._ast_string(v)
+            if ks is None or vs is None:
+                return None
+            pairs.append(f"{ks}: {vs}")
+        return "{" + ", ".join(pairs) + "}"
+
+    @staticmethod
+    def _string_ifexp(node: SuccessfulInferenceResult) -> str | None:
+        if not isinstance(node, nodes.IfExp):
+            return None
+        test_s = AnnotationNormalizer._ast_string(node.test)
+        body_s = AnnotationNormalizer._ast_string(node.body)
+        orelse_s = AnnotationNormalizer._ast_string(node.orelse)
+        if test_s is None or body_s is None or orelse_s is None:
+            return None
+        return f"{body_s} if {test_s} else {orelse_s}"
+
+    @staticmethod
+    def _apply_rewrites(s: str) -> str:
         # First apply non-Union pattern rewrites
         for pattern, replacement in _REWRITE_PATTERNS:
             if pattern.match(s):
@@ -188,7 +223,6 @@ class AnnotationNormalizer:
 
     @staticmethod
     def _split_outer_commas(s: str) -> list[str]:
-        """Split *s* on commas that are not inside angle brackets ``<>`` or square brackets ``[]``."""
         parts: list[str] = []
         depth = 0
         current: list[str] = []
@@ -208,3 +242,18 @@ class AnnotationNormalizer:
         if last:
             parts.append(last)
         return parts
+
+
+# Build the dispatch table after the class body so all handlers exist.
+AnnotationNormalizer._AST_STRING_DISPATCH.update({
+    nodes.Name: AnnotationNormalizer._string_name,
+    nodes.Subscript: AnnotationNormalizer._string_subscript,
+    nodes.BinOp: AnnotationNormalizer._string_binop,
+    nodes.Attribute: AnnotationNormalizer._string_attribute,
+    nodes.Tuple: AnnotationNormalizer._string_tuple,
+    nodes.List: AnnotationNormalizer._string_list,
+    nodes.UnaryOp: AnnotationNormalizer._string_unaryop,
+    nodes.Starred: AnnotationNormalizer._string_starred,
+    nodes.Dict: AnnotationNormalizer._string_dict,
+    nodes.IfExp: AnnotationNormalizer._string_ifexp,
+})

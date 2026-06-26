@@ -56,6 +56,28 @@ def _compare_class_attrs(ctx: ClassComparisonCtx) -> None:
     Skips ClassVar-annotated attributes.
     """
 
+def _build_attr_index(
+    ctx: ClassComparisonCtx,
+) -> tuple[
+    dict[str, nodes.AnnAssign],
+    dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]],
+]:
+    """Build stub and impl attribute indexes for a class."""
+
+def _check_one_variable(
+    checker: StubChecker,
+    module_name: str,
+    var_name: str,
+    stub_ann_node: nodes.AnnAssign,
+    *,
+    impl_vars: dict[
+        str, tuple[nodes.NodeNG | None, nodes.NodeNG | None]
+    ],
+    impl_node: nodes.Module,
+    impl_missing_policy: str,
+) -> None:
+    """Check annotation fidelity for a single variable."""
+
 def _emit_variable_fidelity(checker: StubChecker, module_name: str) -> None:
     """Compare variable annotations between stub and impl for *module_name*.
 

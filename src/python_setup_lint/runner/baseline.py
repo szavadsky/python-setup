@@ -4,16 +4,19 @@ from __future__ import annotations
 
 import json
 import re
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Callable
 
 import beartype
 
-from .parsers import (
-    _RECORD_PARSERS,
-    Record,
-    _compare_records_key,
-    _records_unchanged,
+from ._record_types import Record, _records_unchanged
+from ._baseline_helpers import (
+    _compare_sorted,
+    _dicts_to_records,
+    _diag_error_count,
+    _records_to_dicts,
+    _strip_pyright_volatile,
 )
+from .parsers import _RECORD_PARSERS
 
 from .types import LintResult
 
@@ -51,79 +54,6 @@ def peek_fallback_tools() -> frozenset[str]:  # pylint: disable=missing-beartype
     return frozenset(_FALLBACK_TOOLS)
 
 
-def _compare_sorted(
-    a: list[Record], b: list[Record]
-) -> tuple[list[Record], list[Record]]:
-    added: list[Record] = []
-    removed: list[Record] = []
-    i = j = 0
-    len_a, len_b = len(a), len(b)
-    while i < len_a and j < len_b:
-        ra, rb = a[i], b[j]
-        ka = _compare_records_key(ra)
-        kb = _compare_records_key(rb)
-        if ra == rb:
-            # Identical multiset member → consume one on each side.
-            i += 1
-            j += 1
-        elif (ka, ra.msg) < (kb, rb.msg):
-            added.append(ra)
-            i += 1
-        else:
-            removed.append(rb)
-            j += 1
-    if i < len_a:
-        added.extend(a[i:])
-    if j < len_b:
-        removed.extend(b[j:])
-    return added, removed
-
-
-def _record_to_dict(rec: Record) -> dict[str, Any]:
-    return {
-        "file": rec.file,
-        "line": rec.line,
-        "col": rec.col,
-        "rule": rec.rule,
-        "msg": rec.msg,
-    }
-
-
-def _dict_to_record(d: object) -> Record | None:
-    if not isinstance(d, dict):
-        return None
-    rule = d.get("rule")
-    if not isinstance(rule, str):
-        return None
-    file = d.get("file")
-    line = d.get("line")
-    col = d.get("col")
-    msg = d.get("msg")
-    return Record(
-        file if isinstance(file, str) else None,
-        line if isinstance(line, int) else None,
-        col if isinstance(col, int) else None,
-        rule,
-        msg if isinstance(msg, str) else "",
-    )
-
-
-def _records_to_dicts(records: list[Record]) -> list[dict[str, Any]]:
-    return [_record_to_dict(r) for r in records]
-
-
-def _dicts_to_records(payload: object) -> list[Record]:
-    out: list[Record] = []
-    if not isinstance(payload, list):
-        return out
-    for d in payload:
-        rec = _dict_to_record(d)
-        if rec is not None:
-            out.append(rec)
-    out.sort(key=_compare_records_key)
-    return out
-
-
 def _normalise_rumdl_timing(text: str) -> str:
     return re.sub(r"\(\d+ms\)", "(XXXms)", text)
 
@@ -134,50 +64,24 @@ def _normalise_pyright_verifytypes_output(text: str) -> str:
     return result
 
 
-def _strip_pyright_volatile(diag: object) -> None:
-    if not isinstance(diag, dict):
-        return
-    d = cast("dict[str, Any]", diag)
-    d.pop("time", None)
-    d.pop("version", None)
-    summary = d.get("summary")
-    if isinstance(summary, dict):
-        cast("dict[str, Any]", summary).pop("timeInSec", None)
+def _try_rumdl_json(stdout: str | None) -> dict | list | None:
+    if not stdout:
+        return None
+    try:
+        diag = json.loads(stdout)
+    except (json.JSONDecodeError, ValueError):
+        return None
+    if isinstance(diag, (dict, list)):
+        return diag
+    return None
 
 
-def _capture_one(r: LintResult) -> dict[str, Any]:
-    entry: dict[str, Any] = {"tool": r.tool_name, "exit_code": r.exit_code}
-    # JSON-native tools: pyright + rumdl-when-JSON.
-    if r.tool_name in _JSON_DIAGNOSTIC_TOOLS and r.stdout:
-        try:
-            diag = json.loads(r.stdout)
-        except json.JSONDecodeError, ValueError:
-            diag = None
-        if isinstance(diag, dict):
-            _strip_pyright_volatile(diag)
-            entry["diagnostics"] = diag
-            return entry
-        # JSON expected but not parseable → fall back to records/output path.
-    if r.tool_name == "rumdl check" and r.stdout:
-        # rumdl prefers JSON when its stdout parses cleanly.
-        try:
-            diag = json.loads(r.stdout)
-        except json.JSONDecodeError, ValueError:
-            diag = None
-        if isinstance(diag, (dict, list)):
-            entry["diagnostics"] = diag
-            return entry
-        # Text path → records (rumdl text parser strips the footer).
+def _capture_records_or_output(r: LintResult, entry: dict[str, Any]) -> dict[str, Any]:
     parser = _RECORD_PARSERS.get(r.tool_name)
     if parser is not None:
         records = parser(r.stdout or "")
         entry["schema"] = _SCHEMA_V2
         entry["records"] = _records_to_dicts(records)
-        # When records is empty but stdout was non-empty, stash a
-        # normalised ``output`` so (a) the absence of records is NOT
-        # mistaken for a clean pass and (b) legacy diff fallback can
-        # still compare.  Rumdl timing is collapsed here so a success
-        # banner with ``(Nms)`` is byte-stable across runs.
         if not records and (r.stdout or "").strip():
             if r.tool_name == "rumdl check":
                 entry["output"] = _normalise_rumdl_timing(r.stdout or "")
@@ -186,7 +90,6 @@ def _capture_one(r: LintResult) -> dict[str, Any]:
             entry.pop("records", None)
             entry.pop("schema", None)
         return entry
-    # Tools without a records parser: keep the legacy ``output`` string.
     if r.tool_name == "pyright verify types":
         entry["output"] = _normalise_pyright_verifytypes_output(r.stdout or "")
     elif r.tool_name == "rumdl check":
@@ -196,18 +99,70 @@ def _capture_one(r: LintResult) -> dict[str, Any]:
     return entry
 
 
+def _capture_one(r: LintResult) -> dict[str, Any]:
+    entry: dict[str, Any] = {"tool": r.tool_name, "exit_code": r.exit_code}
+    # JSON-native tools: pyright + rumdl-when-JSON.
+    if r.tool_name in _JSON_DIAGNOSTIC_TOOLS and r.stdout:
+        try:
+            diag = json.loads(r.stdout)
+        except (json.JSONDecodeError, ValueError):
+            diag = None
+        if isinstance(diag, dict):
+            _strip_pyright_volatile(diag)
+            entry["diagnostics"] = diag
+            return entry
+    # rumdl: try JSON first, fall through to records/output.
+    rumdl_json = _try_rumdl_json(r.stdout) if r.tool_name == "rumdl check" else None
+    if rumdl_json is not None:
+        entry["diagnostics"] = rumdl_json
+        return entry
+    # Records parser or legacy output.
+    return _capture_records_or_output(r, entry)
+
+
 @beartype.beartype
 def _capture_baseline(results: list[LintResult]) -> list[dict[str, Any]]:
     return [_capture_one(r) for r in results]
 
 
-def _diag_error_count(d: object) -> int:
-    if isinstance(d, dict):
-        s = cast("dict[str, Any]", d).get("summary", {})
-        if isinstance(s, dict):
-            sd = cast("dict[str, Any]", s)
-            return int(sd.get("errorCount", 0)) + int(sd.get("warningCount", 0))
-    return 0
+def _remove_stale_tools(
+    saved: list[dict[str, Any]],
+    saved_map: dict[str, dict[str, Any]],
+    current_tool_names: set[str],
+) -> bool:
+    modified = False
+    for tool_name in list(saved_map.keys()):
+        if tool_name not in current_tool_names:
+            for entry in saved[:]:
+                if entry.get("tool") == tool_name:
+                    saved.remove(entry)
+                    modified = True
+            del saved_map[tool_name]
+    return modified
+
+
+def _write_baseline_if_modified(
+    saved: list[dict[str, Any]],
+    baseline_path: Path,
+    baseline_modified: bool,
+) -> list[str] | None:
+    if not baseline_modified:
+        return None
+    try:
+        with open(baseline_path, "w") as f:
+            json.dump(saved, f, indent=2, sort_keys=True)
+    except OSError as exc:
+        return [f"Cannot write baseline: {exc}"]
+    return None
+
+
+def _build_saved_map(saved: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    saved_map: dict[str, dict[str, Any]] = {}
+    for entry in saved:
+        tool_name = entry.get("tool", "")
+        if isinstance(tool_name, str):
+            saved_map[tool_name] = entry
+    return saved_map
 
 
 def _diff_baseline(
@@ -224,34 +179,17 @@ def _diff_baseline(
         return [f"Cannot read baseline: {exc}"]
     saved: list[dict[str, Any]] = raw
 
-    # Per-run fallback reset (each diff invocation records its own fallbacks).
     _FALLBACK_TOOLS.clear()
 
-    # Normalise volatile fields on saved diagnostics: strip timeInSec so
-    # baseline comparison is stable across runs.
     for entry in saved:
         _strip_pyright_volatile(entry.get("diagnostics"))
 
-    saved_map: dict[str, dict[str, Any]] = {}
-    for entry in saved:
-        tool_name = entry.get("tool", "")
-        if isinstance(tool_name, str):
-            saved_map[tool_name] = entry
-
+    saved_map = _build_saved_map(saved)
     violations: list[str] = []
     baseline_modified = False
     current_tool_names = {r.tool_name for r in current}
 
-    # Tools in saved but absent from current → shrinkage (remove from baseline).
-    # Remove ALL entries with the same tool name (not just the last one),
-    # preventing stale duplicate entries from leaking into the rewritten baseline.
-    for tool_name in list(saved_map.keys()):
-        if tool_name not in current_tool_names:
-            for entry in saved[:]:
-                if entry.get("tool") == tool_name:
-                    saved.remove(entry)
-                    baseline_modified = True
-            del saved_map[tool_name]
+    baseline_modified = _remove_stale_tools(saved, saved_map, current_tool_names) or baseline_modified
 
     for r in current:
         saved_entry = saved_map.get(r.tool_name)
@@ -264,17 +202,29 @@ def _diff_baseline(
         if m:
             baseline_modified = True
 
-    if baseline_modified:
-        # D5: wrap write in try/except OSError so an unwritable baseline
-        # degrades gracefully with a violation message (matching the
-        # read-path handling above), rather than crashing the pipeline.
-        try:
-            with open(baseline_path, "w") as f:
-                json.dump(saved, f, indent=2, sort_keys=True)
-        except OSError as exc:
-            return [f"Cannot write baseline: {exc}"]
+    write_violations = _write_baseline_if_modified(saved, baseline_path, baseline_modified)
+    if write_violations is not None:
+        return write_violations
 
     return violations
+
+
+def _check_exit_code(
+    r: LintResult, saved_entry: dict[str, Any]
+) -> tuple[list[str], bool | None]:
+    saved_rc = saved_entry.get("exit_code", -1)
+    if r.exit_code == saved_rc:
+        return [], None
+    if r.exit_code == 0 and saved_rc != 0:
+        saved_entry["exit_code"] = 0
+        saved_entry.pop("output", None)
+        saved_entry.pop("diagnostics", None)
+        saved_entry.pop("records", None)
+        saved_entry.pop("schema", None)
+        return [], True
+    if saved_rc == 0 and r.exit_code != 0:
+        return [f"[{r.tool_name}] Exit code changed: 0 → {r.exit_code}"], False
+    return [], None
 
 
 def _compare_one_tool(
@@ -284,19 +234,10 @@ def _compare_one_tool(
     violations: list[str] = []
 
     # ── Exit code check ──────────────────────────────────────
-    saved_rc = saved_entry.get("exit_code", -1)
-    if r.exit_code != saved_rc:
-        if r.exit_code == 0 and saved_rc != 0:
-            # Tool now passes → pure shrinkage; clear all content slots.
-            saved_entry["exit_code"] = 0
-            saved_entry.pop("output", None)
-            saved_entry.pop("diagnostics", None)
-            saved_entry.pop("records", None)
-            saved_entry.pop("schema", None)
-            return violations, True
-        if saved_rc == 0 and r.exit_code != 0:
-            violations.append(f"[{r.tool_name}] Exit code changed: 0 → {r.exit_code}")
-        # else: both non-zero but different → fall through to content compare.
+    v, m = _check_exit_code(r, saved_entry)
+    violations.extend(v)
+    if m is not None:
+        return violations, m
 
     # ── Diagnostics comparison (pyright + rumdl-when-JSON) ──
     saved_diag = saved_entry.get("diagnostics")
@@ -348,47 +289,20 @@ def _compare_diagnostics(
     return violations, False
 
 
-def _compare_records_path(
-    r: LintResult,
+def _legacy_to_records(
+    saved_output: str, parser: Callable[[str], list[Record]]
+) -> list[Record]:
+    return parser(saved_output)
+
+
+def _compare_record_sets(
+    current_records: list[Record],
+    saved_records: list[Record],
     saved_entry: dict[str, Any],
+    r: LintResult,
 ) -> tuple[list[str], bool]:
     violations: list[str] = []
     baseline_modified = False
-
-    parser = _RECORD_PARSERS.get(r.tool_name)
-    current_records: list[Record] = parser(r.stdout or "") if parser is not None else []
-
-    saved_schema = saved_entry.get("schema")
-    saved_records: list[Record] = []
-    legacy_save_fallback = False
-    if saved_schema == _SCHEMA_V2:
-        saved_records = _dicts_to_records(saved_entry.get("records"))
-    elif parser is not None and isinstance(saved_entry.get("output"), str):
-        saved_output = saved_entry["output"]
-        saved_records = parser(saved_output)
-        if saved_output.strip():
-            nonblank_saved_lines = sum(
-                1 for ln in saved_output.splitlines() if ln.strip()
-            )
-            partial_parse = saved_records and len(saved_records) < nonblank_saved_lines
-            if not saved_records or partial_parse:
-                legacy_save_fallback = True
-                _FALLBACK_TOOLS.add(r.tool_name)
-
-    if parser is None:
-        _FALLBACK_TOOLS.add(r.tool_name)
-        legacy_save_fallback = True
-
-    if legacy_save_fallback:
-        if _diff_legacy_output(r, saved_entry):
-            baseline_modified = True
-        if _legacy_has_additions(r, saved_entry):
-            violations.append(
-                f"[{r.tool_name}] Output changed (new/different violations)"
-            )
-        return violations, baseline_modified
-
-    # ── Records walk-merge (the hot path, O(n) after sort) ──
     if _records_unchanged(saved_records, current_records):
         return violations, baseline_modified
     added, removed = _compare_sorted(current_records, saved_records)
@@ -399,7 +313,57 @@ def _compare_records_path(
         baseline_modified = True
     if added:
         violations.append(f"[{r.tool_name}] Output changed (new/different violations)")
+    return violations, baseline_modified
 
+
+def _resolve_saved_records(
+    saved_entry: dict[str, Any],
+    parser: Callable[[str], list[Record]] | None,
+    tool_name: str,
+) -> tuple[list[Record], bool]:
+    saved_schema = saved_entry.get("schema")
+    if saved_schema == _SCHEMA_V2:
+        return _dicts_to_records(saved_entry.get("records")), False
+    if parser is not None and isinstance(saved_entry.get("output"), str):
+        saved_output = saved_entry["output"]
+        saved_records = _legacy_to_records(saved_output, parser)
+        if saved_output.strip():
+            nonblank_saved_lines = sum(1 for ln in saved_output.splitlines() if ln.strip())
+            partial_parse = saved_records and len(saved_records) < nonblank_saved_lines
+            if not saved_records or partial_parse:
+                _FALLBACK_TOOLS.add(tool_name)
+                return saved_records, True
+        return saved_records, False
+    if parser is None:
+        _FALLBACK_TOOLS.add(tool_name)
+    return [], True
+
+
+def _compare_records_path(
+    r: LintResult,
+    saved_entry: dict[str, Any],
+) -> tuple[list[str], bool]:
+    violations: list[str] = []
+    baseline_modified = False
+
+    parser = _RECORD_PARSERS.get(r.tool_name)
+    current_records: list[Record] = parser(r.stdout or "") if parser is not None else []
+
+    saved_records, legacy_save_fallback = _resolve_saved_records(saved_entry, parser, r.tool_name)
+
+    if legacy_save_fallback:
+        if _diff_legacy_output(r, saved_entry):
+            baseline_modified = True
+        if _legacy_has_additions(r, saved_entry):
+            violations.append(
+                f"[{r.tool_name}] Output changed (new/different violations)"
+            )
+        return violations, baseline_modified
+
+    v, m = _compare_record_sets(current_records, saved_records, saved_entry, r)
+    violations.extend(v)
+    if m:
+        baseline_modified = True
     return violations, baseline_modified
 
 
@@ -434,29 +398,26 @@ def _pylint_inventory(output: str) -> str:
     return "\n".join(sorted(f"{count} {sig}" for sig, count in sigs.items()))
 
 
+def _normalise_legacy_output(text: str, tool_name: str) -> str:
+    if tool_name == "ruff check":
+        return "\n".join(sorted(text.splitlines()))
+    if tool_name == "rumdl check":
+        return _normalise_rumdl_timing(text)
+    if tool_name == "pylint":
+        return _pylint_inventory(text)
+    if tool_name == "pyright verify types":
+        return _normalise_pyright_verifytypes_output(text)
+    return text
+
+
 def _legacy_current_output(r: LintResult) -> str:
-    if r.tool_name == "ruff check":
-        return "\n".join(sorted((r.stdout or "").splitlines()))
-    if r.tool_name == "rumdl check":
-        return _normalise_rumdl_timing(r.stdout or "")
-    if r.tool_name == "pylint":
-        return _pylint_inventory(r.stdout or "")
-    if r.tool_name == "pyright verify types":
-        return _normalise_pyright_verifytypes_output(r.stdout or "")
-    return r.stdout or ""
+    return _normalise_legacy_output(r.stdout or "", r.tool_name)
 
 
 def _legacy_saved_output(saved_entry: dict[str, Any], tool_name: str) -> str:
-    saved_output = saved_entry.get("output") or ""
-    if tool_name == "ruff check":
-        return "\n".join(sorted(saved_output.splitlines()))
-    if tool_name == "rumdl check":
-        return _normalise_rumdl_timing(saved_output)
-    if tool_name == "pylint":
-        return _pylint_inventory(saved_output)
-    if tool_name == "pyright verify types":
-        return _normalise_pyright_verifytypes_output(saved_output)
-    return saved_output
+    return _normalise_legacy_output(saved_entry.get("output") or "", tool_name)
+
+
 
 
 def _diff_legacy_output(r: LintResult, saved_entry: dict[str, Any]) -> bool:

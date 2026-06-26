@@ -7,46 +7,9 @@ dataclass plus per-tool ``_parse_<tool>_records`` line→record parsers
 feeding the drift-resistant baseline.
 """
 
+
+from ._record_types import Record
 from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Any
-
-@dataclass(frozen=True)
-class Record:
-    """A single lint violation, order-tolerant + multiset-accurate.
-
-    Invariant: records are kept sorted by ``(file, line, col, rule)``
-    (the baseline diff reduces to a walk-merge over two sorted lists →
-    O(n log n) sort + O(n) merge).  ``msg`` participates in equality so
-    a same-key message rewrite still flags as a regression; identical
-    records are distinct multiset members (count preserved).
-
-    Attributes:
-        file: Source file path or ``None`` for position-less messages
-            (e.g. pylint ``R0801``/``R0401`` collapse signatures).
-        line: 1-indexed source line or ``None``.
-        col: 1-indexed source column or ``None``.
-        rule: Rule / error code; for pylint R0801/R0401 this is the
-            canonical collapse signature.
-        msg: Human-readable violation message (participates in equality).
-    """
-
-    file: str | None
-    line: int | None
-    col: int | None
-    rule: str
-    msg: str
-
-def _compare_records_key(rec: Record) -> tuple[Any, Any, Any, str]:
-    """Stable sort key for the O(n log n) walk-merge.
-
-    ``(file, line, col, rule)`` with ``None`` coerced to an empty-tuple
-    sentinel that sorts below any real value — heterogeneous
-    ``None`` vs ``str``/``int`` comparisons never raise.
-    """
-
-def _records_unchanged(a: list[Record], b: list[Record]) -> bool:
-    """True iff sorted multiset of *a* equals sorted multiset of *b* (both pre-sorted)."""
 
 PARSE_STRATEGIES: frozenset[str]
 """Closed ``parse_strategy`` enum — 11 built-in names + ``regex_count`` /
@@ -110,48 +73,6 @@ def _parse_detect_secrets_json(stdout: str, stderr: str) -> list[tuple[str, int]
 
     JSON object with ``results`` dict mapping filename → secret list; each
     secret carries a ``type`` key.
-    """
-
-# ── Per-tool violation-record parsers (T2 baseline diff) ──────────
-
-def _parse_pylint_records(stdout: str) -> list[Record]:
-    """Parse pylint *text* output into sorted records.
-
-    R0801/R0401 collapse to ONE record each whose ``rule`` is the canonical
-    signature (``R0801:<sorted-spans>``, ``R0401:<cycle>``); remaining
-    lines follow ``path:line:col: CODE: msg (symbol)`` — ``rule`` is the
-    symbol when present, the bare code otherwise.
-    """
-
-def _parse_ruff_records(stdout: str) -> list[Record]:
-    """Parse ruff text output into sorted records.  Format: ``path:line:col: CODE msg``."""
-
-def _parse_mypy_records(stdout: str) -> list[Record]:
-    """Parse mypy stdout into sorted records.  Lines without a code are skipped."""
-
-def _parse_ty_records(stdout: str) -> list[Record]:
-    """Parse ty ``--output-format concise`` AND the default multiline output.
-
-    Multiline form: ``error[code]: msg`` + ``--> path:line:col`` arrow.
-    """
-
-def _parse_yamllint_records(stdout: str) -> list[Record]:
-    """Parse yamllint ``-f parsable`` output into sorted records."""
-
-def _parse_rumdl_records(stdout: str) -> list[Record]:
-    """Parse rumdl check text output into sorted records (legacy text path).
-
-    Multiline ``Found N issues in M files (XXXms)`` footer is filtered out.
-    JSON-emitting rumdl runs are consumed directly as ``diagnostics`` in
-    ``baseline.py``.
-    """
-
-def _parse_pyright_records(data: object) -> list[Record]:
-    """Parse the pre-loaded pyright ``--outputjson`` dict into sorted records.
-
-    Pyright lines/cols are 0-indexed; converted to 1-indexed to match the
-    other tools.  Returns ``[]`` on an unexpected shape (caller falls back
-    to the legacy set-diff path if the source stdout was non-empty).
     """
 
 _RECORD_PARSERS: dict[str, Callable[..., list[Record]]]

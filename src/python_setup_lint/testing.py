@@ -19,18 +19,13 @@ from typing import TYPE_CHECKING, Any
 
 import astroid
 from pylint.testutils import CheckerTestCase
+from beartype import beartype
+from python_setup_lint.runner import LintResult
 
 if TYPE_CHECKING:
     from pylint.checkers import BaseChecker
 
-    from python_setup_lint.runner import LintResult
-
-
 def _make_tc(checker_class: type[BaseChecker]) -> CheckerTestCase:
-    """Create a ``CheckerTestCase`` for *checker_class*.
-
-    Sets ``CHECKER_CLASS``, calls ``setup_method()``, returns the test case.
-    """
     tc = CheckerTestCase()
     tc.CHECKER_CLASS = checker_class
     tc.setup_method()
@@ -44,11 +39,6 @@ def _walk_and_release(
     file_path: str | None = None,
     module_name: str = "",
 ) -> list[Any]:
-    """Parse *code*, walk *checker_class* over it, return released messages.
-
-    Optionally set *file_path* for path-dependent logic (source-roots,
-    test classification) and *module_name* for the astroid module name.
-    """
     tc = _make_tc(checker_class)
     module = astroid.parse(code, module_name=module_name)
     if file_path is not None:
@@ -60,6 +50,7 @@ def _walk_and_release(
 # ── Lint-runner fakes ──────────────────────────────────────────────
 
 
+@beartype
 def make_lint_result(
     tool_name: str = "ruff check",
     exit_code: int = 0,
@@ -67,11 +58,6 @@ def make_lint_result(
     stderr: str = "",
     elapsed: float = 0.0,
 ) -> LintResult:
-    """Build a ``LintResult`` with defaults for test convenience.
-
-    Parameters are identical to ``LintResult`` fields; only *tool_name*
-    and *exit_code* are commonly varied in tests.
-    """
     # late import to avoid circular dependency at module level
     from python_setup_lint.runner import LintResult as _LintResult
 
@@ -116,7 +102,6 @@ class FakeRunCmd:
     def __call__(
         self, cmd: list[str], *, cwd: Path = Path(), label: str = ""
     ) -> LintResult:
-        """Match ``_run_cmd(cmd, *, cwd, label) -> LintResult`` signature."""
         self.calls.append(_FakeRunCmdRecord(cmd=cmd, label=label))
         if isinstance(self.results, dict):
             return self.results.get(
@@ -130,25 +115,10 @@ class FakeRunCmd:
         return make_lint_result(tool_name=label)
 
 
+@beartype
 def fake_run_cmd_factory(
     results: dict[str, LintResult] | list[LintResult],
 ) -> FakeRunCmd:
-    """Build a ``FakeRunCmd`` that returns canned ``LintResult`` values.
-
-    * Dict mode — keys are tool labels (``spec.name``).  Unknown labels
-      return a zero-exit empty result (implicit skip).
-    * List mode — results are returned in call order.  Extra calls beyond
-      the list length return a zero-exit empty result.
-
-    The returned ``FakeRunCmd`` is a callable matching the ``_run_cmd``
-    signature.  Attach it via::
-
-        monkeypatch.setattr(
-            python_setup_lint.runner, "_run_cmd", fake_run_cmd_factory(...)
-        )
-
-    After the test, inspect ``fake.calls`` to assert on constructed commands.
-    """
     return FakeRunCmd(results=results)
 
 
@@ -161,21 +131,8 @@ def fake_run_cmd_factory(
 # project's ``.pre-commit-config.yaml`` generated from the shared template.
 
 
+@beartype
 def test_checked_main() -> None:
-    """Run pytest with typeguard enabled (consumer-agnostic).
-
-    Equivalent to ``pytest -p typeguard -q tests/unit`` with trailing
-    ``sys.argv`` passthrough.  Uses the ``typeguard`` pytest plugin
-    (``-p typeguard``) rather than ``--typeguard-packages=<name>`` so the
-    entry point does not hardcode any package name — any consumer can
-    wire ``test-checked = "python_setup_lint.testing:test_checked_main"``
-    in its ``[project.scripts]`` and delete its local wrapper.
-
-    Consumers that want typeguard scoped to a single package may keep a
-    ``typeguard-packages`` key in ``[tool.pytest.ini_options]``; the plugin
-    honours that ini value when present and instruments every package
-    otherwise.
-    """
     import sys
 
     import pytest
@@ -186,12 +143,6 @@ def test_checked_main() -> None:
 
 
 def _load_precommit_config(repo_root: Path) -> dict[str, Any]:
-    """Load and return ``repo_root / .pre-commit-config.yaml`` as a dict.
-
-    Raises ``AssertionError`` (with a helpful message) when the file is
-    missing or not a YAML mapping with a ``repos`` key, so callers can use
-    the return value without re-validating.
-    """
     import yaml
 
     config_path = repo_root / ".pre-commit-config.yaml"
@@ -205,13 +156,8 @@ def _load_precommit_config(repo_root: Path) -> dict[str, Any]:
     return data
 
 
+@beartype
 def assert_precommit_config_valid(repo_root: Path) -> None:
-    """Assert ``.pre-commit-config.yaml`` is valid YAML + passes ``validate-config``.
-
-    Consumer-agnostic: works against any ``python-setup``-generated config.
-    Runs ``pre-commit validate-config`` against the file (caller's
-    responsibility to ensure ``pre-commit`` is installed in the active env).
-    """
     config_path = repo_root / ".pre-commit-config.yaml"
     _load_precommit_config(repo_root)  # raises AssertionError on YAML/shape errors
     result = subprocess.run(  # noqa: S603 - path is constructed, not user input
@@ -227,21 +173,12 @@ def assert_precommit_config_valid(repo_root: Path) -> None:
     )
 
 
+@beartype
 def assert_precommit_hooks_shape(
     repo_root: Path,
     *,
     baseline_filename: str = "lint.baseline",
 ) -> None:
-    """Assert the pre-commit hook shape matches the shared template contract.
-
-    Checked invariants (consumer-agnostic):
-    * a ``lint`` local hook exists, uses ``language: system``, and its entry
-      contains ``--no-fail-fast`` and ``--baseline <baseline_filename>``;
-    * the ruff fix hook carries ``--fix``;
-    * the fast hooks (``ruff-format``, ``ruff``) run on the ``pre-commit`` stage.
-
-    Raises ``AssertionError`` on the first violated invariant.
-    """
     config = _load_precommit_config(repo_root)
 
     def _find_hook(hook_id: str) -> dict[str, Any] | None:

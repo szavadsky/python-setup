@@ -25,6 +25,11 @@ def _config_flag_for(spec_name: str, config_path: Path | None) -> list[str]:
     external-config flag (e.g. ``tach check``, ``yamllint``).
     """
 
+def _build_config_flags(
+    spec: ToolSpec, config: RunnerConfig, *, config_flag_override: list[str] | None = None
+) -> list[str]:
+    """Build config flags for a tool spec. Returns empty list if no config found."""
+
 def _build_statistics_flags(spec: ToolSpec) -> list[str]:
     """Build extra CLI flags for a tool's statistics-mode invocation.
 
@@ -61,6 +66,14 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
     Ported from consultant.mcp ``_ruff_config_with_project_overrides``.
     """
 
+def _abs_rel_path(value: object, abs_cwd: Path) -> str | None:
+    """Convert a relative path to absolute, or return None if invalid/absolute."""
+
+def _resolve_exclude_paths(
+    exclude_entries: object, abs_cwd: Path
+) -> tuple[list[str], bool]:
+    """Resolve exclude paths relative to abs_cwd. Returns (resolved, changed)."""
+
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     """Build an effective pyright config with ``venvPath``/``exclude`` rooted at *cwd*.
 
@@ -76,6 +89,18 @@ def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     rewriting is needed (already-absolute, absent keys, or unreadable
     config).  The shipped config is never mutated.
     """
+
+def _build_fix_flags(spec: ToolSpec, *, fix: bool) -> list[str]:
+    """Return fix flags if fix is requested and the tool supports it."""
+
+def _build_path_and_exclude_args(
+    spec: ToolSpec,
+    *,
+    config: RunnerConfig,
+    path: str | None = None,
+    exclude: str | None = None,
+) -> list[str]:
+    """Build path and exclude CLI args for a tool spec."""
 
 def _build_command(
     spec: ToolSpec,

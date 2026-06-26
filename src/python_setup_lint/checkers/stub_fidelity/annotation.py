@@ -97,6 +97,24 @@ def _compare_class_bases(ctx: ClassComparisonCtx) -> None:
         )
 
 
+def _compare_one_method(
+    ctx: ClassComparisonCtx,
+    name: str,
+    stub_method: nodes.FunctionDef | nodes.AsyncFunctionDef,
+    impl_method: nodes.FunctionDef | nodes.AsyncFunctionDef | None,
+) -> None:
+    _emit_callable_fidelity_issues(
+        CallableComparisonCtx(
+            checker=ctx.checker,
+            module_name=ctx.module_name,
+            func_name=f"{ctx.class_name}.{name}",
+            msg_node=ctx.msg_node,
+            stub_func=stub_method,
+            impl_func=impl_method,
+        )
+    )
+
+
 def _compare_class_methods(ctx: ClassComparisonCtx) -> None:
     stub_methods: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     impl_methods: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
@@ -112,110 +130,147 @@ def _compare_class_methods(ctx: ClassComparisonCtx) -> None:
             impl_methods[child.name] = child
 
     for mname, stub_method in stub_methods.items():
-        impl_method = impl_methods.get(mname)
-        _emit_callable_fidelity_issues(
-            CallableComparisonCtx(
-                checker=ctx.checker,
-                module_name=ctx.module_name,
-                func_name=f"{ctx.class_name}.{mname}",
-                msg_node=ctx.msg_node,
-                stub_func=stub_method,
-                impl_func=impl_method,
+        _compare_one_method(ctx, mname, stub_method, impl_methods.get(mname))
+
+
+def _compare_one_attr(
+    ctx: ClassComparisonCtx,
+    attr_name: str,
+    stub_annotation: nodes.NodeNG | None,
+    impl_annotation: nodes.NodeNG | None,
+    attr_msg_node: nodes.NodeNG,
+) -> None:
+    if stub_annotation is not None and impl_annotation is None:
+        if ctx.checker._coverage.impl_missing_policy in ("error", "warn"):
+            log.debug(
+                "Impl missing annotation for class attr '%s.%s' in '%s'",
+                ctx.class_name,
+                attr_name,
+                ctx.module_name,
             )
-        )
+            ctx.checker.add_message(
+                "impl-missing-annotation",
+                node=attr_msg_node,
+                args=(f"{ctx.class_name}.{attr_name}", ctx.module_name),
+            )
+    elif stub_annotation is not None and impl_annotation is not None:
+        stub_norm = AnnotationNormalizer.normalize(stub_annotation)
+        impl_norm = AnnotationNormalizer.normalize(impl_annotation)
+        if stub_norm is None or impl_norm is None:
+            log.debug(
+                "Normalization failed for class attr '%s.%s' in '%s'",
+                ctx.class_name,
+                attr_name,
+                ctx.module_name,
+            )
+            ctx.checker.add_message(
+                "annotation-unverifiable",
+                node=attr_msg_node,
+                args=(f"{ctx.class_name}.{attr_name}", ctx.module_name),
+            )
+        elif stub_norm != impl_norm:
+            log.debug(
+                "Annotation mismatch for class attr '%s.%s' in '%s': stub=%s, impl=%s",
+                ctx.class_name,
+                attr_name,
+                ctx.module_name,
+                stub_norm,
+                impl_norm,
+            )
+            ctx.checker.add_message(
+                "annotation-mismatch",
+                node=attr_msg_node,
+                args=(
+                    f"{ctx.class_name}.{attr_name}",
+                    ctx.module_name,
+                    stub_norm,
+                    impl_norm,
+                ),
+            )
+        else:
+            log.debug(
+                "Annotations match for class attr '%s.%s' in '%s': %s",
+                ctx.class_name,
+                attr_name,
+                ctx.module_name,
+                stub_norm,
+            )
 
 
-def _compare_class_attrs(ctx: ClassComparisonCtx) -> None:
+def _build_attr_index(ctx: ClassComparisonCtx) -> tuple[dict[str, nodes.AnnAssign], dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]]]:
+    # no docstring — moved to .pyi stub
     stub_attrs: dict[str, nodes.AnnAssign] = {}
-    impl_attrs: dict[
-        str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]
-    ] = {}
+    impl_attrs: dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]] = {}
     for child in ctx.stub_class.body:
-        if isinstance(child, nodes.AnnAssign) and isinstance(
-            child.target, nodes.AssignName
-        ):
+        if isinstance(child, nodes.AnnAssign) and isinstance(child.target, nodes.AssignName):
             if child.annotation is not None and _is_classvar(child.annotation):
                 log.debug(
                     "Skipping ClassVar '%s' in class '%s' in module '%s'",
-                    child.target.name,
-                    ctx.class_name,
-                    ctx.module_name,
+                    child.target.name, ctx.class_name, ctx.module_name,
                 )
                 continue
             stub_attrs[child.target.name] = child
     for child in ctx.impl_class.body:
-        if isinstance(child, nodes.AnnAssign) and isinstance(
-            child.target, nodes.AssignName
-        ):
+        if isinstance(child, nodes.AnnAssign) and isinstance(child.target, nodes.AssignName):
             impl_attrs[child.target.name] = (child.annotation, child)
         elif isinstance(child, nodes.Assign):
             for t in child.targets:
                 if isinstance(t, nodes.AssignName):
                     impl_attrs[t.name] = (None, child)
+    return stub_attrs, impl_attrs
 
+
+def _compare_class_attrs(ctx: ClassComparisonCtx) -> None:
+    stub_attrs, impl_attrs = _build_attr_index(ctx)
     for attr_name, stub_attr_node in stub_attrs.items():
         stub_annotation = stub_attr_node.annotation
         impl_data = impl_attrs.get(attr_name, (None, None))
         impl_annotation, impl_source_node = impl_data
-        attr_msg_node = (
-            impl_source_node if impl_source_node is not None else ctx.msg_node
-        )
+        attr_msg_node = impl_source_node if impl_source_node is not None else ctx.msg_node
+        _compare_one_attr(ctx, attr_name, stub_annotation, impl_annotation, attr_msg_node)
 
-        if stub_annotation is not None and impl_annotation is None:
-            if ctx.checker._coverage.impl_missing_policy in ("error", "warn"):
-                log.debug(
-                    "Impl missing annotation for class attr '%s.%s' in '%s'",
-                    ctx.class_name,
-                    attr_name,
-                    ctx.module_name,
-                )
-                ctx.checker.add_message(
-                    "impl-missing-annotation",
-                    node=attr_msg_node,
-                    args=(f"{ctx.class_name}.{attr_name}", ctx.module_name),
-                )
-        elif stub_annotation is not None and impl_annotation is not None:
-            stub_norm = AnnotationNormalizer.normalize(stub_annotation)
-            impl_norm = AnnotationNormalizer.normalize(impl_annotation)
-            if stub_norm is None or impl_norm is None:
-                log.debug(
-                    "Normalization failed for class attr '%s.%s' in '%s'",
-                    ctx.class_name,
-                    attr_name,
-                    ctx.module_name,
-                )
-                ctx.checker.add_message(
-                    "annotation-unverifiable",
-                    node=attr_msg_node,
-                    args=(f"{ctx.class_name}.{attr_name}", ctx.module_name),
-                )
-            elif stub_norm != impl_norm:
-                log.debug(
-                    "Annotation mismatch for class attr '%s.%s' in '%s': stub=%s, impl=%s",
-                    ctx.class_name,
-                    attr_name,
-                    ctx.module_name,
-                    stub_norm,
-                    impl_norm,
-                )
-                ctx.checker.add_message(
-                    "annotation-mismatch",
-                    node=attr_msg_node,
-                    args=(
-                        f"{ctx.class_name}.{attr_name}",
-                        ctx.module_name,
-                        stub_norm,
-                        impl_norm,
-                    ),
-                )
-            else:
-                log.debug(
-                    "Annotations match for class attr '%s.%s' in '%s': %s",
-                    ctx.class_name,
-                    attr_name,
-                    ctx.module_name,
-                    stub_norm,
-                )
+
+def _check_one_variable(
+    checker: StubChecker,
+    module_name: str,
+    var_name: str,
+    stub_ann_node: nodes.AnnAssign,
+    *,
+    impl_vars: dict[str, tuple[nodes.NodeNG | None, nodes.NodeNG | None]],
+    impl_node: nodes.Module,
+    impl_missing_policy: str,
+) -> None:
+    # no docstring — moved to .pyi stub
+    stub_annotation = stub_ann_node.annotation
+    if stub_annotation is not None and _is_classvar(stub_annotation):
+        return
+
+    impl_annotation, impl_source_node = impl_vars.get(var_name, (None, None))
+    msg_node = impl_source_node if impl_source_node is not None else impl_node
+
+    if stub_annotation is not None and impl_annotation is None:
+        if impl_missing_policy in ("error", "warn"):
+            checker.add_message(
+                "impl-missing-annotation",
+                node=msg_node,
+                args=(var_name, module_name),
+            )
+    elif stub_annotation is not None and impl_annotation is not None:
+        stub_normalized = AnnotationNormalizer.normalize(stub_annotation)
+        impl_normalized = AnnotationNormalizer.normalize(impl_annotation)
+
+        if stub_normalized is None or impl_normalized is None:
+            checker.add_message(
+                "annotation-unverifiable",
+                node=msg_node,
+                args=(var_name, module_name),
+            )
+        elif stub_normalized != impl_normalized:
+            checker.add_message(
+                "annotation-mismatch",
+                node=msg_node,
+                args=(var_name, module_name, stub_normalized, impl_normalized),
+            )
 
 
 def _emit_variable_fidelity(checker: StubChecker, module_name: str) -> None:
@@ -233,74 +288,6 @@ def _emit_variable_fidelity(checker: StubChecker, module_name: str) -> None:
         return
 
     for var_name, stub_ann_node in stub_vars.items():
-        # Skip variables absent from impl (E97B1 handles them)
         if var_name not in impl_all:
             continue
-
-        stub_annotation = stub_ann_node.annotation
-
-        # Skip ClassVar-annotated attributes
-        if stub_annotation is not None and _is_classvar(stub_annotation):
-            log.debug(
-                "Skipping ClassVar '%s' in module '%s'",
-                var_name,
-                module_name,
-            )
-            continue
-
-        # Check if variable exists in implementation
-        impl_annotation, impl_source_node = impl_vars.get(var_name, (None, None))
-        msg_node = impl_source_node if impl_source_node is not None else impl_node
-
-        if stub_annotation is not None and impl_annotation is None:
-            # Stub annotates, implementation does not → W97B5
-            if c.impl_missing_policy in ("error", "warn"):
-                log.debug(
-                    "Impl missing annotation for '%s' in '%s' (policy=%s)",
-                    var_name,
-                    module_name,
-                    c.impl_missing_policy,
-                )
-                checker.add_message(
-                    "impl-missing-annotation",
-                    node=msg_node,
-                    args=(var_name, module_name),
-                )
-        elif stub_annotation is not None and impl_annotation is not None:
-            # Both annotated → normalize and compare
-            stub_normalized = AnnotationNormalizer.normalize(stub_annotation)
-            impl_normalized = AnnotationNormalizer.normalize(impl_annotation)
-
-            if stub_normalized is None or impl_normalized is None:
-                log.debug(
-                    "Normalization failed for '%s' in '%s': stub=%s, impl=%s",
-                    var_name,
-                    module_name,
-                    stub_normalized,
-                    impl_normalized,
-                )
-                checker.add_message(
-                    "annotation-unverifiable",
-                    node=msg_node,
-                    args=(var_name, module_name),
-                )
-            elif stub_normalized != impl_normalized:
-                log.debug(
-                    "Annotation mismatch for '%s' in '%s': stub=%s, impl=%s",
-                    var_name,
-                    module_name,
-                    stub_normalized,
-                    impl_normalized,
-                )
-                checker.add_message(
-                    "annotation-mismatch",
-                    node=msg_node,
-                    args=(var_name, module_name, stub_normalized, impl_normalized),
-                )
-            else:
-                log.debug(
-                    "Annotations match for '%s' in '%s': %s",
-                    var_name,
-                    module_name,
-                    stub_normalized,
-                )
+        _check_one_variable(checker, module_name, var_name, stub_ann_node, impl_vars=impl_vars, impl_node=impl_node, impl_missing_policy=c.impl_missing_policy)
