@@ -24,6 +24,10 @@ from pathlib import Path
 # Cache directory for downloaded models (idempotent, .gitignored).
 _CACHE_DIR = Path.home() / ".cache" / "python-setup" / "semantic"
 
+# Model singleton cache (loaded once, reused across calls).
+_EMBEDDER_INSTANCE = None
+_RERANKER_INSTANCE = None
+
 # Model identifiers.
 _EMBEDDER_MODEL = "BAAI/bge-small-en-v1.5"
 _RERANKER_MODEL = "jina-reranker-v2-base-multilingual"
@@ -45,6 +49,9 @@ def _load_embedder():
     Returns:
         SentenceTransformer instance, or ``None`` on failure.
     """
+    global _EMBEDDER_INSTANCE
+    if _EMBEDDER_INSTANCE is not None:
+        return _EMBEDDER_INSTANCE
     try:
         from sentence_transformers import SentenceTransformer
     except ImportError:
@@ -52,10 +59,11 @@ def _load_embedder():
 
     try:
         cache = _get_cache_dir()
-        return SentenceTransformer(
+        _EMBEDDER_INSTANCE = SentenceTransformer(
             _EMBEDDER_MODEL,
             cache_folder=str(cache),
         )
+        return _EMBEDDER_INSTANCE
     except Exception:  # noqa: BLE001  # network / download failures are expected
         return None
 
@@ -66,6 +74,9 @@ def _load_reranker():
     Returns:
         CrossEncoder instance, or ``None`` on failure.
     """
+    global _RERANKER_INSTANCE
+    if _RERANKER_INSTANCE is not None:
+        return _RERANKER_INSTANCE
     try:
         from sentence_transformers import CrossEncoder
     except ImportError:
@@ -73,10 +84,11 @@ def _load_reranker():
 
     try:
         cache = _get_cache_dir()
-        return CrossEncoder(
+        _RERANKER_INSTANCE = CrossEncoder(
             _RERANKER_MODEL,
             cache_folder=str(cache),
         )
+        return _RERANKER_INSTANCE
     except Exception:  # noqa: BLE001  # network / download failures are expected
         return None
 
