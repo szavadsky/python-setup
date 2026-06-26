@@ -8,21 +8,18 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
-def _build_stub_kinds(
     stub_vars: dict[str, object],
     stub_callables: dict[str, object],
     stub_classes: dict[str, object],
 ) -> dict[str, str]:
     """Build a symbol-name to kind mapping from stub declarations."""
 
-def _build_impl_kinds(
     f: object,
     module_name: str,
     impl_all: set[str],
 ) -> dict[str, str]:
     """Build a symbol-name to kind mapping from implementation declarations."""
 
-def _check_missing_symbols(
     stub_kinds: dict[str, str],
     impl_kinds: dict[str, str],
     impl_all: set[str],
@@ -31,7 +28,6 @@ def _check_missing_symbols(
 ) -> None:
     """Emit violations for symbols present in stub but missing from impl."""
 
-def _compare_matched_classes(
     stub_classes: dict[str, object],
     f: object,
     checker: StubChecker,
@@ -39,7 +35,6 @@ def _compare_matched_classes(
 ) -> None:
     """Compare matched class definitions between stub and impl."""
 
-def _emit_stub_symbol_check(checker: StubChecker, module_name: str) -> None:
     """Emit E97B1/E97B2 and class comparison for all stub symbols.
 
     E97B1: symbol declared in stub but absent from implementation.

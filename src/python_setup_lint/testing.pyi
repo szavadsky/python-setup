@@ -26,13 +26,11 @@ if TYPE_CHECKING:
 
     from python_setup_lint.runner import LintResult
 
-def _make_tc(checker_class: type[BaseChecker]) -> CheckerTestCase:
     """Create a ``CheckerTestCase`` for *checker_class*.
 
     Sets ``CHECKER_CLASS``, calls ``setup_method()``, returns the test case.
     """
 
-def _walk_and_release(
     code: str,
     checker_class: type[BaseChecker],
     *,
@@ -61,7 +59,6 @@ def make_lint_result(
     """
 
 @dataclass
-class _FakeRunCmdRecord:
     """Record of a single call captured by a fake ``_run_cmd``.
 
     Attributes:

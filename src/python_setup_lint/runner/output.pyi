@@ -8,7 +8,6 @@ from pathlib import Path
 
 from .types import LintResult, ViolationCount
 
-def _aggregate_statistics(results: list[LintResult]) -> list[ViolationCount]:
     """Aggregate violation counts per tool per rule from all tool results.
 
     Returns a list sorted by count descending, then tool, then rule.  Only
@@ -18,13 +17,11 @@ def _aggregate_statistics(results: list[LintResult]) -> list[ViolationCount]:
     included; parser exceptions are swallowed with a warning.
     """
 
-def _print_statistics_table(counts: list[ViolationCount]) -> None:
     """Print violation counts as an aligned human-readable table.
 
     Prints ``"No violations found."`` when *counts* is empty.
     """
 
-def _sort_counts(
     counts: list[ViolationCount],
     *,
     sort_by_rule: bool = False,
@@ -37,7 +34,6 @@ def _sort_counts(
     """
 
 
-def _print_grouped_by_tool(
     counts: list[ViolationCount],
     *,
     sort_by_rule: bool = False,
@@ -45,14 +41,12 @@ def _print_grouped_by_tool(
     """Print violation counts grouped by tool."""
 
 
-def _print_grouped_by_rule(
     counts: list[ViolationCount],
     *,
     sort_by_rule: bool = False,
 ) -> None:
     """Print violation counts grouped by rule."""
 
-def _print_statistics_grouped(
     counts: list[ViolationCount],
     *,
     group: str = "tool",
@@ -65,7 +59,6 @@ def _print_statistics_grouped(
     * ``"file"`` — same layout as ``"tool"`` (no per-file data in statistics).
     """
 
-def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
     """Run a single command via :func:`subprocess.run` and return its result.
 
     600-second timeout; ``check=False`` so a non-zero exit is returned in
@@ -76,5 +69,4 @@ def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
     through the package namespace at call time so the patch is honoured.
     """
 
-def _print_result(result: LintResult) -> None:
     """Print a formatted result block (status + stderr + stdout) to stdout."""

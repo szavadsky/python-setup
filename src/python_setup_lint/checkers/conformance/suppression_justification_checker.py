@@ -47,7 +47,7 @@ class SuppressionJustificationChecker(BaseChecker):
     def visit_module(self, node: object) -> None:
         """Walk the module's source lines looking for bare suppressions."""
         try:
-            stream = node.stream()  # type: ignore[union-attr]  # node is typed as object; astroid Module has .stream() but the signature uses object to avoid astroid import at type level
+            stream = node.stream()  # type: ignore[union-attr]
         except (AttributeError, OSError):
             return
 
