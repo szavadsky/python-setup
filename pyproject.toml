@@ -59,6 +59,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
+addopts = "-m 'not slow'"
 markers = [
     "slow: marks tests that are intentionally slow (benchmarks or full pipeline runs); use '-m slow' to include, '-m \"not slow\"' to exclude",
     "no_external_api: marks tests that do not call external APIs or subprocesses",
