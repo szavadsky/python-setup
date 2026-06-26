@@ -236,4 +236,4 @@ config/
 !/test/data/minimal_sample_project/
 
 # NLP semantic model cache (sentence-transformers)
-~/.cache/python-setup/semantic/
+.cache/python-setup/semantic/
