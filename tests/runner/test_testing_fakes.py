@@ -22,11 +22,11 @@ from python_setup_lint.testing import (
     fake_run_cmd_factory,
     make_lint_result,
 )
-from tests.runner._factories import (
+from tests.runner._factories import canned_results_all_tools
+from tests.runner._factories_extras import (
     CALLS_CAPTURED_CASES,
     DISPATCH_CASES,
     RUN_LINT_FAKE_INVARIANT_CASES,
-    canned_results_all_tools,
 )
 
 # ── make_lint_result ────────────────────────────────────────────────
@@ -151,7 +151,12 @@ def _install_fake_and_run(
     """Install a 11-tool dict-mode ``FakeRunCmd`` + invoke ``run_lint`` (no_fail_fast=True).
 
     ``package_name=None`` ⇒ skip stubtest+verifytypes. Returns ``fake`` for assertion.
+    Resets ``LINT_TOOLS`` to built-in ``TOOLS`` to avoid cross-test pollution.
     """
+    from python_setup_lint.runner import LINT_TOOLS, TOOLS, _reset_extra_tools_cache
+
+    LINT_TOOLS[:] = list(TOOLS)
+    _reset_extra_tools_cache()
     fake = fake_run_cmd_factory(canned_results_all_tools())
     monkeypatch.setattr(_runner_module, "_run_cmd", fake)
     config = RunnerConfig(
@@ -168,6 +173,7 @@ def test_run_lint_with_fake_dispatch_invariants(
     monkeypatch: pytest.MonkeyPatch,
     run_lint_kwargs: dict[str, Any],
     predicate: Callable[[FakeRunCmd], bool],
+    isolated_runner_registries: None,
 ) -> None:
     """One ``run_lint(...)`` + 11-tool fake; the row's predicate asserts the invariant."""
     fake = _install_fake_and_run(monkeypatch, **run_lint_kwargs)

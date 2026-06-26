@@ -36,6 +36,22 @@ def _sort_counts(
     count descending.
     """
 
+
+def _print_grouped_by_tool(
+    counts: list[ViolationCount],
+    *,
+    sort_by_rule: bool = False,
+) -> None:
+    """Print violation counts grouped by tool."""
+
+
+def _print_grouped_by_rule(
+    counts: list[ViolationCount],
+    *,
+    sort_by_rule: bool = False,
+) -> None:
+    """Print violation counts grouped by rule."""
+
 def _print_statistics_grouped(
     counts: list[ViolationCount],
     *,

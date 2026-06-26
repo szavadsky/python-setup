@@ -95,14 +95,14 @@ def test_close_logs_counts(tmp_path: Path) -> None:
 def test_default_source_roots() -> None:
     tc = _make_tc()  # type: ignore[no-untyped-call]
     tc.checker.open()
-    assert len(tc.checker._coverage.source_roots) == 1
-    assert str(tc.checker._coverage.source_roots[0]).endswith("/src")
+    assert len(tc.checker._coverage.patterns.source_roots) == 1
+    assert str(tc.checker._coverage.patterns.source_roots[0]).endswith("/src")
 
 
 def test_default_test_patterns() -> None:
     tc = _make_tc()  # type: ignore[no-untyped-call]
     tc.checker.open()
-    patterns = tc.checker._coverage.test_patterns
+    patterns = tc.checker._coverage.patterns.test_patterns
     assert "tests/" in patterns
     assert "test_*.py" in patterns
 
@@ -111,12 +111,12 @@ def test_defaults_opt_out_empty_and_custom_source_root() -> None:
     """Combined: default opt_out is empty; custom_source_root is honoured."""
     tc = _make_tc()  # type: ignore[no-untyped-call]
     tc.checker.open()
-    assert tc.checker._coverage.opt_out_patterns == []
+    assert tc.checker._coverage.patterns.opt_out_patterns == []
 
     tc2 = _make_tc()  # type: ignore[no-untyped-call]
     tc2.linter.config.source_roots = ["custom_src"]
     tc2.checker.open()
-    roots = tc2.checker._coverage.source_roots
+    roots = tc2.checker._coverage.patterns.source_roots
     assert any("custom_src" in str(r) for r in roots)
 
 

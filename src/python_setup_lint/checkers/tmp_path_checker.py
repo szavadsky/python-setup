@@ -69,7 +69,6 @@ class TempFileChecker(BaseChecker):
         )
 
     def _is_tempfile_call(self, node: nodes.Call) -> bool:
-        """Check if this is a call to tempfile.mkdtemp/mkstemp/NamedTemporaryFile."""
         if not isinstance(node.func, nodes.Attribute):
             return False
         if node.func.attrname not in self._TEMP_FILE_FUNCS:
@@ -87,7 +86,6 @@ class TempFileChecker(BaseChecker):
 
     @staticmethod
     def _is_context_manager(node: nodes.Call) -> bool:
-        """Check if this call is used as a context manager (with statement)."""
         parent = node.parent
         if isinstance(parent, nodes.With):
             for expr, _ in parent.items:
@@ -101,7 +99,6 @@ class TempFileChecker(BaseChecker):
         return "tempfile.*"
 
     def _is_test_file(self, node: nodes.Call) -> bool:
-        """Check if the file containing this node matches test patterns."""
         file_path = getattr(node.root(), "file", None)
         if file_path is None:
             return False

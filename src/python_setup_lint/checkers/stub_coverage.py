@@ -5,7 +5,6 @@ Extracted from stub_checker.py.  Mechanical cut-paste, no logic change.
 
 from __future__ import annotations
 
-import fnmatch
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -13,11 +12,22 @@ from typing import TYPE_CHECKING
 
 import astroid
 from astroid import nodes
+from python_setup_lint.checkers._checker_base import _matches_path
 
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub_checker import StubChecker
     from python_setup_lint.checkers.stub_import_contract import ImportUsage
 log = logging.getLogger(__name__)
+
+
+@dataclass
+class _CoveragePatterns:
+    """Configuration patterns for stub coverage filtering."""
+
+    source_roots: list[Path] = field(default_factory=list)
+    test_patterns: list[str] = field(default_factory=list)
+    opt_out_patterns: list[str] = field(default_factory=list)
+    stub_roots: list[Path] = field(default_factory=list)
 
 
 @dataclass
@@ -35,10 +45,7 @@ class _CoverageState:
     import_usages: list[ImportUsage] = field(default_factory=list)
     production_count: int = 0
     stub_found_count: int = 0
-    source_roots: list[Path] = field(default_factory=list)
-    test_patterns: list[str] = field(default_factory=list)
-    opt_out_patterns: list[str] = field(default_factory=list)
-    stub_roots: list[Path] = field(default_factory=list)
+    patterns: _CoveragePatterns = field(default_factory=_CoveragePatterns)
     star_import_policy: str = "error"
     impl_missing_policy: str = "warn"
     current_file_path: Path | None = None
@@ -49,69 +56,45 @@ class _CoverageState:
 # ── Pattern matching ──────────────────────────────────────────────────────────
 
 
-def _matches_path(str_path: str, patterns: list[str]) -> bool:
-
-    for pattern in patterns:
-        if "/" in pattern or "\\" in pattern:
-            # Directory prefix pattern
-            if str_path.startswith(pattern) or f"/{pattern.lstrip('/')}" in str_path:
-                return True
-        elif fnmatch.fnmatch(str_path, pattern) or fnmatch.fnmatch(
-            Path(str_path).name, pattern
-        ):
-            return True
-    return False
 
 
 def _is_test_file(checker: StubChecker, path: Path) -> bool:
-    return _matches_path(path.as_posix(), checker._coverage.test_patterns)
+    return _matches_path(path.as_posix(), checker._coverage.patterns.test_patterns)
 
 
 def _is_opted_out(checker: StubChecker, path: Path) -> bool:
-    return _matches_path(path.as_posix(), checker._coverage.opt_out_patterns)
+    return _matches_path(path.as_posix(), checker._coverage.patterns.opt_out_patterns)
 
 
 # ── Init file exemption ───────────────────────────────────────────────────────
 
 
+_LOGIC_NODE_TYPES: tuple[type, ...] = (
+    nodes.AnnAssign, nodes.If, nodes.Try, nodes.With,
+    nodes.For, nodes.AugAssign, nodes.Delete, nodes.Raise, nodes.Assert,
+)
+
+
+def _is_logic_node(child: nodes.NodeNG) -> bool:
+    if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
+        # __getattr__ is logic — requires .pyi, not exempt
+        return True
+    if isinstance(child, (nodes.ClassDef, nodes.Expr)):
+        return True
+    if isinstance(child, (nodes.Import, nodes.ImportFrom)):
+        return False
+    if isinstance(child, nodes.Assign):
+        for target in child.targets:
+            if isinstance(target, nodes.AssignName) and target.name != "__all__":
+                return True
+        return False
+    if isinstance(child, _LOGIC_NODE_TYPES):
+        return True
+    return False
+
+
 def _is_init_exempt(node: nodes.Module) -> bool:
-    has_logic = False
-    for child in node.body:
-        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
-            # Only __getattr__ is allowed in __init__.py
-            if child.name == "__getattr__":
-                return False  # NOT exempt — requires .pyi
-            # Any other function def is logic
-            has_logic = True
-        elif isinstance(child, nodes.ClassDef):
-            has_logic = True
-        elif isinstance(child, nodes.Expr):
-            # Standalone expression (call, etc.) is logic
-            has_logic = True
-        elif isinstance(child, (nodes.Import, nodes.ImportFrom)):
-            continue  # imports are ok
-        elif isinstance(child, nodes.Assign):
-            # __all__ assignment ok; anything else is logic
-            for target in child.targets:
-                if isinstance(target, nodes.AssignName) and target.name != "__all__":
-                    has_logic = True
-        elif isinstance(
-            child,
-            (
-                nodes.AnnAssign,
-                nodes.If,
-                nodes.Try,
-                nodes.With,
-                nodes.For,
-                nodes.AugAssign,
-                nodes.Delete,
-                nodes.Raise,
-                nodes.Assert,
-            ),
-        ):
-            has_logic = True
-        # Pass, ellipsis, docstring-like Expr with Const → skip
-    return not has_logic
+    return not any(_is_logic_node(child) for child in node.body)
 
 
 def _is_trivial_test_data(node: nodes.Module) -> bool:
@@ -161,7 +144,7 @@ def _has_main_block(node: nodes.Module) -> bool:
 
 
 def _is_under_source_root(checker: StubChecker, path: Path) -> bool:
-    for root in checker._coverage.source_roots:
+    for root in checker._coverage.patterns.source_roots:
         try:
             path.relative_to(root)
             return True
@@ -186,9 +169,9 @@ def _resolve_stub(checker: StubChecker, py_path: Path) -> Path | None:
             return pkg_init
 
     # 3. Stub roots
-    for stub_root in checker._coverage.stub_roots:
+    for stub_root in checker._coverage.patterns.stub_roots:
         rel = None
-        for root in checker._coverage.source_roots:
+        for root in checker._coverage.patterns.source_roots:
             try:
                 rel = py_path.relative_to(root)
                 break
@@ -205,6 +188,28 @@ def _resolve_stub(checker: StubChecker, py_path: Path) -> Path | None:
 # ── Declaration indexing ──────────────────────────────────────────────────────
 
 
+def _collect_declarations(stub_module: nodes.Module) -> set[str]:
+    declarations: set[str] = set()
+    for child in stub_module.body:
+        _add_declaration(child, declarations)
+    return declarations
+
+
+def _add_declaration(child: nodes.NodeNG, declarations: set[str]) -> None:
+    if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef)):
+        declarations.add(child.name)
+    elif isinstance(child, nodes.Assign):
+        for target in child.targets:
+            if isinstance(target, nodes.AssignName):
+                declarations.add(target.name)
+    elif isinstance(child, nodes.AnnAssign):
+        if isinstance(child.target, nodes.AssignName):
+            declarations.add(child.target.name)
+    elif isinstance(child, (nodes.ImportFrom, nodes.Import)):
+        for name, _ in child.names:
+            declarations.add(name)
+
+
 def _index_stub_declarations(
     checker: StubChecker, module_name: str, stub_path: Path
 ) -> None:
@@ -214,23 +219,7 @@ def _index_stub_declarations(
         log.warning("Syntax error in stub '%s' — cannot index declarations", stub_path)
         return
 
-    declarations: set[str] = set()
-    for child in stub_module.body:
-        if isinstance(
-            child, (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef)
-        ):
-            declarations.add(child.name)
-        elif isinstance(child, nodes.Assign):
-            for target in child.targets:
-                if isinstance(target, nodes.AssignName):
-                    declarations.add(target.name)
-        elif isinstance(child, nodes.AnnAssign):
-            if isinstance(child.target, nodes.AssignName):
-                declarations.add(child.target.name)
-        elif isinstance(child, nodes.TypeAlias):
-            declarations.add(child.name.name)
-
-    checker._coverage.declaration_index[module_name] = declarations
+    checker._coverage.declaration_index[module_name] = _collect_declarations(stub_module)
 
     # Also index callable and class nodes for fidelity phase
     f = checker._fidelity
@@ -238,9 +227,7 @@ def _index_stub_declarations(
     stub_callables: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     stub_classes: dict[str, nodes.ClassDef] = {}
     for child in stub_module.body:
-        if isinstance(child, nodes.AnnAssign) and isinstance(
-            child.target, nodes.AssignName
-        ):
+        if isinstance(child, nodes.AnnAssign) and isinstance(child.target, nodes.AssignName):
             stub_vars[child.target.name] = child
         elif isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
             stub_callables[child.name] = child

@@ -170,13 +170,13 @@ class StubChecker(BaseChecker):
         c = self._coverage
         config = self.linter.config
         raw_roots = getattr(config, "source_roots", None)
-        c.source_roots = (
+        c.patterns.source_roots = (
             [Path(r).resolve() for r in raw_roots if r]
             if raw_roots
             else [Path("src").resolve()]
         )
         raw_patterns = getattr(config, "test_patterns", None)
-        c.test_patterns = (
+        c.patterns.test_patterns = (
             list(raw_patterns)
             if raw_patterns
             else [
@@ -187,9 +187,9 @@ class StubChecker(BaseChecker):
             ]
         )
         raw_opt_out = getattr(config, "stub_opt_out", None)
-        c.opt_out_patterns = list(raw_opt_out) if raw_opt_out else []
+        c.patterns.opt_out_patterns = list(raw_opt_out) if raw_opt_out else []
         raw_stub_roots = getattr(config, "stub_roots", None)
-        c.stub_roots = [Path(r) for r in raw_stub_roots if r] if raw_stub_roots else []
+        c.patterns.stub_roots = [Path(r) for r in raw_stub_roots if r] if raw_stub_roots else []
         raw_star = getattr(config, "star_import_policy", None) or "error"
         c.star_import_policy = str(raw_star)
         raw_missing = getattr(config, "impl_missing_annotation", None) or "warn"
@@ -208,13 +208,25 @@ class StubChecker(BaseChecker):
         c.current_file_path = py_path
         c.current_module_name = module_name if module_name else None
 
+        if self._is_module_exempt(node, py_path, module_name):
+            return
+
+        self._index_module(node, py_path, module_name)
+
+    @beartype
+    def _is_module_exempt(
+        self,
+        node: nodes.Module,
+        py_path: Path,
+        module_name: str,
+    ) -> bool:
         # ── conftest.py always exempt ─────────────────────────────────────
         if py_path.name == "conftest.py":
             log.info(
                 "Exempt %s: conftest.py (always exempt from stub requirement)",
                 module_name,
             )
-            return
+            return True
 
         # ── trivial test data modules (outside source root) exempt ────────
         if _is_trivial_test_data(node) and not _is_under_source_root(self, py_path):
@@ -222,22 +234,32 @@ class StubChecker(BaseChecker):
                 "Exempt %s: trivial test data module (only literal assignments)",
                 module_name,
             )
-            return
+            return True
 
         if (
             _is_test_file(self, py_path)
             or not _is_under_source_root(self, py_path)
             or _is_opted_out(self, py_path)
         ):
-            return
+            return True
         if not module_name:
-            return
+            return True
 
         # ── __init__.py exemption ─────────────────────────────────────────
         if py_path.name == "__init__.py" and _is_init_exempt(node):
             log.info("Exempt %s: __init__.py with imports/__all__ only", module_name)
-            return
+            return True
 
+        return False
+
+    @beartype
+    def _index_module(
+        self,
+        node: nodes.Module,
+        py_path: Path,
+        module_name: str,
+    ) -> None:
+        c = self._coverage
         # Track modules with __main__ blocks for post-processing in close().
         if _has_main_block(node):
             c.main_module_candidates.add(module_name)
@@ -252,6 +274,7 @@ class StubChecker(BaseChecker):
         else:
             c.stub_missing.add(module_name)
         self._index_impl_annotations(module_name, node)
+
 
     @beartype
     def visit_import(self, node: nodes.Import) -> None:

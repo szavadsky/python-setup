@@ -113,6 +113,31 @@ def _extra_tool_parser(
             ``parse_regex``, or a regex without exactly one capture group.
     """
 
+def _validate_extra_bool_fields(
+    entry: dict[str, Any], location: str
+) -> tuple[bool, bool, bool]:
+    """Validate supports_fix, supports_path, supports_exclude fields."""
+
+def _validate_extra_list_field(
+    entry: dict[str, Any], key: str, location: str
+) -> list[str]:
+    """Validate a list-of-strings field and return the validated list."""
+
+def _validate_extra_config_flag(
+    entry: dict[str, Any], location: str
+) -> list[str] | None:
+    """Validate config_flag field (str, list[str], or None)."""
+
+def _validate_extra_fields(
+    entry: dict[str, Any], location: str
+) -> dict[str, Any]:
+    """Validate all fields in an extra-tool entry and return validated values."""
+
+def _validate_extra_name(
+    name: str, seen_names: set[str], location: str
+) -> str:
+    """Validate extra-tool name uniqueness and return the validated name."""
+
 def _validate_extra(
     entry: dict[str, Any],
     *,

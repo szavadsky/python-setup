@@ -25,14 +25,17 @@ from ._setup_precommit import (
     _step_precommit,
 )
 
+from beartype import beartype
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+
 # ── Constants ───────────────────────────────────────────────────────
 
-_PACKAGE_NAME = "python-setup"
-_GIT_URL = "git+https://github.com/szavadsky/python-setup"
-_STATE_FILE = ".python-setup-state.json"
+_PACKAGE_NAME: str = "python-setup"
+_GIT_URL: str = "git+https://github.com/szavadsky/python-setup"
+_STATE_FILE: str = ".python-setup-state.json"
 
 # Bundled config files to copy / checksum-track (relative to config/ dir)
 _BUNDLED_CONFIGS: tuple[str, ...] = (
@@ -44,9 +47,7 @@ _BUNDLED_CONFIGS: tuple[str, ...] = (
     "ty.toml",
 )
 
-
 # ── Data structures ─────────────────────────────────────────────────
-
 
 @dataclass
 class SetupState:
@@ -65,15 +66,13 @@ class SetupState:
     errors: list[str] = field(default_factory=list)
 
     @property
+    @beartype
     def all_ok(self) -> bool:
         return len(self.errors) == 0
 
-
 # ── Helpers ─────────────────────────────────────────────────────────
 
-
 def _compute_checksums(config_dir: Path, files: Sequence[str]) -> dict[str, str]:
-    """Compute SHA-256 checksums for *files* relative to *config_dir*."""
     result: dict[str, str] = {}
     for fname in files:
         fpath = config_dir / fname
@@ -81,13 +80,7 @@ def _compute_checksums(config_dir: Path, files: Sequence[str]) -> dict[str, str]
             result[fname] = hashlib.sha256(fpath.read_bytes()).hexdigest()
     return result
 
-
 def _discover_checkers() -> list[str]:
-    """Introspect ``python_setup_lint.checkers`` for pylint plugin modules.
-
-    Returns fully-qualified module names for modules that define a
-    ``register`` function (pylint plugin contract).
-    """
     import python_setup_lint.checkers as checkers_pkg
 
     result: list[str] = []
@@ -108,34 +101,35 @@ def _discover_checkers() -> list[str]:
             )
     return sorted(result)
 
-
 def _read_pyproject_toml(project_dir: Path) -> dict[str, object] | None:
-    """Read pyproject.toml from *project_dir*, returning parsed dict or None."""
     toml_path = project_dir / "pyproject.toml"
     if not toml_path.is_file():
         return None
     with open(toml_path, "rb") as f:
         return tomllib.load(f)
 
-
 def _write_pyproject_toml(project_dir: Path, data: dict[str, object]) -> None:
-    """Write *data* back to pyproject.toml using tomli-w."""
     import tomli_w
 
     toml_path = project_dir / "pyproject.toml"
     _atomic_write(toml_path, tomli_w.dumps(data))
 
-
-def _get_pylint_load_plugins(data: dict[str, object]) -> list[str]:
-    """Extract current ``[tool.pylint.main].load-plugins`` list from TOML data."""
+def _pylint_main_section(data: dict[str, object]) -> dict | None:
     tool = data.get("tool", {})
     if not isinstance(tool, dict):
-        return []
+        return None
     pylint = tool.get("pylint", {})
     if not isinstance(pylint, dict):
-        return []
+        return None
     main = pylint.get("main", {})
     if not isinstance(main, dict):
+        return None
+    return main
+
+
+def _get_pylint_load_plugins(data: dict[str, object]) -> list[str]:
+    main = _pylint_main_section(data)
+    if main is None:
         return []
     plugins = main.get("load-plugins", [])
     if isinstance(plugins, list):
@@ -143,22 +137,25 @@ def _get_pylint_load_plugins(data: dict[str, object]) -> list[str]:
     return []
 
 
-def _set_pylint_load_plugins(data: dict[str, object], plugins: list[str]) -> None:
-    """Set ``[tool.pylint.main].load-plugins`` in TOML data, creating sections as needed."""
+def _ensure_pylint_main_section(data: dict[str, object]) -> dict | None:
     tool = data.setdefault("tool", {})
     if not isinstance(tool, dict):
-        return
+        return None
     pylint = tool.setdefault("pylint", {})
     if not isinstance(pylint, dict):
-        return
+        return None
     main = pylint.setdefault("main", {})
     if not isinstance(main, dict):
-        return
-    main["load-plugins"] = plugins
+        return None
+    return main
 
+
+def _set_pylint_load_plugins(data: dict[str, object], plugins: list[str]) -> None:
+    main = _ensure_pylint_main_section(data)
+    if main is not None:
+        main["load-plugins"] = plugins
 
 def _get_dev_deps(data: dict[str, object]) -> list[str]:
-    """Extract current ``[dependency-groups].dev`` list from TOML data."""
     dg = data.get("dependency-groups", {})
     if not isinstance(dg, dict):
         return []
@@ -167,9 +164,7 @@ def _get_dev_deps(data: dict[str, object]) -> list[str]:
         return [str(d) for d in dev]
     return []
 
-
 def _has_python_setup_dep(dev_deps: list[str]) -> bool:
-    """Check if python-setup is already in dev dependencies."""
     for dep in dev_deps:
         # PEP 508: package name is everything before first [ < > = ! ~ @
         # Strip extras [...], then version/URL specifiers
@@ -182,9 +177,7 @@ def _has_python_setup_dep(dev_deps: list[str]) -> bool:
             return True
     return False
 
-
 def _run_uv(args: list[str], *, cwd: Path) -> tuple[int, str, str]:
-    """Run a uv command, returning (exit_code, stdout, stderr)."""
     try:
         proc = subprocess.run(
             ["uv"] + args,
@@ -200,13 +193,7 @@ def _run_uv(args: list[str], *, cwd: Path) -> tuple[int, str, str]:
     except subprocess.TimeoutExpired:
         return 1, "", "uv command timed out"
 
-
 def _get_package_dir() -> Path:
-    """Return the directory containing config/ and CodingRules.md.
-
-    With ``force-include`` these ship inside the package directory.
-    For editable installs they live at the project root.
-    """
     import python_setup_lint
 
     pkg_dir = Path(python_setup_lint.__path__[0])
@@ -214,9 +201,7 @@ def _get_package_dir() -> Path:
         return pkg_dir
     return pkg_dir.parent.parent
 
-
 # ── Install steps ────────────────────────────────────────────────────
-
 
 def _step_add_dep(
     state: SetupState,
@@ -224,7 +209,6 @@ def _step_add_dep(
     *,
     dev_path: str | None = None,
 ) -> None:
-    """Step 1: Add python-setup git dependency to dev group."""
     data = _read_pyproject_toml(project_dir)
     if data is None:
         state.errors.append("pyproject.toml not found — not a Python project?")
@@ -251,9 +235,7 @@ def _step_add_dep(
     state.dep_added = True
     print("  [dependency] Added python-setup to dev dependencies")
 
-
 def _step_pylint_plugins(state: SetupState, project_dir: Path) -> None:
-    """Step 2: Add pylint load-plugins entries for discovered checkers."""
     data = _read_pyproject_toml(project_dir)
     if data is None:
         state.errors.append("pyproject.toml not found — cannot add pylint plugins")
@@ -279,9 +261,7 @@ def _step_pylint_plugins(state: SetupState, project_dir: Path) -> None:
     state.pylint_plugins_added = True
     print(f"  [pylint] Added load-plugins: {', '.join(missing)}")
 
-
 def _step_coding_rules(state: SetupState, project_dir: Path) -> None:
-    """Step 4: Copy CodingRules.md from python-setup's bundled copy."""
     target = project_dir / "CodingRules.md"
     if target.exists():
         state.coding_rules_skipped = True
@@ -297,9 +277,7 @@ def _step_coding_rules(state: SetupState, project_dir: Path) -> None:
     state.coding_rules_copied = True
     print("  [coding-rules] Copied CodingRules.md")
 
-
 def _save_state(project_dir: Path) -> None:
-    """Save install state to .python-setup-state.json for update drift detection."""
     pkg_dir = _get_package_dir()
     config_dir = pkg_dir / "config"
     checksums = _compute_checksums(config_dir, _BUNDLED_CONFIGS)
@@ -312,19 +290,91 @@ def _save_state(project_dir: Path) -> None:
     state_path = project_dir / _STATE_FILE
     _atomic_write(state_path, json.dumps(state_data, indent=2, sort_keys=True) + "\n")
 
+def _format_install_summary(state: SetupState) -> list[str]:
+    actions: list[str] = []
+    _SUMMARY_ITEMS: tuple[tuple[str, str], ...] = (
+        ("dep_added", "added python-setup dependency"),
+        ("dep_skipped", "dependency already present"),
+        ("pylint_plugins_added", "added pylint load-plugins"),
+        ("pylint_plugins_skipped", "pylint plugins already configured"),
+        ("precommit_written", "wrote .pre-commit-config.yaml"),
+        ("precommit_skipped", "pre-commit config already exists"),
+        ("coding_rules_copied", "copied CodingRules.md"),
+        ("coding_rules_skipped", "CodingRules.md already exists"),
+        ("agents_appended", "appended AGENTS.md snippet"),
+        ("agents_skipped", "AGENTS.md snippet skipped"),
+    )
+    for attr, msg in _SUMMARY_ITEMS:
+        if getattr(state, attr):
+            actions.append(msg)
+    return actions
+
+
+def _check_config_drift(project_dir: Path) -> list[str]:
+    state_path = project_dir / _STATE_FILE
+    if not state_path.exists():
+        print("  [config] No .python-setup-state.json — skipping drift check")
+        return []
+
+    try:
+        saved = json.loads(state_path.read_text(encoding="utf-8"))
+        saved_checksums: dict[str, str] = saved.get("config_checksums", {})
+    except (json.JSONDecodeError, KeyError):
+        print(
+            "  [config] .python-setup-state.json unreadable — skipping drift check"
+        )
+        return []
+
+    pkg_dir = _get_package_dir()
+    config_dir = pkg_dir / "config"
+    current = _compute_checksums(config_dir, _BUNDLED_CONFIGS)
+
+    drifted: list[str] = []
+    for fname in sorted(set(saved_checksums) | set(current)):
+        old = saved_checksums.get(fname, "(missing)")
+        new = current.get(fname, "(missing)")
+        if old != new:
+            drifted.append(f"{fname}: saved={old[:8]}… current={new[:8]}…")
+
+    if drifted:
+        print("  [config] ⚠ Config drift detected:")
+        for d in drifted:
+            print(f"    • {d}")
+    else:
+        print("  [config] All config checksums match — no drift")
+
+    return drifted
+
+def _run_update_steps(project_dir: Path) -> list[str]:
+    errors: list[str] = []
+
+    # Step 1: uv sync
+    rc, stdout, stderr = _run_uv(["sync"], cwd=project_dir)
+    if rc != 0:
+        errors.append(f"uv sync failed: {stderr.strip()}")
+    else:
+        print("  [sync] uv sync completed")
+
+    # Step 2: uv add --refresh-package python-setup
+    rc, stdout, stderr = _run_uv(
+        ["add", "--refresh-package", "python-setup"],
+        cwd=project_dir,
+    )
+    if rc != 0:
+        errors.append(f"uv add --refresh-package failed: {stderr.strip()}")
+    else:
+        print("  [refresh] python-setup version pins refreshed")
+
+    return errors
 
 # ── Install command ──────────────────────────────────────────────────
 
-
+@beartype
 def install(
     project_dir: Path,
     *,
     dev_path: str | None = None,
 ) -> int:
-    """Idempotently install python-setup tooling into *project_dir*.
-
-    Returns exit code (0 = success, 1 = errors).
-    """
     print(f"python-setup install → {project_dir}")
     state = SetupState()
 
@@ -346,27 +396,7 @@ def install(
             print(f"  ✗ {e}")
         return 1
 
-    actions = []
-    if state.dep_added:
-        actions.append("added python-setup dependency")
-    if state.dep_skipped:
-        actions.append("dependency already present")
-    if state.pylint_plugins_added:
-        actions.append("added pylint load-plugins")
-    if state.pylint_plugins_skipped:
-        actions.append("pylint plugins already configured")
-    if state.precommit_written:
-        actions.append("wrote .pre-commit-config.yaml")
-    if state.precommit_skipped:
-        actions.append("pre-commit config already exists")
-    if state.coding_rules_copied:
-        actions.append("copied CodingRules.md")
-    if state.coding_rules_skipped:
-        actions.append("CodingRules.md already exists")
-    if state.agents_appended:
-        actions.append("appended AGENTS.md snippet")
-    if state.agents_skipped:
-        actions.append("AGENTS.md snippet skipped")
+    actions = _format_install_summary(state)
 
     if not actions:
         print("Already fully configured — nothing to do.")
@@ -377,65 +407,15 @@ def install(
 
     return 0
 
-
 # ── Update command ───────────────────────────────────────────────────
 
-
+@beartype
 def update(project_dir: Path) -> int:
-    """Update python-setup in *project_dir* and report config drift.
-
-    Returns exit code (0 = success, 1 = errors).
-    """
     print(f"python-setup update → {project_dir}")
-    errors: list[str] = []
 
-    # Step 1: uv sync
-    rc, stdout, stderr = _run_uv(["sync"], cwd=project_dir)
-    if rc != 0:
-        errors.append(f"uv sync failed: {stderr.strip()}")
-    else:
-        print("  [sync] uv sync completed")
+    errors = _run_update_steps(project_dir)
 
-    # Step 2: uv add --refresh-package python-setup
-    rc, stdout, stderr = _run_uv(
-        ["add", "--refresh-package", "python-setup"],
-        cwd=project_dir,
-    )
-    if rc != 0:
-        errors.append(f"uv add --refresh-package failed: {stderr.strip()}")
-    else:
-        print("  [refresh] python-setup version pins refreshed")
-
-    # Step 3: Compare config checksums
-    state_path = project_dir / _STATE_FILE
-    if not state_path.exists():
-        print("  [config] No .python-setup-state.json — skipping drift check")
-    else:
-        try:
-            saved = json.loads(state_path.read_text(encoding="utf-8"))
-            saved_checksums: dict[str, str] = saved.get("config_checksums", {})
-        except json.JSONDecodeError, KeyError:
-            print(
-                "  [config] .python-setup-state.json unreadable — skipping drift check"
-            )
-        else:
-            pkg_dir = _get_package_dir()
-            config_dir = pkg_dir / "config"
-            current = _compute_checksums(config_dir, _BUNDLED_CONFIGS)
-
-            drifted = []
-            for fname in sorted(set(saved_checksums) | set(current)):
-                old = saved_checksums.get(fname, "(missing)")
-                new = current.get(fname, "(missing)")
-                if old != new:
-                    drifted.append(f"{fname}: saved={old[:8]}… current={new[:8]}…")
-
-            if drifted:
-                print("  [config] ⚠ Config drift detected:")
-                for d in drifted:
-                    print(f"    • {d}")
-            else:
-                print("  [config] All config checksums match — no drift")
+    _check_config_drift(project_dir)
 
     if errors:
         print()
@@ -448,12 +428,9 @@ def update(project_dir: Path) -> int:
     print("Update complete.")
     return 0
 
-
 # ── CLI entry point ──────────────────────────────────────────────────
 
-
 def _build_parser() -> argparse.ArgumentParser:
-    """Build the argument parser for ``python-setup install`` / ``update``."""
     parser = argparse.ArgumentParser(
         prog="python-setup",
         description="Set up python-setup tooling in a Python project",
@@ -488,9 +465,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
     return parser
 
-
+@beartype
 def main(argv: list[str] | None = None) -> int:
-    """CLI entry point for ``python-setup install`` / ``python-setup update``."""
     parser = _build_parser()
     args = parser.parse_args(argv)
 

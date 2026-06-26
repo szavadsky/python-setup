@@ -94,6 +94,56 @@ def _sort_counts(
     return sorted(counts)
 
 
+def _print_grouped_by_tool(
+    counts: list[ViolationCount],
+    *,
+    sort_by_rule: bool = False,
+) -> None:
+    sorted_counts = _sort_counts(counts, sort_by_rule=sort_by_rule)
+    by_tool: dict[str, list[ViolationCount]] = {}
+    for v in sorted_counts:
+        by_tool.setdefault(v.tool, []).append(v)
+
+    print(f"\n{'=' * 60}")
+    print("VIOLATION STATISTICS (grouped by tool)")
+    print(f"{'=' * 60}")
+    total = 0
+    for tool_name, entries in by_tool.items():
+        print(f"\n  [{tool_name}]")
+        for v in entries:
+            print(f"    {v.rule:<30} {v.count:>6}")
+            total += v.count
+        print(f"    {'\u2500' * 38}")
+        print(f"    {'Subtotal':<30} {sum(e.count for e in entries):>6}")
+    print(f"\n{'\u2500' * 60}")
+    print(f"{'Total':<30} {total:>6}")
+
+
+def _print_grouped_by_rule(
+    counts: list[ViolationCount],
+    *,
+    sort_by_rule: bool = False,
+) -> None:
+    sorted_counts = _sort_counts(counts, sort_by_rule=sort_by_rule)
+    by_rule: dict[str, list[ViolationCount]] = {}
+    for v in sorted_counts:
+        by_rule.setdefault(v.rule, []).append(v)
+
+    print(f"\n{'=' * 60}")
+    print("VIOLATION STATISTICS (grouped by rule)")
+    print(f"{'=' * 60}")
+    total = 0
+    for rule, entries in by_rule.items():
+        print(f"\n  [{rule}]")
+        for v in entries:
+            print(f"    {v.tool:<20} {v.count:>6}")
+            total += v.count
+        print(f"    {'\u2500' * 28}")
+        print(f"    {'Subtotal':<20} {sum(e.count for e in entries):>6}")
+    print(f"\n{'\u2500' * 60}")
+    print(f"{'Total':<30} {total:>6}")
+
+
 def _print_statistics_grouped(
     counts: list[ViolationCount],
     *,
@@ -104,45 +154,10 @@ def _print_statistics_grouped(
         print("\nNo violations found.")
         return
 
-    sorted_counts = _sort_counts(counts, sort_by_rule=sort_by_rule)
-
     if group in ("tool", "file"):
-        by_tool: dict[str, list[ViolationCount]] = {}
-        for v in sorted_counts:
-            by_tool.setdefault(v.tool, []).append(v)
-
-        print(f"\n{'=' * 60}")
-        print("VIOLATION STATISTICS (grouped by tool)")
-        print(f"{'=' * 60}")
-        total = 0
-        for tool_name, entries in by_tool.items():
-            print(f"\n  [{tool_name}]")
-            for v in entries:
-                print(f"    {v.rule:<30} {v.count:>6}")
-                total += v.count
-            print(f"    {'\u2500' * 38}")
-            print(f"    {'Subtotal':<30} {sum(e.count for e in entries):>6}")
-        print(f"\n{'\u2500' * 60}")
-        print(f"{'Total':<30} {total:>6}")
-
+        _print_grouped_by_tool(counts, sort_by_rule=sort_by_rule)
     elif group == "rule":
-        by_rule: dict[str, list[ViolationCount]] = {}
-        for v in sorted_counts:
-            by_rule.setdefault(v.rule, []).append(v)
-
-        print(f"\n{'=' * 60}")
-        print("VIOLATION STATISTICS (grouped by rule)")
-        print(f"{'=' * 60}")
-        total = 0
-        for rule, entries in by_rule.items():
-            print(f"\n  [{rule}]")
-            for v in entries:
-                print(f"    {v.tool:<20} {v.count:>6}")
-                total += v.count
-            print(f"    {'\u2500' * 28}")
-            print(f"    {'Subtotal':<20} {sum(e.count for e in entries):>6}")
-        print(f"\n{'\u2500' * 60}")
-        print(f"{'Total':<30} {total:>6}")
+        _print_grouped_by_rule(counts, sort_by_rule=sort_by_rule)
 
 
 # ── Subprocess runner ──────────────────────────────────────────────

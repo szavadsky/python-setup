@@ -24,6 +24,16 @@ if TYPE_CHECKING:
     from python_setup_lint.checkers.stub_import_contract import ImportUsage
 
 @dataclass
+class _CoveragePatterns:
+    """Configuration patterns for stub coverage filtering."""
+
+    source_roots: list[Path] = ...
+    test_patterns: list[str] = ...
+    opt_out_patterns: list[str] = ...
+    stub_roots: list[Path] = ...
+
+
+@dataclass
 class _CoverageState:
     """Phase 1 and shared state aggregated for StubChecker."""
 
@@ -34,28 +44,22 @@ class _CoverageState:
     import_usages: list[ImportUsage] = ...
     production_count: int = 0
     stub_found_count: int = 0
-    source_roots: list[Path] = ...
-    test_patterns: list[str] = ...
-    opt_out_patterns: list[str] = ...
-    stub_roots: list[Path] = ...
+    patterns: _CoveragePatterns = ...
     star_import_policy: str = "error"
     impl_missing_policy: str = "warn"
     current_file_path: Path | None = None
     current_module_name: str | None = None
     main_module_candidates: set[str] = ...
 
-def _matches_path(str_path: str, patterns: list[str]) -> bool:
-    """Check if *str_path* matches any of the *patterns*.
-
-    Patterns containing ``/`` or ``\\`` are treated as directory prefixes;
-    other patterns use fnmatch globbing against the full path and basename.
-    """
 
 def _is_test_file(checker: StubChecker, path: Path) -> bool:
     """Check if *path* matches any configured test pattern."""
 
 def _is_opted_out(checker: StubChecker, path: Path) -> bool:
     """Check if *path* matches any stub-opt-out pattern."""
+
+def _is_logic_node(child: nodes.NodeNG) -> bool:
+    """Check if an AST child node represents logic (not just imports/assignments)."""
 
 def _is_init_exempt(node: nodes.Module) -> bool:
     """Check if an ``__init__.py`` is exempt from stub requirement.
@@ -85,6 +89,12 @@ def _resolve_stub(checker: StubChecker, py_path: Path) -> Path | None:
     2. For ``__init__.py``, companion ``__init__.pyi`` in same directory.
     3. Configured *stub-roots*.
     """
+
+def _collect_declarations(stub_module: nodes.Module) -> set[str]:
+    """Collect all declared symbol names from a stub module's body."""
+
+def _add_declaration(child: nodes.NodeNG, declarations: set[str]) -> None:
+    """Add a single child's declarations to the set."""
 
 def _index_stub_declarations(
     checker: StubChecker, module_name: str, stub_path: Path
