@@ -13,14 +13,10 @@ from pathlib import Path
 
 import pytest
 
-import python_setup_lint.runner as _runner_module
-from python_setup_lint.runner import (
-    RunnerConfig,
-    ViolationCount,
-    _aggregate_statistics,
-    _reset_extra_tools_cache,
-    run_lint,
-)
+from python_setup_lint.runner import RunnerConfig, ViolationCount, run_lint
+from python_setup_lint.runner.output import _aggregate_statistics
+from python_setup_lint.runner.extra_tools import _reset_extra_tools_cache
+import python_setup_lint.runner.output as _output_module
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 from tests.runner._factories import write_pyproject
 from tests.runner._factories_extras import (
@@ -29,7 +25,6 @@ from tests.runner._factories_extras import (
     EXTRA_OBSERV_NAME,
     EXTRA_OBSERV_STDOUT,
 )
-
 
 # ── DOWNSTREAM-INTEGRATION ───────────────────────────────────────
 # End-to-end fake-subprocess pipeline for extras (NO real subprocess).
@@ -65,7 +60,7 @@ class TestRunLintExtraDownstreamIntegration:
         fake = fake_run_cmd_factory(
             {extra_name: make_lint_result(tool_name=extra_name, stdout=extra_stdout)}
         )
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
 
         rc = run_lint(
             config=RunnerConfig(cwd=tmp_path),
@@ -141,7 +136,7 @@ def test_run_lint_with_extras_startup_overhead_within_10_percent(
         lines.append('parse_strategy = "none"')
     (extras_dir / "pyproject.toml").write_text("\n".join(lines) + "\n")
 
-    monkeypatch.setattr(_runner_module, "_run_cmd", fake_run_cmd_factory({}))
+    monkeypatch.setattr(_output_module, "_run_cmd", fake_run_cmd_factory({}))
 
     t_0_cold = _time_run_lint(no_extras_dir, clear_cache_each=True)
     t_10_cold = _time_run_lint(extras_dir, clear_cache_each=True)
@@ -185,7 +180,7 @@ class TestExtraStatisticsObservability:
                 ),
             }
         )
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
 
     @pytest.mark.parametrize("fmt", ["json", "table"])
     def test_extra_rule_counts_surface_in_statistics_output(

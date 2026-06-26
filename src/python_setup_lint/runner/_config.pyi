@@ -3,7 +3,6 @@
 T1b — self-discovery helpers + CLI config-key aliases.
 """
 
-from __future__ import annotations
 
 from pathlib import Path
 

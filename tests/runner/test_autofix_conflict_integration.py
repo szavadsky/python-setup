@@ -7,32 +7,24 @@ from pathlib import Path
 
 import pytest
 
-import python_setup_lint.runner as _runner_module
-from python_setup_lint.runner import (
-    _AUTOFIX_ENV_VAR,
-    LINT_TOOLS,
-    LintResult,
-    RunnerConfig,
-    ToolSpec,
-    _apply_autofix_conflict_aware,
-    run_lint,
-)
+import python_setup_lint.runner.output as _output_module
+from python_setup_lint.runner import LINT_TOOLS, LintResult, RunnerConfig, ToolSpec, run_lint
+from python_setup_lint.runner._autofix import _AUTOFIX_ENV_VAR, _apply_autofix_conflict_aware
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 from tests.runner._autofix_helpers import (
     _CANARY_LABEL,
     _FIX_TOOL_NAMES,
-    _git_init,
-    _write_file,
-    _stage,
     _commit_all,
+    _git_init,
     _make_canned_fix_results,
     _PostFixFakeRunCmd,
+    _stage,
+    _write_file,
 )
 from tests.runner._factories import (
     canned_results_all_tools,
     tmp_config,
 )
-
 
 # ── Downstream integration: run_lint --fix on real python-setup repo ─
 
@@ -223,7 +215,7 @@ class TestRunLintFixDispatch:
         monkeypatch.delenv(_AUTOFIX_ENV_VAR, raising=False)
         canned = _make_canned_fix_results()
         fake = fake_run_cmd_factory(canned)
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
 
         # Create source files under ruff's default_paths so the canary has
         # something to enumerate (otherwise canary_targets is empty and the
@@ -251,7 +243,7 @@ class TestRunLintFixDispatch:
         monkeypatch.delenv(_AUTOFIX_ENV_VAR, raising=False)
         canned = _make_canned_fix_results()
         fake = fake_run_cmd_factory(canned)
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         target = _write_file(tmp_path, "src/main.py", "x = 1\n")
         run_lint(
             config=tmp_config(tmp_path),
@@ -274,7 +266,7 @@ class TestRunLintFixDispatch:
         monkeypatch.delenv(_AUTOFIX_ENV_VAR, raising=False)
         canned = canned_results_all_tools()
         fake = fake_run_cmd_factory(canned)
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=tmp_config(tmp_path), fix=False, no_fail_fast=True)
         labels = [c.label for c in fake.calls]
         assert _CANARY_LABEL not in labels

@@ -14,10 +14,11 @@ import json
 import tempfile
 import tomllib
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
     from .types import RunnerConfig, ToolSpec
 
 __all__ = [
@@ -119,7 +120,7 @@ def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
     return None
 
 
-def _load_pyproject_toml(path: Path) -> dict:
+def _load_pyproject_toml(path: Path) -> dict[str, Any]:
     resolved = path.resolve()
     try:
         mtime = resolved.stat().st_mtime_ns

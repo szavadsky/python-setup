@@ -6,8 +6,9 @@ Exercises Phase 1 (inference), Phase 2 (AST walking), and rewrite rules.
 
 from __future__ import annotations
 
-import astroid
 from typing import Any
+
+import astroid
 import pytest
 
 from python_setup_lint.checkers.stub_normalizer import AnnotationNormalizer

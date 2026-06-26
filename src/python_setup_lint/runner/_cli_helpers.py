@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .types import LintResult, ToolSpec
+from .types import LintResult, ToolSpec  # noqa: TC001
 
 
 def _print_tool_notes(spec: ToolSpec, *, fix: bool, path: str | None, exclude: str | None) -> None:
@@ -40,11 +40,11 @@ def _handle_baseline(
     overall_rc: int,
 ) -> int:
 
-    from python_setup_lint import runner as _pkg
+    from .baseline import _capture_baseline, _diff_baseline
 
     base_path = Path(baseline)
     if base_path.exists() and not overwrite_baseline:
-        new_issues = _pkg._diff_baseline(results, base_path)
+        new_issues = _diff_baseline(results, base_path)
         if new_issues:
             print(f"\n{'=' * 60}")
             print("[baseline] New violations detected:")
@@ -60,7 +60,7 @@ def _handle_baseline(
         action = "Overwriting" if base_path.exists() else "Creating"
         print(f"\n{'=' * 60}")
         print(f"[baseline] {action} baseline \u2192 {baseline}")
-        base_data = _pkg._capture_baseline(results)
+        base_data = _capture_baseline(results)
         base_path.parent.mkdir(parents=True, exist_ok=True)
         with open(base_path, "w") as f:
             json.dump(base_data, f, indent=2, sort_keys=True)

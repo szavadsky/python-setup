@@ -18,9 +18,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import astroid
-from pylint.testutils import CheckerTestCase
 from beartype import beartype
-from python_setup_lint.runner import LintResult
+from pylint.testutils import CheckerTestCase
+
+from python_setup_lint.runner import LintResult  # noqa: TC001
 
 if TYPE_CHECKING:
     from pylint.checkers import BaseChecker
@@ -160,8 +161,8 @@ def _load_precommit_config(repo_root: Path) -> dict[str, Any]:
 def assert_precommit_config_valid(repo_root: Path) -> None:
     config_path = repo_root / ".pre-commit-config.yaml"
     _load_precommit_config(repo_root)  # raises AssertionError on YAML/shape errors
-    result = subprocess.run(  # noqa: S603 - path is constructed, not user input
-        ["pre-commit", "validate-config", str(config_path)],
+    result = subprocess.run(  # noqa: S603 - pre-commit is a trusted project tool
+        ["pre-commit", "validate-config", str(config_path)],  # noqa: S607 - pre-commit is a trusted project tool
         check=False,
         cwd=repo_root,
         capture_output=True,

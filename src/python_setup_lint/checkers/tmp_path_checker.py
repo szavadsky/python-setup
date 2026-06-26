@@ -18,7 +18,7 @@ from pylint.lint import PyLinter  # noqa: TC002
 class TempFileChecker(BaseChecker):
     """AST visitor that flags tempfile leakage in test files."""
 
-    name = "tempfile-mkdtemp-in-test"
+    name: str = "tempfile-mkdtemp-in-test"
     msgs = {
         "W9702": (
             "Use pytest tmp_path instead of '%s' in test files",

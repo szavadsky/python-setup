@@ -9,17 +9,11 @@ from typing import Any
 
 import pytest
 
-from python_setup_lint.runner import (
-    Record,
-    _capture_baseline,
-    _compare_records_key,
-    _compare_sorted,
-    _diff_baseline,
-    peek_fallback_tools,
-)
+from python_setup_lint.runner import Record, peek_fallback_tools
+from python_setup_lint.runner.baseline import _capture_baseline, _compare_sorted, _diff_baseline
+from python_setup_lint.runner._record_types import _compare_records_key
 from python_setup_lint.testing import make_lint_result
 from tests.runner._factories import diff_baseline_with
-
 
 # ── Mixed schema load ─────────────────────────────────────────────
 

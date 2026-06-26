@@ -5,15 +5,14 @@ Informational (W-level) only — does not block builds.
 """
 
 from __future__ import annotations
-from beartype import beartype
 
 import logging
 from pathlib import Path
 
 from astroid import nodes
+from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
-
 
 log = logging.getLogger(__name__)
 

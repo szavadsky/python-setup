@@ -44,7 +44,7 @@ _KNOWN_TIMEOUT_FUNCS: frozenset[str] = frozenset(
 class AsyncTimeoutChecker(BaseChecker):
     """AST visitor that flags await calls missing enclosing timeout context."""
 
-    name: ClassVar[str] = "asyncio-timeout"
+    name: str = "asyncio-timeout"
     msgs: ClassVar[dict[str, tuple[str, str, str]]] = {
         "W9703": (
             "External async call '%s' without enclosing"

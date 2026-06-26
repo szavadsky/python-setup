@@ -6,8 +6,9 @@ Public entry points:
 - ``register(linter)`` — pylint plugin entrypoint, called from ``pyproject.toml``.
 """
 
-from astroid import nodes
 from pathlib import Path
+
+from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 

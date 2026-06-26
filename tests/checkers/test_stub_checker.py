@@ -48,7 +48,8 @@ from tests.checkers._factories import (
 
 if TYPE_CHECKING:
     from pathlib import Path
-    import pytest  # noqa: F401
+
+    import pytest
 
 
 def _make_tc() -> Any:

@@ -20,9 +20,8 @@ The fixtures cover every emitted message-id family:
 
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
-
 import inspect
+from typing import TYPE_CHECKING, Any
 
 import astroid
 

@@ -31,13 +31,10 @@ from pathlib import Path
 
 import pytest
 
-import python_setup_lint.runner as _runner_module
-from python_setup_lint.runner import (
-    RunnerConfig,
-    _compose_pyright_config,
-    run_lint,
-)
+from python_setup_lint.runner import RunnerConfig, run_lint
+from python_setup_lint.runner.cmd_build import _compose_pyright_config
 from python_setup_lint.testing import fake_run_cmd_factory
+import python_setup_lint.runner.output as _output_module
 
 # ── _compose_pyright_config surface-unit ─────────────────────────
 
@@ -283,7 +280,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         config = self._config_with_shipped(tmp_path)
         shipped_before = config.config_paths["pyright check"]  # type: ignore[index]
         fake = fake_run_cmd_factory({})
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         assert config.config_paths["pyright check"] != shipped_before  # type: ignore[index]
         assert "python_setup_lint_pyright_" in str(config.config_paths["pyright check"])  # type: ignore[index]
@@ -294,7 +291,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         """The pyright ``--project`` flag points at the composed tmp path."""
         config = self._config_with_shipped(tmp_path)
         fake = fake_run_cmd_factory({})
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         pyright_rec = next((r for r in fake.calls if r.cmd[:1] == ["pyright"]), None)
         assert pyright_rec is not None, (
@@ -314,7 +311,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         override.write_text("[project]\nname = 'x'\n")
         config.pyright_project_override = override
         fake = fake_run_cmd_factory({})
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         # Override takes precedence — config_paths now points at the override.
         assert config.config_paths["pyright check"] == override  # type: ignore[index]
@@ -334,7 +331,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
             config_paths={"ruff check": tmp_path / "ruff.toml"},
         )
         fake = fake_run_cmd_factory({})
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         # No tmp pyright config written.
         assert "pyright check" not in config.config_paths  # type: ignore[operator]
@@ -365,7 +362,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
             },
         )
         fake = fake_run_cmd_factory({})
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         # Both composed paths land.
         assert "python_setup_lint_ruff_" in str(config.config_paths["ruff check"])  # type: ignore[index]

@@ -56,9 +56,9 @@ class LintTool:
         self,
         *,
         config: RunnerConfig,
-        fix: bool = False,
-        path: str | None = None,
-        exclude: str | None = None,
+        _fix: bool = False,
+        _path: str | None = None,
+        _exclude: str | None = None,
     ) -> list[str]: ...
     def statistics_flags(self) -> list[str]: ...
     def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]: ...

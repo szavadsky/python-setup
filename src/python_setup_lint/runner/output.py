@@ -16,8 +16,8 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from typing import TYPE_CHECKING
 import time
+from typing import TYPE_CHECKING
 
 from .dispatch import STRATEGIES
 from .parsers import _STATISTICS_PARSERS
@@ -165,7 +165,7 @@ def _print_statistics_grouped(
 
 def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
     start = time.monotonic()
-    proc = subprocess.run(  # noqa: S603  # commands are constructed from internal ToolSpec, not user input
+    proc = subprocess.run(
         cmd,
         cwd=cwd,
         capture_output=True,

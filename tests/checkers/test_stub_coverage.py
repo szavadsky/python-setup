@@ -45,7 +45,7 @@ from tests.checkers._factories import (
 )
 
 if TYPE_CHECKING:
-    import pytest as _pytest  # noqa: F401
+    pass
 
 
 def _parse(code: str, module_name: str = "") -> astroid.Module:

@@ -15,9 +15,8 @@ from __future__ import annotations
 
 import json
 import re
-
 from typing import TYPE_CHECKING, Any
-from ._record_types import Record, _compare_records_key, _records_unchanged
+
 from ._record_parsers import (  # noqa: F401  # re-exported for backward compat
     _parse_mypy_records,
     _parse_pylint_records,
@@ -27,23 +26,15 @@ from ._record_parsers import (  # noqa: F401  # re-exported for backward compat
     _parse_ty_records,
     _parse_yamllint_records,
 )
+from ._record_types import Record  # noqa: F401  # re-exported for backward compat
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 
 __all__ = [
-    "PARSE_STRATEGIES", "_BUILTIN_PARSE_STRATEGY_TO_PARSER",
-    "_RECORD_PARSERS", "_STATISTICS_PARSERS", "Record",
-    "_compare_records_key", "_parse_detect_secrets_json",
-    "_parse_mypy_records", "_parse_mypy_stderr", "_parse_pylint_json2",
-    "_parse_pylint_records", "_parse_pyright_outputjson",
-    "_parse_pyright_records", "_parse_pyright_verify_types",
-    "_parse_ruff_records", "_parse_ruff_statistics",
-    "_parse_rumdl_records", "_parse_rumdl_statistics",
-    "_parse_stubtest_stderr", "_parse_tach_json", "_parse_ty_concise",
-    "_parse_ty_records", "_parse_yamllint_parsable",
-    "_parse_yamllint_records", "_records_unchanged",
+    "PARSE_STRATEGIES",
+    "Record",
 ]
 
 

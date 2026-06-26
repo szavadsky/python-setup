@@ -6,20 +6,17 @@ from pathlib import Path
 
 import pytest
 
-from python_setup_lint.runner import (
-    LINT_TOOLS,
-    ToolSpec,
-    _apply_autofix_conflict_aware,
-)
+from python_setup_lint.runner import LINT_TOOLS, ToolSpec
+from python_setup_lint.runner._autofix import _apply_autofix_conflict_aware
 from python_setup_lint.testing import fake_run_cmd_factory
 from tests.runner._autofix_helpers import (
     _CANARY_LABEL,
-    _git_init,
-    _write_file,
-    _stage,
     _commit_all,
+    _git_init,
     _make_canned_fix_results,
     _PostFixFakeRunCmd,
+    _stage,
+    _write_file,
 )
 from tests.runner._factories import tmp_config
 

@@ -3,12 +3,10 @@
 Helper functions for baseline comparison (extracted to reduce module size).
 """
 
-from __future__ import annotations
 
 from typing import Any
 
 from ._record_types import Record
-
 
 def _compare_sorted(
     a: list[Record], b: list[Record]

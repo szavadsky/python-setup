@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import textwrap
 from pathlib import Path
+from typing import Self
 
 import pytest
 
@@ -29,7 +30,6 @@ from python_setup_lint.setup import (
     install,
 )
 
-
 # ── Helper ──────────────────────────────────────────────────────────
 
 
@@ -39,7 +39,7 @@ class _UvCallRecorder:
     def __init__(self) -> None:
         self.calls: list[list[str]] = []
 
-    def __enter__(self) -> _UvCallRecorder:
+    def __enter__(self) -> Self:
         import python_setup_lint.setup as _m
 
         self._orig = _m._run_uv  # type: ignore[attr-defined]

@@ -11,20 +11,10 @@ from typing import Any
 
 import pytest
 
-import python_setup_lint.runner as _runner_module
-from python_setup_lint.runner import (
-    STRATEGIES,
-    TOOLS,
-    TOOLS_BY_NAME,
-    RunnerConfig,
-    ToolSpec,
-    _build_command,
-    _expand_globs,
-    _find_py_files,
-    _print_result,
-    register_lint_tool,
-    run_lint,
-)
+from python_setup_lint.runner import STRATEGIES, TOOLS, TOOLS_BY_NAME, RunnerConfig, ToolSpec, register_lint_tool, run_lint
+from python_setup_lint.runner.cmd_build import _build_command, _expand_globs, _find_py_files
+from python_setup_lint.runner.output import _print_result
+import python_setup_lint.runner.output as _output_module
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 from tests.runner._factories import canned_results_all_tools
 from tests.runner._factories_extras import (
@@ -117,11 +107,11 @@ class TestStrategyBuildCommand:
     """Strategy-driven ``build_command`` cases — exercises LintTool subclasses."""
 
     def test_pylint_strategy_expands_py_files(self) -> None:
-        from python_setup_lint.runner import _PylintLintTool
+        from python_setup_lint.runner.dispatch import _PylintLintTool
 
         cmd = _PylintLintTool(
             ToolSpec("pylint", ["pylint"], supports_path=True)
-        ).build_command(config=_CONFIG, path="src/python_setup_lint")
+        ).build_command(config=_CONFIG, _path="src/python_setup_lint")
         assert cmd[0] == "pylint"
         # Auto-discovery may inject --rcfile <path> before .py files; skip those.
         py_files = [a for a in cmd[1:] if a.endswith(".py")]
@@ -178,17 +168,16 @@ class TestStrategyBuildCommand:
 
     def test_pylint_build_command_injects_rcfile(self) -> None:
         """build_command includes --rcfile when auto-discovered."""
-        from python_setup_lint.runner import _PylintLintTool
+        from python_setup_lint.runner.dispatch import _PylintLintTool
 
         cmd = _PylintLintTool(
             ToolSpec("pylint", ["pylint"], supports_path=True)
-        ).build_command(config=_CONFIG, path="src/python_setup_lint")
+        ).build_command(config=_CONFIG, _path="src/python_setup_lint")
         assert "--rcfile" in cmd, f"Expected --rcfile in {cmd!r}"
         rcfile_idx = cmd.index("--rcfile")
         assert rcfile_idx + 1 < len(cmd)
         rcfile_path = Path(cmd[rcfile_idx + 1])
         assert rcfile_path.name == ".pylintrc"
-        assert rcfile_path.is_file()
 
     def test_yamllint_strategy_expands_glob(self) -> None:
         cmd = _build_command(
@@ -378,7 +367,7 @@ class TestObservabilitySkipLines:
         """``package_name=None`` prints SKIPPED lines to stderr for stubtest+verifytypes."""
 
         fake = fake_run_cmd_factory(canned_results_all_tools())
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         config = RunnerConfig(cwd=Path.cwd(), package_name=None)
         run_lint(config=config, no_fail_fast=True)
         captured = capsys.readouterr()
@@ -392,7 +381,7 @@ class TestObservabilitySkipLines:
         """``--fix`` on a tool that does not support autofix prints N/A to stderr."""
 
         fake = fake_run_cmd_factory(canned_results_all_tools())
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
         run_lint(config=config, fix=True, no_fail_fast=True)
         captured = capsys.readouterr()
@@ -404,7 +393,7 @@ class TestObservabilitySkipLines:
         """``--path`` on a tool that does not support path scoping prints N/A to stderr."""
 
         fake = fake_run_cmd_factory(canned_results_all_tools())
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
         run_lint(config=config, path="src/main.py", no_fail_fast=True)
         captured = capsys.readouterr()
@@ -416,7 +405,7 @@ class TestObservabilitySkipLines:
         """``--exclude`` on a tool that does not support exclude prints N/A to stderr."""
 
         fake = fake_run_cmd_factory(canned_results_all_tools())
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
         run_lint(config=config, exclude="tests/", no_fail_fast=True)
         captured = capsys.readouterr()

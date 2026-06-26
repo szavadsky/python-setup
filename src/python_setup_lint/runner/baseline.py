@@ -4,21 +4,21 @@ from __future__ import annotations
 
 import json
 import re
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable  # noqa: TC003
+from typing import TYPE_CHECKING, Any
 
 import beartype
 
-from ._record_types import Record, _records_unchanged
 from ._baseline_helpers import (
     _compare_sorted,
-    _dicts_to_records,
     _diag_error_count,
+    _dicts_to_records,
     _records_to_dicts,
     _strip_pyright_volatile,
 )
+from ._record_types import Record, _records_unchanged
 from .parsers import _RECORD_PARSERS
-
-from .types import LintResult
+from .types import LintResult  # noqa: TC001
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -64,7 +64,7 @@ def _normalise_pyright_verifytypes_output(text: str) -> str:
     return result
 
 
-def _try_rumdl_json(stdout: str | None) -> dict | list | None:
+def _try_rumdl_json(stdout: str | None) -> dict[str, Any] | list[dict[str, Any]] | None:
     if not stdout:
         return None
     try:

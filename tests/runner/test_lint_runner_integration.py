@@ -11,17 +11,10 @@ from typing import Any
 
 import pytest
 
-import python_setup_lint.runner as _runner_module
-from python_setup_lint.runner import (
-    LINT_TOOLS,
-    LintResult,
-    RunnerConfig,
-    _capture_baseline,
-    _diff_baseline,
-    _run_cmd,
-    main,
-    run_lint,
-)
+from python_setup_lint.runner import LINT_TOOLS, LintResult, RunnerConfig, main, run_lint
+from python_setup_lint.runner.baseline import _capture_baseline, _diff_baseline
+from python_setup_lint.runner.output import _run_cmd
+import python_setup_lint.runner.output as _output_module
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 from tests.runner._factories import (
     diff_baseline_with,
@@ -38,14 +31,13 @@ from tests.runner._factories_baseline import (
     build_current_results,
     diff_violation_kind,
 )
-from tests.runner._factories_tables import MAIN_ARGPARSE_CASES
 from tests.runner._factories_extras import (
     MAIN_EXIT_CODE_CASES,
     PACKAGE_NAME_STUBTEST_CASES,
     RUFF_BASELINE_FIX_CASES,
     RUN_CMD_CASES,
 )
-
+from tests.runner._factories_tables import MAIN_ARGPARSE_CASES
 
 # ── Baseline capture / diff ───────────────────────────────────────
 
@@ -318,7 +310,7 @@ class TestOverwriteBaseline:
                 ),
             }
         )
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         main(
             ["--baseline", str(baseline_file), "--path", "src/main.py"],
             config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"),
@@ -443,7 +435,7 @@ class TestRunLintIntegration:
         )
         if ruff_result is not None:
             fake = fake_run_cmd_factory({"ruff check": ruff_result})
-            monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+            monkeypatch.setattr(_output_module, "_run_cmd", fake)
         else:
             install_fake_runner(monkeypatch)
         baseline_file = tmp_path / "test_baseline.json"

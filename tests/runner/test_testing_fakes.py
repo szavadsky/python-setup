@@ -9,13 +9,13 @@ installed (no real subprocess spawned).
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 import pytest
 
-import python_setup_lint.runner as _runner_module
 from python_setup_lint.runner import LintResult, RunnerConfig, run_lint
+import python_setup_lint.runner.output as _output_module
 from python_setup_lint.testing import (
     FakeRunCmd,
     _FakeRunCmdRecord,
@@ -153,12 +153,13 @@ def _install_fake_and_run(
     ``package_name=None`` ⇒ skip stubtest+verifytypes. Returns ``fake`` for assertion.
     Resets ``LINT_TOOLS`` to built-in ``TOOLS`` to avoid cross-test pollution.
     """
-    from python_setup_lint.runner import LINT_TOOLS, TOOLS, _reset_extra_tools_cache
+    from python_setup_lint.runner.extra_tools import _reset_extra_tools_cache
+    from python_setup_lint.runner import LINT_TOOLS, TOOLS
 
     LINT_TOOLS[:] = list(TOOLS)
     _reset_extra_tools_cache()
     fake = fake_run_cmd_factory(canned_results_all_tools())
-    monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+    monkeypatch.setattr(_output_module, "_run_cmd", fake)
     config = RunnerConfig(
         cwd=Path.cwd(),
         package_name=run_lint_kwargs.pop("package_name", "python_setup_lint"),
@@ -183,7 +184,7 @@ def test_run_lint_with_fake_dispatch_invariants(
 def test_run_lint_with_fake_returns_zero(monkeypatch: pytest.MonkeyPatch) -> None:
     """When the fake returns zero-exit empty results for every tool, ``run_lint`` exits 0."""
     fake = fake_run_cmd_factory(canned_results_all_tools())
-    monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+    monkeypatch.setattr(_output_module, "_run_cmd", fake)
     config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
     assert (
         run_lint(
@@ -207,7 +208,7 @@ def test_fake_no_subprocess_spawned(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(subprocess, "run", spy_run)
     fake = fake_run_cmd_factory(canned_results_all_tools())
-    monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+    monkeypatch.setattr(_output_module, "_run_cmd", fake)
     config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
     run_lint(config=config, no_fail_fast=True, path="src/python_setup_lint/runner.py")
 

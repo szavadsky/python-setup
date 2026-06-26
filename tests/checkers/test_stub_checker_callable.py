@@ -36,7 +36,7 @@ from tests.checkers._factories import (
 )
 
 if TYPE_CHECKING:
-    import pytest as _pytest  # noqa: F401
+    pass
 
 PROJECT_SRC = Path(__file__).resolve().parents[3] / "src"
 

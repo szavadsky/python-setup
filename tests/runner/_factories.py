@@ -20,12 +20,8 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from python_setup_lint.runner import (
-    TOOLS,
-    LintResult,
-    RunnerConfig,
-    _diff_baseline,
-)
+from python_setup_lint.runner import TOOLS, LintResult, RunnerConfig
+from python_setup_lint.runner.baseline import _diff_baseline
 
 if TYPE_CHECKING:
     import pytest
@@ -78,11 +74,11 @@ def install_fake_runner(
     can introspect ``fake.calls`` after invoking ``run_lint(config=config, ...)`` /
     ``main([..], config=config)``.
     """
-    import python_setup_lint.runner as _runner_module
+    import python_setup_lint.runner.output as _output_module
     from python_setup_lint.testing import fake_run_cmd_factory
 
     fake = fake_run_cmd_factory(dict(overrides) if overrides else {})
-    monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+    monkeypatch.setattr(_output_module, "_run_cmd", fake)
     cfg = RunnerConfig(
         cwd=Path.cwd(),
         package_name=package_name,
@@ -153,7 +149,7 @@ def extra_block(entries: str) -> str:
 
 def write_pyproject(tmp_path: Path, body: str) -> Path:
     """Write a synthetic ``pyproject.toml`` body under *tmp_path*, reset extras cache, return resolved path."""
-    from python_setup_lint.runner import _reset_extra_tools_cache
+    from python_setup_lint.runner.extra_tools import _reset_extra_tools_cache
 
     pyproject = tmp_path / "pyproject.toml"
     pyproject.write_text(body, encoding="utf-8")

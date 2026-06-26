@@ -5,12 +5,12 @@ and signatures must match .py counterparts after normalization.
 """
 
 from __future__ import annotations
-from beartype import beartype
 
 import logging
 from pathlib import Path
 
 from astroid import nodes
+from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
@@ -36,7 +36,6 @@ from python_setup_lint.checkers.stub_import_contract import (
     _resolve_relative,
     emit_import_contract_violations,
 )
-
 
 log = logging.getLogger(__name__)
 

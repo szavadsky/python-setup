@@ -7,8 +7,10 @@ from __future__ import annotations
 
 import pytest
 
-from python_setup_lint.runner import ViolationCount
+from python_setup_lint.runner.output import ViolationCount
+
 from ._factories_baseline import _make_result
+
 # ── Extra-tools test data ──────────────────────────────────────────
 
 BUILTIN_NAME = "ruff check"
