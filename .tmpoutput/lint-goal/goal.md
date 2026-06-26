@@ -19,6 +19,7 @@ Decision based on fidelity and PoC - and you need to decide based on grounded da
   
   only tests that forces bypass of cache can be marked slow
 
+test_consolidated_real_pipeline_smoke MUST NOT be marked slow - it is important enough to be run every time
 
 DoD includes implementation to best possible fidelity, quality and usability; not a brush of a feature
 

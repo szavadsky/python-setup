@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
 @dataclass
-class _FidelityState:
     """Phase 3 state aggregated for StubChecker."""
 
     stub_variable_nodes: dict[str, dict[str, nodes.AnnAssign]]

@@ -22,8 +22,6 @@ class StubDocstringChecker(BaseChecker):
     """
 
     name: str  # "stub-docstring-checker"
-    _enabled_for_module: bool
-    _current_module_name: str | None
 
     def visit_module(self, node: nodes.Module) -> None:
         """Decide whether this module should be processed; set up state."""
@@ -34,18 +32,15 @@ class StubDocstringChecker(BaseChecker):
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
         """Check async function for docstring and returns-clause rules."""
 
-    def _check_function(
         self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef
     ) -> None:
         """Apply all docstring rules to *func_node*."""
 
-    def _check_returns_clause(
         self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef
     ) -> None:
         """Emit W9701 if function has a non-None return type but no Returns: clause."""
 
     @staticmethod
-    def _has_returns_clause(doc_text: str) -> bool:
         """Check if a docstring contains a Returns: or Yields: clause."""
 
 def register(linter: PyLinter) -> None: ...

@@ -15,6 +15,8 @@
   constructors), `ParamSpec`, `Concatenate` (preserve call signatures in
   decorators), `TYPE_CHECKING` guard for import-cycle-breaking imports.
   - Generic-key dict annotations: `dict[str, X]` is allowed when the key is a filename, identifier, path, or display string. Domain-typed values (e.g. `dict[str, MessageDef]`) should use `LintRuleId`, an enum, or a `Literal` type instead.
+  - Unnamed-tuple dict values: `dict[str, tuple[str, ...]]` values should use a `NamedTuple`, dataclass, or `Protocol` with named fields instead of bare tuple literals.
+  - Suppression comments (`# pylint: disable=...`, `# noqa`, `# type: ignore`) must carry a trailing technical justification comment explaining why the rule is suppressed.
 - Runtime enforcement: `@beartype` on all first-party public functions/methods.
   Validates `Annotated` predicates at call boundary. No manual `if` guards for
   type contracts.

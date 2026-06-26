@@ -12,31 +12,25 @@ if TYPE_CHECKING:
 
 from .types import RunnerConfig, ToolSpec
 
-def _find_py_files(dirs: Sequence[str], *, cwd: Path) -> list[str]:
     """Find all .py files under *dirs*, sorted uniquely relative to *cwd*."""
 
-def _expand_globs(paths: Sequence[str], *, cwd: Path) -> list[str]:
     """Expand shell glob patterns (*, ?) in *paths* relative to *cwd*."""
 
-def _config_flag_for(spec_name: str, config_path: Path | None) -> list[str]:
     """Build the CLI flag telling a tool to use *config_path*.
 
     Returns ``[]`` when *config_path* is ``None`` or the tool has no
     external-config flag (e.g. ``tach check``, ``yamllint``).
     """
 
-def _build_config_flags(
     spec: ToolSpec, config: RunnerConfig, *, config_flag_override: list[str] | None = None
 ) -> list[str]:
     """Build config flags for a tool spec. Returns empty list if no config found."""
 
-def _build_statistics_flags(spec: ToolSpec) -> list[str]:
     """Build extra CLI flags for a tool's statistics-mode invocation.
 
     Returns ``[]`` when the tool already emits parseable output by default.
     """
 
-def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
     """Return the pylint rcfile path, or ``None`` if none found.
 
     Checks ``config_paths`` for an explicit ``"pylint"`` entry first.
@@ -44,7 +38,6 @@ def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
     dir), then ``.pylintrc`` (project root).
     """
 
-def _load_pyproject_toml(path: Path) -> dict[str, Any]:
     """Load and cache ``pyproject.toml``, keyed by ``(resolved_path, mtime_ns)``.
 
     Memoised so repeated calls within the same process avoid re-parsing the
@@ -54,7 +47,6 @@ def _load_pyproject_toml(path: Path) -> dict[str, Any]:
     than silent fallback).
     """
 
-def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
     """Build an effective ruff config that ``extend``s *shared_config*.
 
     Writes a temporary ``ruff.toml`` that extends the shared config + copies
@@ -66,15 +58,12 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
     Ported from consultant.mcp ``_ruff_config_with_project_overrides``.
     """
 
-def _abs_rel_path(value: object, abs_cwd: Path) -> str | None:
     """Convert a relative path to absolute, or return None if invalid/absolute."""
 
-def _resolve_exclude_paths(
     exclude_entries: object, abs_cwd: Path
 ) -> tuple[list[str], bool]:
     """Resolve exclude paths relative to abs_cwd. Returns (resolved, changed)."""
 
-def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     """Build an effective pyright config with ``venvPath``/``exclude`` rooted at *cwd*.
 
     ``pyright --project <shared>`` resolves ``venvPath``/``exclude`` against
@@ -90,10 +79,8 @@ def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     config).  The shipped config is never mutated.
     """
 
-def _build_fix_flags(spec: ToolSpec, *, fix: bool) -> list[str]:
     """Return fix flags if fix is requested and the tool supports it."""
 
-def _build_path_and_exclude_args(
     spec: ToolSpec,
     *,
     config: RunnerConfig,
@@ -102,7 +89,6 @@ def _build_path_and_exclude_args(
 ) -> list[str]:
     """Build path and exclude CLI args for a tool spec."""
 
-def _build_command(
     spec: ToolSpec,
     *,
     config: RunnerConfig,

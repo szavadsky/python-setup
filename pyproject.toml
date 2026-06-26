@@ -58,6 +58,8 @@ dev = [
     "types-tqdm>=4.68.0.20260608",
 ]
 
+semantic = ["sentence-transformers>=3.0.0"]
+
 [tool.pytest.ini_options]
 addopts = "-m 'not slow'"
 markers = [

@@ -234,3 +234,6 @@ config/
 
 # But keep the sample project's planted source committed
 !/test/data/minimal_sample_project/
+
+# NLP semantic model cache (sentence-transformers)
+~/.cache/python-setup/semantic/

@@ -79,14 +79,14 @@ class StubDocstringChecker(BaseChecker):
             description="Usage docstrings (params, raises, edge cases) belong in .pyi stubs, "
             "not in .py implementation files. CodingRules.md: '.pyi only: all usage docstrings'.",
         ),
-        "W9705": MessageDef(
+        "W9701": MessageDef(
             message="Function '%s' has a non-None return type annotation but no 'Returns:' clause in its docstring",
             symbol="generic-return-requires-returns",
             description="Functions with concrete return type annotations (e.g. -> int, -> str, -> bool) "
             "must have a 'Returns:' clause in their docstring describing the return value. "
             "CodingRules.md: 'Generic-typed returns require a Returns clause'.",
         ),
-        "W9706": MessageDef(
+        "W9702": MessageDef(
             message="Internal helper '%s' MAY have a docstring (not required)",
             symbol="internal-helper-docstring-allowed",
             description="'_'-prefixed helpers are allowed but not required to have docstrings. "

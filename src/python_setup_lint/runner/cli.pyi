@@ -5,7 +5,6 @@ Lint pipeline orchestration (``run_lint``) + CLI entry point (``main``).
 
 from .types import LintResult, RunnerConfig, ToolSpec
 
-def _run_tool_pipeline(
     selected: list[ToolSpec],
     *,
     config: RunnerConfig,
@@ -18,7 +17,6 @@ def _run_tool_pipeline(
     """Iterate over selected tools, run each via the dispatch strategy, collect results."""
 
 
-def _emit_statistics(
     results: list[LintResult],
     *,
     statistics_format: str,
