@@ -128,7 +128,7 @@ def semantic_check_if_meaningful(
     try:
         emb_text = embedder.encode(primary, normalize_embeddings=True)
         emb_query = embedder.encode(query, normalize_embeddings=True)
-    except Exception:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # network / download failures are expected
         return None
 
     similarity = float(emb_text @ emb_query)
@@ -145,7 +145,7 @@ def semantic_check_if_meaningful(
         pairs = [(primary, query)]
         scores = reranker.predict(pairs)
         score = float(scores[0])
-    except Exception:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # network / download failures are expected
         return True  # embedding passed, reranker failed — accept provisionally
 
     # Cross-encoder scores are typically 0-1; use a higher bar.
