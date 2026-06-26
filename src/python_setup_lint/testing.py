@@ -21,7 +21,7 @@ import astroid
 from beartype import beartype
 from pylint.testutils import CheckerTestCase
 
-from python_setup_lint.runner import LintResult  # noqa: TC001
+from python_setup_lint.runner import LintResult  # noqa: TC001  # TYPE_CHECKING-only import; not available at runtime
 
 if TYPE_CHECKING:
     from pylint.checkers import BaseChecker

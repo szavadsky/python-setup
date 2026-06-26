@@ -30,6 +30,7 @@ _PYRIGHT = shutil.which("pyright")
 _PS_ROOT = Path("/home/slava/aiexp/python-setup")
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(
     not _pyright_available(),
     reason="pyright not installed; live downstream-integration smoke skipped",
@@ -42,7 +43,7 @@ class TestLiveSmokePyrightConfigCollapse:
     """Live runner-built command collapses ``.venv`` noise to the real floor.
 
     The envelope's named gate: ``runner-built pyright --project <composed>``
-    invocation reports ``filesAnalyzed ≤ 100`` and no ``.venv`` paths appear in
+    invocation reports ``filesAnalyzed <= 100`` and no ``.venv`` paths appear in
     ``generalDiagnostics``.  The proof-of-work pair (before vs after) lives in
     the per-test artifact dir captured as JSON for downstream observability.
     """
@@ -100,7 +101,7 @@ class TestLiveSmokePyrightConfigCollapse:
 
     def test_runner_compose_collapses_venv_noise(self, tmp_path: Path) -> None:
         """End-to-end: ``run_lint`` wires the composed path and live pyright
-        collapses the ``.venv`` walk to ``filesAnalyzed ≤ 100`` with zero
+        collapses the ``.venv`` walk to ``filesAnalyzed <= 100`` with zero
         ``.venv``-path diagnostics.
 
         Captures the runner-built command + before/after diagnostics in the
@@ -120,7 +121,7 @@ class TestLiveSmokePyrightConfigCollapse:
         # so the artifact still shows the contrast.
         (artifact / "BEFORE.note.txt").write_text(
             "BEFORE: runner-used `pyright --outputjson --project "
-            f"{shipped} .` against the shipped config dir-relative venvPath → "
+            f"{shipped} .` against the shipped config dir-relative venvPath -> "
             "16803 .venv-path diagnostics ~17k, filesAnalyzed ~9948, elapsed ~490s\n"
             "(live repro skipped — the AFTER gate proves the collapse).\n"
             "see T9.7-pow.md for the historical before/after pair.\n"
@@ -145,7 +146,7 @@ class TestLiveSmokePyrightConfigCollapse:
 
     def test_compose_helper_collapses_venv_noise_direct(self, tmp_path: Path) -> None:
         """Direct invocation: ``_compose_pyright_config`` produces a config the
-        runner-built command shape honors — ``filesAnalyzed ≤ 100`` +
+        runner-built command shape honors — ``filesAnalyzed <= 100`` +
         zero ``.venv`` diagnostics."""
         artifact = tmp_path / "t9_7_artifact_direct"
         artifact.mkdir()

@@ -11,10 +11,10 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-from astroid import nodes  # noqa: TC002
+from astroid import nodes  # noqa: TC002  # TYPE_CHECKING-only import; pylint is a dev dependency
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TC002
+from pylint.lint import PyLinter  # noqa: TC002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
 from python_setup_lint.checkers._base import MessageDef
 
