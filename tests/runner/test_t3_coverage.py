@@ -6,21 +6,11 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-import python_setup_lint.runner as _runner_module
-from python_setup_lint.runner import (
-    TOOLS,
-    LintResult,
-    ViolationCount,
-    _aggregate_statistics,
-    _build_statistics_flags,
-    _parse_detect_secrets_json,
-    _parse_mypy_stderr,
-    _parse_tach_json,
-    _parse_ty_concise,
-    _parse_yamllint_parsable,
-    _print_statistics_table,
-    run_lint,
-)
+from python_setup_lint.runner import TOOLS, LintResult, ViolationCount, run_lint
+from python_setup_lint.runner.output import _aggregate_statistics, _print_statistics_table
+from python_setup_lint.runner.cmd_build import _build_statistics_flags
+from python_setup_lint.runner.parsers import _parse_detect_secrets_json, _parse_mypy_stderr, _parse_tach_json, _parse_ty_concise, _parse_yamllint_parsable
+import python_setup_lint.runner.output as _output_module
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 
 if TYPE_CHECKING:
@@ -278,7 +268,7 @@ class TestStatisticsObservability:
                 ),
             }
         )
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         rc = run_lint(
             path="src/main.py",
             statistics=True,
@@ -311,7 +301,7 @@ class TestStatisticsObservability:
                 ),
             }
         )
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         rc = run_lint(
             path="src/main.py",
             statistics=True,
@@ -329,7 +319,7 @@ class TestStatisticsObservability:
     ) -> None:
         """When no violations exist, JSON output is an empty array."""
         fake = fake_run_cmd_factory({})
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         rc = run_lint(
             path="src/main.py",
             statistics=True,

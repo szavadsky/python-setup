@@ -7,7 +7,7 @@ entry point in :mod:`python_setup_lint.runner.cli`.
 
 from __future__ import annotations
 
-import argparse
+import argparse  # noqa: TC003
 from pathlib import Path
 
 from ._config import (

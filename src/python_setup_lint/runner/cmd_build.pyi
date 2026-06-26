@@ -5,7 +5,7 @@ construction, and statistics-mode flag selection.
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -44,7 +44,7 @@ def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
     dir), then ``.pylintrc`` (project root).
     """
 
-def _load_pyproject_toml(path: Path) -> dict:
+def _load_pyproject_toml(path: Path) -> dict[str, Any]:
     """Load and cache ``pyproject.toml``, keyed by ``(resolved_path, mtime_ns)``.
 
     Memoised so repeated calls within the same process avoid re-parsing the

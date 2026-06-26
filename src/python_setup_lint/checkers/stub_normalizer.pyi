@@ -6,7 +6,6 @@ Phase 2: AST-string walking + rewrite rules — fallback for Uninferable (~6%).
 
 from astroid import nodes
 
-
 class AnnotationNormalizer:
     """Two-phase annotation normalizer for stub-vs-impl comparison.
 

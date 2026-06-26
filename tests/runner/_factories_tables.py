@@ -5,10 +5,7 @@ Moved from ``_factories.py`` to keep each file under 500 lines (pylint C0302).
 
 from __future__ import annotations
 
-
 import pytest
-
-
 
 # ── Parametrise tables ────────────────────────────────────────────
 

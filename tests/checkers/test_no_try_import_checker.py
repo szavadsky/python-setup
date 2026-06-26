@@ -7,7 +7,6 @@ try/except+import patterns. All fixture src strings live in
 
 from __future__ import annotations
 
-
 import pytest
 
 from python_setup_lint.checkers.no_try_import_checker import NoTryImportChecker

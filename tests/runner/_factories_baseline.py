@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from python_setup_lint.runner import LintResult
+from python_setup_lint.runner.output import LintResult
 
 _p = pytest.param
 

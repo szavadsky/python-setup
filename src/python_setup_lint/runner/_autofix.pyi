@@ -3,10 +3,9 @@
 T4 — conflict-tolerant autofix helpers.
 """
 
-from __future__ import annotations
 
-from collections.abc import Callable
 import re
+from collections.abc import Callable
 from pathlib import Path
 
 from .types import LintResult, RunnerConfig, ToolSpec

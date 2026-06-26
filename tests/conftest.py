@@ -21,12 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from python_setup_lint.runner import (
-    LINT_TOOLS,
-    STRATEGIES,
-    RunnerConfig,
-    _reset_extra_tools_cache,
-)
+from python_setup_lint.runner import LINT_TOOLS, STRATEGIES, RunnerConfig
+from python_setup_lint.runner.extra_tools import _reset_extra_tools_cache
 
 # ── Project fixtures for setup tests ────────────────────────────────
 
@@ -106,11 +102,26 @@ def isolated_runner_registries() -> Iterable[None]:
     (e.g. ``register_lint_tool`` extras-merge tests, T8 fail-fast
     clean-pyproject test). Without isolation, leaked mutations corrupt
     the fake-count assertions of later tests in the same process.
+
+    Resets to builtins at setup so tests that don't use the fixture
+    but leak mutations don't affect tests that do.
     """
+    from python_setup_lint.runner.dispatch import TOOLS as _BUILTIN_TOOLS
+    from python_setup_lint.runner.dispatch import _STRATEGY_CLASSES, LintTool
+
     baseline_tools = list(LINT_TOOLS)
     baseline_strategies = dict(STRATEGIES)
     _reset_extra_tools_cache()
+
+    # Reset to builtins at setup
+    LINT_TOOLS[:] = list(_BUILTIN_TOOLS)
+    STRATEGIES.clear()
+    STRATEGIES.update(
+        {spec.name: (_STRATEGY_CLASSES.get(spec.name) or LintTool)(spec) for spec in _BUILTIN_TOOLS}
+    )
+
     yield
+
     LINT_TOOLS[:] = baseline_tools
     STRATEGIES.clear()
     STRATEGIES.update(baseline_strategies)

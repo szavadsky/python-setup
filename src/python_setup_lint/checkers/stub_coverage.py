@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path  # noqa: TC003
 from typing import TYPE_CHECKING
 
 import astroid
 from astroid import nodes
+
 from python_setup_lint.checkers._checker_base import _matches_path
 
 if TYPE_CHECKING:

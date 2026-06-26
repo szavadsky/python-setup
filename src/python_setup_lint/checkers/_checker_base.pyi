@@ -6,12 +6,10 @@ Consolidates duplicate code across checker modules:
 - ``_get_file_path`` — resolve a node's file path.
 """
 
-from __future__ import annotations
 
 from pathlib import Path
 
 from astroid import nodes
-
 
 def _matches_path(str_path: str, patterns: list[str]) -> bool:
     """Check if *str_path* matches any of the *patterns*.

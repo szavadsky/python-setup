@@ -8,8 +8,14 @@ feeding the drift-resistant baseline.
 """
 
 
-from ._record_types import Record
 from collections.abc import Callable
+
+from ._record_types import Record
+
+__all__ = [
+    "PARSE_STRATEGIES",
+    "Record",
+]
 
 PARSE_STRATEGIES: frozenset[str]
 """Closed ``parse_strategy`` enum — 11 built-in names + ``regex_count`` /

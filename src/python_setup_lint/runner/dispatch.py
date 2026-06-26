@@ -17,8 +17,9 @@ unknown names, and :func:`_strategy_for` synthesises a
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 import sys
+from typing import TYPE_CHECKING
+
 from .cmd_build import (
     _build_command,
     _build_statistics_flags,
@@ -133,12 +134,12 @@ class LintTool:
         self,
         *,
         config: RunnerConfig,
-        fix: bool = False,
-        path: str | None = None,
-        exclude: str | None = None,
+        _fix: bool = False,
+        _path: str | None = None,
+        _exclude: str | None = None,
     ) -> list[str]:
         return _build_command(
-            self.spec, config=config, fix=fix, path=path, exclude=exclude
+            self.spec, config=config, fix=_fix, path=_path, exclude=_exclude
         )
 
     def statistics_flags(self) -> list[str]:  # pylint: disable=missing-beartype
@@ -163,9 +164,9 @@ class _StubtestLintTool(LintTool):
         self,
         *,
         config: RunnerConfig,
-        fix: bool = False,
-        path: str | None = None,
-        exclude: str | None = None,
+        _fix: bool = False,
+        _path: str | None = None,
+        _exclude: str | None = None,
     ) -> list[str]:
         spec = self.spec
         cwd = config.cwd
@@ -192,9 +193,9 @@ class _VerifyTypesLintTool(LintTool):
         self,
         *,
         config: RunnerConfig,
-        fix: bool = False,
-        path: str | None = None,
-        exclude: str | None = None,
+        _fix: bool = False,
+        _path: str | None = None,
+        _exclude: str | None = None,
     ) -> list[str]:
         spec = self.spec
         cmd = list(spec.command)
@@ -211,12 +212,12 @@ class _DetectSecretsLintTool(LintTool):
         self,
         *,
         config: RunnerConfig,
-        fix: bool = False,
-        path: str | None = None,
-        exclude: str | None = None,
+        _fix: bool = False,
+        _path: str | None = None,
+        _exclude: str | None = None,
     ) -> list[str]:
         spec = self.spec
-        _ = path, fix, exclude
+        _ = _path, _fix, _exclude
         baseline_path = config.cwd / config.secrets_baseline
         if baseline_path.is_file():
             return [
@@ -241,9 +242,9 @@ class _PylintLintTool(LintTool):
         self,
         *,
         config: RunnerConfig,
-        fix: bool = False,
-        path: str | None = None,
-        exclude: str | None = None,
+        _fix: bool = False,
+        _path: str | None = None,
+        _exclude: str | None = None,
     ) -> list[str]:
         spec = self.spec
         cmd = list(spec.command)
@@ -255,12 +256,12 @@ class _PylintLintTool(LintTool):
         cmd.extend(_config_flag_for(spec.name, rcfile))
 
         # ── Fix flags ────────────────────────────────────────
-        if fix and spec.supports_fix:
+        if _fix and spec.supports_fix:
             cmd.extend(spec.fix_flags)
 
         # ── Path scoping — always expand to .py files ────────
-        if path is not None:
-            paths = _find_py_files([path], cwd=config.cwd)
+        if _path is not None:
+            paths = _find_py_files([_path], cwd=config.cwd)
         else:
             paths = _find_py_files(config.default_py_dirs, cwd=config.cwd)
 
@@ -271,8 +272,8 @@ class _PylintLintTool(LintTool):
             cmd.extend(paths)
 
         # ── Exclude flags ────────────────────────────────────
-        if exclude is not None and spec.supports_exclude:
-            cmd.extend([spec.exclude_flag, exclude])
+        if _exclude is not None and spec.supports_exclude:
+            cmd.extend([spec.exclude_flag, _exclude])
 
         return cmd
 
@@ -307,16 +308,16 @@ class GenericLintTool(LintTool):
         self,
         *,
         config: RunnerConfig,
-        fix: bool = False,
-        path: str | None = None,
-        exclude: str | None = None,
+        _fix: bool = False,
+        _path: str | None = None,
+        _exclude: str | None = None,
     ) -> list[str]:
         return _build_command(
             self.spec,
             config=config,
-            fix=fix,
-            path=path,
-            exclude=exclude,
+            fix=_fix,
+            path=_path,
+            exclude=_exclude,
             config_flag_override=self._config_flag,
         )
 

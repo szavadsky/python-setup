@@ -7,7 +7,8 @@ Phase 2: AST-string walking + rewrite rules — fallback for Uninferable (~6%).
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable  # noqa: TC003
+from typing import TYPE_CHECKING
 
 import astroid
 from astroid import bases, nodes

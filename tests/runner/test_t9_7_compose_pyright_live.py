@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from python_setup_lint.runner import RunnerConfig, _compose_pyright_config
-
+from python_setup_lint.runner import RunnerConfig
+from python_setup_lint.runner.cmd_build import _compose_pyright_config
 
 # ── live downstream-integration smoke (gated on pyright installed) ──
 
@@ -153,14 +153,14 @@ class TestLiveSmokePyrightConfigCollapse:
         composed = _compose_pyright_config(_PS_ROOT, shipped)
         # Re-run via the runner-built command shape too — verifies the
         # dispatched shape reproduces the helper collapse.
-        from python_setup_lint.runner import _default_config_paths
+        from python_setup_lint.runner._config import _default_config_paths
         from python_setup_lint.runner.dispatch import STRATEGIES
 
         config = RunnerConfig(cwd=_PS_ROOT)
         config.config_paths = _default_config_paths(_PS_ROOT)
         # Runner-built command shape (as dispatched by run_lint's compose wire).
         cmd_built = STRATEGIES["pyright check"].build_command(
-            config=config, exclude=None, path=".", fix=False
+            config=config, _exclude=None, _path=".", _fix=False
         )
         # After run_lint-style composition, swap the --project arg to the
         # composed path — the runner's wire does exactly this in-place swap.

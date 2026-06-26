@@ -122,7 +122,7 @@ def _parse_regex_count(
     return list(counts.items())
 
 
-def _parse_raw_lines(stdout: str, stderr: str) -> list[tuple[str, int]]:
+def _parse_raw_lines(stdout: str, _stderr: str) -> list[tuple[str, int]]:
     count = sum(1 for line in stdout.splitlines() if line.strip())
     if count == 0:
         return []

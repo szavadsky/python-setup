@@ -2,7 +2,6 @@
 
 CLI helper functions for the lint pipeline.
 """
-from __future__ import annotations
 
 from .types import LintResult, ToolSpec
 

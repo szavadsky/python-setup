@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import re
 
-
 from ._record_types import Record, _compare_records_key
 
 

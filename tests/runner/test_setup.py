@@ -6,6 +6,7 @@ import inspect
 import re
 import textwrap
 from pathlib import Path
+from typing import Self
 
 import pytest
 
@@ -32,7 +33,6 @@ from python_setup_lint.setup import (
     update,
 )
 
-
 # ── Helper ──────────────────────────────────────────────────────────
 
 
@@ -47,7 +47,7 @@ class _UvCallRecorder:
         self.calls.append(args)
         return 0, "", ""
 
-    def __enter__(self) -> _UvCallRecorder:
+    def __enter__(self) -> Self:
         import python_setup_lint.setup as _m
 
         self._orig = _m._run_uv  # type: ignore[assignment]
@@ -395,7 +395,7 @@ class TestSetPylintLoadPluginsMerge:
 class TestConfigDrift:
     def test_update_detects_drift(self, configured_project: Path) -> None:
         """Verify that update detects config drift by checking state."""
-        from python_setup_lint.setup import _save_state, _read_pyproject_toml
+        from python_setup_lint.setup import _read_pyproject_toml, _save_state
 
         d = _read_pyproject_toml(configured_project)
         assert d is not None

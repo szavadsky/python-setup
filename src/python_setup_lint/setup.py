@@ -19,13 +19,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from beartype import beartype
+
 from ._setup_precommit import (
     _atomic_write,
     _step_agents_snippet,
     _step_precommit,
 )
-
-from beartype import beartype
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -114,7 +114,7 @@ def _write_pyproject_toml(project_dir: Path, data: dict[str, object]) -> None:
     toml_path = project_dir / "pyproject.toml"
     _atomic_write(toml_path, tomli_w.dumps(data))
 
-def _pylint_main_section(data: dict[str, object]) -> dict | None:
+def _pylint_main_section(data: dict[str, object]) -> dict[str, object] | None:
     tool = data.get("tool", {})
     if not isinstance(tool, dict):
         return None
@@ -137,7 +137,7 @@ def _get_pylint_load_plugins(data: dict[str, object]) -> list[str]:
     return []
 
 
-def _ensure_pylint_main_section(data: dict[str, object]) -> dict | None:
+def _ensure_pylint_main_section(data: dict[str, object]) -> dict[str, object] | None:
     tool = data.setdefault("tool", {})
     if not isinstance(tool, dict):
         return None
@@ -179,7 +179,7 @@ def _has_python_setup_dep(dev_deps: list[str]) -> bool:
 
 def _run_uv(args: list[str], *, cwd: Path) -> tuple[int, str, str]:
     try:
-        proc = subprocess.run(
+        proc = subprocess.run(  # noqa: S603 - uv is a trusted project tool
             ["uv"] + args,
             cwd=cwd,
             capture_output=True,
@@ -292,7 +292,7 @@ def _save_state(project_dir: Path) -> None:
 
 def _format_install_summary(state: SetupState) -> list[str]:
     actions: list[str] = []
-    _SUMMARY_ITEMS: tuple[tuple[str, str], ...] = (
+    _summary_items: tuple[tuple[str, str], ...] = (
         ("dep_added", "added python-setup dependency"),
         ("dep_skipped", "dependency already present"),
         ("pylint_plugins_added", "added pylint load-plugins"),
@@ -304,7 +304,7 @@ def _format_install_summary(state: SetupState) -> list[str]:
         ("agents_appended", "appended AGENTS.md snippet"),
         ("agents_skipped", "AGENTS.md snippet skipped"),
     )
-    for attr, msg in _SUMMARY_ITEMS:
+    for attr, msg in _summary_items:
         if getattr(state, attr):
             actions.append(msg)
     return actions

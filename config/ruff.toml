@@ -33,6 +33,17 @@ ignore = [
     "B023",    # function-uses-loop-variable
 ]
 
+
+[lint.per-file-ignores]
+"src/python_setup_lint/checkers/**" = [
+    "TCH",      # TYPE_CHECKING guard — checkers use `from __future__ import annotations` making TCH think imports are type-only, but they're used at runtime
+]
+"src/python_setup_lint/runner/**" = [
+    "TCH",      # TYPE_CHECKING guard — runner files use `from __future__ import annotations` making TCH think imports are type-only, but they're used at runtime
+]
+"src/python_setup_lint/testing.py" = [
+    "TCH",      # TYPE_CHECKING guard — testing.py uses `from __future__ import annotations` making TCH think imports are type-only, but they're used at runtime
+]
 ## Generic rules stays here. Tests code different from prod - generic
 [lint.per-file-ignores]
 "tests/**" = [
@@ -56,6 +67,7 @@ ignore = [
     "F841",     # pre-existing unused-variable; not in scope
     "SIM112",   # pre-existing env-var casing; not in scope
     "SIM117",   # pre-existing nested-context; not in scope
+    "TCH",      # TYPE_CHECKING guard — tests use `from __future__ import annotations` making TCH think imports are type-only
 ]
 "tests/data/**" = [
     "F401",     # vendored corpus test data; not our code to fix

@@ -14,17 +14,21 @@ build astroid modules from source / assert message ids live here too.
 """
 
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+
 import inspect
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock
+
 import astroid
 import pytest
 from pylint.testutils import CheckerTestCase
+
 from python_setup_lint.testing import _make_tc as _make_tc_factory
 
 if TYPE_CHECKING:
     from pylint.checkers import BaseChecker
+
     from python_setup_lint.checkers.stub_checker import StubChecker
     from python_setup_lint.checkers.stub_import_contract import ImportUsage
 
@@ -419,6 +423,7 @@ def walk_both_release_for_pyi(
 ) -> list:
     from pylint.testutils import UnittestLinter
     from pylint.utils import ASTWalker
+
     from python_setup_lint.checkers.stub_checker import StubChecker
     from python_setup_lint.checkers.stub_docstring_checker import StubDocstringChecker
 

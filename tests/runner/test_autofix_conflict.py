@@ -39,33 +39,30 @@ from pathlib import Path
 
 import pytest
 
-import python_setup_lint.runner as _runner_module
-from python_setup_lint.runner import (
+import python_setup_lint.runner.output as _output_module
+from python_setup_lint.runner import LintResult, ToolSpec, run_lint
+from python_setup_lint.runner._autofix import (
     _AUTOFIX_ENV_VAR,
-    LintResult,
-    ToolSpec,
     _apply_autofix_conflict_aware,
     _autofix_target_paths,
     _git_changed_files,
     _ruff_parseability_errors,
-    run_lint,
 )
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
+from tests.runner._autofix_helpers import (
+    _CANARY_LABEL,
+    _FIX_TOOL_NAMES,
+    _commit_all,
+    _git_init,
+    _make_canned_fix_results,
+    _PostFixFakeRunCmd,
+    _stage,
+    _write_file,
+)
 from tests.runner._factories import (
     canned_results_all_tools,
     tmp_config,
 )
-from tests.runner._autofix_helpers import (
-    _CANARY_LABEL,
-    _FIX_TOOL_NAMES,
-    _git_init,
-    _write_file,
-    _stage,
-    _commit_all,
-    _make_canned_fix_results,
-    _PostFixFakeRunCmd,
-)
-
 
 # ── Surface-unit: _git_changed_files ──────────────────────────────
 
@@ -242,7 +239,7 @@ class TestEnvVarAutofixOptOut:
         """``run_lint(fix=True)`` with the env-var set → no tool sees fix=True."""
         monkeypatch.setenv(_AUTOFIX_ENV_VAR, "1")
         fake = fake_run_cmd_factory(canned_results_all_tools())
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=tmp_config(tmp_path), fix=True, no_fail_fast=True)
         captured = capsys.readouterr()
         # D4 (review T4-0): the prior form asserted only substring matches
@@ -275,7 +272,7 @@ class TestEnvVarAutofixOptOut:
         monkeypatch.delenv(_AUTOFIX_ENV_VAR, raising=False)
         canned = _make_canned_fix_results()
         fake = fake_run_cmd_factory(canned)
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=tmp_config(tmp_path), fix=True, no_fail_fast=True)
         captured = capsys.readouterr()
         assert "disabling autofix" not in captured.err
@@ -298,7 +295,7 @@ class TestEnvVarAutofixOptOut:
         monkeypatch.setenv(_AUTOFIX_ENV_VAR, "0")
         canned = _make_canned_fix_results()
         fake = fake_run_cmd_factory(canned)
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=tmp_config(tmp_path), fix=True, no_fail_fast=True)
         for record in fake.calls:
             if record.label in _FIX_TOOL_NAMES:

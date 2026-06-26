@@ -5,7 +5,6 @@ Lint pipeline orchestration (``run_lint``) + CLI entry point (``main``).
 
 from .types import LintResult, RunnerConfig, ToolSpec
 
-
 def _run_tool_pipeline(
     selected: list[ToolSpec],
     *,

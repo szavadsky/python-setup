@@ -3,7 +3,6 @@
 Per-tool violation-record parsers (T2 baseline diff).
 """
 
-from __future__ import annotations
 
 from ._record_types import Record
 

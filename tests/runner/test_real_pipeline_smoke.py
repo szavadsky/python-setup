@@ -16,7 +16,7 @@ from python_setup_lint.runner import TOOLS, RunnerConfig, run_lint
 
 @pytest.mark.slow
 def test_consolidated_real_pipeline_smoke(
-    tmp_path: Path, capsys: pytest.CaptureFixture
+    tmp_path: Path, capsys: pytest.CaptureFixture, isolated_runner_registries: None
 ) -> None:
     """Run the full lint pipeline on a minimal synthetic project.
 

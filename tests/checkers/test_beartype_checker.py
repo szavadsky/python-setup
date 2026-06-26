@@ -6,11 +6,12 @@ Uses synthetic code strings parsed via astroid, walked over
 """
 
 from __future__ import annotations
+
 from typing import Any
-from pylint.testutils import CheckerTestCase
 
 import astroid
 import pytest
+from pylint.testutils import CheckerTestCase
 
 from python_setup_lint.checkers.beartype_checker import BeartypeCoverageChecker
 from python_setup_lint.testing import _make_tc as _make_tc_factory

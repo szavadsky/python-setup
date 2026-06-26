@@ -4,16 +4,15 @@ Test files should use pytest's built-in ``tmp_path`` fixture instead of
 manual ``tempfile`` calls that leak directories.
 """
 
+
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
-from typing import ClassVar
-
 
 class TempFileChecker(BaseChecker):
     """AST visitor that flags tempfile leakage in test files."""
 
-    name: ClassVar[str] = "tempfile-mkdtemp-in-test"
+    name: str = "tempfile-mkdtemp-in-test"
 
     def __init__(self, linter: PyLinter) -> None: ...
     def open(self) -> None: ...

@@ -22,14 +22,10 @@ from pathlib import Path
 
 import pytest
 
-import python_setup_lint.runner as _runner_module
-from python_setup_lint.runner import (
-    RunnerConfig,
-    _compose_ruff_config,
-    run_lint,
-)
-from python_setup_lint.runner.cmd_build import _load_pyproject_toml
+from python_setup_lint.runner import RunnerConfig, run_lint
+from python_setup_lint.runner.cmd_build import _compose_ruff_config, _load_pyproject_toml
 from python_setup_lint.testing import fake_run_cmd_factory
+import python_setup_lint.runner.output as _output_module
 
 # ── RunnerConfig default-off + explicit-on ──────────────────────
 
@@ -308,7 +304,7 @@ class TestRunLintConsumesOverrides:
         config = self._config_with_overrides(tmp_path)
         shared_before = config.config_paths["ruff check"]  # type: ignore[index]
         fake = fake_run_cmd_factory({})
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         assert config.config_paths["ruff check"] != shared_before  # type: ignore[index]
         assert "python_setup_lint_ruff_" in str(config.config_paths["ruff check"])  # type: ignore[index]
@@ -318,7 +314,7 @@ class TestRunLintConsumesOverrides:
     ) -> None:
         config = self._config_with_overrides(tmp_path)
         fake = fake_run_cmd_factory({})
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         assert config.config_paths["pyright check"] == tmp_path / "pyproject.toml"  # type: ignore[index]
 
@@ -328,7 +324,7 @@ class TestRunLintConsumesOverrides:
         """The ruff ``--config`` flag points at the composed path."""
         config = self._config_with_overrides(tmp_path)
         fake = fake_run_cmd_factory({})
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         ruff_rec = next((r for r in fake.calls if r.cmd[:2] == ["ruff", "check"]), None)
         assert ruff_rec is not None, (
@@ -343,7 +339,7 @@ class TestRunLintConsumesOverrides:
         """The pyright ``--project`` flag points at the override path."""
         config = self._config_with_overrides(tmp_path)
         fake = fake_run_cmd_factory({})
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         pyright_rec = next((r for r in fake.calls if r.cmd[:1] == ["pyright"]), None)
         assert pyright_rec is not None, (
@@ -370,7 +366,7 @@ class TestRunLintConsumesOverrides:
         snapshot_ruff = config.config_paths["ruff check"]  # type: ignore[index]
         snapshot_pyright = config.config_paths["pyright check"]  # type: ignore[index]
         fake = fake_run_cmd_factory({})
-        monkeypatch.setattr(_runner_module, "_run_cmd", fake)
+        monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config, no_fail_fast=True)
         assert config.config_paths["ruff check"] == snapshot_ruff  # type: ignore[index]
         assert config.config_paths["pyright check"] == snapshot_pyright  # type: ignore[index]

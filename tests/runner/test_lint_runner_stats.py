@@ -12,23 +12,21 @@ import pytest
 
 from python_setup_lint.runner import (
     LINT_TOOLS,
+    PARSE_STRATEGIES,
     STRATEGIES,
     TOOLS,
+    ExtraToolsConfigError,
     RunnerConfig,
     ToolSpec,
     ViolationCount,
-    _STATISTICS_PARSERS,
-    _SUPPORTED_CONFIG_KEYS,
-    PARSE_STRATEGIES,
-    ExtraToolsConfigError,
-    _build_command,
-    _build_statistics_flags,
-    _print_statistics_grouped,
-    _sort_counts,
     main,
     register_lint_tool,
     run_lint,
 )
+from python_setup_lint.runner._config import _SUPPORTED_CONFIG_KEYS
+from python_setup_lint.runner.parsers import _STATISTICS_PARSERS
+from python_setup_lint.runner.cmd_build import _build_command, _build_statistics_flags
+from python_setup_lint.runner.output import _print_statistics_grouped, _sort_counts
 from tests.runner._factories import install_fake_runner, lint_config, write_pyproject
 from tests.runner._factories_extras import (
     CLEAN_EXTRAS_PYPROJECT_BODY,
@@ -190,11 +188,11 @@ class TestLintToolRegistry:
         [STRATEGIES, {t.name: t for t in LINT_TOOLS}],
         ids=["STRATEGIES", "LINT_TOOLS"],
     )
-    def test_registry_mirrors_builtins(self, registry: dict[str, Any]) -> None:
+    def test_registry_mirrors_builtins(self, registry: dict[str, Any], isolated_runner_registries: None) -> None:
         assert set(registry) == {t.name for t in TOOLS} and len(registry) == len(TOOLS)
 
     def test_strategies_are_lint_tool_instances_with_matching_names(self) -> None:
-        from python_setup_lint.runner import LintTool
+        from python_setup_lint.runner.dispatch import LintTool
 
         for name, strategy in STRATEGIES.items():
             assert isinstance(strategy, LintTool), (
@@ -207,7 +205,7 @@ class TestRegisterLintTool:
     """``register_lint_tool`` semantics: append-extra, idempotent, builtin-protected."""
 
     def test_register_appends_extra(self, isolated_runner_registries: None) -> None:
-        from python_setup_lint.runner import GenericLintTool
+        from python_setup_lint.runner.dispatch import GenericLintTool
 
         extra = ToolSpec("t4-extra-test-tool", ["t4extra", "check"], supports_path=True)
         register_lint_tool(extra, statistics_flag=[], parser=None, config_flag=None)
@@ -239,7 +237,7 @@ class TestGenericLintTool:
     """``GenericLintTool`` synthesises command + statistics-flag plumbing from spec."""
 
     def test_build_command_composes_fix_path_exclude(self) -> None:
-        from python_setup_lint.runner import GenericLintTool
+        from python_setup_lint.runner.dispatch import GenericLintTool
 
         spec = ToolSpec(
             "t4-generic-tool",
@@ -251,7 +249,7 @@ class TestGenericLintTool:
         )
         g = GenericLintTool(spec, statistics_flag=[], parser=None, config_flag=None)
         assert g.build_command(
-            config=RunnerConfig(cwd=Path("/tmp")), fix=True, path=None, exclude="tests/"
+            config=RunnerConfig(cwd=Path("/tmp")), _fix=True, _path=None, _exclude="tests/"
         ) == [
             "t4g",
             "check",
@@ -271,7 +269,7 @@ class TestGenericLintTool:
     def test_statistics_flags_use_override(
         self, override: list[str], expected: list[str]
     ) -> None:
-        from python_setup_lint.runner import GenericLintTool
+        from python_setup_lint.runner.dispatch import GenericLintTool
 
         g = GenericLintTool(
             ToolSpec("t4-stats-tool", ["t4s"]),
@@ -282,7 +280,7 @@ class TestGenericLintTool:
         assert g.statistics_flags() == expected
 
     def test_statistics_flags_fall_back_to_module_lookup(self) -> None:
-        from python_setup_lint.runner import GenericLintTool
+        from python_setup_lint.runner.dispatch import GenericLintTool
 
         g = GenericLintTool(
             ToolSpec("ruff check", ["ruff", "check"]),
@@ -293,7 +291,7 @@ class TestGenericLintTool:
         assert g.statistics_flags() == ["--statistics"]
 
     def test_parse_statistics_uses_override(self) -> None:
-        from python_setup_lint.runner import GenericLintTool
+        from python_setup_lint.runner.dispatch import GenericLintTool
 
         def custom_parser(stdout: str, stderr: str) -> list[tuple[str, int]]:
             return [("custom-rule", 7)]
@@ -307,7 +305,7 @@ class TestGenericLintTool:
         assert g.parse_statistics("ignored", "also-ignored") == [("custom-rule", 7)]
 
     def test_parse_statistics_falls_back_to_module_lookup(self) -> None:
-        from python_setup_lint.runner import GenericLintTool
+        from python_setup_lint.runner.dispatch import GenericLintTool
 
         g = GenericLintTool(
             ToolSpec("ruff check", ["ruff", "check"]),
@@ -323,7 +321,7 @@ class TestStrategyForFallback:
     """``_strategy_for`` default-aware fallback (unknown names → GenericLintTool)."""
 
     def test_returns_cached_builtin(self) -> None:
-        from python_setup_lint.runner import _strategy_for  # type: ignore[attr-defined]
+        from python_setup_lint.runner.dispatch import _strategy_for  # type: ignore[attr-defined]
 
         original = STRATEGIES["ruff check"]
         assert (
@@ -332,14 +330,14 @@ class TestStrategyForFallback:
         )
 
     def test_unknown_name_returns_generic(self) -> None:
-        from python_setup_lint.runner import GenericLintTool, _strategy_for  # type: ignore[attr-defined]
+        from python_setup_lint.runner.dispatch import GenericLintTool, _strategy_for  # type: ignore[attr-defined]
 
         fake_spec = ToolSpec("t4-unknown-fallback", ["t4fake"])
         got = _strategy_for("t4-unknown-fallback", fake_spec)
         assert isinstance(got, GenericLintTool) and got.spec is fake_spec
 
     def test_unknown_name_does_not_mutate_strategies(self) -> None:
-        from python_setup_lint.runner import _strategy_for  # type: ignore[attr-defined]
+        from python_setup_lint.runner.dispatch import _strategy_for  # type: ignore[attr-defined]
 
         _strategy_for(
             "t4-no-cache-fallback", ToolSpec("t4-no-cache-fallback", ["t4nc"])

@@ -88,7 +88,7 @@ def _parse_regex_count(
     stderr are scanned — most CLIs split diagnostics across the two streams.
     """
 
-def _parse_raw_lines(stdout: str, stderr: str) -> list[tuple[str, int]]:
+def _parse_raw_lines(stdout: str, _stderr: str) -> list[tuple[str, int]]:
     """Count non-empty stdout lines as a single synthetic rule ``"line"``.
 
     Escape hatch for tools with no notion of rule identifiers.  stderr is

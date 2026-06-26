@@ -29,6 +29,13 @@ from ._autofix import (
     _apply_autofix_conflict_aware,
     _autofix_target_paths,
 )
+from ._cli_complexity import (
+    _apply_config_overrides,
+    _build_runner_config,
+    _handle_config_status,
+    _parse_config_args,
+    _select_tools,
+)
 from ._cli_helpers import _handle_baseline, _print_tool_notes
 from .dispatch import _strategy_for
 from .extra_tools import (
@@ -37,13 +44,6 @@ from .extra_tools import (
     _register_extra_tools,
 )
 from .types import LintResult, RunnerConfig, ToolSpec
-from ._cli_complexity import (
-    _apply_config_overrides,
-    _build_runner_config,
-    _handle_config_status,
-    _parse_config_args,
-    _select_tools,
-)
 
 __all__ = [
     "_apply_autofix_conflict_aware",
@@ -74,7 +74,7 @@ def _run_tool_pipeline(
     overall_rc = 0
     cwd = config.cwd
 
-    from python_setup_lint import runner as _pkg
+    from .output import _run_cmd, _print_result
 
     for spec in selected:
         if (
@@ -93,18 +93,18 @@ def _run_tool_pipeline(
                 spec,
                 config=config,
                 paths_to_check=file_targets,
-                run_cmd=_pkg._run_cmd,
+                run_cmd=_run_cmd,
             )
         else:
             cmd = strategy.build_command(
-                config=config, fix=fix, path=path, exclude=exclude
+                config=config, _fix=fix, _path=path, _exclude=exclude
             )
             if statistics:
                 cmd.extend(strategy.statistics_flags())
-            result = _pkg._run_cmd(cmd, cwd=cwd, label=spec.name)
+            result = _run_cmd(cmd, cwd=cwd, label=spec.name)
         results.append(result)
         if not statistics:
-            _pkg._print_result(result)
+            _print_result(result)
 
         if result.exit_code != 0:
             overall_rc = result.exit_code

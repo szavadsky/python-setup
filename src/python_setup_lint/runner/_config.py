@@ -128,8 +128,8 @@ def _print_config_status(
     except importlib.metadata.PackageNotFoundError:
         version = "unknown"
 
-    from .dispatch import LINT_TOOLS
     from .cmd_build import _resolve_pylintrc
+    from .dispatch import LINT_TOOLS
 
     for spec in LINT_TOOLS:
         name = spec.name

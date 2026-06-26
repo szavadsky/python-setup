@@ -9,12 +9,13 @@ from __future__ import annotations
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter # noqa: TC002
+from pylint.lint import PyLinter  # noqa: TC002
+
 
 class NoTryImportChecker(BaseChecker):
     """AST visitor that flags try blocks containing imports caught by ImportError / ModuleNotFoundError."""
 
-    name = "no-try-import"
+    name: str = "no-try-import"
     msgs = {
         "W9001": (
             "Explicit handling of failed import via try/except %s",

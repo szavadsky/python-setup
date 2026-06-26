@@ -5,6 +5,7 @@ simulate test-file paths.
 """
 
 from __future__ import annotations
+
 from typing import Any
 
 from python_setup_lint.checkers.tmp_path_checker import TempFileChecker

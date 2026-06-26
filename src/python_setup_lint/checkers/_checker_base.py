@@ -11,7 +11,7 @@ from __future__ import annotations
 import fnmatch
 from pathlib import Path
 
-from astroid import nodes
+from astroid import nodes  # noqa: TC002
 
 
 def _matches_path(str_path: str, patterns: list[str]) -> bool:

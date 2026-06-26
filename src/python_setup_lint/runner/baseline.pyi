@@ -9,9 +9,9 @@ exists; tools without a parser keep the legacy rstrip-set path (recorded
 in ``decisions.md`` per fallback).
 """
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
-from collections.abc import Callable
 
 from .parsers import Record
 from .types import LintResult
@@ -64,7 +64,7 @@ def _diff_baseline(current: list[LintResult], baseline_path: Path) -> list[str]:
             :func:`_capture_baseline`.
     """
 
-def _try_rumdl_json(stdout: str | None) -> dict | list | None:
+def _try_rumdl_json(stdout: str | None) -> dict[str, Any] | list[dict[str, Any]] | None:
     """Try to parse rumdl JSON output. Returns parsed dict/list or None."""
 
 def _capture_records_or_output(r: LintResult, entry: dict[str, Any]) -> dict[str, Any]:

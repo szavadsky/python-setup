@@ -19,11 +19,13 @@ from python_setup_lint.runner import (
     ExtraToolsConfigError,
     RunnerConfig,
     ToolSpec,
+    register_lint_tool,
+)
+from python_setup_lint.runner.extra_tools import (
     _ExtraToolRegistration,
     _load_extra_tools,
     _register_extra_tools,
     _reset_extra_tools_cache,
-    register_lint_tool,
 )
 from tests.runner._factories import write_pyproject
 from tests.runner._factories_extras import (
@@ -34,6 +36,7 @@ from tests.runner._factories_extras import (
     VALID_EXTRA_BLOCK,
     extra_block,
 )
+
 
 @pytest.fixture(autouse=True)
 def _isolate_registries() -> None:
@@ -312,7 +315,7 @@ class TestExtraBuildCommand:
     def test_build_command_appends_fix_flag(self, tmp_path: Path) -> None:
         _register_extra("extra1", supports_fix=True)
         ctx = _ctx(tmp_path)
-        assert STRATEGIES["extra1"].build_command(config=ctx, fix=True) == [
+        assert STRATEGIES["extra1"].build_command(config=ctx, _fix=True) == [
             "mytool",
             "--fix",
         ]
@@ -323,7 +326,7 @@ class TestExtraBuildCommand:
     def test_build_command_appends_exclude_flag(self, tmp_path: Path) -> None:
         _register_extra("extra1", supports_exclude=True, supports_path=False)
         assert STRATEGIES["extra1"].build_command(
-            config=_ctx(tmp_path), exclude="bad.py"
+            config=_ctx(tmp_path), _exclude="bad.py"
         ) == ["mytool", "--exclude", "bad.py"]
 
     def test_build_command_expands_glob_in_default_paths(self, tmp_path: Path) -> None:

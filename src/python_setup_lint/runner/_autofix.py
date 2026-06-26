@@ -19,18 +19,17 @@ owns staging.
 
 from __future__ import annotations
 
-
 import re
 import subprocess
 import sys
-from collections.abc import Callable
-from pathlib import Path
+from collections.abc import Callable  # noqa: TC003
+from pathlib import Path  # noqa: TC003
 
 import beartype
 
 from .cmd_build import _expand_globs, _find_py_files
 from .dispatch import _strategy_for
-from .types import LintResult, RunnerConfig, ToolSpec
+from .types import LintResult, RunnerConfig, ToolSpec  # noqa: TC001
 
 _AUTOFIX_ENV_VAR: str = "PYTHON_SETUP_LINT_NO_AUTOFIX"
 _E999_RULE: str = "E999"
@@ -46,7 +45,7 @@ def _git_changed_files(cwd: Path, *, staged: bool) -> set[str]:
         else ["git", "diff", "--name-only"]
     )
     try:
-        proc = subprocess.run(  # noqa: S603  # argv is constructed internally; cwd is lint scope
+        proc = subprocess.run(  # argv is constructed internally; cwd is lint scope
             cmd,
             cwd=cwd,
             capture_output=True,
@@ -113,7 +112,7 @@ def _apply_autofix_conflict_aware(
             continue
 
     strategy = _strategy_for(spec.name, spec)
-    cmd = strategy.build_command(config=config, fix=True)
+    cmd = strategy.build_command(config=config, _fix=True)
     result = run_cmd(cmd, cwd=config.cwd, label=spec.name)
 
     # E999 canary — revert any file the fix tool broke parseability on.

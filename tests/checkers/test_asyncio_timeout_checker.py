@@ -6,8 +6,9 @@ asyncio.timeout() / anyio.fail_after() wrapping patterns.
 
 from __future__ import annotations
 
-import pytest
 from typing import Any
+
+import pytest
 
 from python_setup_lint.checkers.asyncio_timeout_checker import AsyncTimeoutChecker
 from python_setup_lint.testing import _walk_and_release

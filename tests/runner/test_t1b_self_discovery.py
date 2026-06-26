@@ -10,11 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from python_setup_lint.runner import (
-    _config_flag_for,
-    _default_config_paths,
-    _infer_package_name,
-)
+from python_setup_lint.runner._config import _default_config_paths, _infer_package_name
+from python_setup_lint.runner.cmd_build import _config_flag_for
 
 
 class TestDefaultConfigPaths:
