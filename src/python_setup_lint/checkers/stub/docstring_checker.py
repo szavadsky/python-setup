@@ -62,6 +62,12 @@ class StubDocstringChecker(BaseChecker):
     Uses visitor-method pattern (visit_functiondef, visit_asyncfunctiondef)
     so methods inside classes are also checked. ClassDef is NOT visited —
     class-level docstrings are legitimate in .py per CodingRules.md.
+
+    Also enforces:
+    - Generic-return-requires-Returns: functions with non-None concrete return
+      type annotations must have a ``Returns:`` clause in their docstring.
+    - Internal-helper-docstring-allowed: ``_``-prefixed helpers MAY have a
+      docstring (relaxes the existing rule for public functions).
     """
     name: str = "stub-docstring-checker"
     _enabled_for_module: bool
@@ -72,6 +78,19 @@ class StubDocstringChecker(BaseChecker):
             symbol="docstring-in-impl",
             description="Usage docstrings (params, raises, edge cases) belong in .pyi stubs, "
             "not in .py implementation files. CodingRules.md: '.pyi only: all usage docstrings'.",
+        ),
+        "W9701": MessageDef(
+            message="Function '%s' has a non-None return type annotation but no 'Returns:' clause in its docstring",
+            symbol="generic-return-requires-returns",
+            description="Functions with concrete return type annotations (e.g. -> int, -> str, -> bool) "
+            "must have a 'Returns:' clause in their docstring describing the return value. "
+            "CodingRules.md: 'Generic-typed returns require a Returns clause'.",
+        ),
+        "W9702": MessageDef(
+            message="Internal helper '%s' MAY have a docstring (not required)",
+            symbol="internal-helper-docstring-allowed",
+            description="'_'-prefixed helpers are allowed but not required to have docstrings. "
+            "CodingRules.md: '_'-prefixed helpers MAY have a docstring.",
         ),
     }
 
@@ -112,23 +131,76 @@ class StubDocstringChecker(BaseChecker):
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         if not self._enabled_for_module:
             return
-        self._emit_if_docstring(node)
+        self._check_function(node)
 
     @beartype
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
         if not self._enabled_for_module:
             return
-        self._emit_if_docstring(node)
+        self._check_function(node)
 
-    def _emit_if_docstring(
+    def _check_function(
         self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef
     ) -> None:
+        # Rule 1: docstring-in-impl — flag usage docstrings in .py with companion .pyi
         if func_node.doc_node is not None:
+            # Internal-helper-docstring-allowed: _-prefixed helpers MAY have docstrings
+            if func_node.name.startswith("_"):
+                self.add_message(
+                    "internal-helper-docstring-allowed",
+                    node=func_node,
+                    args=(func_node.name,),
+                )
+            else:
+                self.add_message(
+                    "docstring-in-impl",
+                    node=func_node,
+                    args=(self._current_module_name or "", func_node.name),
+                )
+
+        # Rule 2: generic-return-requires-Returns
+        self._check_returns_clause(func_node)
+
+    def _check_returns_clause(
+        self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef
+    ) -> None:
+        """Emit W9701 if function has a non-None return type but no Returns: clause."""
+        returns = func_node.returns
+        if returns is None:
+            return  # No return type annotation
+
+        # Skip None return type (-> None)
+        if isinstance(returns, nodes.Const) and returns.value is None:
+            return
+        if isinstance(returns, nodes.Name) and returns.name == "None":
+            return
+
+        # Check if docstring has a Returns: clause
+        doc_node = func_node.doc_node
+        if doc_node is None:
+            # No docstring at all — no Returns clause to check
+            return
+
+        doc_text = doc_node.value
+        if not doc_text:
+            return
+
+        # Look for a Returns: clause in the docstring
+        if not self._has_returns_clause(doc_text):
             self.add_message(
-                "docstring-in-impl",
+                "generic-return-requires-returns",
                 node=func_node,
-                args=(self._current_module_name or "", func_node.name),
+                args=(func_node.name,),
             )
+
+    @staticmethod
+    def _has_returns_clause(doc_text: str) -> bool:
+        """Check if a docstring contains a Returns: or Yields: clause."""
+        for line in doc_text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("Returns:") or stripped.startswith("Yields:"):
+                return True
+        return False
 
 
 @beartype

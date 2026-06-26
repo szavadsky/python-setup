@@ -12,7 +12,14 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 class StubDocstringChecker(BaseChecker):
-    """AST visitor that flags usage docstrings in .py files with companion .pyi."""
+    """AST visitor that flags usage docstrings in .py files with companion .pyi.
+
+    Also enforces:
+    - Generic-return-requires-Returns: functions with non-None concrete return
+      type annotations must have a ``Returns:`` clause in their docstring.
+    - Internal-helper-docstring-allowed: ``_``-prefixed helpers MAY have a
+      docstring (relaxes the existing rule for public functions).
+    """
 
     name: str  # "stub-docstring-checker"
     _enabled_for_module: bool
@@ -22,14 +29,23 @@ class StubDocstringChecker(BaseChecker):
         """Decide whether this module should be processed; set up state."""
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
-        """Emit W9700 if function/method has a docstring in an enabled module."""
+        """Check function for docstring and returns-clause rules."""
 
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
-        """Emit W9700 if async function/method has a docstring in an enabled module."""
+        """Check async function for docstring and returns-clause rules."""
 
-    def _emit_if_docstring(
+    def _check_function(
         self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef
     ) -> None:
-        """Emit W9700 if *func_node* has a docstring (via doc_node)."""
+        """Apply all docstring rules to *func_node*."""
+
+    def _check_returns_clause(
+        self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef
+    ) -> None:
+        """Emit W9701 if function has a non-None return type but no Returns: clause."""
+
+    @staticmethod
+    def _has_returns_clause(doc_text: str) -> bool:
+        """Check if a docstring contains a Returns: or Yields: clause."""
 
 def register(linter: PyLinter) -> None: ...
