@@ -113,7 +113,7 @@ class BeartypeCoverageChecker(BaseChecker):
             if file_val is None:
                 return None
             return Path(file_val)
-        except AttributeError, TypeError:
+        except (AttributeError, TypeError):
             return None
 
     def _is_under_source_root(self, path: Path) -> bool:
