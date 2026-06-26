@@ -14,7 +14,7 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
-from python_setup_lint.checkers.stub_coverage import (
+from python_setup_lint.checkers.stub.coverage import (
     _CoverageState,
     _has_main_block,
     _index_stub_declarations,
@@ -26,11 +26,11 @@ from python_setup_lint.checkers.stub_coverage import (
     _resolve_stub,
     emit_coverage_violations,
 )
-from python_setup_lint.checkers.stub_fidelity import (
+from python_setup_lint.checkers.stub.fidelity import (
     _FidelityState,
     emit_fidelity_violations,
 )
-from python_setup_lint.checkers.stub_import_contract import (
+from python_setup_lint.checkers.stub.import_contract import (
     ImportUsage,
     _in_type_checking_block,
     _resolve_relative,

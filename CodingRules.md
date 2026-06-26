@@ -35,6 +35,7 @@ mypackage/
 - `_` prefix: file-private, imported only by tests.
 - No prefix: file surface (re-exported in `__init__.py`) or intra-module helper.
   Prefer moving intra-module helpers to dedicated `_` files.
+  Tests import `_`-prefixed symbols only from their defining submodule, never through the package `__init__`.
 
 ## .pyi Rules
 

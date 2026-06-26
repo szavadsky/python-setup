@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from astroid import nodes
 
 if TYPE_CHECKING:
-    from python_setup_lint.checkers.stub_checker import StubChecker
+    from python_setup_lint.checkers.stub.checker import StubChecker
 
 log = logging.getLogger(__name__)
 

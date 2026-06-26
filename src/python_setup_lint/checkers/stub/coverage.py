@@ -13,11 +13,11 @@ from typing import TYPE_CHECKING
 import astroid
 from astroid import nodes
 
-from python_setup_lint.checkers._checker_base import _matches_path
+from python_setup_lint.checkers._base import _matches_path
 
 if TYPE_CHECKING:
-    from python_setup_lint.checkers.stub_checker import StubChecker
-    from python_setup_lint.checkers.stub_import_contract import ImportUsage
+    from python_setup_lint.checkers.stub.checker import StubChecker
+    from python_setup_lint.checkers.stub.import_contract import ImportUsage
 log = logging.getLogger(__name__)
 
 

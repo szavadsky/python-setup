@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 import astroid
 import pytest
 
-from python_setup_lint.checkers.stub_coverage import (
+from python_setup_lint.checkers.stub.coverage import (
     _has_main_block,
     _index_stub_declarations,
     _is_init_exempt,

@@ -10,7 +10,7 @@ from astroid import nodes
 from ._ast_helpers import ClassComparisonCtx
 
 if TYPE_CHECKING:
-    from python_setup_lint.checkers.stub_checker import StubChecker
+    from python_setup_lint.checkers.stub.checker import StubChecker
 
 def _normalize_bases(bases: list[nodes.NodeNG]) -> list[str]:
     """Strips module prefix from ``Attribute`` nodes (e.g. ``pydantic.BaseModel``

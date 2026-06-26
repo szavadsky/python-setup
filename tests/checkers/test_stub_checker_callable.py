@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 import astroid
 import pytest
 
-from python_setup_lint.checkers.stub_fidelity import (
+from python_setup_lint.checkers.stub.fidelity import (
     CallableComparisonCtx,
     ParamDescriptor,
     _compare_callable_annotations,

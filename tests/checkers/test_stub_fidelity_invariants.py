@@ -25,8 +25,8 @@ from typing import TYPE_CHECKING, Any
 
 import astroid
 
-from python_setup_lint.checkers.stub_checker import StubChecker
-from python_setup_lint.checkers.stub_fidelity import (
+from python_setup_lint.checkers.stub.checker import StubChecker
+from python_setup_lint.checkers.stub.fidelity import (
     CallableComparisonCtx,
     ClassComparisonCtx,
     ParamDescriptor,
@@ -279,7 +279,7 @@ class TestPublicSymbolSurface:
     """
 
     def test_public_symbols_exportable(self) -> None:
-        from python_setup_lint.checkers import stub_fidelity as mod
+        from python_setup_lint.checkers.stub import fidelity as mod
 
         for name in (
             "emit_fidelity_violations",

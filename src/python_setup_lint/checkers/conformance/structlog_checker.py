@@ -9,7 +9,7 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TC002
 
-from python_setup_lint.checkers._checker_base import _is_under_source_root
+from python_setup_lint.checkers._base import _is_under_source_root
 
 log = structlog.get_logger(__name__)
 

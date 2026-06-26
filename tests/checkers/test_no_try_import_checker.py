@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from python_setup_lint.checkers.no_try_import_checker import NoTryImportChecker
+from python_setup_lint.checkers.conformance.no_try_import_checker import NoTryImportChecker
 from python_setup_lint.testing import _walk_and_release
 from tests.checkers._factories import (
     _NO_TRY_DETECT_CASES,

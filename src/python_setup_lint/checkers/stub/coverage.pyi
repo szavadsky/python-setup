@@ -20,8 +20,8 @@ from typing import TYPE_CHECKING
 from astroid import nodes
 
 if TYPE_CHECKING:
-    from python_setup_lint.checkers.stub_checker import StubChecker
-    from python_setup_lint.checkers.stub_import_contract import ImportUsage
+    from python_setup_lint.checkers.stub.checker import StubChecker
+    from python_setup_lint.checkers.stub.import_contract import ImportUsage
 
 @dataclass
 class _CoveragePatterns:

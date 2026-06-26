@@ -25,13 +25,13 @@ from typing import TYPE_CHECKING
 
 from astroid import nodes
 
-from python_setup_lint.checkers.stub_normalizer import AnnotationNormalizer
+from python_setup_lint.checkers.stub.normalizer import AnnotationNormalizer
 
 from ._ast_helpers import CallableComparisonCtx, ClassComparisonCtx
 from .signature import _emit_callable_fidelity_issues
 
 if TYPE_CHECKING:
-    from python_setup_lint.checkers.stub_checker import StubChecker
+    from python_setup_lint.checkers.stub.checker import StubChecker
 
 log = logging.getLogger(__name__)
 

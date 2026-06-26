@@ -30,12 +30,12 @@ from typing import TYPE_CHECKING
 
 from astroid import nodes
 
-from python_setup_lint.checkers.stub_normalizer import AnnotationNormalizer
+from python_setup_lint.checkers.stub.normalizer import AnnotationNormalizer
 
 from ._ast_helpers import CallableComparisonCtx, ParamDescriptor
 
 if TYPE_CHECKING:
-    from python_setup_lint.checkers.stub_checker import StubChecker
+    from python_setup_lint.checkers.stub.checker import StubChecker
 
 log = logging.getLogger(__name__)
 

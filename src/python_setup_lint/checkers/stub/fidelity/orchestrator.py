@@ -22,7 +22,7 @@ from .kind import _emit_stub_symbol_check
 from .signature import _emit_callable_fidelity
 
 if TYPE_CHECKING:
-    from python_setup_lint.checkers.stub_checker import StubChecker
+    from python_setup_lint.checkers.stub.checker import StubChecker
 
 __all__ = ["emit_fidelity_violations"]
 

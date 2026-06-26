@@ -3,7 +3,7 @@ max-module-lines=500
 ignore-paths=tests/data/,.venv,__pycache__,node_modules,build/,.tmp*/
 ignore-patterns=.*\.pyi$
 source-roots=src
-load-plugins=python_setup_lint.checkers.no_try_import_checker,python_setup_lint.checkers.beartype_checker,python_setup_lint.checkers.stub_checker,python_setup_lint.checkers.stub_docstring_checker,python_setup_lint.checkers.tmp_path_checker,python_setup_lint.checkers.asyncio_timeout_checker
+load-plugins=python_setup_lint.checkers.conformance.no_try_import_checker,python_setup_lint.checkers.conformance.beartype_checker,python_setup_lint.checkers.stub.checker,python_setup_lint.checkers.stub.docstring_checker,python_setup_lint.checkers.conformance.tmp_path_checker,python_setup_lint.checkers.conformance.asyncio_timeout_checker
 
 [MESSAGES CONTROL]
 disable=unknown-option-value,unused-argument,broad-exception-caught,protected-access,missing-function-docstring,line-too-long,import-outside-toplevel,trailing-newlines,too-many-arguments,unspecified-encoding,unused-import,cell-var-from-loop,too-many-return-statements,too-few-public-methods,superfluous-parens,wrong-import-order,unused-variable,missing-module-docstring,missing-class-docstring,invalid-name,impl-missing-annotation,global-statement,cyclic-import,bad-indentation,unnecessary-ellipsis,unnecessary-dunder-call,redefined-outer-name,reimported,use-implicit-booleaness-not-comparison

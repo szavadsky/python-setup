@@ -12,7 +12,7 @@ from typing import Any
 import astroid
 import pytest
 
-from python_setup_lint.checkers.stub_docstring_checker import StubDocstringChecker
+from python_setup_lint.checkers.stub.docstring_checker import StubDocstringChecker
 from python_setup_lint.testing import _make_tc as _make_tc_factory
 from tests.checkers._factories import (
     _DOCSTRING_DETECT_CASES,
