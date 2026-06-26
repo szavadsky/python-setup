@@ -39,7 +39,7 @@ class GenericKeyDictChecker(BaseChecker):
 
     name: str = "generic-key-dict"
     msgs: dict[str, MessageDef] = {
-        "W9720": MessageDef(
+        "W9721": MessageDef(
             message="'dict[str, %s]' uses a generic string key; consider LintRuleId, enum, or Literal instead",
             symbol="generic-key-dict",
             description="Dicts keyed by string where the value is a domain type "
