@@ -5,7 +5,22 @@ that without the extra, `import python_setup_lint` never imports it. Guard with
 `ImportError` → fallback to heuristic. Models download on first use (cache in
 HF cache); tests must not require network.
 
+User direction
 
+Test need to require network if we use sentence tansformer. 
+In porudction, it could be config guarded BUT - all paths must be tested as per coding rule
+.gitignored idemponentn simple cache must be added cor checkMeaningful if it is  relies on local models. 
+Decision based on fidelity and PoC - and you need to decide based on grounded data, but if  we are doing it - has to be fully tested feature. 
+ WRONG:
+   `pytest.importorskip("sentence_transformers")`); these are marked
+  `@pytest.mark.slow` (model load/download) so they never run in the default
+  suite. 
+  
+  
+  only tests that forces bypass of cache can be marked slow
+
+
+DoD includes implementation to best possible fidelity, quality and usability; not a brush of a feature
 
 # _ symbols
 Apply  CodingRules.md

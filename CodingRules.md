@@ -299,6 +299,8 @@ Annotate hard-to-inject failure paths and defensive behaviors.
 - Test data factories for complex domain objects.
 - Async: `pytest-asyncio` with `asyncio_mode = "auto"` in `pyproject.toml`.
   `anyio` + `@pytest.mark.anyio` for framework-agnostic tests.
+  Tests are exempt from production-code parameter-count and complexity heuristics
+  (e.g. many fixtures/params in a single test function is acceptable).
 
 ### Naming
 
