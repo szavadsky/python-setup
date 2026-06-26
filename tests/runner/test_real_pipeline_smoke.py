@@ -1,8 +1,6 @@
 """Consolidated real-pipeline smoke test.
 
-Replaces all per-site real-pipeline slow variants with a single
-``@pytest.mark.slow`` test that exercises the full lint pipeline end-to-end
-on a minimal synthetic project.
+Exercises the full lint pipeline end-to-end on a minimal synthetic project.
 """
 
 from __future__ import annotations
@@ -14,7 +12,6 @@ import pytest
 from python_setup_lint.runner import TOOLS, RunnerConfig, run_lint
 
 
-@pytest.mark.slow
 def test_consolidated_real_pipeline_smoke(
     tmp_path: Path, capsys: pytest.CaptureFixture, isolated_runner_registries: None
 ) -> None:
