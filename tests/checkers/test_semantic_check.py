@@ -1,6 +1,6 @@
 """Unit tests for python_setup_lint.checkers._semantic.
 
-Tests the two-stage NLP ``semantic_check_if_meaningful`` function.
+Tests the single-stage NLP ``semantic_check_if_meaningful`` function.
 
 Tests that require network access (model download) are marked ``@pytest.mark.slow``.
 Tests that hit the local model cache are **not** marked slow.
@@ -56,10 +56,7 @@ class TestSemanticCheck:
 
     def test_meaningful_justification(self) -> None:
         """A detailed technical justification should be meaningful."""
-        pytest.importorskip(
-            "sentence_transformers",
-            reason="install with `uv sync --extra semantic` to run NLP tests",
-        )
+
         from python_setup_lint.checkers._semantic import (
             semantic_check_if_meaningful,
         )
@@ -76,10 +73,7 @@ class TestSemanticCheck:
 
     def test_empty_justification(self) -> None:
         """Empty justification should return False."""
-        pytest.importorskip(
-            "sentence_transformers",
-            reason="install with `uv sync --extra semantic` to run NLP tests",
-        )
+
         from python_setup_lint.checkers._semantic import (
             semantic_check_if_meaningful,
         )
@@ -89,10 +83,7 @@ class TestSemanticCheck:
 
     def test_whitespace_justification(self) -> None:
         """Whitespace-only justification should return False."""
-        pytest.importorskip(
-            "sentence_transformers",
-            reason="install with `uv sync --extra semantic` to run NLP tests",
-        )
+
         from python_setup_lint.checkers._semantic import (
             semantic_check_if_meaningful,
         )
@@ -113,6 +104,45 @@ class TestSemanticCheck:
             result = semantic_check_if_meaningful("some reason")
             assert result is None
 
+    def test_cache_hit_returns_cached_result(self) -> None:
+        """A cached result is returned without calling _load_reranker."""
+        import hashlib
+
+        from python_setup_lint.checkers._semantic import (
+            _RERANKER_MODEL,
+            semantic_check_if_meaningful,
+        )
+
+        text = "some reason"
+        rule = "E501"
+        code_context = "x = 1"
+        comment = "some reason"
+
+        # Compute the cache key the same way the function does.
+        cache_key = hashlib.sha256(
+            "|".join(
+                str(x) for x in (text, rule, code_context, comment, _RERANKER_MODEL)
+            ).encode()
+        ).digest()
+        cache_key_int = int.from_bytes(cache_key[:8], "big")
+
+        # Pre-populate the cache with a known result.
+        with patch(
+            "python_setup_lint.checkers._semantic._RESULT_CACHE",
+            {cache_key_int: True},
+        ):
+            with patch(
+                "python_setup_lint.checkers._semantic._load_reranker",
+            ) as mock_load:
+                result = semantic_check_if_meaningful(
+                    text,
+                    rule=rule,
+                    code_context=code_context,
+                    comment=comment,
+                )
+                assert result is True
+                mock_load.assert_not_called()
+
     @pytest.mark.slow
     def test_semantic_with_model_download(self) -> None:
         """End-to-end test that downloads models (slow, network required).
@@ -121,10 +151,7 @@ class TestSemanticCheck:
         On cache hit (models already downloaded), it runs quickly but is
         still gated by the ``slow`` marker for safety.
         """
-        pytest.importorskip(
-            "sentence_transformers",
-            reason="install with `uv sync --extra semantic` to run NLP tests",
-        )
+
         from python_setup_lint.checkers._semantic import (
             semantic_check_if_meaningful,
         )
@@ -141,10 +168,7 @@ class TestSemanticCheck:
     @pytest.mark.slow
     def test_semantic_meaningful_justification(self) -> None:
         """A genuinely meaningful justification should pass the semantic check."""
-        pytest.importorskip(
-            "sentence_transformers",
-            reason="install with `uv sync --extra semantic` to run NLP tests",
-        )
+
         from python_setup_lint.checkers._semantic import (
             semantic_check_if_meaningful,
         )
@@ -160,10 +184,7 @@ class TestSemanticCheck:
     @pytest.mark.slow
     def test_semantic_weak_justification(self) -> None:
         """A weak justification should fail the semantic check."""
-        pytest.importorskip(
-            "sentence_transformers",
-            reason="install with `uv sync --extra semantic` to run NLP tests",
-        )
+
         from python_setup_lint.checkers._semantic import (
             semantic_check_if_meaningful,
         )
