@@ -63,7 +63,7 @@ def _run(
     (src / f"{module_name}.py").write_text(py_code)
     (src / f"{module_name}.pyi").write_text(pyi_code)
 
-    tc = _make_tc()  # type: ignore[no-untyped-call]
+    tc = _make_tc()
     tc.linter.config.source_roots = [str(src)]
     tc.checker.open()
     module = astroid.parse(py_code, module_name=module_name)
@@ -426,7 +426,7 @@ class TestEmitFidelityViolationsOrchestrator:
     def test_empty_checker_no_error(self) -> None:
         # No stub_index entries → no dispatch.  Defensive guard against
         # any future refactor that would iterate outside stub_index.
-        tc = _make_tc()  # type: ignore[no-untyped-call]
+        tc = _make_tc()
         tc.checker.open()
         # Empty _coverage.stub_index → emit_fidelity_violations returns.
         emit_fidelity_violations(tc.checker)  # returns None

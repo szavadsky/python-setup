@@ -28,7 +28,7 @@ def _make_tc() -> Any:
 
 def _walk_and_release(code: str, file_path: str = "/workspace/src/mod.py") -> list[Any]:
     """Walk only ``StubDocstringChecker`` (no .pyi companion required)."""
-    tc = _make_tc()  # type: ignore[no-untyped-call]
+    tc = _make_tc()
     module = astroid.parse(code)
     module.file = file_path
     tc.walk(module)

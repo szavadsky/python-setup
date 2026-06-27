@@ -8,8 +8,11 @@ try/except+import patterns. All fixture src strings live in
 from __future__ import annotations
 
 import pytest
+from typing import Any
 
-from python_setup_lint.checkers.conformance.no_try_import_checker import NoTryImportChecker
+from python_setup_lint.checkers.conformance.no_try_import_checker import (
+    NoTryImportChecker,
+)
 from python_setup_lint.testing import _walk_and_release
 from tests.checkers._factories import (
     _NO_TRY_DETECT_CASES,
@@ -24,7 +27,7 @@ from tests.checkers._factories import (
 def test_detects_no_try_import(
     code: str,
     expected_count: int,
-    expected_args: tuple,
+    expected_args: tuple[Any, ...],
 ) -> None:
     """Checker must flag all flagged-pattern rows with the expected message count.
 

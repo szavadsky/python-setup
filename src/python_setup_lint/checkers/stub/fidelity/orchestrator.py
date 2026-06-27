@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code  # all fidelity modules share the same import/dispatch pattern
 """Phase 3 orchestrator — top-level dispatcher for stub-impl fidelity.
 
 Public entrypoint :func:`emit_fidelity_violations` walks every module
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
 __all__ = ["emit_fidelity_violations"]
+
 
 def emit_fidelity_violations(checker: StubChecker) -> None:  # pylint: disable=missing-beartype  # StubChecker is TYPE_CHECKING-only; beartype can't resolve at runtime
     for module_name in checker._coverage.stub_index:

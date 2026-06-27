@@ -214,8 +214,8 @@ class TestAggregateStatisticsEdgeCases:
             LintResult("ruff check", 0, "Count\tCode\n-----\t----\n2\tE501\n", "", 0.0),
         ]
         _ = _aggregate_statistics(results)
-        assert ViolationCount("ruff check", "F401", 3)  # type: ignore[call-arg]
-        assert ViolationCount("ruff check", "E501", 2)  # type: ignore[call-arg]
+        assert ViolationCount("ruff check", "F401", 3)
+        assert ViolationCount("ruff check", "E501", 2)
 
     def test_all_parsers_reachable(self) -> None:
         """Every tool with a parser successfully processes empty output."""
@@ -243,7 +243,7 @@ class TestAggregateStatisticsEdgeCases:
         stdout = "Count\tCode\n-----\t----\n9999\tF401\n"
         r = LintResult("ruff check", 0, stdout, "", 0.0)
         _ = _aggregate_statistics([r])
-        assert ViolationCount("ruff check", "F401", 9999)  # type: ignore[call-arg]
+        assert ViolationCount("ruff check", "F401", 9999)
 
     def test_aggregate_sorts_properly(self) -> None:
         """Sorting by count desc, then tool, then rule."""
@@ -256,9 +256,9 @@ class TestAggregateStatisticsEdgeCases:
         counts = _aggregate_statistics(results)
         # Highest count first: code-a (3) > E501 (2) > F401 (1)
         assert len(counts) == 3
-        assert counts[0] == ViolationCount("mypy", "code-a", 3)  # type: ignore[call-arg]
-        assert counts[1] == ViolationCount("ruff check", "E501", 2)  # type: ignore[call-arg]
-        assert counts[2] == ViolationCount("ruff check", "F401", 1)  # type: ignore[call-arg]
+        assert counts[0] == ViolationCount("mypy", "code-a", 3)
+        assert counts[1] == ViolationCount("ruff check", "E501", 2)
+        assert counts[2] == ViolationCount("ruff check", "F401", 1)
 
 
 # ── Observability: statistics JSON structure ─────────────────────
@@ -356,7 +356,7 @@ class TestPrintStatisticsTableEdgeCases:
     ) -> None:
         """Long tool names are displayed (column format is minimum width, not max)."""
         counts = [
-            ViolationCount(tool="a" * 30, rule="X1", count=1),  # type: ignore[call-arg]
+            ViolationCount(tool="a" * 30, rule="X1", count=1),
         ]
         _print_statistics_table(counts)
         captured = capsys.readouterr()
@@ -366,7 +366,7 @@ class TestPrintStatisticsTableEdgeCases:
 
     def test_zero_count_rule(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Zero counts are displayed (may indicate a parser found nothing)."""
-        counts = [ViolationCount(tool="test", rule="Z001", count=0)]  # type: ignore[call-arg]
+        counts = [ViolationCount(tool="test", rule="Z001", count=0)]
         _print_statistics_table(counts)
         captured = capsys.readouterr()
         # zero is explicitly shown, not hidden

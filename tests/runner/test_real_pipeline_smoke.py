@@ -13,7 +13,7 @@ from python_setup_lint.runner import TOOLS, RunnerConfig, run_lint
 
 
 def test_consolidated_real_pipeline_smoke(
-    tmp_path: Path, capsys: pytest.CaptureFixture, isolated_runner_registries: None
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], isolated_runner_registries: None
 ) -> None:
     """Run the full lint pipeline on a minimal synthetic project.
 
@@ -39,7 +39,7 @@ def test_consolidated_real_pipeline_smoke(
     assert isinstance(rc, int), f"Expected int exit code, got {type(rc)}: {rc}"
 
     captured = capsys.readouterr()
-    tool_names = {t.name for t in TOOLS}  # type: ignore[type-arg]
+    tool_names = {t.name for t in TOOLS}
     for name in tool_names:
         assert f"[{name}]" in captured.out, (
             f"Expected tool '{name}' output in lint output. "

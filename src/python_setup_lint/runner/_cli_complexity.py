@@ -27,23 +27,21 @@ from .types import RunnerConfig, ToolSpec
 
 
 def _apply_config_overrides(config: RunnerConfig) -> RunnerConfig:
+    config_paths = config.config_paths or {}
     if config.ruff_project_overrides:
-        shared_ruff = config.config_paths.get("ruff check")
+        shared_ruff = config_paths.get("ruff check")
         if shared_ruff is not None:
             composed = _compose_ruff_config(config.cwd, shared_ruff)
             if composed != shared_ruff:
-                config.config_paths["ruff check"] = composed
+                config_paths["ruff check"] = composed
     if config.pyright_project_override is not None:
-        config.config_paths["pyright check"] = config.pyright_project_override
-    elif (
-        config.config_paths is not None
-        and config.config_paths.get("pyright check") is not None
-    ):
-        paths = config.config_paths
-        shared_pyright = paths["pyright check"]
+        config_paths["pyright check"] = config.pyright_project_override
+    elif config_paths is not None and config_paths.get("pyright check") is not None:
+        shared_pyright = config_paths["pyright check"]
         composed_pyright = _compose_pyright_config(config.cwd, shared_pyright)
         if composed_pyright != shared_pyright:
-            paths["pyright check"] = composed_pyright
+            config_paths["pyright check"] = composed_pyright
+    config.config_paths = config_paths
     return config
 
 
@@ -70,9 +68,9 @@ def _parse_config_args(
     parser: argparse.ArgumentParser,
     base_config: RunnerConfig | None = None,
 ) -> dict[str, Path]:
-    config_paths: dict[str, Path] = (
-        dict(base_config.config_paths) if base_config is not None else {}
-    )
+    config_paths: dict[str, Path] = {}
+    if base_config is not None and base_config.config_paths is not None:
+        config_paths = base_config.config_paths.copy()
     for raw in args.config:
         if "=" not in raw:
             parser.error(f"--config must be TOOL=PATH, got: {raw!r}")
@@ -103,9 +101,9 @@ def _handle_config_status(
         tool_id = raw.split("=", 1)[0]
         canonical = _CONFIG_KEY_ALIASES.get(tool_id) or tool_id
         cli_overridden.add(canonical)
-    caller_config_paths: dict[str, Path] = (
-        dict(config.config_paths) if config is not None else {}
-    )
+    caller_config_paths: dict[str, Path] = {}
+    if config is not None and config.config_paths is not None:
+        caller_config_paths = config.config_paths.copy()
     shipped_paths = _default_config_paths(cwd)
     ruff_composed = (
         config is not None and config.ruff_project_overrides

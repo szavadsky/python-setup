@@ -4,11 +4,11 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
 
 class UnnamedTupleDictChecker(BaseChecker):
     name: str = "unnamed-tuple-dict"
-    msgs: dict[LintRuleId, MessageDef]  # type: ignore[assignment]  # pylint's BaseChecker declares msgs as dict[str, tuple[...]]; our typed MessageDef is narrower but correct at runtime
+    msgs: dict[LintRuleId, MessageDef]
 
     def visit_annassign(self, node: nodes.AnnAssign) -> None:
         """Check annotated assignments for unnamed-tuple dict values.

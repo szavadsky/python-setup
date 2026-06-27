@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from pylint.checkers import BaseChecker
 
 
-def _make_tc(checker_class: type[BaseChecker]) -> CheckerTestCase:
+def _make_tc(checker_class: type[BaseChecker], /) -> CheckerTestCase:
     tc = CheckerTestCase()
     tc.CHECKER_CLASS = checker_class
     tc.setup_method()
@@ -37,6 +37,7 @@ def _make_tc(checker_class: type[BaseChecker]) -> CheckerTestCase:
 def _walk_and_release(
     code: str,
     checker_class: type[BaseChecker],
+    /,
     *,
     file_path: str | None = None,
     module_name: str = "",
@@ -146,7 +147,7 @@ def test_checked_main() -> None:
     sys.exit(pytest.main(args))
 
 
-def _load_precommit_config(repo_root: Path) -> dict[str, Any]:
+def _load_precommit_config(repo_root: Path, /) -> dict[str, Any]:
     import yaml
 
     config_path = repo_root / ".pre-commit-config.yaml"
@@ -161,7 +162,7 @@ def _load_precommit_config(repo_root: Path) -> dict[str, Any]:
 
 
 @beartype
-def assert_precommit_config_valid(repo_root: Path) -> None:
+def assert_precommit_config_valid(repo_root: Path, /) -> None:
     config_path = repo_root / ".pre-commit-config.yaml"
     _load_precommit_config(repo_root)  # raises AssertionError on YAML/shape errors
     # pre-commit is a trusted project tool; subprocess.run is the standard interface for running external commands
@@ -182,6 +183,7 @@ def assert_precommit_config_valid(repo_root: Path) -> None:
 @beartype
 def assert_precommit_hooks_shape(
     repo_root: Path,
+    /,
     *,
     baseline_filename: str = "lint.baseline",
 ) -> None:

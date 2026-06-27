@@ -65,7 +65,7 @@ def test_matches_path(path: str, patterns: list[str], expected: bool) -> None:
 
 @pytest.mark.parametrize(("path", "test_patterns", "expected"), _IS_TEST_FILE_CASES)
 def test_is_test_file(path: str, test_patterns: list[str], expected: bool) -> None:
-    checker, _tc = make_coverage_checker(test_patterns=test_patterns)  # type: ignore[no-untyped-call]
+    checker, _tc = make_coverage_checker(test_patterns=test_patterns)
     assert _is_test_file(checker, Path(path)) is expected
 
 
@@ -78,7 +78,7 @@ def test_is_test_file_custom(
     expected: bool,
 ) -> None:
     """Custom test_patterns=['specs/'] matches specs/ but NOT tests/."""
-    checker, _tc = make_coverage_checker(test_patterns=test_patterns)  # type: ignore[no-untyped-call]
+    checker, _tc = make_coverage_checker(test_patterns=test_patterns)
     assert _is_test_file(checker, Path(path)) is expected
 
 
@@ -87,7 +87,7 @@ def test_is_test_file_custom(
 
 @pytest.mark.parametrize(("path", "opt_out_patterns", "expected"), _IS_OPTED_OUT_CASES)
 def test_is_opted_out(path: str, opt_out_patterns: list[str], expected: bool) -> None:
-    checker, _tc = make_coverage_checker(stub_opt_out=opt_out_patterns)  # type: ignore[no-untyped-call]
+    checker, _tc = make_coverage_checker(stub_opt_out=opt_out_patterns)
     assert _is_opted_out(checker, Path(path)) is expected
 
 
@@ -126,7 +126,7 @@ def test_is_under_source_root(
     source_roots: list[str],
     expected: bool,
 ) -> None:
-    checker, _tc = make_coverage_checker(source_roots=source_roots)  # type: ignore[no-untyped-call]
+    checker, _tc = make_coverage_checker(source_roots=source_roots)
     assert _is_under_source_root(checker, Path(path)) is expected
 
 
@@ -145,7 +145,7 @@ def test_resolve_stub(
     """
     checker, py_path, expected_pyi = materialize_resolve_stub_layout(
         tmp_path, layout_kind
-    )  # type: ignore[no-untyped-call]
+    )
     result = _resolve_stub(checker, py_path)
     if expected_kind == "returns_pyi":
         assert result == expected_pyi
@@ -162,7 +162,7 @@ def test_index_stub_declarations(tmp_path: Path) -> None:
     """Symbol/class/func declarations are all indexed from a .pyi file."""
     stub_path = tmp_path / "mod.pyi"
     stub_path.write_text("\nx: int\ndef foo(): ...\nclass Bar: ...\n")
-    checker, _tc = make_coverage_checker()  # type: ignore[no-untyped-call]
+    checker, _tc = make_coverage_checker()
     checker._fidelity.stub_variable_nodes["mod"] = {}
     checker._fidelity.stub_callable_nodes["mod"] = {}
     checker._fidelity.stub_class_nodes["mod"] = {}
@@ -187,7 +187,7 @@ def test_emit_coverage_violations(
 ) -> None:
     """Each row exercises one branch of ``emit_coverage_violations`` (emit /
     no-missing / skip-not-in-index)."""
-    tc, _ = make_emit_coverage_state(tmp_path, setup_kind, stub_missing_module)  # type: ignore[no-untyped-call]
+    tc, _ = make_emit_coverage_state(tmp_path, setup_kind, stub_missing_module)
     emit_coverage_violations(tc.checker)
     msgs = tc.linter.release_messages()
     assert len(msgs) == expected_msg_count

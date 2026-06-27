@@ -16,14 +16,21 @@ from __future__ import annotations
 
 import hashlib
 import json
+import structlog
 from pathlib import Path
+from typing import TYPE_CHECKING
+
 from beartype import beartype
+
+_LOG = structlog.get_logger(__name__)
+if TYPE_CHECKING:
+    from sentence_transformers import CrossEncoder
 
 # Cache directory for downloaded models (idempotent, .gitignored).
 _CACHE_DIR = Path.home() / ".cache" / "python-setup" / "semantic"
 
 # Model singleton cache (loaded once, reused across calls).
-_RERANKER_INSTANCE = None
+_RERANKER_INSTANCE: CrossEncoder | None = None
 
 # Persisted result cache file.
 _RESULT_CACHE_FILE = _CACHE_DIR / "results.json"
@@ -41,6 +48,7 @@ def _load_result_cache() -> dict[int, bool]:
         raw = _RESULT_CACHE_FILE.read_text()
         return {int(k): v for k, v in json.loads(raw).items()}
     except FileNotFoundError, json.JSONDecodeError, OSError, ValueError:
+        _LOG.warning("Failed to load result cache", exc_info=True)
         return {}
 
 
@@ -52,7 +60,7 @@ def _save_result_cache() -> None:
             json.dumps({str(k): v for k, v in _RESULT_CACHE.items()})
         )
     except OSError:
-        pass  # cache write is best-effort
+        _LOG.warning("Failed to save result cache", exc_info=True)
 
 
 # Load persisted cache at module level.
@@ -72,7 +80,7 @@ def _get_cache_dir() -> Path:
     return cache
 
 
-def _load_reranker():
+def _load_reranker() -> CrossEncoder | None:
     """Lazy-load the cross-encoder reranker model.
 
     Returns:
@@ -84,6 +92,7 @@ def _load_reranker():
     try:
         from sentence_transformers import CrossEncoder
     except ImportError:
+        _LOG.warning("sentence_transformers not available, reranker disabled")
         return None
 
     try:
@@ -93,11 +102,8 @@ def _load_reranker():
             cache_folder=str(cache),
         )
         return _RERANKER_INSTANCE
-    except (
-        OSError,
-        RuntimeError,
-        ValueError,
-    ):  # network / download failures are expected
+    except OSError, RuntimeError, ValueError:
+        _LOG.warning("Failed to load reranker model", exc_info=True)
         return None
 
 
@@ -149,11 +155,8 @@ def semantic_check_if_meaningful(
         pairs = [(primary, query)]
         scores = reranker.predict(pairs)
         score = float(scores[0])
-    except (
-        OSError,
-        RuntimeError,
-        ValueError,
-    ):  # network / download failures are expected
+    except OSError, RuntimeError, ValueError:
+        _LOG.warning("Reranker prediction failed", exc_info=True)
         return None
 
     result = score >= 0.5

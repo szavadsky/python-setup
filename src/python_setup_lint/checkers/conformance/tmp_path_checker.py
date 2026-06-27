@@ -12,21 +12,26 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef, _matches_path
+from python_setup_lint.checkers._base import (
+    LintRuleId,
+    MessageDef,
+    _matches_path,
+    _msgs,
+)
 
 
 class TempFileChecker(BaseChecker):
     """AST visitor that flags tempfile leakage in test files."""
 
     name: str = "tempfile-mkdtemp-in-test"
-    msgs: dict[LintRuleId, MessageDef] = {
-        "W9702": MessageDef(
+    msgs = _msgs(
+        W9702=MessageDef(
             message="Use pytest tmp_path instead of '%s' in test files",
             symbol="tempfile-mkdtemp-in-test",
             description="Test files should use pytest's built-in tmp_path fixture "
             "instead of manual tempfile calls that leak directories.",
         ),
-    }
+    )
     options = (
         (
             "test-patterns",
@@ -103,7 +108,6 @@ class TempFileChecker(BaseChecker):
         if file_path is None:
             return False
         return _matches_path(file_path, self._test_patterns)
-
 
 
 @beartype

@@ -35,6 +35,7 @@ __all__ = [
     "_FidelityState",
 ]
 
+
 @dataclass
 class _FidelityState:
     """Phase 3 state aggregated for StubChecker.
@@ -60,6 +61,7 @@ class _FidelityState:
     impl_class_nodes: dict[str, dict[str, nodes.ClassDef]] = field(default_factory=dict)
     impl_all_names: dict[str, set[str]] = field(default_factory=dict)
 
+
 @dataclass
 class ParamDescriptor:
     """Canonical form of a single function parameter for comparison.
@@ -71,9 +73,10 @@ class ParamDescriptor:
     """
 
     name: str
-    kind: inspect.Parameter.Kind  # type: ignore[name-defined]  # inspect.Parameter.Kind is not a real type at runtime on Python <3.10
+    kind: inspect._ParameterKind
     has_default: bool
     annotation_normalized: str | None
+
 
 @dataclass
 class ClassComparisonCtx:
@@ -88,6 +91,7 @@ class ClassComparisonCtx:
     msg_node: nodes.NodeNG
     stub_class: nodes.ClassDef
     impl_class: nodes.ClassDef
+
 
 @dataclass
 class CallableComparisonCtx:

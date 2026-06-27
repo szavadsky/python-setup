@@ -16,21 +16,21 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
 
 
 class PyiUnderscoreChecker(BaseChecker):
     """AST visitor that flags _-prefixed symbols in .pyi files."""
 
     name: str = "pyi-underscore"
-    msgs: dict[LintRuleId, MessageDef] = {
-        "W9707": MessageDef(
+    msgs = _msgs(
+        W9707=MessageDef(
             message="Private symbol '%s' in .pyi stub file; remove it from the public API surface",
             symbol="pyi-underscore-symbol",
             description="Functions, classes, and module-level attributes with "
             "_-prefixed names should not appear in .pyi stub files.",
         ),
-    }
+    )
 
     _is_pyi: bool = False
 

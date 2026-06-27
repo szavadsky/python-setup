@@ -154,7 +154,7 @@ def _is_under_source_root(checker: StubChecker, path: Path) -> bool:
         try:
             path.relative_to(root)
             return True
-        except ValueError:
+        except ValueError:  # pylint: disable=W9740  # best-effort path relative-to fallback; logging would noise unavoidable path-mismatch degrade
             continue
     return False
 
@@ -181,7 +181,7 @@ def _resolve_stub(checker: StubChecker, py_path: Path) -> Path | None:
             try:
                 rel = py_path.relative_to(root)
                 break
-            except ValueError:
+            except ValueError:  # pylint: disable=W9740  # best-effort path relative-to fallback; logging would noise unavoidable path-mismatch degrade
                 continue
         if rel is not None:
             candidate = stub_root / rel.with_suffix(".pyi")

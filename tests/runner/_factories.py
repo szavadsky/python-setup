@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 from python_setup_lint.runner import TOOLS, LintResult, RunnerConfig
+from python_setup_lint.runner.extra_tools import ExtraToolsConfigError
 from python_setup_lint.runner.baseline import _diff_baseline
 
 if TYPE_CHECKING:
@@ -101,7 +102,7 @@ def tmp_config(tmp_path: Path, **overrides: Any) -> RunnerConfig:
 
 
 def write_baseline(
-    tmp_path: Path, entries: list[dict[str, Any]], name: str = "baseline.json"
+    tmp_path: Path, /, entries: list[dict[str, Any]], name: str = "baseline.json"
 ) -> Path:
     """Write a JSON baseline file under *tmp_path* and return its path."""
     path = tmp_path / name
@@ -111,6 +112,7 @@ def write_baseline(
 
 def diff_baseline_with(
     tmp_path: Path,
+    /,
     saved: dict[str, Any] | list[dict[str, Any]],
     current: Iterable[LintResult],
     *,
@@ -161,6 +163,7 @@ def write_pyproject(tmp_path: Path, body: str) -> Path:
 
 def lint_config(
     cwd: Path,
+    /,
     *,
     package_name: str | None = "python_setup_lint",
     tools_override: list[str] | None = None,
@@ -171,7 +174,9 @@ def lint_config(
     )
 
 
-def assert_r4_reason(err, pyproject: Path, reason_want: str, want_kind: str) -> None:
+def assert_r4_reason(
+    err: ExtraToolsConfigError, /, pyproject: Path, reason_want: str, want_kind: str
+) -> None:
     """Assert ``ExtraToolsConfigError.location`` matches *pyproject* + reason by kind."""
     assert err.location == str(pyproject), (
         f"location mismatch: got {err.location!r}, want {str(pyproject)!r}"

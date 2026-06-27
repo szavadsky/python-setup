@@ -8,27 +8,31 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef, _is_under_source_root
+from python_setup_lint.checkers._base import (
+    LintRuleId,
+    MessageDef,
+    _is_under_source_root,
+    _msgs,
+)
 
 log = structlog.get_logger(__name__)
 
 
 class StructlogChecker(BaseChecker):
-
     name: str = "structlog-checker"
-    msgs: dict[LintRuleId, MessageDef] = {
-        "W9710": MessageDef(
+    msgs = _msgs(
+        W9710=MessageDef(
             message="Use structlog.get_logger instead of logging.getLogger in '%s'",
             symbol="use-structlog",
             description="Prefer structlog over stdlib logging for structured logging.",
         ),
-        "W9711": MessageDef(
+        W9711=MessageDef(
             message="Use structured kwargs instead of printf-style formatting in '%s'",
             symbol="use-structured-logging",
             description="Logger calls should use keyword arguments for structured fields, "
             "not printf-style positional args or f-string messages.",
         ),
-    }
+    )
     options = (
         (
             "source-roots",
@@ -74,7 +78,9 @@ class StructlogChecker(BaseChecker):
             return
 
         file_path = self._get_node_file_path(node)
-        if file_path is None or not _is_under_source_root(file_path, self._source_roots):
+        if file_path is None or not _is_under_source_root(
+            file_path, self._source_roots
+        ):
             return
 
         self._uses_stdlib_logging = True
@@ -89,7 +95,9 @@ class StructlogChecker(BaseChecker):
 
         # Source root check: skip files outside configured source roots
         file_path = self._get_node_file_path(node)
-        if file_path is None or not _is_under_source_root(file_path, self._source_roots):
+        if file_path is None or not _is_under_source_root(
+            file_path, self._source_roots
+        ):
             return
 
         callee = func.expr
@@ -128,6 +136,7 @@ class StructlogChecker(BaseChecker):
                     node=node,
                     args=(func.attrname,),
                 )
+
     @staticmethod
     def _get_node_file_path(node: nodes.NodeNG) -> Path | None:
         try:
@@ -135,7 +144,7 @@ class StructlogChecker(BaseChecker):
             if file_val is None:
                 return None
             return Path(file_val)
-        except (AttributeError, TypeError):
+        except AttributeError, TypeError:  # pylint: disable=W9740  # best-effort file path extraction fallback; logging would noise unavoidable attribute/type degrade
             return None
 
     @staticmethod

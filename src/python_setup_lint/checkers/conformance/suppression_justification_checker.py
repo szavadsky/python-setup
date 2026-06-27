@@ -13,7 +13,12 @@ from typing import TYPE_CHECKING
 from beartype import beartype
 from pylint.checkers import BaseChecker
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef, check_if_meaningful
+from python_setup_lint.checkers._base import (
+    LintRuleId,
+    MessageDef,
+    _msgs,
+    check_if_meaningful,
+)
 
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
@@ -31,29 +36,29 @@ class SuppressionJustificationChecker(BaseChecker):
     """AST visitor that flags unjustified suppression comments."""
 
     name: str = "suppression-justification"
-    msgs: dict[LintRuleId, MessageDef] = {
-        "W9704": MessageDef(
+    msgs = _msgs(
+        W9704=MessageDef(
             message="Suppression comment without technical justification: %s",
             symbol="unjustified-suppression",
             description=(
                 "Suppression comments (# pylint: disable=..., # noqa, "
-                "# type: ignore) must be accompanied by a technical reason "  # noqa: W9704  # this is a description string, not an actual suppression
+                "# type: ignore) must be accompanied by a technical reason "
                 "on the same line or the preceding line."
             ),
         ),
-    }
+    )
 
     @beartype
     def visit_module(self, node: object) -> None:
         # Walk the module's source lines looking for bare suppressions.
         try:
             stream = node.stream()  # type: ignore[union-attr]  # node is ModuleNode from astroid, stream() exists at runtime
-        except (AttributeError, OSError):
+        except AttributeError, OSError:  # pylint: disable=W9740  # best-effort stream access fallback; logging would noise unavoidable attribute/IO degrade
             return
 
         try:
             raw = stream.read()
-        except OSError:
+        except OSError:  # pylint: disable=W9740  # best-effort stream read fallback; logging would noise unavoidable IO degrade
             return
 
         if isinstance(raw, bytes):

@@ -33,6 +33,11 @@ class MessageDef(NamedTuple):
     description: str
 
 
+def _msgs(**definitions: MessageDef) -> dict[LintRuleId, MessageDef]:
+    """Build a checker msgs dict with domain-typed keys."""
+    return {LintRuleId(k): v for k, v in definitions.items()}
+
+
 def _matches_path(str_path: str, patterns: list[str]) -> bool:
     for pattern in patterns:
         if "/" in pattern or "\\" in pattern:
@@ -52,7 +57,7 @@ def _is_under_source_root(path: Path, source_roots: list[Path]) -> bool:
         try:
             resolved.relative_to(root)
             return True
-        except ValueError:
+        except ValueError:  # pylint: disable=W9740  # best-effort path relative-to fallback; logging would noise unavoidable path-mismatch degrade
             continue
     return False
 
@@ -63,7 +68,7 @@ def _get_file_path(node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> Path | N
         if file_val is None:
             return None
         return Path(file_val)
-    except (AttributeError, TypeError):
+    except AttributeError, TypeError:  # pylint: disable=W9740  # best-effort file path extraction fallback; logging would noise unavoidable attribute/type degrade
         return None
 
 

@@ -5,11 +5,11 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 from typing import Any
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
 
 class GenericKeyDictChecker(BaseChecker):
     name: str = "generic-key-dict"
-    msgs: dict[LintRuleId, MessageDef]  # type: ignore[assignment]  # pylint's BaseChecker declares msgs as dict[str, tuple[...]]; our typed MessageDef is narrower but correct at runtime
+    msgs: dict[LintRuleId, MessageDef]
     options: tuple[tuple[str, dict[str, Any]], ...]
 
     def __init__(self, linter: PyLinter) -> None: ...
@@ -22,4 +22,6 @@ class GenericKeyDictChecker(BaseChecker):
     def _infer_var_name(node: nodes.Subscript) -> str | None: ...
     def _is_allowed_category(self, var_name: str) -> bool: ...
 
-def register(linter: PyLinter) -> None: ...
+def register(linter: PyLinter) -> None:
+    """Register the checker with the linter."""
+    ...

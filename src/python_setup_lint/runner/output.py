@@ -56,7 +56,7 @@ def _aggregate_statistics(results: list[LintResult]) -> list[ViolationCount]:
                 if parser is None:
                     continue
                 violations = parser(result.stdout, result.stderr)
-        except Exception as e:
+        except Exception as e:  # parser may fail for any reason; log and continue
             logger.warning("stats parser failed", tool=result.tool_name, exc_info=e)
             continue
         for rule, count in violations:
@@ -165,6 +165,15 @@ def _print_statistics_grouped(
 
 def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
     start = time.monotonic()
+    # Inject .venv/bin into PATH so tools installed in the project venv
+    # are found even when the parent shell's PATH doesn't include it.
+    env = None
+    venv_bin = cwd / ".venv" / "bin"
+    if venv_bin.is_dir():
+        env = {
+            **__import__("os").environ,
+            "PATH": f"{venv_bin}:{__import__('os').environ.get('PATH', '')}",
+        }
     try:
         proc = subprocess.run(
             cmd,
@@ -173,6 +182,7 @@ def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
             text=True,
             timeout=600,
             check=False,
+            env=env,
         )
         elapsed = time.monotonic() - start
         return LintResult(
@@ -182,7 +192,7 @@ def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
             stderr=proc.stderr,
             elapsed=elapsed,
         )
-    except FileNotFoundError:
+    except FileNotFoundError:  # pylint: disable=W9740  # best-effort subprocess fallback; logging would noise unavoidable tool-not-found degrade
         elapsed = time.monotonic() - start
         return LintResult(
             tool_name=label,

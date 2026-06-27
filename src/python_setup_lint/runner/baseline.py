@@ -69,7 +69,7 @@ def _try_rumdl_json(stdout: str | None) -> dict[str, Any] | list[dict[str, Any]]
         return None
     try:
         diag = json.loads(stdout)
-    except (json.JSONDecodeError, ValueError):
+    except json.JSONDecodeError, ValueError:  # pylint: disable=W9740  # best-effort rumdl JSON parse fallback; logging would noise unavoidable parse degrade
         return None
     if isinstance(diag, (dict, list)):
         return diag
@@ -105,7 +105,7 @@ def _capture_one(r: LintResult) -> dict[str, Any]:
     if r.tool_name in _JSON_DIAGNOSTIC_TOOLS and r.stdout:
         try:
             diag = json.loads(r.stdout)
-        except (json.JSONDecodeError, ValueError):
+        except json.JSONDecodeError, ValueError:  # pylint: disable=W9740  # best-effort JSON diagnostics parse fallback; logging would noise unavoidable parse degrade
             diag = None
         if isinstance(diag, dict):
             _strip_pyright_volatile(diag)
@@ -151,7 +151,7 @@ def _write_baseline_if_modified(
     try:
         with open(baseline_path, "w") as f:
             json.dump(saved, f, indent=2, sort_keys=True)
-    except OSError as exc:
+    except OSError as exc:  # pylint: disable=W9740  # best-effort baseline write fallback; logging would noise unavoidable IO degrade
         return [f"Cannot write baseline: {exc}"]
     return None
 
@@ -175,7 +175,7 @@ def _diff_baseline(
     try:
         with open(baseline_path) as f:
             raw: list[dict[str, Any]] = json.load(f)
-    except (json.JSONDecodeError, OSError) as exc:
+    except (json.JSONDecodeError, OSError) as exc:  # pylint: disable=W9740  # best-effort baseline read fallback; logging would noise unavoidable parse/IO degrade
         return [f"Cannot read baseline: {exc}"]
     saved: list[dict[str, Any]] = raw
 
@@ -264,7 +264,7 @@ def _compare_diagnostics(
     violations: list[str] = []
     try:
         current_diag = json.loads(r.stdout) if r.stdout else None
-    except (json.JSONDecodeError, ValueError):
+    except json.JSONDecodeError, ValueError:  # pylint: disable=W9740  # best-effort diagnostics JSON parse fallback; logging would noise unavoidable parse degrade
         current_diag = None
 
     # D4: saved has diagnostics (dict) but current stdout is

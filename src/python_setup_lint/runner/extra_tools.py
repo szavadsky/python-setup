@@ -158,7 +158,9 @@ def _extra_tool_parser(
     raise ExtraToolsConfigError(location, f"bad enum: parse_strategy {strategy!r}")
 
 
-def _validate_extra_bool_fields(entry: dict[str, Any], location: str) -> tuple[bool, bool, bool]:
+def _validate_extra_bool_fields(
+    entry: dict[str, Any], location: str
+) -> tuple[bool, bool, bool]:
     supports_fix = entry.get("supports_fix", False)
     if not isinstance(supports_fix, bool):
         raise ExtraToolsConfigError(location, "wrong type: supports_fix must be bool")
@@ -173,17 +175,23 @@ def _validate_extra_bool_fields(entry: dict[str, Any], location: str) -> tuple[b
     return supports_fix, supports_path, supports_exclude
 
 
-def _validate_extra_list_field(entry: dict[str, Any], key: str, location: str) -> list[str]:
+def _validate_extra_list_field(
+    entry: dict[str, Any], key: str, location: str
+) -> list[str]:
     raw = entry.get(key, [])
     if not isinstance(raw, list):
         raise ExtraToolsConfigError(location, f"wrong type: {key} must be list[str]")
     for part in raw:
         if not isinstance(part, str):
-            raise ExtraToolsConfigError(location, f"wrong type: {key} must be list[str]")
+            raise ExtraToolsConfigError(
+                location, f"wrong type: {key} must be list[str]"
+            )
     return list(raw)
 
 
-def _validate_extra_config_flag(entry: dict[str, Any], location: str) -> list[str] | None:
+def _validate_extra_config_flag(
+    entry: dict[str, Any], location: str
+) -> list[str] | None:
     config_flag_raw = entry.get("config_flag")
     if config_flag_raw is None:
         return None
@@ -228,7 +236,9 @@ def _validate_extra_fields(entry: dict[str, Any], location: str) -> dict[str, An
             location, "wrong type: command must be non-empty list[str]"
         )
 
-    supports_fix, supports_path, supports_exclude = _validate_extra_bool_fields(entry, location)
+    supports_fix, supports_path, supports_exclude = _validate_extra_bool_fields(
+        entry, location
+    )
     default_paths = _validate_extra_list_field(entry, "default_paths", location)
     config_flag = _validate_extra_config_flag(entry, location)
 
@@ -305,7 +315,7 @@ def _load_extra_tools(cwd: Path) -> list[_ExtraToolRegistration]:
     resolved = pyproject.resolve()
     try:
         mtime = resolved.stat().st_mtime_ns
-    except OSError:
+    except OSError:  # pylint: disable=W9740  # best-effort stat fallback; logging would noise unavoidable IO degrade
         return []
     key = (resolved, mtime)
     cached = _EXTRA_TOOLS_CACHE.get(key)

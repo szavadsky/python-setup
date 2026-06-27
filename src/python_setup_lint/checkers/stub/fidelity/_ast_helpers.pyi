@@ -37,7 +37,7 @@ class ParamDescriptor:
     """Canonical parameter form for stub-vs-impl comparison."""
 
     name: str
-    kind: inspect.Parameter.Kind  # type: ignore[name-defined]
+    kind: inspect._ParameterKind
     has_default: bool
     annotation_normalized: str | None
 

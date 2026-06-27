@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+from typing import Any
 from pathlib import Path
 
 import pytest
@@ -50,7 +51,7 @@ class TestLiveSmokePyrightConfigCollapse:
 
     def _run(
         self, cfg_path: Path | None, cwd: Path, *, artifact: Path, label: str
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Run pyright and stash the parsed ``--outputjson`` + the constructed cmd."""
         cmd = ["pyright", "--outputjson"]
         if cfg_path is not None:

@@ -321,7 +321,7 @@ class TestStrategyForFallback:
     """``_strategy_for`` default-aware fallback (unknown names → GenericLintTool)."""
 
     def test_returns_cached_builtin(self) -> None:
-        from python_setup_lint.runner.dispatch import _strategy_for  # type: ignore[attr-defined]
+        from python_setup_lint.runner.dispatch import _strategy_for
 
         original = STRATEGIES["ruff check"]
         assert (
@@ -330,14 +330,14 @@ class TestStrategyForFallback:
         )
 
     def test_unknown_name_returns_generic(self) -> None:
-        from python_setup_lint.runner.dispatch import GenericLintTool, _strategy_for  # type: ignore[attr-defined]
+        from python_setup_lint.runner.dispatch import GenericLintTool, _strategy_for
 
         fake_spec = ToolSpec("t4-unknown-fallback", ["t4fake"])
         got = _strategy_for("t4-unknown-fallback", fake_spec)
         assert isinstance(got, GenericLintTool) and got.spec is fake_spec
 
     def test_unknown_name_does_not_mutate_strategies(self) -> None:
-        from python_setup_lint.runner.dispatch import _strategy_for  # type: ignore[attr-defined]
+        from python_setup_lint.runner.dispatch import _strategy_for
 
         _strategy_for(
             "t4-no-cache-fallback", ToolSpec("t4-no-cache-fallback", ["t4nc"])

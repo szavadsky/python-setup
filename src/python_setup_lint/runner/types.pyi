@@ -49,6 +49,7 @@ class LintResult:
     stderr: str
     elapsed: float
 
+@dataclass
 class ViolationCount:
     """Aggregated violation count for a single rule in a single tool.
 

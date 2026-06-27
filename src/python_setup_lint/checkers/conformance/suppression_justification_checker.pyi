@@ -12,13 +12,13 @@ from pylint.checkers import BaseChecker
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
 
 class SuppressionJustificationChecker(BaseChecker):
     """AST visitor that flags unjustified suppression comments."""
 
     name: str = "suppression-justification"
-    msgs: dict[LintRuleId, MessageDef]  # type: ignore[assignment]  # pylint's BaseChecker declares msgs as dict[str, tuple[...]]; our typed MessageDef is narrower but correct at runtime
+    msgs: dict[LintRuleId, MessageDef]
 
     def visit_module(self, node: object) -> None:
         """Walk the module's source lines looking for bare suppressions.
