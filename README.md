@@ -82,7 +82,7 @@ and fail-fast / fail-fast-free modes.
 
 When lint rules or checkers change in `python-setup`:
 
-1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.9.0"`
+1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.10.0"`
 2. Re-run the installer: `uv run python-setup install`
 3. Commit the updated config in the consuming project.
 

@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.10.0 (2026-06-27) — Iteration 2+3: Stub repair, runner robustness, structlog migration, mypy fix
+
+**WS1: Repair 26 corrupted .pyi stubs.** Restored missing `def name(` headers from
+pre-corruption git history. Added back missing symbols (LintRuleId, MessageDef,
+check_if_meaningful). Fixed 529 invalid-syntax + 63 astroid-error violations.
+
+**WS2: Runner robustness.** `_run_cmd` now catches FileNotFoundError (returns rc=127
+instead of crashing). CLI `main()` and test conftest ensure `.venv/bin` is on PATH.
+`test_consolidated_real_pipeline_smoke` now passes.
+
+**WS3: Delete W9706 advisory-as-violation.** Removed `internal-helper-docstring-allowed`
+message definition, emit code, and pylintrc enable entries.
+
+**WS4: Structlog migration.** Migrated 9 files from stdlib logging to structlog.
+Converted 21 printf-style log calls to structured kwargs.
+
+**WS5: Semantic threshold test.** Added >50-call behavioral test. Expanded boilerplate
+set and added meaningless_phrases check in `check_if_meaningful` heuristic.
+
+**WS6: Fix remaining pylint violations.** Fixed W9700 (docstring-in-impl), W9705
+(generic-return-requires-returns), W9701 (missing-beartype), W9721 (generic-key-dict),
+W9704 (unjustified-suppression) across 15+ files. Fixed 8 comma-except bugs (Python-2
+syntax). Fixed 24 mypy errors. Created 2 missing .pyi stubs.
+
+**WS7: Version bump 0.9.0→0.10.0.** Updated pyproject.toml, README, CHANGELOG.
+
 ## v0.9.0 (2026-06-27) — Iteration 7: pylint-pyi pass, self-consistency, semantic reranker-only, integration test
   
 **WS1: Unmask .pyi checking.** Added `pylint-pyi` as a 12th lint tool — a second pylint pass
