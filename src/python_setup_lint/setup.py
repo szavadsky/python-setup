@@ -4,6 +4,7 @@ Provides ``python-setup install`` and ``python-setup update`` commands.
 Every install step checks current state before writing — running twice
 is a no-op.
 """
+# pylint: disable=too-many-lines  # setup.py is a CLI with many sub-steps; splitting would harm readability
 
 from __future__ import annotations
 

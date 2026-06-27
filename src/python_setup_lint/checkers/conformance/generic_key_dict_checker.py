@@ -13,6 +13,7 @@ Allowed categories (configurable via ``allow-string-keys-for``):
 """
 
 from __future__ import annotations
+from typing import Any
 
 
 from astroid import nodes
@@ -49,7 +50,7 @@ class GenericKeyDictChecker(BaseChecker):
             "Use 'allow-string-keys-for' config to suppress for legitimate categories.",
         ),
     }
-    options = (
+    options: tuple[tuple[str, dict[str, Any]], ...] = (
         (
             "allow-string-keys-for",
             {
