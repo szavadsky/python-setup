@@ -130,7 +130,7 @@ uv run python-setup-test-checked
 
 ### Formatting & Linting
 
-- **Line length**: 130 (ruff config `line-length = 130`)
+- **Python Line length**: 130 (ruff config `line-length = 130`)
 - **Quote style**: double quotes (ruff format `quote-style = "double"`)
 - **Target**: Python 3.14+ (`target-version = "py314"`)
 - **Ruff rules**: E, F, I, B, UP, SIM, TID + extended sets (N, W, C4, A, RET, PIE, FLY, PERF, PYI, selected PL, PT, S, ARG, ANN, TCH)
@@ -282,5 +282,4 @@ mypackage/
 
 - `lint.baseline` freezes pre-existing violations; only new violations (regressions) fail CI.
 - Shrinkage (fixing violations) auto-records silently — no human diff review needed.
-- `--overwrite-baseline` is reserved for coordinated cleanup milestones only (documented in `decisions.md`).
-- `decisions.md` records consciously baselined findings that cannot be fixed without redesign.
+- `--overwrite-baseline` is reserved for major refactoring only
