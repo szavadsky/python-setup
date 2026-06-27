@@ -9,7 +9,7 @@ from python_setup_lint.checkers._base import LintRuleId, MessageDef
 
 class GenericKeyDictChecker(BaseChecker):
     name: str = "generic-key-dict"
-    msgs: dict[LintRuleId, MessageDef]
+    msgs: dict[LintRuleId, MessageDef]  # type: ignore[assignment]  # pylint's BaseChecker declares msgs as dict[str, tuple[...]]; our typed MessageDef is narrower but correct at runtime
     options: tuple[tuple[str, dict[str, Any]], ...]
 
     def __init__(self, linter: PyLinter) -> None: ...
