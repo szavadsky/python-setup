@@ -38,8 +38,10 @@ Produce written plan: concrete sub-tasks, file paths, dependencies, sequence.
 Write plan to {F}/plan{pIt}.md.
 
 
-Planner MUST limit DIY searching, test running, reading. Launch `explore`/`task` subagents instead.
+Planner MUST limit DIY searching, test running, reading. Launch `explore`/`task`/`librtarian` subagents instead.
 MUST START from launching `explore` subagent(s) and add more as needed
+Consult with high reasoning `oracle` agent on uncertainties/alternativies. 
+Specify scope of each workstream/task
 ```
 WAIT for plan job to complete
 Plan agent writes `{F}/plan{pIt}.md`. Reads applicable `{F}/summary{pIt}.md` files (not previous plans).
@@ -50,7 +52,7 @@ Plan agent writes `{F}/plan{pIt}.md`. Reads applicable `{F}/summary{pIt}.md` fil
 Load `{F}/plan{pIt}.md`. Plan agent reports goal already complete (and nothing delayed till next Phase) → report final status, exit.
 
 ### 4. Execute sub-tasks
-
+Split into small, manageable substaks
 Per sub-task, spawn 2 sequential `task` agents:
 
 - **Implementer** — implements sub-task per plan. Full tool access.

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from pathlib import Path  # noqa: TC003  # TYPE_CHECKING-only import; not available at runtime
+from pathlib import Path  # noqa: TCH003  # TYPE_CHECKING-only import; not available at runtime
 from typing import TYPE_CHECKING
 
 import astroid

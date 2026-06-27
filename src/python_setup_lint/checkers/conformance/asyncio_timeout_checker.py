@@ -12,14 +12,13 @@ Per CodingRules External Call Requirements:
 
 from __future__ import annotations
 
-from typing import ClassVar
 
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TC002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef
 
 
 _HTTP_METHODS: frozenset[str] = frozenset(
@@ -48,7 +47,7 @@ class AsyncTimeoutChecker(BaseChecker):
     """AST visitor that flags await calls missing enclosing timeout context."""
 
     name: str = "asyncio-timeout"
-    msgs: ClassVar[dict[str, "MessageDef"]] = {
+    msgs: dict[LintRuleId, MessageDef] = {
         "W9703": MessageDef(
             message="External async call '%s' without enclosing"
             " asyncio.timeout() / anyio.fail_after()",

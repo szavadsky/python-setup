@@ -11,12 +11,12 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-from astroid import nodes  # noqa: TC002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from astroid import nodes  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TC002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef
 
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
@@ -72,21 +72,21 @@ class StubDocstringChecker(BaseChecker):
     name: str = "stub-docstring-checker"
     _enabled_for_module: bool
     _current_module_name: str | None
-    msgs: dict[str, MessageDef] = {
+    msgs: dict[LintRuleId, MessageDef] = {
         "W9700": MessageDef(
             message="Implementation file '%s' has usage docstring for '%s'; move to .pyi",
             symbol="docstring-in-impl",
             description="Usage docstrings (params, raises, edge cases) belong in .pyi stubs, "
             "not in .py implementation files. CodingRules.md: '.pyi only: all usage docstrings'.",
         ),
-        "W9701": MessageDef(
+        "W9705": MessageDef(
             message="Function '%s' has a non-None return type annotation but no 'Returns:' clause in its docstring",
             symbol="generic-return-requires-returns",
             description="Functions with concrete return type annotations (e.g. -> int, -> str, -> bool) "
             "must have a 'Returns:' clause in their docstring describing the return value. "
             "CodingRules.md: 'Generic-typed returns require a Returns clause'.",
         ),
-        "W9702": MessageDef(
+        "W9706": MessageDef(
             message="Internal helper '%s' MAY have a docstring (not required)",
             symbol="internal-helper-docstring-allowed",
             description="'_'-prefixed helpers are allowed but not required to have docstrings. "

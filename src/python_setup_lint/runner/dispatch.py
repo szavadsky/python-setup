@@ -26,6 +26,7 @@ from .cmd_build import (
     _config_flag_for,
     _expand_globs,
     _find_py_files,
+    _find_pyi_files,
     _resolve_pylintrc,
 )
 from .parsers import _STATISTICS_PARSERS
@@ -110,6 +111,14 @@ TOOLS: list[ToolSpec] = [
         "pylint",
         ["pylint"],
         supports_path=True,
+    ),
+    ToolSpec(
+        "pylint-pyi",
+        ["pylint"],
+        supports_fix=False,
+        supports_path=True,
+        supports_exclude=False,
+        default_paths=["src"],
     ),
     ToolSpec(
         "detect-secrets",
@@ -265,9 +274,6 @@ class _PylintLintTool(LintTool):
         else:
             paths = _find_py_files(config.default_py_dirs, cwd=config.cwd)
 
-        # Expand globs (e.g. config/*.yaml)
-        paths = _expand_globs(paths, cwd=config.cwd)
-
         if paths:
             cmd.extend(paths)
 
@@ -278,12 +284,44 @@ class _PylintLintTool(LintTool):
         return cmd
 
 
+class _PylintPyiLintTool(LintTool):
+    def build_command(  # pylint: disable=missing-beartype  # subclass override; beartype overhead unnecessary
+        self,
+        *,
+        config: RunnerConfig,
+        _fix: bool = False,
+        _path: str | None = None,
+        _exclude: str | None = None,
+    ) -> list[str]:
+        spec = self.spec
+        cmd = list(spec.command)
+
+        # Use .pylintrc-pyi
+        rcfile = config.cwd / "config" / ".pylintrc-pyi"
+        if not rcfile.exists():
+            rcfile = (
+                Path(__file__).parent.parent.parent.parent / "config" / ".pylintrc-pyi"
+            )
+        cmd.extend(["--rcfile", str(rcfile)])
+
+        # Find .pyi files
+        if _path is not None:
+            paths = _find_pyi_files([_path], cwd=config.cwd)
+        else:
+            paths = _find_pyi_files(config.default_py_dirs, cwd=config.cwd)
+
+        if paths:
+            cmd.extend(paths)
+        return cmd
+
+
 # Populate the strategy registry from the 11 built-ins.
 _STRATEGY_CLASSES: dict[str, type[LintTool]] = {
     "mypy.stubtest": _StubtestLintTool,
     "pyright verify types": _VerifyTypesLintTool,
     "detect-secrets": _DetectSecretsLintTool,
     "pylint": _PylintLintTool,
+    "pylint-pyi": _PylintPyiLintTool,
 }
 STRATEGIES: dict[str, LintTool] = {
     spec.name: (_STRATEGY_CLASSES.get(spec.name) or LintTool)(spec) for spec in TOOLS

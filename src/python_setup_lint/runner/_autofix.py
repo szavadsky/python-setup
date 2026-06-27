@@ -22,14 +22,14 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
-from collections.abc import Callable  # noqa: TC003  # TYPE_CHECKING-only import; not available at runtime
-from pathlib import Path  # noqa: TC003  # TYPE_CHECKING-only import; not available at runtime
+from collections.abc import Callable  # noqa: TCH003  # TYPE_CHECKING-only import; not available at runtime
+from pathlib import Path  # noqa: TCH003  # TYPE_CHECKING-only import; not available at runtime
 
 import beartype
 
 from .cmd_build import _expand_globs, _find_py_files
 from .dispatch import _strategy_for
-from .types import LintResult, RunnerConfig, ToolSpec  # noqa: TC001  # TYPE_CHECKING-only import; not available at runtime
+from .types import LintResult, RunnerConfig, ToolSpec  # noqa: TCH001  # TYPE_CHECKING-only import; not available at runtime
 
 _AUTOFIX_ENV_VAR: str = "PYTHON_SETUP_LINT_NO_AUTOFIX"
 _E999_RULE: str = "E999"

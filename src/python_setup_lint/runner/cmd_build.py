@@ -29,6 +29,7 @@ __all__ = [
     "_config_flag_for",
     "_expand_globs",
     "_find_py_files",
+    "_find_pyi_files",
     "_resolve_pylintrc",
 ]
 
@@ -63,6 +64,17 @@ def _find_py_files(dirs: Sequence[str], *, cwd: Path) -> list[str]:
             files.update(p.rglob("*.py"))
         elif p.is_file() and p.suffix == ".py":
             files.add(p)
+    return sorted(str(f.relative_to(cwd)) for f in files)
+
+
+def _find_pyi_files(dirs: Sequence[str], *, cwd: Path) -> list[str]:
+    files: set[Path] = set()
+    for d in dirs:
+        resolved = (cwd / d).resolve()
+        if resolved.is_dir():
+            files.update(resolved.rglob("*.pyi"))
+        elif resolved.is_file():
+            files.add(resolved)
     return sorted(str(f.relative_to(cwd)) for f in files)
 
 
@@ -251,12 +263,16 @@ def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     if not changed:
         return shared_config
 
-    out_dir = Path(tempfile.mkdtemp(prefix=f"python_setup_lint_pyright_{abs_cwd.name}_"))
+    out_dir = Path(
+        tempfile.mkdtemp(prefix=f"python_setup_lint_pyright_{abs_cwd.name}_")
+    )
     composed = out_dir / "pyrightconfig.json"
     composed.write_text(
         json.dumps(data, indent=4, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     return composed
+
+
 def _build_fix_flags(spec: ToolSpec, *, fix: bool) -> list[str]:
     # Return fix flags if *fix* is requested and the tool supports it.
     if fix and spec.supports_fix:
@@ -304,7 +320,11 @@ def _build_command(
     config_flag_override: list[str] | None = None,
 ) -> list[str]:
     cmd = list(spec.command)
-    cmd.extend(_build_config_flags(spec, config, config_flag_override=config_flag_override))
+    cmd.extend(
+        _build_config_flags(spec, config, config_flag_override=config_flag_override)
+    )
     cmd.extend(_build_fix_flags(spec, fix=fix))
-    cmd.extend(_build_path_and_exclude_args(spec, config=config, path=path, exclude=exclude))
+    cmd.extend(
+        _build_path_and_exclude_args(spec, config=config, path=path, exclude=exclude)
+    )
     return cmd

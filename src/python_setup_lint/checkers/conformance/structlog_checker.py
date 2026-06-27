@@ -6,9 +6,9 @@ import structlog
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TC002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import MessageDef, _is_under_source_root
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, _is_under_source_root
 
 log = structlog.get_logger(__name__)
 
@@ -16,7 +16,7 @@ log = structlog.get_logger(__name__)
 class StructlogChecker(BaseChecker):
 
     name: str = "structlog-checker"
-    msgs: dict[str, MessageDef] = {
+    msgs: dict[LintRuleId, MessageDef] = {
         "W9710": MessageDef(
             message="Use structlog.get_logger instead of logging.getLogger in '%s'",
             symbol="use-structlog",

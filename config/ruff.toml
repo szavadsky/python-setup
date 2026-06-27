@@ -44,8 +44,7 @@ ignore = [
 "src/python_setup_lint/testing.py" = [
     "TCH",      # TYPE_CHECKING guard — testing.py uses `from __future__ import annotations` making TCH think imports are type-only, but they're used at runtime
 ]
-## Generic rules stays here. Tests code different from prod - generic
-[lint.per-file-ignores]
+# Tests code different from prod — generic rules stay here.
 "tests/**" = [
     "TID251",
     "S101",     # assertions are expected in tests

@@ -1,12 +1,8 @@
 """Integration tests for the full python-setup install/lint pipeline.
 
-These tests exercise real subprocess calls (uv, pre-commit, pylint, etc.)
-and are therefore marked ``@pytest.mark.slow`` and
-``@pytest.mark.with_real_api``.  They are excluded from the default
-``pytest`` run (which uses ``-m 'not slow'``) and must be invoked
-explicitly::
-
-    pytest test/integration.py -m slow -v
+Exercises real subprocess calls (uv, pre-commit, pylint, etc.)
+across 7 scenarios: setup, lint, violations, config overlay, resetup,
+update, and git hooks dry-run.
 """
 
 from __future__ import annotations
@@ -63,8 +59,6 @@ def _lint_output_contains_violation(output: str, pattern: str) -> bool:
 # ── Test: install + lint on a clean project ─────────────────────────
 
 
-@pytest.mark.slow
-@pytest.mark.with_real_api
 class TestInstallAndLint:
     """End-to-end install-then-lint integration."""
 
@@ -128,8 +122,6 @@ class TestInstallAndLint:
 # ── Test: planted violations detection ────────────────────────────────
 
 
-@pytest.mark.slow
-@pytest.mark.with_real_api
 class TestPlantedViolations:
     """Verify that all planted violations are detected by the linters."""
 
@@ -177,8 +169,6 @@ class TestPlantedViolations:
 # ── Test: overlay config changes lint result ──────────────────────────
 
 
-@pytest.mark.slow
-@pytest.mark.with_real_api
 class TestOverlayConfig:
     """Verify that modifying config changes lint results."""
 
@@ -243,8 +233,6 @@ class TestOverlayConfig:
 # ── Test: resetup / update ────────────────────────────────────────────
 
 
-@pytest.mark.slow
-@pytest.mark.with_real_api
 class TestResetup:
     """Verify that update works on an already-installed project."""
 
@@ -292,8 +280,6 @@ class TestResetup:
 # ── Test: pre-commit hooks dry run ────────────────────────────────────
 
 
-@pytest.mark.slow
-@pytest.mark.with_real_api
 class TestGitHooks:
     """Verify pre-commit hooks are correctly generated and valid."""
 

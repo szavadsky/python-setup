@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from beartype import beartype
 from pylint.checkers import BaseChecker
 
-from python_setup_lint.checkers._base import MessageDef, check_if_meaningful
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, check_if_meaningful
 
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
@@ -31,7 +31,7 @@ class SuppressionJustificationChecker(BaseChecker):
     """AST visitor that flags unjustified suppression comments."""
 
     name: str = "suppression-justification"
-    msgs: dict[str, MessageDef] = {
+    msgs: dict[LintRuleId, MessageDef] = {
         "W9704": MessageDef(
             message="Suppression comment without technical justification: %s",
             symbol="unjustified-suppression",
@@ -103,7 +103,7 @@ class SuppressionJustificationChecker(BaseChecker):
                 tm = _PAT_TRAILING_REASON.search(after)
                 if tm:
                     reason = tm.group(1)
-                    if check_if_meaningful(reason):
+                    if check_if_meaningful(reason, comment=reason):
                         return True
                 break
 
@@ -113,7 +113,7 @@ class SuppressionJustificationChecker(BaseChecker):
             pm = _PAT_PRECEDING_COMMENT.match(prev)
             if pm:
                 reason = pm.group(1)
-                if check_if_meaningful(reason):
+                if check_if_meaningful(reason, comment=reason):
                     return True
 
         return False
