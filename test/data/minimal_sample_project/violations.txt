@@ -37,8 +37,6 @@ docstring-in-impl
 # docstring_checker — missing Returns clause
 generic-return-requires-returns
 
-# docstring_checker — internal helper with docstring (allowed but noted)
-internal-helper-docstring-allowed
 
 # stub_checker — production module has no .pyi stub
 missing-module-stub

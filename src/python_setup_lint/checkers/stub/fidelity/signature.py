@@ -25,7 +25,7 @@ to delegate public-method fidelity.
 from __future__ import annotations
 
 import inspect
-import logging
+import structlog
 from typing import TYPE_CHECKING
 
 from astroid import nodes
@@ -37,7 +37,7 @@ from ._ast_helpers import CallableComparisonCtx, ParamDescriptor
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
-log = logging.getLogger(__name__)
+log = structlog.get_logger(__name__)
 
 __all__ = [
     "_compare_callable_annotations",
@@ -47,6 +47,7 @@ __all__ = [
     "_emit_callable_fidelity_issues",
     "_extract_param_descriptors",
 ]
+
 
 def _extract_param_descriptors(
     args: nodes.Arguments,
@@ -146,6 +147,7 @@ def _extract_param_descriptors(
 
     return descriptors
 
+
 def _compare_callable_descriptors(
     stub_params: list[ParamDescriptor],
     impl_params: list[ParamDescriptor],
@@ -164,6 +166,7 @@ def _compare_callable_descriptors(
 
     return None
 
+
 def _compare_callable_annotations(
     stub_params: list[ParamDescriptor],
     impl_params: list[ParamDescriptor],
@@ -180,6 +183,7 @@ def _compare_callable_annotations(
                 )
     return mismatches
 
+
 def _compare_return_annotations(
     stub_returns: nodes.NodeNG | None,
     impl_returns: nodes.NodeNG | None,
@@ -190,6 +194,7 @@ def _compare_return_annotations(
     stub_norm = AnnotationNormalizer.normalize(stub_returns)
     impl_norm = AnnotationNormalizer.normalize(impl_returns)
     return (stub_norm, impl_norm)
+
 
 def _emit_callable_fidelity_issues(ctx: CallableComparisonCtx) -> None:
     if ctx.impl_func is None:
@@ -209,10 +214,10 @@ def _emit_callable_fidelity_issues(ctx: CallableComparisonCtx) -> None:
     sig_mismatch = _compare_callable_descriptors(stub_params, impl_params)
     if sig_mismatch is not None:
         log.debug(
-            "Signature mismatch for '%s' in '%s': %s",
-            ctx.func_name,
-            ctx.module_name,
-            sig_mismatch,
+            "Signature mismatch",
+            func=ctx.func_name,
+            module=ctx.module_name,
+            detail=sig_mismatch,
         )
         ctx.checker.add_message(
             "signature-mismatch",
@@ -225,12 +230,12 @@ def _emit_callable_fidelity_issues(ctx: CallableComparisonCtx) -> None:
     ann_mismatches = _compare_callable_annotations(stub_params, impl_params)
     for pname, stub_val, impl_val in ann_mismatches:
         log.debug(
-            "Annotation mismatch for param '%s' in '%s.%s': stub=%s, impl=%s",
-            pname,
-            ctx.module_name,
-            ctx.func_name,
-            stub_val,
-            impl_val,
+            "Annotation mismatch for param",
+            param=pname,
+            module=ctx.module_name,
+            func=ctx.func_name,
+            stub=stub_val,
+            impl=impl_val,
         )
         ctx.checker.add_message(
             "annotation-mismatch",
@@ -246,18 +251,18 @@ def _emit_callable_fidelity_issues(ctx: CallableComparisonCtx) -> None:
     if stub_ret is not None and impl_ret is not None:
         if stub_ret == impl_ret:
             log.debug(
-                "Return annotations match for '%s' in '%s': %s",
-                ctx.func_name,
-                ctx.module_name,
-                stub_ret,
+                "Return annotations match",
+                func=ctx.func_name,
+                module=ctx.module_name,
+                annotation=stub_ret,
             )
         else:
             log.debug(
-                "Return annotation mismatch for '%s' in '%s': stub=%s, impl=%s",
-                ctx.func_name,
-                ctx.module_name,
-                stub_ret,
-                impl_ret,
+                "Return annotation mismatch",
+                func=ctx.func_name,
+                module=ctx.module_name,
+                stub=stub_ret,
+                impl=impl_ret,
             )
             ctx.checker.add_message(
                 "annotation-mismatch",
@@ -267,15 +272,14 @@ def _emit_callable_fidelity_issues(ctx: CallableComparisonCtx) -> None:
     elif ctx.stub_func.returns is not None and ctx.impl_func.returns is not None:
         # Both have return annotations but one or both failed normalization
         log.debug(
-            "Return annotation unverifiable for '%s' in '%s'",
-            ctx.func_name,
-            ctx.module_name,
+            "Return annotation unverifiable", func=ctx.func_name, module=ctx.module_name
         )
         ctx.checker.add_message(
             "annotation-unverifiable",
             node=ctx.msg_node,
             args=(ctx.func_name, ctx.module_name),
         )
+
 
 def _emit_callable_fidelity(checker: StubChecker, module_name: str) -> None:
     f = checker._fidelity

@@ -14,7 +14,7 @@ call time so the patch is honoured.
 
 from __future__ import annotations
 
-import logging
+import structlog
 import subprocess
 import time
 from typing import TYPE_CHECKING
@@ -36,7 +36,7 @@ __all__ = [
     "_sort_counts",
 ]
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def _aggregate_statistics(results: list[LintResult]) -> list[ViolationCount]:
@@ -57,7 +57,7 @@ def _aggregate_statistics(results: list[LintResult]) -> list[ViolationCount]:
                     continue
                 violations = parser(result.stdout, result.stderr)
         except Exception as e:
-            logger.warning("stats parser %s failed: %s", result.tool_name, e)
+            logger.warning("stats parser failed", tool=result.tool_name, exc_info=e)
             continue
         for rule, count in violations:
             counts.append(

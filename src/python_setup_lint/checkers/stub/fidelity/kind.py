@@ -21,7 +21,7 @@ Topologically the upstream-most dispatcher: depends on ``_ast_helpers``
 
 from __future__ import annotations
 
-import logging
+import structlog
 from typing import TYPE_CHECKING
 
 from ._ast_helpers import ClassComparisonCtx
@@ -34,9 +34,10 @@ from .annotation import (
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
-log = logging.getLogger(__name__)
+log = structlog.get_logger(__name__)
 
 __all__ = ["_emit_stub_symbol_check"]
+
 
 def _build_stub_kinds(
     stub_vars: dict[str, object],
@@ -82,9 +83,7 @@ def _check_missing_symbols(
     for sym_name, stub_kind in stub_kinds.items():
         if sym_name not in impl_all:
             log.debug(
-                "Stub symbol '%s' in module '%s' has no implementation",
-                sym_name,
-                module_name,
+                "Stub symbol has no implementation", symbol=sym_name, module=module_name
             )
             checker.add_message(
                 "stub-symbol-missing",
@@ -95,11 +94,11 @@ def _check_missing_symbols(
             impl_kind = impl_kinds.get(sym_name, "unknown")
             if stub_kind != impl_kind:
                 log.debug(
-                    "Kind mismatch for '%s' in '%s': stub=%s, impl=%s",
-                    sym_name,
-                    module_name,
-                    stub_kind,
-                    impl_kind,
+                    "Kind mismatch",
+                    symbol=sym_name,
+                    module=module_name,
+                    stub_kind=stub_kind,
+                    impl_kind=impl_kind,
                 )
                 checker.add_message(
                     "symbol-kind-mismatch",

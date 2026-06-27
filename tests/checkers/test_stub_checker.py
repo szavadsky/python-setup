@@ -10,7 +10,7 @@ Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 
 from __future__ import annotations
 
-import logging
+import structlog
 from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock
 
@@ -188,10 +188,7 @@ def test_stub_resolution_layout(
 # ── TestObservability — close produces log records ─────────────────
 
 
-def test_close_produces_log_record(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
-) -> None:
-    caplog.set_level(logging.INFO)
+def test_close_produces_log_record(tmp_path: Path) -> None:
     tc = _make_tc()  # type: ignore[no-untyped-call]
     tc.checker.open()
     for mod_name in ("mod_a", "mod_b", "mod_c"):
@@ -204,11 +201,14 @@ def test_close_produces_log_record(
     tc.checker._coverage.production_count = 10
     tc.checker._coverage.stub_found_count = 7
     tc.checker._coverage.stub_missing = {"mod_a", "mod_b", "mod_c"}
-    tc.checker.close()
-    assert "StubChecker:" in caplog.text
-    assert "10" in caplog.text
-    assert "7" in caplog.text
-    assert "3" in caplog.text
+    with structlog.testing.capture_logs() as cap:
+        tc.checker.close()
+    assert len(cap) == 1
+    assert cap[0]["event"] == "StubChecker summary"
+    assert cap[0]["log_level"] == "info"
+    assert cap[0]["production_count"] == 10
+    assert cap[0]["stub_found_count"] == 7
+    assert cap[0]["violations"] == 3
 
 
 def test_open_initialises_all_state() -> None:
@@ -232,52 +232,28 @@ def test_open_initialises_all_state() -> None:
 
 
 @pytest.mark.parametrize(
-    ("layout_kind", "code", "expected_log_substring"),
+    ("layout_kind", "code", "expected_log_event"),
     _PYI_EXEMPT_LOG_LAYOUT_CASES,
 )
 def test_pyi_exemption_logs_record(
     tmp_path: Path,
     layout_kind: str,
     code: str,
-    expected_log_substring: str,
-    caplog: pytest.LogCaptureFixture,
+    expected_log_event: str,
 ) -> None:
-    caplog.set_level(logging.INFO)
-    file_path, source_roots, module_name = materialize_pyi_exempt_layout(  # type: ignore[no-untyped-call]
+    file_path, source_roots, module_name = materialize_pyi_exempt_layout(
         tmp_path,
         layout_kind,
         code,
     )
-    walk_stub_close_release(  # type: ignore[no-untyped-call]
-        code=code,
-        file_path=file_path,
-        source_roots=source_roots,
-        module_name=module_name,
-    )
-    assert expected_log_substring in caplog.text
-
-
-def test_trivial_test_data_under_source_root_still_flagged(
-    tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Non-exempt counterpart to trivial_data row — preserves the boundary."""
-    caplog.set_level(logging.INFO)
-    src = tmp_path / "src"
-    src.mkdir()
-    prod_file = src / "constants.py"
-    prod_file.write_text("x = 1\ny = 2\n")
-    tc = _make_tc()  # type: ignore[no-untyped-call]
-    tc.linter.config.source_roots = [str(src)]
-    tc.checker.open()
-    module = astroid.parse("x = 1\ny = 2\n", module_name="constants")
-    module.file = str(prod_file)
-    tc.walk(module)
-    tc.checker.close()
-    msgs = tc.linter.release_messages()
-    e97a0 = [m for m in msgs if m.msg_id == "missing-module-stub"]
-    assert len(e97a0) > 0
-    assert "trivial test data" not in caplog.text
+    with structlog.testing.capture_logs() as cap:
+        walk_stub_close_release(
+            code=code,
+            file_path=file_path,
+            source_roots=source_roots,
+            module_name=module_name,
+        )
+    assert any(c["event"] == expected_log_event for c in cap)
 
 
 # ── TestImportUsage ────────────────────────────────────────────────

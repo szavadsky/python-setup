@@ -5,7 +5,7 @@ Extracted from stub_checker.py.  Mechanical cut-paste, no logic change.
 
 from __future__ import annotations
 
-import logging
+import structlog
 from dataclasses import dataclass, field
 from pathlib import Path  # noqa: TCH003  # TYPE_CHECKING-only import; not available at runtime
 from typing import TYPE_CHECKING
@@ -18,7 +18,7 @@ from python_setup_lint.checkers._base import _matches_path
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
     from python_setup_lint.checkers.stub.import_contract import ImportUsage
-log = logging.getLogger(__name__)
+log = structlog.get_logger(__name__)
 
 
 @dataclass
@@ -57,8 +57,6 @@ class _CoverageState:
 # ── Pattern matching ──────────────────────────────────────────────────────────
 
 
-
-
 def _is_test_file(checker: StubChecker, path: Path) -> bool:
     return _matches_path(path.as_posix(), checker._coverage.patterns.test_patterns)
 
@@ -71,8 +69,15 @@ def _is_opted_out(checker: StubChecker, path: Path) -> bool:
 
 
 _LOGIC_NODE_TYPES: tuple[type, ...] = (
-    nodes.AnnAssign, nodes.If, nodes.Try, nodes.With,
-    nodes.For, nodes.AugAssign, nodes.Delete, nodes.Raise, nodes.Assert,
+    nodes.AnnAssign,
+    nodes.If,
+    nodes.Try,
+    nodes.With,
+    nodes.For,
+    nodes.AugAssign,
+    nodes.Delete,
+    nodes.Raise,
+    nodes.Assert,
 )
 
 
@@ -217,10 +222,12 @@ def _index_stub_declarations(
     try:
         stub_module = astroid.parse(stub_path.read_text(), module_name=module_name)
     except SyntaxError:
-        log.warning("Syntax error in stub '%s' — cannot index declarations", stub_path)
+        log.warning("Syntax error in stub", stub_path=str(stub_path))
         return
 
-    checker._coverage.declaration_index[module_name] = _collect_declarations(stub_module)
+    checker._coverage.declaration_index[module_name] = _collect_declarations(
+        stub_module
+    )
 
     # Also index callable and class nodes for fidelity phase
     f = checker._fidelity
@@ -228,7 +235,9 @@ def _index_stub_declarations(
     stub_callables: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     stub_classes: dict[str, nodes.ClassDef] = {}
     for child in stub_module.body:
-        if isinstance(child, nodes.AnnAssign) and isinstance(child.target, nodes.AssignName):
+        if isinstance(child, nodes.AnnAssign) and isinstance(
+            child.target, nodes.AssignName
+        ):
             stub_vars[child.target.name] = child
         elif isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
             stub_callables[child.name] = child
