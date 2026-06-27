@@ -186,7 +186,11 @@ class StubDocstringChecker(BaseChecker):
 
     @staticmethod
     def _has_returns_clause(doc_text: str) -> bool:
-        """Check if a docstring contains a Returns: or Yields: clause."""
+        """Check if a docstring contains a Returns: or Yields: clause.
+
+        Returns:
+            True if the docstring contains a ``Returns:`` or ``Yields:`` clause.
+        """
         for line in doc_text.splitlines():
             stripped = line.strip()
             if stripped.startswith("Returns:") or stripped.startswith("Yields:"):

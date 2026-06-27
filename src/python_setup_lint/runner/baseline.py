@@ -189,7 +189,9 @@ def _diff_baseline(
     baseline_modified = False
     current_tool_names = {r.tool_name for r in current}
 
-    baseline_modified = _remove_stale_tools(saved, saved_map, current_tool_names) or baseline_modified
+    baseline_modified = (
+        _remove_stale_tools(saved, saved_map, current_tool_names) or baseline_modified
+    )
 
     for r in current:
         saved_entry = saved_map.get(r.tool_name)
@@ -202,7 +204,9 @@ def _diff_baseline(
         if m:
             baseline_modified = True
 
-    write_violations = _write_baseline_if_modified(saved, baseline_path, baseline_modified)
+    write_violations = _write_baseline_if_modified(
+        saved, baseline_path, baseline_modified
+    )
     if write_violations is not None:
         return write_violations
 
@@ -260,7 +264,7 @@ def _compare_diagnostics(
     violations: list[str] = []
     try:
         current_diag = json.loads(r.stdout) if r.stdout else None
-    except json.JSONDecodeError, ValueError:
+    except (json.JSONDecodeError, ValueError):
         current_diag = None
 
     # D4: saved has diagnostics (dict) but current stdout is
@@ -328,7 +332,9 @@ def _resolve_saved_records(
         saved_output = saved_entry["output"]
         saved_records = _legacy_to_records(saved_output, parser)
         if saved_output.strip():
-            nonblank_saved_lines = sum(1 for ln in saved_output.splitlines() if ln.strip())
+            nonblank_saved_lines = sum(
+                1 for ln in saved_output.splitlines() if ln.strip()
+            )
             partial_parse = saved_records and len(saved_records) < nonblank_saved_lines
             if not saved_records or partial_parse:
                 _FALLBACK_TOOLS.add(tool_name)
@@ -349,7 +355,9 @@ def _compare_records_path(
     parser = _RECORD_PARSERS.get(r.tool_name)
     current_records: list[Record] = parser(r.stdout or "") if parser is not None else []
 
-    saved_records, legacy_save_fallback = _resolve_saved_records(saved_entry, parser, r.tool_name)
+    saved_records, legacy_save_fallback = _resolve_saved_records(
+        saved_entry, parser, r.tool_name
+    )
 
     if legacy_save_fallback:
         if _diff_legacy_output(r, saved_entry):
@@ -416,8 +424,6 @@ def _legacy_current_output(r: LintResult) -> str:
 
 def _legacy_saved_output(saved_entry: dict[str, Any], tool_name: str) -> str:
     return _normalise_legacy_output(saved_entry.get("output") or "", tool_name)
-
-
 
 
 def _diff_legacy_output(r: LintResult, saved_entry: dict[str, Any]) -> bool:

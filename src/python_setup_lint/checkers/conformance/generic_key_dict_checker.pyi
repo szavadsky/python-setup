@@ -3,13 +3,15 @@
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
+from pylint.typing import ExtraMessageOptions
+from typing import Any
 
 from python_setup_lint.checkers._base import LintRuleId, MessageDef
 
 class GenericKeyDictChecker(BaseChecker):
     name: str = "generic-key-dict"
-    msgs: dict[LintRuleId, MessageDef]
-    options: tuple[tuple[str, dict], ...]
+    msgs: dict[str, tuple[str, str, str] | tuple[str, str, str, ExtraMessageOptions]]
+    options: tuple[tuple[str, dict[str, Any]], ...]
 
     def __init__(self, linter: PyLinter) -> None: ...
     def open(self) -> None: ...

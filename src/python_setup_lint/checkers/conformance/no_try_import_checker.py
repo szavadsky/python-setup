@@ -23,7 +23,11 @@ _OPTIONAL_IMPORT_PATTERNS: frozenset[str] = frozenset({"sentence_transformers"})
 
 
 def _all_imports_optional(stmts: list[nodes.NodeNG]) -> bool:
-    """Return True if every import in *stmts* is from an optional dependency."""
+    """Return True if every import in *stmts* is from an optional dependency.
+
+    Returns:
+        True if every import statement in *stmts* is from an optional dependency.
+    """
     for stmt in stmts:
         if isinstance(stmt, nodes.Import):
             for alias in stmt.names:
@@ -86,5 +90,5 @@ class NoTryImportChecker(BaseChecker):
         return any(isinstance(stmt, (nodes.Import, nodes.ImportFrom)) for stmt in stmts)
 
 
-def register(linter: PyLinter) -> None: # pylint: disable=missing-beartype # PyLinter is a pylint internal type not available at runtime for beartype
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype # PyLinter is a pylint internal type not available at runtime for beartype
     linter.register_checker(NoTryImportChecker(linter))

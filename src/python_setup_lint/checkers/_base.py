@@ -13,6 +13,7 @@ import fnmatch
 import os
 from pathlib import Path
 from typing import NamedTuple, NewType
+from beartype import beartype
 
 from astroid import nodes  # noqa: TCH002  # astroid is a pylint dependency, only used for type checking in this module
 
@@ -62,10 +63,11 @@ def _get_file_path(node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> Path | N
         if file_val is None:
             return None
         return Path(file_val)
-    except AttributeError, TypeError:
+    except (AttributeError, TypeError):
         return None
 
 
+@beartype
 def check_if_meaningful(
     text: str,
     *,
@@ -73,18 +75,6 @@ def check_if_meaningful(
     code_context: str | None = None,
     comment: str | None = None,
 ) -> bool:
-    """Check if a suppression justification is meaningful.
-
-    Uses the NLP semantic pipeline (``_semantic.semantic_check_if_meaningful``)
-    when enabled and available, falling back to a heuristic check.
-
-    The semantic pipeline is enabled by default (``PYTHON_SETUP_LINT_SEMANTIC=1``)
-    and requires the ``[semantic]`` extra (``sentence-transformers``).
-
-    Heuristic: non-empty, non-boilerplate, not equal to the rule symbol.
-    Uses *comment* as the primary text if provided; falls back to *text*.
-    *rule* and *code_context* are reserved for future semantic analysis.
-    """
     # Try the semantic NLP pipeline when enabled.
     if os.environ.get("PYTHON_SETUP_LINT_SEMANTIC", "1") == "1":
         from python_setup_lint.checkers._semantic import (

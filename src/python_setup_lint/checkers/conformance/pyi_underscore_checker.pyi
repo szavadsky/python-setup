@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
+from pylint.typing import ExtraMessageOptions
 
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
@@ -23,13 +24,40 @@ class PyiUnderscoreChecker(BaseChecker):
     """AST visitor that flags _-prefixed symbols in .pyi files."""
 
     name: str = "pyi-underscore"
-    msgs: dict[LintRuleId, MessageDef]
+    msgs: dict[str, tuple[str, str, str] | tuple[str, str, str, ExtraMessageOptions]]
 
-    def visit_module(self, node: nodes.Module) -> None: ...
-    def visit_functiondef(self, node: nodes.FunctionDef) -> None: ...
-    def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None: ...
-    def visit_classdef(self, node: nodes.ClassDef) -> None: ...
-    def visit_annassign(self, node: nodes.AnnAssign) -> None: ...
-    def visit_assign(self, node: nodes.Assign) -> None: ...
+    def visit_module(self, node: nodes.Module) -> None:
+        """Determine if this module is a .pyi file."""
+    def visit_functiondef(self, node: nodes.FunctionDef) -> None:
+        """Check function names in .pyi files.
 
-def register(linter: PyLinter) -> None: ...
+        Flags functions whose names start with ``_`` in ``.pyi`` stub files.
+        Skips symbols inside ``if TYPE_CHECKING:`` blocks.
+        """
+    def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
+        """Check async function names in .pyi files.
+
+        Flags async functions whose names start with ``_`` in ``.pyi`` stub files.
+        Skips symbols inside ``if TYPE_CHECKING:`` blocks.
+        """
+    def visit_classdef(self, node: nodes.ClassDef) -> None:
+        """Check class names in .pyi files.
+
+        Flags classes whose names start with ``_`` in ``.pyi`` stub files.
+        Skips symbols inside ``if TYPE_CHECKING:`` blocks.
+        """
+    def visit_annassign(self, node: nodes.AnnAssign) -> None:
+        """Check annotated assignment targets in .pyi files.
+
+        Flags annotated assignments whose target names start with ``_``.
+        Skips symbols inside ``if TYPE_CHECKING:`` blocks.
+        """
+    def visit_assign(self, node: nodes.Assign) -> None:
+        """Check assignment targets in .pyi files.
+
+        Flags assignments whose target names start with ``_``.
+        Skips symbols inside ``if TYPE_CHECKING:`` blocks.
+        """
+
+def register(linter: PyLinter) -> None:
+    """Register the checker with the linter."""

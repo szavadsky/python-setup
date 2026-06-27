@@ -37,7 +37,7 @@ class SuppressionJustificationChecker(BaseChecker):
             symbol="unjustified-suppression",
             description=(
                 "Suppression comments (# pylint: disable=..., # noqa, "
-                "# type: ignore) must be accompanied by a technical reason "
+                "# type: ignore) must be accompanied by a technical reason "  # noqa: W9704  # this is a description string, not an actual suppression
                 "on the same line or the preceding line."
             ),
         ),
@@ -45,10 +45,10 @@ class SuppressionJustificationChecker(BaseChecker):
 
     @beartype
     def visit_module(self, node: object) -> None:
-        """Walk the module's source lines looking for bare suppressions."""
+        # Walk the module's source lines looking for bare suppressions.
         try:
             stream = node.stream()  # type: ignore[union-attr]  # node is ModuleNode from astroid, stream() exists at runtime
-        except AttributeError, OSError:
+        except (AttributeError, OSError):
             return
 
         try:
@@ -78,7 +78,11 @@ class SuppressionJustificationChecker(BaseChecker):
 
     @staticmethod
     def _is_suppression_line(line: str) -> bool:
-        """Return True if *line* contains a suppression comment."""
+        """Return True if *line* contains a suppression comment.
+
+        Returns:
+            True if *line* contains a suppression comment.
+        """
         return bool(
             _PAT_PYLINT_DISABLE.search(line)
             or _PAT_NOQA.search(line)
@@ -91,6 +95,9 @@ class SuppressionJustificationChecker(BaseChecker):
 
         Looks for a trailing comment on the same line, or a comment on the
         preceding line.
+
+        Returns:
+            True if the suppression at *idx* has a meaningful justification.
         """
         line = lines[idx].rstrip("\n")
 
@@ -121,5 +128,5 @@ class SuppressionJustificationChecker(BaseChecker):
 
 
 def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API; @beartype cannot resolve PyLinter forward ref
-    """Register the checker with the linter."""
+    # Register the checker with the linter.
     linter.register_checker(SuppressionJustificationChecker(linter))

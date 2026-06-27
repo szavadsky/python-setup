@@ -97,7 +97,7 @@ def _parse_pylint_json2(stdout: str, stderr: str) -> list[tuple[str, int]]:
     _ = stderr
     try:
         raw: Any = json.loads(stdout)
-    except json.JSONDecodeError, TypeError:
+    except (json.JSONDecodeError, TypeError):
         return []
     if isinstance(raw, dict):
         raw = raw.get("messages", [])

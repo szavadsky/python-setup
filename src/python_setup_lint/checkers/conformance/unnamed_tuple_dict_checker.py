@@ -35,7 +35,7 @@ class UnnamedTupleDictChecker(BaseChecker):
 
     @beartype
     def visit_annassign(self, node: nodes.AnnAssign) -> None:
-        """Check annotated assignments for unnamed-tuple dict values."""
+        # Check annotated assignments for unnamed-tuple dict values.
         if not self._is_str_key_dict_annotation(node.annotation):
             return
         if not isinstance(node.value, nodes.Dict):
@@ -44,7 +44,7 @@ class UnnamedTupleDictChecker(BaseChecker):
 
     @beartype
     def visit_assign(self, node: nodes.Assign) -> None:
-        """Check assignments with type comments for unnamed-tuple dict values."""
+        # Check assignments with type comments for unnamed-tuple dict values.
         if node.type_annotation is None:
             return
         if not self._is_str_key_dict_annotation(node.type_annotation):
@@ -54,7 +54,11 @@ class UnnamedTupleDictChecker(BaseChecker):
         self._check_dict(node.value)
 
     def _is_str_key_dict_annotation(self, ann: nodes.NodeNG | None) -> bool:
-        """Check if annotation is ``dict[str, ...]`` or ``ClassVar[dict[str, ...]]``."""
+        """Check if annotation is ``dict[str, ...]`` or ``ClassVar[dict[str, ...]]``.
+
+        Returns:
+            True if the annotation is ``dict[str, ...]`` or ``ClassVar[dict[str, ...]]``.
+        """
         if ann is None:
             return False
 
@@ -96,7 +100,11 @@ class UnnamedTupleDictChecker(BaseChecker):
 
     @staticmethod
     def _is_unnamed_tuple(node: nodes.NodeNG) -> bool:
-        """Check if *node* is a bare tuple literal with >1 unnamed fields."""
+        """Check if *node* is a bare tuple literal with >1 unnamed fields.
+
+        Returns:
+            True if *node* is a bare tuple literal with >1 unnamed fields.
+        """
         if not isinstance(node, nodes.Tuple):
             return False
         elts = node.elts
