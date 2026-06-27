@@ -42,11 +42,11 @@ def canned_results_all_tools(
     stdout: str = "",
     overrides: Mapping[str, LintResult] | None = None,
 ) -> dict[str, LintResult]:
-    """Build the 11-tool canned-result dict for ``fake_run_cmd_factory``.
+    """Build the 12-tool canned-result dict for ``fake_run_cmd_factory``.
 
     Every built-in label maps to a ``LintResult`` with defaults; pass
     *overrides* to vary any subset. Used by the orchestration / smoke
-    tests so they stop repeating the 11-key dict literal.
+    tests so they stop repeating the 12-key dict literal.
     """
     # Late import to avoid any conftest-collection ordering surprise.
     from python_setup_lint.testing import make_lint_result
@@ -144,7 +144,9 @@ def assert_violation_contains_any(violations: list[str], *needles: str) -> None:
 
 def extra_block(entries: str) -> str:
     """Wrap one-or-more ``[[tool.python-setup-lint.extra-tools]]`` body lines."""
-    return f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{entries}"
+    return (
+        f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{entries}"
+    )
 
 
 def write_pyproject(tmp_path: Path, body: str) -> Path:
@@ -185,4 +187,3 @@ def assert_r4_reason(err, pyproject: Path, reason_want: str, want_kind: str) -> 
 
 
 # ── Re-exports from split files ─────────────────────────────────────
-

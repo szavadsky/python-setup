@@ -7,9 +7,18 @@ import json
 from typing import TYPE_CHECKING
 
 from python_setup_lint.runner import TOOLS, LintResult, ViolationCount, run_lint
-from python_setup_lint.runner.output import _aggregate_statistics, _print_statistics_table
+from python_setup_lint.runner.output import (
+    _aggregate_statistics,
+    _print_statistics_table,
+)
 from python_setup_lint.runner.cmd_build import _build_statistics_flags
-from python_setup_lint.runner.parsers import _parse_detect_secrets_json, _parse_mypy_stderr, _parse_tach_json, _parse_ty_concise, _parse_yamllint_parsable
+from python_setup_lint.runner.parsers import (
+    _parse_detect_secrets_json,
+    _parse_mypy_stderr,
+    _parse_tach_json,
+    _parse_ty_concise,
+    _parse_yamllint_parsable,
+)
 import python_setup_lint.runner.output as _output_module
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 
@@ -28,6 +37,7 @@ class TestParserCompleteness:
         "ruff check",
         "rumdl check",
         "pylint",
+        "pylint-pyi",
         "pyright check",
         "pyright verify types",
         "mypy",
@@ -64,6 +74,7 @@ class TestParserCompleteness:
             "pyright verify types",
             "mypy.stubtest",
             "detect-secrets",
+            "pylint-pyi",
         }, f"Tools with parsers but no flags: {no_flag_but_parser}"
 
 

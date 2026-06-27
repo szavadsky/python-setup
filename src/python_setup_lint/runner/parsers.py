@@ -211,6 +211,7 @@ _STATISTICS_PARSERS: dict[str, Callable[..., list[tuple[str, int]]]] = {
     "ruff check": _parse_ruff_statistics,
     "rumdl check": _parse_rumdl_statistics,
     "pylint": _parse_pylint_json2,
+    "pylint-pyi": _parse_pylint_json2,
     "pyright check": _parse_pyright_outputjson,
     "pyright verify types": _parse_pyright_verify_types,
     "mypy": _parse_mypy_stderr,

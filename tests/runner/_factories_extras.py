@@ -31,9 +31,13 @@ EMPTY_LOADER_CASES: list = [
     ("empty_array", "[tool.python-setup-lint]\nextra-tools = []\n"),
 ]
 
+
 def extra_block(entries: str) -> str:
     """Wrap one-or-more ``[[tool.python-setup-lint.extra-tools]]`` body lines."""
-    return f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{entries}"
+    return (
+        f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{entries}"
+    )
+
 
 # Combined R4 reason-match table.
 R4_EXACT_REASON_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
@@ -369,9 +373,9 @@ RUN_LINT_FAKE_INVARIANT_CASES: list[pytest.Param] = [  # type: ignore[name-defin
     pytest.param(
         {"path": "src/python_setup_lint/runner.py"},
         lambda f: (
-            len(f.calls) == 11 and all(len(c.cmd) > 0 and c.label for c in f.calls)
+            len(f.calls) == 12 and all(len(c.cmd) > 0 and c.label for c in f.calls)
         ),
-        id="all_11_tools_dispatched",
+        id="all_12_tools_dispatched",
     ),
     pytest.param(
         {"path": "src/python_setup_lint/runner.py", "fix": True},
@@ -394,7 +398,7 @@ RUN_LINT_FAKE_INVARIANT_CASES: list[pytest.Param] = [  # type: ignore[name-defin
     pytest.param(
         {"package_name": None, "path": "src/python_setup_lint/runner.py"},
         lambda f: (
-            len(f.calls) == 9
+            len(f.calls) == 10
             and "mypy.stubtest" not in {c.label for c in f.calls}
             and "pyright verify types" not in {c.label for c in f.calls}
         ),
@@ -447,15 +451,19 @@ FIND_PY_FILES_BOUNDARY_CASES: list[pytest.Param] = [  # type: ignore[name-define
     ),
 ]
 
+
 # ``TestPathHelpers._expand_globs`` rows.
 def _is_passthrough(r: list[str]) -> bool:
     return r == ["src/python_setup_lint"]
 
+
 def _is_py_glob(r: list[str]) -> bool:
     return bool(r) and all(f.endswith(".py") for f in r)
 
+
 def _is_empty(r: list[str]) -> bool:
     return r == []
+
 
 EXPAND_GLOBS_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
     pytest.param(["src/python_setup_lint"], _is_passthrough, id="passthrough"),
@@ -481,12 +489,8 @@ STRATEGY_TOKENS_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
 
 # ``TestRunLintOrchestration.test_package_name_governs_stubtest_verifytypes`` rows.
 PACKAGE_NAME_STUBTEST_CASES: list[pytest.Param] = [  # type: ignore[name-defined]
-    pytest.param(
-        None, False, -2, id="package_name_none_skips"
-    ),
-    pytest.param(
-        "python_setup_lint", True, 0, id="package_name_set_runs"
-    ),
+    pytest.param(None, False, -2, id="package_name_none_skips"),
+    pytest.param("python_setup_lint", True, 0, id="package_name_set_runs"),
 ]
 
 # ``TestMainCLI.test_main_exit_codes`` rows.
