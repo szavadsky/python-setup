@@ -16,6 +16,7 @@ from ._ast_helpers import CallableComparisonCtx, ParamDescriptor
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
+def _extract_param_descriptors(
     args: nodes.Arguments,
     *,
     strip_self: bool = ...,
@@ -26,6 +27,7 @@ if TYPE_CHECKING:
     ``cls``, it is excluded from the result.
     """
 
+def _compare_callable_descriptors(
     stub_params: list[ParamDescriptor],
     impl_params: list[ParamDescriptor],
 ) -> str | None:
@@ -35,6 +37,7 @@ if TYPE_CHECKING:
     Checks: count, name, kind, default-presence.
     """
 
+def _compare_callable_annotations(
     stub_params: list[ParamDescriptor],
     impl_params: list[ParamDescriptor],
 ) -> list[tuple[str, str, str]]:
@@ -45,6 +48,7 @@ if TYPE_CHECKING:
     an annotation.
     """
 
+def _compare_return_annotations(
     stub_returns: nodes.NodeNG | None,
     impl_returns: nodes.NodeNG | None,
 ) -> tuple[str | None, str | None]:
@@ -55,12 +59,14 @@ if TYPE_CHECKING:
     there is nothing to compare.
     """
 
+def _emit_callable_fidelity_issues(ctx: CallableComparisonCtx) -> None:
     """Emit E97B3/E97B4/I97B6 for a single callable pair.
 
     If *impl_func* is None, the function exists only in the stub — no
     comparison can be done (handled separately by coverage logic).
     """
 
+def _emit_callable_fidelity(checker: StubChecker, module_name: str) -> None:
     """Compare callable signatures between stub and impl for *module_name*.
 
     Dispatches to ``_emit_callable_fidelity_issues`` for each stub callable.

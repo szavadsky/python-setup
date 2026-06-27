@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.import_contract import ImportUsage
 
 @dataclass
+class _CoveragePatterns:
     """Configuration patterns for stub coverage filtering."""
 
     source_roots: list[Path] = ...
@@ -33,6 +34,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
+class _CoverageState:
     """Phase 1 and shared state aggregated for StubChecker."""
 
     module_index: dict[str, tuple[Path, nodes.Module]] = ...
@@ -50,12 +52,16 @@ if TYPE_CHECKING:
     main_module_candidates: set[str] = ...
 
 
+def _is_test_file(checker: StubChecker, path: Path) -> bool:
     """Check if *path* matches any configured test pattern."""
 
+def _is_opted_out(checker: StubChecker, path: Path) -> bool:
     """Check if *path* matches any stub-opt-out pattern."""
 
+def _is_logic_node(child: nodes.NodeNG) -> bool:
     """Check if an AST child node represents logic (not just imports/assignments)."""
 
+def _is_init_exempt(node: nodes.Module) -> bool:
     """Check if an ``__init__.py`` is exempt from stub requirement.
 
     Exempt when body contains only imports, ``__all__``, and simple
@@ -63,13 +69,17 @@ if TYPE_CHECKING:
     non-trivial logic (calls, class/func defs, expressions) exists.
     """
 
+def _is_trivial_test_data(node: nodes.Module) -> bool:
     """Check if module is trivial test data (only literal assignments, no
     classes, functions, or imports)."""
 
+def _has_main_block(node: nodes.Module) -> bool:
     """Check if module has a ``if __name__ == '__main__':`` block."""
 
+def _is_under_source_root(checker: StubChecker, path: Path) -> bool:
     """Check if *path* is under any configured source root."""
 
+def _resolve_stub(checker: StubChecker, py_path: Path) -> Path | None:
     """Resolve a .pyi companion for *py_path*.
 
     Returns the resolved stub path or None.
@@ -80,10 +90,13 @@ if TYPE_CHECKING:
     3. Configured *stub-roots*.
     """
 
+def _collect_declarations(stub_module: nodes.Module) -> set[str]:
     """Collect all declared symbol names from a stub module's body."""
 
+def _add_declaration(child: nodes.NodeNG, declarations: set[str]) -> None:
     """Add a single child's declarations to the set."""
 
+def _index_stub_declarations(
     checker: StubChecker, module_name: str, stub_path: Path
 ) -> None:
     """Parse a .pyi stub file and index its top-level declarations."""

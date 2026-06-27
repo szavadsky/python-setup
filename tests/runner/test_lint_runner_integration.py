@@ -11,7 +11,13 @@ from typing import Any
 
 import pytest
 
-from python_setup_lint.runner import LINT_TOOLS, LintResult, RunnerConfig, main, run_lint
+from python_setup_lint.runner import (
+    LINT_TOOLS,
+    LintResult,
+    RunnerConfig,
+    main,
+    run_lint,
+)
 from python_setup_lint.runner.baseline import _capture_baseline, _diff_baseline
 from python_setup_lint.runner.output import _run_cmd
 import python_setup_lint.runner.output as _output_module
@@ -328,7 +334,6 @@ class TestOverwriteBaseline:
 class TestRunLintOrchestration:
     """Fake-driven ``run_lint``: --no-fail-fast, tools_override, package_name."""
 
-
     def test_no_fail_fast_captures_all_tools_and_returns_int(
         self,
         tmp_path: Path,
@@ -495,6 +500,8 @@ class TestRunCmd:
         if stdout_want is not None:
             assert r.stdout == stdout_want
 
-    def test_non_existent_command_raises(self) -> None:
-        with pytest.raises(FileNotFoundError):
-            _run_cmd(["nonexistent_cmd_xyz789"], cwd=Path.cwd(), label="bad")
+    def test_non_existent_command_returns_127(self) -> None:
+        r = _run_cmd(["nonexistent_cmd_xyz789"], cwd=Path.cwd(), label="bad")
+        assert r.exit_code == 127
+        assert r.stderr == "Tool not found: nonexistent_cmd_xyz789"
+        assert r.elapsed >= 0

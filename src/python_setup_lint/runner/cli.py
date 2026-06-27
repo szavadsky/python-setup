@@ -132,10 +132,7 @@ def _emit_statistics(
     if statistics_format == "json":
         print(
             json.dumps(
-                [
-                    {"tool": v.tool, "rule": v.rule, "count": v.count}
-                    for v in vcounts
-                ],
+                [{"tool": v.tool, "rule": v.rule, "count": v.count} for v in vcounts],
                 indent=2,
             )
         )
@@ -145,7 +142,6 @@ def _emit_statistics(
         if sort_by_rule:
             vcounts = _sort_counts(vcounts, sort_by_rule=True)
         _print_statistics_table(vcounts)
-
 
 
 def run_lint(
@@ -207,7 +203,8 @@ def run_lint(
     # Baseline handling.
     if baseline is not None:
         overall_rc = _handle_baseline(
-            results, baseline,
+            results,
+            baseline,
             overwrite_baseline=overwrite_baseline,
             overall_rc=overall_rc,
         )
@@ -221,6 +218,11 @@ def run_lint(
 #   orchestrator, not a leaf utility — beartype's overhead on this entry
 #   point is not justified.
 def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -> int:
+    # Ensure .venv/bin is on PATH so subprocesses find installed tools.
+    _venv_bin = Path(__file__).resolve().parent.parent.parent / ".venv" / "bin"
+    if _venv_bin.is_dir() and str(_venv_bin) not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = f"{_venv_bin}:{os.environ['PATH']}"
+
     parser = argparse.ArgumentParser(
         description="Run the python-setup lint pipeline",
     )

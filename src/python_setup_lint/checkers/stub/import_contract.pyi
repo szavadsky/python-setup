@@ -26,13 +26,16 @@ class ImportUsage:
     alias: str | None
     is_star: bool
 
+def _in_type_checking_block(node: nodes.Import | nodes.ImportFrom) -> bool:
     """Walk parent chain to detect ``if TYPE_CHECKING:`` guard.
 
     True if any ancestor ``If`` node has a ``TYPE_CHECKING`` test.
     """
 
+def _is_type_checking_guard(test: nodes.NodeNG) -> bool:
     """Check if *test* is a ``TYPE_CHECKING`` name (Name or Attribute form)."""
 
+def _resolve_relative(
     current_module: str,
     level: int,
     modname: str | None,

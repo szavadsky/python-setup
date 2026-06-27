@@ -165,22 +165,32 @@ def _print_statistics_grouped(
 
 def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
     start = time.monotonic()
-    proc = subprocess.run(
-        cmd,
-        cwd=cwd,
-        capture_output=True,
-        text=True,
-        timeout=600,
-        check=False,
-    )
-    elapsed = time.monotonic() - start
-    return LintResult(
-        tool_name=label,
-        exit_code=proc.returncode,
-        stdout=proc.stdout,
-        stderr=proc.stderr,
-        elapsed=elapsed,
-    )
+    try:
+        proc = subprocess.run(
+            cmd,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=600,
+            check=False,
+        )
+        elapsed = time.monotonic() - start
+        return LintResult(
+            tool_name=label,
+            exit_code=proc.returncode,
+            stdout=proc.stdout,
+            stderr=proc.stderr,
+            elapsed=elapsed,
+        )
+    except FileNotFoundError:
+        elapsed = time.monotonic() - start
+        return LintResult(
+            tool_name=label,
+            exit_code=127,
+            stdout="",
+            stderr=f"Tool not found: {cmd[0]}",
+            elapsed=elapsed,
+        )
 
 
 def _print_result(result: LintResult) -> None:
