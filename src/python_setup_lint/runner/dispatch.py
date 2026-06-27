@@ -18,6 +18,7 @@ unknown names, and :func:`_strategy_for` synthesises a
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .cmd_build import (
@@ -34,7 +35,6 @@ from .types import RunnerConfig, ToolSpec
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from pathlib import Path
 
 __all__ = [
     "LINT_TOOLS",
