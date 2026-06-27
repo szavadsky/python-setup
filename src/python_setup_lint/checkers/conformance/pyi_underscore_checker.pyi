@@ -23,7 +23,7 @@ class PyiUnderscoreChecker(BaseChecker):
     """AST visitor that flags _-prefixed symbols in .pyi files."""
 
     name: str = "pyi-underscore"
-    msgs: dict[LintRuleId, MessageDef]
+    msgs: dict[LintRuleId, MessageDef]  # type: ignore[assignment]  # pylint's BaseChecker declares msgs as dict[str, tuple[...]]; our typed MessageDef is narrower but correct at runtime
 
     def visit_module(self, node: nodes.Module) -> None:
         """Determine if this module is a .pyi file."""

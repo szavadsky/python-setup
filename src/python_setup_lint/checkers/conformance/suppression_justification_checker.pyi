@@ -18,7 +18,7 @@ class SuppressionJustificationChecker(BaseChecker):
     """AST visitor that flags unjustified suppression comments."""
 
     name: str = "suppression-justification"
-    msgs: dict[LintRuleId, MessageDef]
+    msgs: dict[LintRuleId, MessageDef]  # type: ignore[assignment]  # pylint's BaseChecker declares msgs as dict[str, tuple[...]]; our typed MessageDef is narrower but correct at runtime
 
     def visit_module(self, node: object) -> None:
         """Walk the module's source lines looking for bare suppressions.
