@@ -35,7 +35,7 @@ def _load_result_cache() -> dict[int, bool]:
     try:
         raw = _RESULT_CACHE_FILE.read_text()
         return {int(k): v for k, v in json.loads(raw).items()}
-    except FileNotFoundError, json.JSONDecodeError, OSError, ValueError:
+    except (FileNotFoundError, json.JSONDecodeError, OSError, ValueError):
         return {}
 
 
