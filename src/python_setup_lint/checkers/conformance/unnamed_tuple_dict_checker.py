@@ -14,16 +14,16 @@ from __future__ import annotations
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TC002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef
 
 
 class UnnamedTupleDictChecker(BaseChecker):
     """AST visitor that flags dict values that should be NamedTuples."""
 
     name: str = "unnamed-tuple-dict"
-    msgs: dict[str, MessageDef] = {
+    msgs: dict[LintRuleId, MessageDef] = {
         "W9720": MessageDef(
             message="Dict value is a bare tuple literal with %d unnamed fields; "
             "use a NamedTuple or dataclass instead",

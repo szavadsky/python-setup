@@ -48,14 +48,34 @@ def empty_project(tmp_path: Path) -> Path:
     return d
 
 
-@pytest.fixture
-def configured_project(empty_project: Path) -> Path:
-    """Run install once on empty_project, return the configured dir."""
+@pytest.fixture(scope="session")
+def configured_project(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Run install once on a session-scoped temp dir, return the configured dir.
+
+    Session-scoped — install runs once per test session.
+    Tests that mutate config should copy the configured project to their own tmp_path.
+    """
     from python_setup_lint.setup import install
 
-    rc = install(empty_project, dev_path="/home/slava/aiexp/python-setup")
+    d: Path = tmp_path_factory.mktemp("configured_project")
+    pyproject = d / "pyproject.toml"
+    pyproject.write_text(
+        textwrap.dedent("""\
+        [project]
+        name = "test-project"
+        version = "0.1.0"
+        requires-python = ">=3.14"
+
+        [dependency-groups]
+        dev = ["ruff>=0.5"]
+        """)
+    )
+    agents = d / "AGENTS.md"
+    agents.write_text("# Test Project\n\nSome content.\n")
+
+    rc = install(d, dev_path="/home/slava/aiexp/python-setup")
     assert rc == 0
-    return empty_project
+    return d
 
 
 @pytest.fixture
@@ -126,3 +146,9 @@ def isolated_runner_registries() -> Iterable[None]:
     STRATEGIES.clear()
     STRATEGIES.update(baseline_strategies)
     _reset_extra_tools_cache()
+
+
+@pytest.fixture
+def sample_project() -> Path:
+    """Path to the minimal sample project with planted violations."""
+    return Path("test/data/minimal_sample_project")

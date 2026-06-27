@@ -1,34 +1,24 @@
-"""Pylint checker: prohibit unnamed-tuple dict values.
+"""Pylint checker: prohibit unnamed-tuple dict values."""
 
-Flags ``dict`` literals whose values are bare ``tuple``/``Tuple[...]``
-literals with >1 unnamed positional fields, suggesting they should use
-a ``NamedTuple`` or dataclass instead.
-
-Checker logic
--------------
-- Walks AST for ``AnnAssign`` and ``Assign`` (with type comment) nodes.
-- Checks if the annotation is ``dict[str, ...]`` or ``ClassVar[dict[str, ...]]``.
-- For matching dict literals, flags any value that is a bare ``tuple``
-  literal with >= 2 simple literal elements.
-"""
-
-from typing import TYPE_CHECKING
+from __future__ import annotations
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
+from pylint.lint import PyLinter
 
-if TYPE_CHECKING:
-    from pylint.lint import PyLinter
-
+from python_setup_lint.checkers._base import LintRuleId, MessageDef
 
 class UnnamedTupleDictChecker(BaseChecker):
-    """AST visitor that flags dict values that should be NamedTuples."""
-
     name: str = "unnamed-tuple-dict"
+    msgs: dict[LintRuleId, MessageDef]
 
-    def __init__(self, linter: PyLinter) -> None: ...
     def visit_annassign(self, node: nodes.AnnAssign) -> None: ...
     def visit_assign(self, node: nodes.Assign) -> None: ...
-
+    def _is_str_key_dict_annotation(self, ann: nodes.NodeNG | None) -> bool: ...
+    def _check_dict(self, dict_node: nodes.Dict) -> None: ...
+    @staticmethod
+    def _is_unnamed_tuple(node: nodes.NodeNG) -> bool: ...
+    @staticmethod
+    def _get_tuple_elts(node: nodes.Tuple) -> list: ...
 
 def register(linter: PyLinter) -> None: ...

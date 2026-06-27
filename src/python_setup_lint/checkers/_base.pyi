@@ -49,7 +49,12 @@ def check_if_meaningful(
 ) -> bool:
     """Check if a suppression justification is meaningful.
 
+    Uses the NLP semantic pipeline (``_semantic.semantic_check_if_meaningful``)
+    when enabled and available, falling back to a heuristic check.
+
+    The semantic pipeline is enabled by default (``PYTHON_SETUP_LINT_SEMANTIC=1``)
+    and requires the ``[semantic]`` extra (``sentence-transformers``).
+
     Heuristic: non-empty, non-boilerplate, contains a noun not equal to the rule symbol.
     Uses *comment* as the primary text if provided; falls back to *text*.
-    *rule* and *code_context* are reserved for future semantic analysis.
     """

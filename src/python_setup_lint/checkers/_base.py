@@ -10,14 +10,15 @@ Consolidates duplicate code across checker modules:
 from __future__ import annotations
 
 import fnmatch
+import os
 from pathlib import Path
 from typing import NamedTuple, NewType
 
-from astroid import nodes  # noqa: TC002  # astroid is a pylint dependency, only used for type checking in this module
-
+from astroid import nodes  # noqa: TCH002  # astroid is a pylint dependency, only used for type checking in this module
 
 
 LintRuleId = NewType("LintRuleId", str)
+
 
 class MessageDef(NamedTuple):
     """Named representation for a pylint checker message definition.
@@ -61,7 +62,7 @@ def _get_file_path(node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> Path | N
         if file_val is None:
             return None
         return Path(file_val)
-    except (AttributeError, TypeError):
+    except AttributeError, TypeError:
         return None
 
 
@@ -74,15 +75,46 @@ def check_if_meaningful(
 ) -> bool:
     """Check if a suppression justification is meaningful.
 
-    Heuristic: non-empty, non-boilerplate, contains a noun not equal to the rule symbol.
+    Uses the NLP semantic pipeline (``_semantic.semantic_check_if_meaningful``)
+    when enabled and available, falling back to a heuristic check.
+
+    The semantic pipeline is enabled by default (``PYTHON_SETUP_LINT_SEMANTIC=1``)
+    and requires the ``[semantic]`` extra (``sentence-transformers``).
+
+    Heuristic: non-empty, non-boilerplate, not equal to the rule symbol.
     Uses *comment* as the primary text if provided; falls back to *text*.
-    *rule* and *code_context* are reserved for future semantic analysis (Track B).
+    *rule* and *code_context* are reserved for future semantic analysis.
     """
+    # Try the semantic NLP pipeline when enabled.
+    if os.environ.get("PYTHON_SETUP_LINT_SEMANTIC", "1") == "1":
+        from python_setup_lint.checkers._semantic import (
+            semantic_check_if_meaningful as _semantic_check,
+        )
+
+        result = _semantic_check(
+            text, rule=rule, code_context=code_context, comment=comment
+        )
+        if result is not None:
+            return result
+
+    # Heuristic fallback.
     primary = (comment or text).strip()
     if not primary or len(primary) < 5:
         return False
     primary_lower = primary.lower()
-    boilerplate = {"noqa", "ignore", "suppress", "disable", "skip", "todo", "fixme", "hack"}
+    boilerplate = {
+        "noqa",
+        "ignore",
+        "suppress",
+        "disable",
+        "skip",
+        "todo",
+        "fixme",
+        "hack",
+    }
     if primary_lower in boilerplate:
+        return False
+    # Reject justification that is just the rule symbol itself.
+    if rule and primary_lower == rule.lower():
         return False
     return True

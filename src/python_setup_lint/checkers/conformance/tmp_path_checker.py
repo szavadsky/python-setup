@@ -6,22 +6,20 @@ manual ``tempfile`` calls that leak directories.
 
 from __future__ import annotations
 
-import fnmatch
-from pathlib import Path
 
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TC002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, _matches_path
 
 
 class TempFileChecker(BaseChecker):
     """AST visitor that flags tempfile leakage in test files."""
 
     name: str = "tempfile-mkdtemp-in-test"
-    msgs: dict[str, MessageDef] = {
+    msgs: dict[LintRuleId, MessageDef] = {
         "W9702": MessageDef(
             message="Use pytest tmp_path instead of '%s' in test files",
             symbol="tempfile-mkdtemp-in-test",
@@ -104,22 +102,8 @@ class TempFileChecker(BaseChecker):
         file_path = getattr(node.root(), "file", None)
         if file_path is None:
             return False
-        return self._matches_path(file_path, self._test_patterns)
+        return _matches_path(file_path, self._test_patterns)
 
-    @staticmethod
-    def _matches_path(str_path: str, patterns: list[str]) -> bool:
-        for pattern in patterns:
-            if "/" in pattern or "\\" in pattern:
-                if (
-                    str_path.startswith(pattern)
-                    or f"/{pattern.lstrip('/')}" in str_path
-                ):
-                    return True
-            elif fnmatch.fnmatch(str_path, pattern) or fnmatch.fnmatch(
-                Path(str_path).name, pattern
-            ):
-                return True
-        return False
 
 
 @beartype

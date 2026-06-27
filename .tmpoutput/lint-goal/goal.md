@@ -1,27 +1,4 @@
-# 
-Mid session user override 
-WRONG: All `sentence_transformers` imports are inside the function / a lazy loader so
-that without the extra, `import python_setup_lint` never imports it. Guard with
-`ImportError` → fallback to heuristic. Models download on first use (cache in
-HF cache); tests must not require network.
 
-User direction
-
-Test need to require network if we use sentence tansformer. 
-In porudction, it could be config guarded BUT - all paths must be tested as per coding rule
-.gitignored idemponentn simple cache must be added cor checkMeaningful if it is  relies on local models. 
-Decision based on fidelity and PoC - and you need to decide based on grounded data, but if  we are doing it - has to be fully tested feature. 
- WRONG:
-   `pytest.importorskip("sentence_transformers")`); these are marked
-  `@pytest.mark.slow` (model load/download) so they never run in the default
-  suite. 
-  
-  
-  only tests that forces bypass of cache can be marked slow
-
-test_consolidated_real_pipeline_smoke MUST NOT be marked slow - it is important enough to be run every time
-
-DoD includes implementation to best possible fidelity, quality and usability; not a brush of a feature
 
 # _ symbols
 Apply  CodingRules.md
@@ -108,5 +85,44 @@ eg not ok
   - overlays and custom checks -> separate linked docs in docs/
 
 DoD
-  - project is perfectly functional, tangible, ready to use /install, code well organized, LoC minimized, no liniting violations excpet small number explicitly expected
+  - project is perfectly functional, self linting wih all rules and tools, tangible, ready to use /install, code well organized, LoC minimized, no liniting violations excpet small number explicitly expected
   - may have generic expections for tests and py vs pyi if justified as per coding rules
+
+
+  ---- FEEDBACK ACCUMULATED from previous iterations
+
+  # Another critical feedback
+  - WE MUST retain ability to chek pyi<->py as per coding rules and implemented checkes 
+  I understand pyi was excluded from pylint and it created issues with false positive duplciates
+  They must be run, test shall not be used for linting (as we deliver linter, not tests)
+  Research and consider options. Eg, we can run pylint twice as part of pipeline
+  BUT - ALL CHECKS MUST BE EXECUTED, NO checks masked.
+
+# ANOTHER USE CORRECTION PAST ITER 5
+gitignored idemponentn simple cache must be added cor checkMeaningful if it is  relies on local models. 
+MEANS: use deffault hugging face models cache, document how to pre-load them as fallback if needed
++ Cache results (based on function arguments) - .gitignored cache to avoid expensive emebdder/reranker calls 
+Conider: do we need both embedder and reranker or only 1? because currently emebdder is just quick fail for reranler, make sense only if substantiallu cheaper
+
+Document how end user need to configure (shall be easy) use vs no use of semantic, and depedenency shall be as seamless to user as possible
+# 
+Mid session user override 
+WRONG: All `sentence_transformers` imports a (ImportError fallback to heuristic)
+
+User direction
+
+Test need to require network if we use sentence tansformer. 
+In porudction, it must  be config guarded, enabled by default  BUT - all paths must be tested as per coding rule
+.
+Decision based on fidelity and PoC - and you need to decide based on grounded data, but if  we are doing it - has to be fully tested feature. 
+ WRONG:
+   `pytest.importorskip("sentence_transformers")`); these are marked
+  `@pytest.mark.slow` (model load/download) so they never run in the default
+  suite. 
+  
+  
+  only tests that forces bypass of cache can be marked slow
+
+test_consolidated_real_pipeline_smoke MUST NOT be marked slow - it is important enough to be run every time
+
+DoD includes implementation to best possible fidelity, quality and usability; not a brush of a feature

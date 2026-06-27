@@ -46,6 +46,11 @@ mypackage/
   Prefer moving intra-module helpers to dedicated `_` files.
   Tests import `_`-prefixed symbols only from their defining submodule, never through the package `__init__`.
 
+
+### Test Imports
+
+- Tests import `_`-prefixed symbols only from the defining submodule, not the package `__init__`.
+
 ## .pyi Rules
 
 **No .pyi for:** `__init__.py` (unless `__getattr__` or logic present), test
@@ -92,6 +97,15 @@ yields, context manager semantics. No `_`-prefix symbols.
 
 - Generic-typed returns (`-> int/str/bool/...`) require a `Returns` clause describing the value.
 - `_`-prefixed helpers MAY have a docstring (not required).
+
+
+### Generic-key Dict
+
+- If it is a bona fide generic, it must be a named type that defines what it is (e.g. ``LintRuleId``). Otherwise use ``enum``, ``Literal``, etc.
+
+### Unnamed Tuple Dict Values
+
+- Dict values that are bare ``tuple``/``Tuple[...]`` with >1 unnamed positional fields should use a ``NamedTuple`` or dataclass instead.
 
 ## Project Documentation Layout
 

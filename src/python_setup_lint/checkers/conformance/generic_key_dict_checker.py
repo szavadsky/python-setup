@@ -18,9 +18,9 @@ from __future__ import annotations
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TC002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef
 
 # Domain-type value names — dict values whose type name suggests a
 # domain concept rather than a generic string-keyed mapping.
@@ -38,8 +38,8 @@ class GenericKeyDictChecker(BaseChecker):
     """AST visitor that flags ``dict[str, X]`` with domain-typed values."""
 
     name: str = "generic-key-dict"
-    msgs: dict[str, MessageDef] = {
-        "W9720": MessageDef(
+    msgs: dict[LintRuleId, MessageDef] = {
+        "W9721": MessageDef(
             message="'dict[str, %s]' uses a generic string key; consider LintRuleId, enum, or Literal instead",
             symbol="generic-key-dict",
             description="Dicts keyed by string where the value is a domain type "
@@ -154,6 +154,9 @@ class GenericKeyDictChecker(BaseChecker):
     def _is_allowed_category(self, var_name: str) -> bool:
         """Check if a variable name suggests an allowed string-key category."""
         lower = var_name.lower()
+        # ``msgs`` is the canonical pylint checker message dict — always allowed.
+        if lower == "msgs":
+            return True
         if "filename" in lower or "file" in lower or "_path" in lower or "path" in lower:
             return "filenames" in self._allowed or "paths" in self._allowed
         if "index" in lower or "map" in lower or "by_" in lower:

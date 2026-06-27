@@ -223,7 +223,7 @@ class TestEdgeCases:
 
     def test_matches_path_with_backslash_pattern(self) -> None:
         """_matches_path handles backslash-containing patterns (Windows compat)."""
-        from python_setup_lint.checkers.conformance.tmp_path_checker import TempFileChecker
+        from python_setup_lint.checkers._base import _matches_path
 
-        assert TempFileChecker._matches_path("tests\\foo\\test_mod.py", ["tests\\"])
-        assert not TempFileChecker._matches_path("src\\prod.py", ["tests\\"])
+        assert _matches_path("tests\\foo\\test_mod.py", ["tests\\"])
+        assert not _matches_path("src\\prod.py", ["tests\\"])

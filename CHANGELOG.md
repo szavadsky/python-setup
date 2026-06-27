@@ -1,5 +1,41 @@
 # Changelog
 
+## v0.8.0 (2026-06-27) — Iteration 5+6 hardening: NLP rework, bug fixes, sample project, integration tests
+
+Hardening batch covering iteration 5 and 6 of the lint-goal:
+
+**Track B: NLP semantic experiment rework.** Wired `_semantic.py` into
+`check_if_meaningful` (was disconnected). Resolved W9001 vs `try/except ImportError`
+conflict with optional-dependency allowlist. Fixed `.gitignore` cache entry (tilde
+path was ineffective). Added model singleton cache + arg-keyed result cache.
+Reworked tests: `pytest.importorskip` instead of silent `@pytest.mark.skipif`.
+Removed `@pytest.mark.slow` from `test_consolidated_real_pipeline_smoke`.
+Created `_semantic.pyi` stub. Fixed broad `except Exception` to specific types.
+Reranker failure now returns `None` (defer to heuristic) instead of `True`.
+
+**Track X: Latent bug fixes.** Fixed Python-2-style `except AttributeError, TypeError:`
+in `beartype_checker.py`. Resolved W9720 rule-ID collision between
+`generic_key_dict_checker` and `unnamed_tuple_dict_checker` (W9720→W9721).
+Updated all 11 checker `msgs` dicts to `dict[LintRuleId, MessageDef]`.
+Fixed bare `# type: ignore[union-attr]` in `suppression_justification_checker.py`.
+Repaired `_base.pyi` broken stub (orphaned docstring string-literals).
+Eliminated duplicated checker helpers (`_get_file_path`, `_is_under_source_root`,
+`_matches_path`) by importing from `_base`.
+Normalized `asyncio_timeout_checker` msgs typing to `dict[LintRuleId, MessageDef]`.
+
+**Track C: Sample project + integration tests.** Created
+`test/data/minimal_sample_project/` with planted violations for all 10 custom
+linters. Created `tests/test_integration.py` with 7 scenarios (setup, lint,
+tools, config overlay, resetup, git hooks). Added `sample_project` fixture.
+
+**Track V: Version + docs.** Bumped to 0.8.0. Updated `docs/semantic-justification.md`
+with rework details (config flag, cache singleton, test strategy).
+`configured_project` fixture changed to session-scoped for perf.
+
+**Perf:** Non-slow test suite optimized. `configured_project` session-scoped.
+`check_if_meaningful` now uses `rule` param to reject justifications equal to
+the rule symbol.
+
 ## v0.7.0 (2026-06-26) — Docstring returns-clause rule, checkers reorg, dict-prohibition rules, suppression-justification linter, test perf, sample project
 
 Feature batch covering WS-1 through WS-8:

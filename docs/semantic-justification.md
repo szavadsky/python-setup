@@ -1,16 +1,17 @@
-# Semantic Justification Checker (Track B)
+# Semantic Justification Checker
 
-> **Research track** — not enabled by default. Requires the `semantic` extra.
+> **Experimental feature** — enabled by default when the `[semantic]` extra
+> is installed. Disable with `PYTHON_SETUP_LINT_SEMANTIC=0`.
 
 ## Overview
 
 The standard suppression-justification checker uses a simple heuristic
-(non-empty, non-boilerplate, contains a noun) to decide whether a
+(non-empty, non-boilerplate, not equal to the rule symbol) to decide whether a
 `# pylint: disable=...`, `# noqa`, or `# type: ignore` comment carries
 a meaningful technical reason.
 
-Track B replaces that heuristic with a **two-stage NLP pipeline** for
-higher accuracy:
+The semantic pipeline replaces that heuristic with a **two-stage NLP pipeline**
+for higher accuracy:
 
 1. **Embedding similarity** — encodes the justification and its context
    into dense vectors and measures cosine similarity.
@@ -19,6 +20,7 @@ higher accuracy:
 
 ## Opt-in Mechanism
 
+The semantic pipeline is **enabled by default** (``PYTHON_SETUP_LINT_SEMANTIC=1``).
 Install the optional dependency:
 
 ```bash
@@ -30,6 +32,12 @@ uv pip install python-setup[semantic]
 Once `sentence-transformers` is importable, the semantic pipeline
 activates automatically. If the package is not installed, the checker
 falls back to the original heuristic with no change in behaviour.
+
+To disable the semantic pipeline without uninstalling:
+
+```bash
+PYTHON_SETUP_LINT_SEMANTIC=0 uv run lint
+```
 
 ## Two-Stage Pipeline
 
@@ -54,13 +62,25 @@ falls back to the original heuristic with no change in behaviour.
   justification is considered insufficient.
 
 If the reranker is unavailable (download failure, OOM), the pipeline
-accepts the justification provisionally when the embedding stage passes.
+defers to the heuristic fallback.
 
 ## Model Cache
 
 Downloaded models are stored in `~/.cache/python-setup/semantic/`.
-This directory is `.gitignore`d and reused across runs. Cache hits
-avoid network downloads, making repeated invocations fast.
+This directory is `.gitignore`d and reused across runs. Models are
+loaded once and cached in memory (singleton pattern) — subsequent
+calls reuse the already-loaded instance.
+
+## Result Cache
+
+Semantic check results are cached both in-memory and on disk:
+- **In-memory**: `_RESULT_CACHE` dict, keyed by SHA-256 hash of
+  (text, rule, code_context, comment, model IDs).
+- **On disk**: `~/.cache/python-setup/semantic/results.json`, loaded
+  at startup and written on new entries.
+
+This prevents recomputation for identical inputs within and across
+processes.
 
 ## Fallback Behaviour
 
@@ -68,9 +88,16 @@ avoid network downloads, making repeated invocations fast.
 |---|---|
 | `sentence-transformers` not installed | Heuristic (original) |
 | Model download fails | Heuristic (original) |
-| Embedding stage passes, reranker unavailable | Accept (provisional) |
+| Embedding stage passes, reranker unavailable | Heuristic (original) |
 | Both stages pass | Accept |
 | Either stage rejects | Reject |
+
+## Test Strategy
+
+Tests that require network access (model download) are marked
+``@pytest.mark.slow``. Tests that hit the local model cache are **not**
+marked slow. All semantic tests use ``pytest.importorskip("sentence_transformers")``
+with a clear message: "install with ``uv sync --extra semantic`` to run NLP tests".
 
 ## Research Status
 

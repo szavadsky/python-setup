@@ -6,7 +6,6 @@ namespace accessible via ``from python_setup_lint.runner import ...``.
 """
 from __future__ import annotations
 
-import pkgutil
 from pathlib import Path
 from typing import Any
 
@@ -15,15 +14,6 @@ import pytest
 pytestmark = pytest.mark.no_external_api
 _RUNNER_PKG = "python_setup_lint.runner"
 
-
-def _get_runner_modules() -> list[str]:
-    """Return all submodule names under the runner package."""
-    import python_setup_lint.runner as runner_pkg
-
-    prefix = runner_pkg.__name__ + "."
-    modules: list[str] = [
-        m.name for m in pkgutil.walk_packages(runner_pkg.__path__, prefix)
-    ]
 
 
 def _get_public_names(module: Any) -> set[str]:

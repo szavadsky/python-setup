@@ -8,7 +8,6 @@ Tests that hit the local model cache are **not** marked slow.
 
 from __future__ import annotations
 
-import importlib.util
 from unittest.mock import patch
 
 import pytest
@@ -20,50 +19,16 @@ from python_setup_lint.checkers._base import check_if_meaningful
 
 
 class TestImportErrorFallback:
-    """When sentence_transformers is not installed, fall back to heuristic."""
+    """When sentence_transformers is not installed, ImportError propagates."""
 
-    def test_fallback_on_import_error(self) -> None:
-        """check_if_meaningful must return heuristic result when _semantic unavailable."""
-        # Simulate _semantic module being unimportable by patching the import
-        # inside check_if_meaningful to raise ImportError.
+    def test_import_error_propagates(self) -> None:
+        """check_if_meaningful must propagate ImportError when _semantic unavailable."""
         with patch(
-            "python_setup_lint.checkers._base._semantic",
-            None,
-            create=True,
-        ), patch(
             "builtins.__import__",
             side_effect=self._make_blocking_import(),
         ):
-            result = check_if_meaningful(
-                "circular import — PyLinter not available"
-            )
-            assert result is True  # heuristic: non-empty, non-boilerplate
-
-    def test_fallback_short_text(self) -> None:
-        """Short text should still return False via heuristic fallback."""
-        with patch(
-            "python_setup_lint.checkers._base._semantic",
-            None,
-            create=True,
-        ), patch(
-            "builtins.__import__",
-            side_effect=self._make_blocking_import(),
-        ):
-            result = check_if_meaningful("ok")
-            assert result is False  # heuristic: too short
-
-    def test_fallback_boilerplate(self) -> None:
-        """Boilerplate text should still return False via heuristic fallback."""
-        with patch(
-            "python_setup_lint.checkers._base._semantic",
-            None,
-            create=True,
-        ), patch(
-            "builtins.__import__",
-            side_effect=self._make_blocking_import(),
-        ):
-            result = check_if_meaningful("ignore")
-            assert result is False  # heuristic: boilerplate
+            with pytest.raises(ImportError, match="No module named _semantic"):
+                check_if_meaningful("circular import — PyLinter not available")
 
     @staticmethod
     def _make_blocking_import():
@@ -81,19 +46,20 @@ class TestImportErrorFallback:
 # ── Semantic pipeline (requires sentence_transformers) ───────────────
 
 
-@pytest.mark.skipif(
-    importlib.util.find_spec("sentence_transformers") is None,
-    reason="sentence_transformers not installed",
-)
 class TestSemanticCheck:
     """Tests that exercise the NLP pipeline.
 
-    These tests require ``sentence_transformers`` to be importable.
-    Tests that download models are marked ``@pytest.mark.slow``.
+    These tests require ``sentence_transformers`` to be importable
+    (``uv sync --extra semantic``).  Tests that download models are
+    marked ``@pytest.mark.slow``; cache-hit tests are not.
     """
 
     def test_meaningful_justification(self) -> None:
         """A detailed technical justification should be meaningful."""
+        pytest.importorskip(
+            "sentence_transformers",
+            reason="install with `uv sync --extra semantic` to run NLP tests",
+        )
         from python_setup_lint.checkers._semantic import (
             semantic_check_if_meaningful,
         )
@@ -110,6 +76,10 @@ class TestSemanticCheck:
 
     def test_empty_justification(self) -> None:
         """Empty justification should return False."""
+        pytest.importorskip(
+            "sentence_transformers",
+            reason="install with `uv sync --extra semantic` to run NLP tests",
+        )
         from python_setup_lint.checkers._semantic import (
             semantic_check_if_meaningful,
         )
@@ -119,6 +89,10 @@ class TestSemanticCheck:
 
     def test_whitespace_justification(self) -> None:
         """Whitespace-only justification should return False."""
+        pytest.importorskip(
+            "sentence_transformers",
+            reason="install with `uv sync --extra semantic` to run NLP tests",
+        )
         from python_setup_lint.checkers._semantic import (
             semantic_check_if_meaningful,
         )
@@ -128,9 +102,8 @@ class TestSemanticCheck:
 
     def test_returns_none_on_import_error(self) -> None:
         """When sentence_transformers can't be imported, return None."""
-        # Patch inside the function to simulate missing package
         with patch(
-            "python_setup_lint.checkers._semantic._load_embedder",
+            "python_setup_lint.checkers._semantic._load_reranker",
             return_value=None,
         ):
             from python_setup_lint.checkers._semantic import (
@@ -148,6 +121,10 @@ class TestSemanticCheck:
         On cache hit (models already downloaded), it runs quickly but is
         still gated by the ``slow`` marker for safety.
         """
+        pytest.importorskip(
+            "sentence_transformers",
+            reason="install with `uv sync --extra semantic` to run NLP tests",
+        )
         from python_setup_lint.checkers._semantic import (
             semantic_check_if_meaningful,
         )
@@ -164,6 +141,10 @@ class TestSemanticCheck:
     @pytest.mark.slow
     def test_semantic_meaningful_justification(self) -> None:
         """A genuinely meaningful justification should pass the semantic check."""
+        pytest.importorskip(
+            "sentence_transformers",
+            reason="install with `uv sync --extra semantic` to run NLP tests",
+        )
         from python_setup_lint.checkers._semantic import (
             semantic_check_if_meaningful,
         )
@@ -179,6 +160,10 @@ class TestSemanticCheck:
     @pytest.mark.slow
     def test_semantic_weak_justification(self) -> None:
         """A weak justification should fail the semantic check."""
+        pytest.importorskip(
+            "sentence_transformers",
+            reason="install with `uv sync --extra semantic` to run NLP tests",
+        )
         from python_setup_lint.checkers._semantic import (
             semantic_check_if_meaningful,
         )

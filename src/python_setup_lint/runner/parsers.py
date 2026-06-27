@@ -38,10 +38,8 @@ __all__ = [
 ]
 
 
-
-
-
 # ── Helpers ──────────────────────────────────────────────────────────
+
 
 def _load_json_dict(data: str) -> dict[str, Any]:
     try:
@@ -52,7 +50,9 @@ def _load_json_dict(data: str) -> dict[str, Any]:
 
 
 def _count_lines(
-    pattern: re.Pattern[str], text: str, group: int = 1,
+    pattern: re.Pattern[str],
+    text: str,
+    group: int = 1,
 ) -> list[tuple[str, int]]:
     counts: dict[str, int] = {}
     for line in text.splitlines():
@@ -64,6 +64,7 @@ def _count_lines(
 
 
 # ── Statistics parsers ───────────────────────────────────────────────
+
 
 def _parse_ruff_statistics(stdout: str, stderr: str) -> list[tuple[str, int]]:
     _ = stderr
@@ -96,7 +97,7 @@ def _parse_pylint_json2(stdout: str, stderr: str) -> list[tuple[str, int]]:
     _ = stderr
     try:
         raw: Any = json.loads(stdout)
-    except (json.JSONDecodeError, TypeError):
+    except json.JSONDecodeError, TypeError:
         return []
     if isinstance(raw, dict):
         raw = raw.get("messages", [])
@@ -134,8 +135,7 @@ def _parse_pyright_verify_types(stdout: str, stderr: str) -> list[tuple[str, int
     if not isinstance(symbols, list):
         return []
     incomplete = sum(
-        1 for s in symbols
-        if isinstance(s, dict) and s.get("completeness", 1.0) < 1.0
+        1 for s in symbols if isinstance(s, dict) and s.get("completeness", 1.0) < 1.0
     )
     return [("verifytypes:incomplete", incomplete)] if incomplete else []
 
@@ -201,6 +201,7 @@ _RECORD_PARSERS: dict[str, Callable[..., list[Record]]] = {
     "ruff check": _parse_ruff_records,
     "mypy": _parse_mypy_records,
     "pylint": _parse_pylint_records,
+    "pylint-pyi": _parse_pylint_records,
     "ty check": _parse_ty_records,
     "yamllint": _parse_yamllint_records,
     "rumdl check": _parse_rumdl_records,
@@ -234,9 +235,21 @@ _BUILTIN_PARSE_STRATEGY_TO_PARSER: dict[str, Callable[..., list[tuple[str, int]]
     "detect_secrets_json": _parse_detect_secrets_json,
 }
 
-PARSE_STRATEGIES: frozenset[str] = frozenset({
-    "none", "ruff_statistics", "rumdl_statistics", "pylint_json2",
-    "pyright_outputjson", "pyright_verify_types", "mypy_stderr",
-    "ty_concise", "tach_json", "yamllint_parsable", "stubtest_stderr",
-    "detect_secrets_json", "regex_count", "raw_lines",
-})
+PARSE_STRATEGIES: frozenset[str] = frozenset(
+    {
+        "none",
+        "ruff_statistics",
+        "rumdl_statistics",
+        "pylint_json2",
+        "pyright_outputjson",
+        "pyright_verify_types",
+        "mypy_stderr",
+        "ty_concise",
+        "tach_json",
+        "yamllint_parsable",
+        "stubtest_stderr",
+        "detect_secrets_json",
+        "regex_count",
+        "raw_lines",
+    }
+)

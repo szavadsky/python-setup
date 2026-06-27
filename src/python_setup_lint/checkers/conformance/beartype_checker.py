@@ -12,9 +12,9 @@ from pathlib import Path
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TC002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, _get_file_path, _is_under_source_root
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class BeartypeCoverageChecker(BaseChecker):
     """AST visitor that inventories @beartype coverage on public functions."""
 
     name: str = "beartype-coverage"
-    msgs: dict[str, MessageDef] = {
+    msgs: dict[LintRuleId, MessageDef] = {
         "W9701": MessageDef(
             message="Public function '%s' in '%s' is missing @beartype decorator",
             symbol="missing-beartype",
@@ -67,8 +67,8 @@ class BeartypeCoverageChecker(BaseChecker):
 
     def _check_function(self, node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> None:
         # Skip modules outside source roots
-        file_path = self._get_file_path(node)
-        if file_path is None or not self._is_under_source_root(file_path):
+        file_path = _get_file_path(node)
+        if file_path is None or not _is_under_source_root(file_path, self._source_roots):
             return
 
         # Skip __init__ — constructor beartype is an anti-pattern
@@ -106,25 +106,6 @@ class BeartypeCoverageChecker(BaseChecker):
                 return True
         return False
 
-    @staticmethod
-    def _get_file_path(node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> Path | None:
-        try:
-            file_val = node.root().file
-            if file_val is None:
-                return None
-            return Path(file_val)
-        except (AttributeError, TypeError):
-            return None
-
-    def _is_under_source_root(self, path: Path) -> bool:
-        resolved = path.resolve()
-        for root in self._source_roots:
-            try:
-                resolved.relative_to(root)
-                return True
-            except ValueError:
-                continue
-        return False
 
 
 def register(  # pylint: disable=missing-beartype  # circular import — PyLinter not available at runtime
