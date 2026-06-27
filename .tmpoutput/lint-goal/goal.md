@@ -1,4 +1,5 @@
-
+# extra note
+  Semantic meaningful checker with decided threshold shall be testes with a test with large > 50 number of calls on realistic "meaningful" and meaningless comments. threadholds and algo mau need afdjustment once test is implemented
 
 # _ symbols
 Apply  CodingRules.md

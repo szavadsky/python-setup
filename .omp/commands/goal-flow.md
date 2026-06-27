@@ -40,7 +40,7 @@ Write plan to {F}/plan{pIt}.md.
 
 Planner MUST limit DIY searching, test running, reading. Launch `explore`/`task`/`librtarian` subagents instead.
 MUST START from launching `explore` subagent(s) and add more as needed
-Consult with high reasoning `oracle` agent on uncertainties/alternativies. 
+Consult with high reasoning `oracle` agent on uncertainties/alternativies/loo. 
 Specify scope of each workstream/task
 ```
 WAIT for plan job to complete
@@ -55,8 +55,8 @@ Load `{F}/plan{pIt}.md`. Plan agent reports goal already complete (and nothing d
 Split into small, manageable substaks
 Per sub-task, spawn 2 sequential `task` agents:
 
-- **Implementer** — implements sub-task per plan. Full tool access.
-- **Checker** — after implementer finishes, review changes, independently execute lint/test. Decide:
+- **Implementer** — implements sub-task per plan. Full tool access. Make sure test runs and lint is OK. Ha
+- **Checker** — after implementer finishes, review changes, and **independently execute lint/test**, checks if task is bonda fide done wirhout regression. Decide:
   - Commit (git commit) if correct, no technical debt, no regression
   - Minor touch-ups then commit
   - Require more `task`/`checker` iterations or rollback (git restore) if wrong. Report decision.

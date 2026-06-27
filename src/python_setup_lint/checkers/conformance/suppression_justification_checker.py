@@ -48,7 +48,7 @@ class SuppressionJustificationChecker(BaseChecker):
         """Walk the module's source lines looking for bare suppressions."""
         try:
             stream = node.stream()  # type: ignore[union-attr]  # node is ModuleNode from astroid, stream() exists at runtime
-        except (AttributeError, OSError):
+        except AttributeError, OSError:
             return
 
         try:
@@ -72,6 +72,7 @@ class SuppressionJustificationChecker(BaseChecker):
             self.add_message(
                 "unjustified-suppression",
                 line=lineno,
+                node=node,
                 args=(stripped.strip(),),
             )
 
@@ -119,7 +120,6 @@ class SuppressionJustificationChecker(BaseChecker):
         return False
 
 
-@beartype
-def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API; @beartype cannot resolve PyLinter forward ref
     """Register the checker with the linter."""
     linter.register_checker(SuppressionJustificationChecker(linter))
