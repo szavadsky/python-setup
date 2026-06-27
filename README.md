@@ -4,9 +4,7 @@ Shared linting, formatting, and dev-tooling infrastructure for Python projects.
 
 ## What it is
 
-`python-setup` is a reusable Python package that encapsulates linting conventions,
-custom checkers, and setup scripts used across multiple projects. It keeps tooling
-DRY — one source of truth for rules, checkers, and config.
+`python-setup` is a reusable Python package that encapsulates linting conventions, custom checkers, and setup scripts used across multiple projects. It keeps tooling DRY — one source of truth for rules, checkers, and config.
 
 ## Install
 
@@ -52,8 +50,7 @@ uv add --dev "python-setup @ git+https://github.com/szavadsky/python-setup.git@v
 uv run python-setup install
 ```
 
-The installer adds the dependency, registers pylint plugins, writes pre-commit
-config, copies `CodingRules.md`, and appends setup instructions to `AGENTS.md`.
+The installer adds the dependency, registers pylint plugins, writes pre-commit config, copies `CodingRules.md`, and appends setup instructions to `AGENTS.md`.
 
 ### 3. Install pre-commit hooks
 
@@ -67,8 +64,7 @@ uv run pre-commit install
 uv run lint
 ```
 
-Runs all 12 lint tools sequentially with baseline diffing, statistics aggregation,
-and fail-fast / fail-fast-free modes.
+Runs all 12 lint tools sequentially with baseline diffing, statistics aggregation, and fail-fast / fail-fast-free modes.
 
 ### What you get
 
@@ -90,27 +86,19 @@ When lint rules or checkers change in `python-setup`:
 
 ### Rule overlays
 
-Consumer projects can overlay their own rules on the shared base config.
-See [docs/overlays.md](docs/overlays.md) for per-tool overlay reference.
+Consumer projects can overlay their own rules on the shared base config. See [docs/overlays.md](docs/overlays.md) for per-tool overlay reference.
 
 ### Custom lint steps
 
-Declarative lint-step registration with zero Python code. Add a
-`[[tool.python-setup-lint.extra-tools]]` entry to your `pyproject.toml`.
-See [docs/custom-checks.md](docs/custom-checks.md) for the full field reference,
-parse strategies, and examples.
+Declarative lint-step registration with zero Python code. Add a `[[tool.python-setup-lint.extra-tools]]` entry to your `pyproject.toml`. See [docs/custom-checks.md](docs/custom-checks.md) for the full field reference, parse strategies, and examples.
 
 ### Re-baselining
 
-The lint pipeline uses a baseline file (`lint.baseline`) to distinguish new
-violations from pre-existing ones. See [docs/overlays.md](docs/overlays.md) for
-re-baselining commands and workflow.
+The lint pipeline uses a baseline file (`lint.baseline`) to distinguish new violations from pre-existing ones. See [docs/overlays.md](docs/overlays.md) for re-baselining commands and workflow.
 
 ### Semantic justification
 
-See [docs/semantic-justification.md](docs/semantic-justification.md) for the
-semantic lint-justification system — how suppressed violations are tracked and
-validated with meaningful explanations.
+See [docs/semantic-justification.md](docs/semantic-justification.md) for the semantic lint-justification system — how suppressed violations are tracked and validated with meaningful explanations.
 
 ## License
 

@@ -1,7 +1,6 @@
 # Writing Custom Pylint Checkers
 
-`python-setup` provides a framework for custom pylint checkers that are automatically
-discovered and registered. This document explains how to write and integrate new checkers.
+`python-setup` provides a framework for custom pylint checkers that are automatically discovered and registered. This document explains how to write and integrate new checkers.
 
 ## Checker structure
 
@@ -48,19 +47,15 @@ def register(linter: PyLinter) -> None:
 
 ## Message definition
 
-Use `MessageDef` (a `NamedTuple` with `message`, `symbol`, `description` fields)
-for all checker message definitions. This replaces the legacy bare-tuple pattern.
+Use `MessageDef` (a `NamedTuple` with `message`, `symbol`, `description` fields) for all checker message definitions. This replaces the legacy bare-tuple pattern.
 
 ## Rule IDs
 
-Custom checkers use `W` (warning) or `C` (convention) codes in the range `W97xx`–`W99xx`
-and `C0xxx`. See `LintRuleId` in `checkers/_base.py` for the typed rule-id type.
+Custom checkers use `W` (warning) or `C` (convention) codes in the range `W97xx`–`W99xx` and `C0xxx`. See `LintRuleId` in `checkers/_base.py` for the typed rule-id type.
 
 ## Registration
 
-The installer automatically discovers all modules in `checkers/` that export a
-`register` function. No manual plugin configuration is needed — the installer
-writes the `load-plugins` entry to the consumer's `pyproject.toml`.
+The installer automatically discovers all modules in `checkers/` that export a `register` function. No manual plugin configuration is needed — the installer writes the `load-plugins` entry to the consumer's `pyproject.toml`.
 
 ## Testing
 
@@ -83,8 +78,7 @@ def test_example_checker() -> None:
 
 ## Available helpers
 
-- `check_if_meaningful(text, *, rule, code_context, comment)` — heuristic check
-  for meaningful suppression justifications (in `checkers/_base.py`).
+- `check_if_meaningful(text, *, rule, code_context, comment)` — heuristic check for meaningful suppression justifications (in `checkers/_base.py`).
 - `_matches_path(str_path, patterns)` — glob/directory path matching.
 - `_is_under_source_root(path, source_roots)` — source-root containment check.
 - `_get_file_path(node)` — resolve a node's file path.

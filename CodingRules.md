@@ -9,24 +9,12 @@
 - First-party code: fully typed. `Any` only with documented technical justification.
 - Types from defining module; define only at origin. Untyped only at untyped third-party boundaries.
 - Types > names > docstrings.
-- Use: `Literal`, `Enum`, `TypedDict`, `Protocol`, `NewType`, `TypeVar`,
-  `TypeAlias`, `Final`, `Annotated` + `annotated-types` predicates (`Gt`, `Lt`,
-  `MinLen`…), `Unpack`, `assert_never`, `Self` (fluent APIs, classmethod
-  constructors), `ParamSpec`, `Concatenate` (preserve call signatures in
-  decorators), `TYPE_CHECKING` guard for import-cycle-breaking imports.
-  - Generic-key dict annotations: `dict[str, X]` is allowed when the key is a filename, identifier, path, or display string. Domain-typed values (e.g. `dict[str, MessageDef]`) should use `LintRuleId`, an enum, or a `Literal` type instead.
-  - Unnamed-tuple dict values: `dict[str, tuple[str, ...]]` values should use a `NamedTuple`, dataclass, or `Protocol` with named fields instead of bare tuple literals.
-  - Suppression comments (`# pylint: disable=...`, `# noqa`, `# type: ignore`) must carry a trailing technical justification comment explaining why the rule is suppressed.
-- Runtime enforcement: `@beartype` on all first-party public functions/methods.
-  Validates `Annotated` predicates at call boundary. No manual `if` guards for
-  type contracts.
+- Use: `Literal`, `Enum`, `TypedDict`, `Protocol`, `NewType`, `TypeVar`, `TypeAlias`, `Final`, `Annotated` + `annotated-types` predicates (`Gt`, `Lt`, `MinLen`…), `Unpack`, `assert_never`, `Self` (fluent APIs, classmethod constructors), `ParamSpec`, `Concatenate` (preserve call signatures in decorators), `TYPE_CHECKING` guard for import-cycle-breaking imports.
+  - Generic-key dict annotations: `dict[str, X]` allowed when key is filename, identifier, path, or display string. Domain-typed values (e.g. `dict[str, MessageDef]`) should use `LintRuleId`, enum, or `Literal` type instead.
+  - Unnamed-tuple dict values: `dict[str, tuple[str, ...]]` values should use `NamedTuple`, dataclass, or `Protocol` with named fields instead of bare tuple literals.
+  - Suppression comments (`# pylint: disable=...`, `# noqa`, `# type: ignore`) must carry trailing technical justification comment explaining why suppressed.
+- Runtime enforcement: `@beartype` on all first-party public functions/methods. Validates `Annotated` predicates at call boundary. No manual `if` guards for type contracts.
 
-
-## Universal Exceptions
-
-- Tests may have functions with more parameters than production code would
-  normally allow (e.g., for parametrize fixtures), and this is an accepted
-  exception.
 ## Module Layout
 
 ```text
@@ -42,24 +30,15 @@ mypackage/
 ## Symbol Convention
 
 - `_` prefix: file-private, imported only by tests.
-- No prefix: file surface (re-exported in `__init__.py`) or intra-module helper.
-  Prefer moving intra-module helpers to dedicated `_` files.
-  Tests import `_`-prefixed symbols only from their defining submodule, never through the package `__init__`.
-
-
-### Test Imports
-
-- Tests import `_`-prefixed symbols only from the defining submodule, not the package `__init__`.
+- No prefix: file surface (re-exported in `__init__.py`) or intra-module helper. Prefer moving intra-module helpers to dedicated `_` files. Tests import `_`-prefixed symbols only from defining submodule, never through package `__init__`.
 
 ## .pyi Rules
 
-**No .pyi for:** `__init__.py` (unless `__getattr__` or logic present), test
-bodies, standalone scripts, `conftest.py`, trivial test data.
+**No .pyi for:** `__init__.py` (unless `__getattr__` or logic present), test bodies, standalone scripts, `conftest.py`, trivial test data.
 
 **Required for all other `.py` files.**
 
-**Scope:** Annotate everything in `.py`. Expose only public members in `.pyi` —
-stub wins for consumers, `.py` wins internally.
+**Scope:** Annotate everything in `.py`. Expose only public members in `.pyi` — stub wins for consumers, `.py` wins internally.
 
 ```python
 # thing.py
@@ -75,44 +54,29 @@ class Thing:
     def get(self) -> int: ...          # _help and _x invisible to consumers
 ```
 
-**Content:** Self-sufficient: params, returns, `@overload`, exceptions, generator
-yields, context manager semantics. No `_`-prefix symbols.
+**Content:** Self-sufficient: params, returns, `@overload`, exceptions, generator yields, context manager semantics. No `_`-prefix symbols.
 
-**Re-exports in `__init__.py`:** explicit `from .module import Symbol`. No
-`import *`. Dynamic `__getattr__` requires `.pyi`.
+**Re-exports in `__init__.py`:** explicit `from .module import Symbol`. No `import *`. Dynamic `__getattr__` requires `.pyi`.
 
 ## Documentation
 
 ### Python Docstrings
 
-- `__init__.py`: module-level docs — purpose, quick-start. Agents and users see
-  contract without opening implementation.
+- `__init__.py`: module-level docs — purpose, quick-start. Agents and users see contract without opening implementation.
 - Typing > names > docstrings. Comments must not duplicate signatures.
-- `.pyi` only: all usage docstrings (params, raises, edge cases) not apparent
-  from names/types. Stub is sole contract file — read it, not the implementation.
-- `.py`: implementation comments only (why, tricks). `help()` / `.__doc__` empty
-  — intentional.
+- `.pyi` only: all usage docstrings (params, raises, edge cases) not apparent from names/types. Stub is sole contract file — read it, not implementation.
+- `.py`: implementation comments only (why, tricks). `help()` / `.__doc__` empty — intentional.
 
 ### Docstring Rules
 
-- Generic-typed returns (`-> int/str/bool/...`) require a `Returns` clause describing the value.
+- Generic-typed returns (`-> int/str/bool/...`) require `Returns` clause describing value.
 - `_`-prefixed helpers MAY have a docstring (not required).
-
-
-### Generic-key Dict
-
-- If it is a bona fide generic, it must be a named type that defines what it is (e.g. ``LintRuleId``). Otherwise use ``enum``, ``Literal``, etc.
-
-### Unnamed Tuple Dict Values
-
-- Dict values that are bare ``tuple``/``Tuple[...]`` with >1 unnamed positional fields should use a ``NamedTuple`` or dataclass instead.
 
 ## Project Documentation Layout
 
 ### End User
 
-- `{projectRoot}/README.md` — entry point. What, install, configure. Link to
-  `docs/`.
+- `{projectRoot}/README.md` — entry point. What, install, configure. Link to `docs/`.
 - `docs/` — tutorials, config reference, troubleshooting.
 - `docs/CHANGELOG.md` — user-visible changes only. No internal refactors.
 
@@ -126,8 +90,7 @@ yields, context manager semantics. No `_`-prefix symbols.
 ## Simplification
 
 - Clarity over cleverness unless needed for performance.
-- **Wrappers:** justified if removing them forces callers to understand an
-  internal dependency's interface. Otherwise, inline.
+- **Wrappers:** justified if removing them forces callers to understand an internal dependency's interface. Otherwise, inline.
 
   ```python
   # Justified — hides transport, narrows interface
@@ -175,13 +138,7 @@ flat = list(chain.from_iterable(nested))
 
 ## Complexity Rules (R0912 / R0915 / C0302) — enforced, not noise
 
-`too-many-branches` (R0912 ≤16), `too-many-statements` (R0915 ≤65), and
-`too-many-lines` (C0302 ≤500/module) are enabled **on purpose** in
-`config/.pylintrc`. An over-threshold function has too many jobs: split it into
-single-purpose helpers and compose them in sequence — never raise the global
-thresholds to mask a hit. Suppress only with a justified
-`# pylint: disable=…` (W9704) when branching is structurally inherent (an AST
-visitor over many node shapes).
+`too-many-branches` (R0912 ≤16), `too-many-statements` (R0915 ≤65), and `too-many-lines` (C0302 ≤500/module) enabled **on purpose** in `config/.pylintrc`. An over-threshold function has too many jobs: split into single-purpose helpers and compose in sequence — never raise global thresholds to mask a hit. Suppress only with justified `# pylint: disable=…` (W9704) when branching structurally inherent (an AST visitor over many node shapes).
 
 Before — one validator doing several jobs (signatures only):
 
@@ -208,18 +165,14 @@ def _is_logger_call(self, node: nodes.Call) -> bool: ...
 def _is_printf_format(self, node: nodes.Call) -> bool: ...
 ```
 
-For C0302 (≤500 lines/module) split the **module**, not the logic: move a
-coherent slice into a sibling file (e.g. `runner/_factories_{baseline,extras,tables}.py`
-were extracted from `_factories.py` to stay under 500 lines).
+For C0302 (≤500 lines/module) split the **module**, not the logic: move a coherent slice into a sibling file (e.g. `runner/_factories_{baseline,extras,tables}.py` were extracted from `_factories.py` to stay under 500 lines).
 
 ## Logging
 
 - `structlog` throughout.
 - No string formatting in log calls — use bound logger kwargs.
-- Levels: `debug` diagnostic, `info` business events, `warning`
-  degraded-but-continuing, `error` handled failure, `critical` service-stopping.
-- Async: `structlog.contextvars` for request-scoped fields (request_id,
-  user_id).
+- Levels: `debug` diagnostic, `info` business events, `warning` degraded-but-continuing, `error` handled failure, `critical` service-stopping.
+- Async: `structlog.contextvars` for request-scoped fields (request_id, user_id).
 
 ## Sync, Async, Timeouts, Parallelism
 
@@ -231,8 +184,7 @@ were extracted from `_factories.py` to stay under 500 lines).
 - Structured concurrency (`TaskGroup`) over raw `asyncio.gather`.
 - Timeouts via `asyncio.timeout()` covering full operations.
 - `asyncio.Semaphore` for concurrency limits.
-- `asyncio.create_task` → store reference. Cancel all on shutdown. No orphaned
-  tasks.
+- `asyncio.create_task` → store reference. Cancel all on shutdown. No orphaned tasks.
 - Graceful shutdown: signal handlers, drain-in-flight, close connection pools.
 
 ### Sync
@@ -247,13 +199,11 @@ Parallelize same-API calls only when:
 1. Documented product feature.
 2. Max concurrent call count guardrails in place.
 
-Proxy: one inbound → one outbound unless parallelism is explicit product
-feature.
+Proxy: one inbound → one outbound unless parallelism is explicit product feature.
 
 ### External Call Requirements
 
-1. Timeout via `asyncio.timeout()`. Separate connect/read. Configurable,
-   documented in `.pyi`. Neither `None` nor `0` in production.
+1. Timeout via `asyncio.timeout()`. Separate connect/read. Configurable, documented in `.pyi`. Neither `None` nor `0` in production.
 2. Keepalive where applicable.
 3. Connection pooling.
 4. At least one retry for transient failures.
@@ -267,34 +217,24 @@ Proxy services: signal 429/503 when outbound capacity exhausted.
 
 ### Boundaries
 
-- External inputs (user, network, file, IPC, config): validated at process
-  boundary. Trusted downstream.
-- Public API: types specify acceptable inputs. `@beartype` enforces `Annotated`
-  predicates at runtime. Validate beyond type contract (ranges, emptiness,
-  format) with `annotated-types` predicates where possible, explicit checks
-  otherwise.
+- External inputs (user, network, file, IPC, config): validated at process boundary. Trusted downstream.
+- Public API: types specify acceptable inputs. `@beartype` enforces `Annotated` predicates at runtime. Validate beyond type contract (ranges, emptiness, format) with `annotated-types` predicates where possible, explicit checks otherwise.
 - Helpers: may assume caller guarantees. Document assumptions inline.
 
 ### Failures
 
-- IPC/API failures: handled or propagated. `except` without re-raise must
-  comment why.
+- IPC/API failures: handled or propagated. `except` without re-raise must comment why.
 - Chain errors: `raise X from Y`.
-- Expected → caller-facing error type. Unexpected → log internals, generic
-  surface.
+- Expected → caller-facing error type. Unexpected → log internals, generic surface.
 - Messages: human-diagnostic, include context (what, expected, got).
 - Every caught error path: `structlog` error with structured fields.
-- Prefer return types encoding failure (`Result`, `Optional`, union) over
-  exceptions for expected control flow.
+- Prefer return types encoding failure (`Result`, `Optional`, union) over exceptions for expected control flow.
 
 ## Schema
 
-- Structured files under git (config, YAML, JSON, frontmatter MD): validate
-  against schema in lint.
-- Schema is source of truth (pydantic model, TypedDict, JSON Schema, protobuf).
-  Derive validators; no hand-duplicated constraints.
-- Runtime boundary data (IPC, external input): validated at ingestion. Internal
-  code trusts validated data.
+- Structured files under git (config, YAML, JSON, frontmatter MD): validate against schema in lint.
+- Schema is source of truth (pydantic model, TypedDict, JSON Schema, protobuf). Derive validators; no hand-duplicated constraints.
+- Runtime boundary data (IPC, external input): validated at ingestion. Internal code trusts validated data.
 
 ## Tests
 
@@ -308,8 +248,7 @@ All request/response handlers and task processors maintain perf/stat counters:
 
 ### Mocking Strategy
 
-Mock only at true external boundaries. Never mock first-party code or local
-compute libraries.
+Mock only at true external boundaries. Never mock first-party code or local compute libraries.
 
 ```text
 L3 + L3Helper                      # internal logic
@@ -321,8 +260,7 @@ ImportedPackage: real impl, verify assumptions in dedicated tests
 First-party (L1, L2, L3, helpers): always real
 ```
 
-Wrapping first-party code for injection acceptable; mocking not.
-Verify DB/file content directly instead of mocking local layers.
+Wrapping first-party code for injection acceptable; mocking not. Verify DB/file content directly instead of mocking local layers.
 
 ### Test Categories
 
@@ -342,26 +280,19 @@ Verify DB/file content directly instead of mocking local layers.
 
 ### Coverage
 
-Each layer tested independently. Near 100% layer + downstream (transitive).
-Annotate hard-to-inject failure paths and defensive behaviors.
+Each layer tested independently. Near 100% layer + downstream (transitive). Annotate hard-to-inject failure paths and defensive behaviors.
 
 ### Test Code Quality
 
 - Optimize test LoC and complexity vigorously.
-- Prefer long end-to-end scenario tests with meaningful intermediate assertions
-  over narrow coverage-only tests.
+- Prefer long end-to-end scenario tests with meaningful intermediate assertions over narrow coverage-only tests.
 - Reuse test code across success and failure injection paths.
 - `@pytest.mark.parametrize` for discrete input-variant tests.
 - `pytest.approx` for all float assertions.
-- `hypothesis` for: parsers, serialization round-trips, data-transformation
-  invariants — any input space that is continuous, combinatorial, or poorly
-  bounded.
+- `hypothesis` for: parsers, serialization round-trips, data-transformation invariants — any input space that is continuous, combinatorial, or poorly bounded.
 - Snapshot/golden-file testing for serialization and output-format tests.
 - Test data factories for complex domain objects.
-- Async: `pytest-asyncio` with `asyncio_mode = "auto"` in `pyproject.toml`.
-  `anyio` + `@pytest.mark.anyio` for framework-agnostic tests.
-  Tests are exempt from production-code parameter-count and complexity heuristics
-  (e.g. many fixtures/params in a single test function is acceptable).
+- Async: `pytest-asyncio` with `asyncio_mode = "auto"` in `pyproject.toml`. `anyio` + `@pytest.mark.anyio` for framework-agnostic tests. Tests are exempt from production-code parameter-count and complexity heuristics (e.g. many fixtures/params in a single test function is acceptable).
 
 ### Naming
 
@@ -375,10 +306,8 @@ Annotate hard-to-inject failure paths and defensive behaviors.
 ### Fixture Scope
 
 - `function`: mutable state (default).
-- `session`: expensive setup (containers, DB engine). Prefer session-scoped
-  engine with function-scoped transaction rollback for DB tests.
-- `module`: mutable shared state expensive to re-create per module (e.g.,
-  per-module schema migration).
+- `session`: expensive setup (containers, DB engine). Prefer session-scoped engine with function-scoped transaction rollback for DB tests.
+- `module`: mutable shared state expensive to re-create per module (e.g., per-module schema migration).
 
 ### conftest.py Scope
 
