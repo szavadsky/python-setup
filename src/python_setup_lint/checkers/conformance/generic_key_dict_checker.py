@@ -21,7 +21,7 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
 
 # Domain-type value names — dict values whose type name suggests a
 # domain concept rather than a generic string-keyed mapping.
@@ -41,15 +41,15 @@ class GenericKeyDictChecker(BaseChecker):
     """AST visitor that flags ``dict[str, X]`` with domain-typed values."""
 
     name: str = "generic-key-dict"
-    msgs: dict[LintRuleId, MessageDef] = {
-        "W9721": MessageDef(
+    msgs = _msgs(
+        W9721=MessageDef(
             message="'dict[str, %s]' uses a generic string key; consider LintRuleId, enum, or Literal instead",
             symbol="generic-key-dict",
             description="Dicts keyed by string where the value is a domain type "
             "should use a typed key (LintRuleId, enum, Literal). "
             "Use 'allow-string-keys-for' config to suppress for legitimate categories.",
         ),
-    }
+    )
     options: tuple[tuple[str, dict[str, Any]], ...] = (
         (
             "allow-string-keys-for",
@@ -189,5 +189,4 @@ class GenericKeyDictChecker(BaseChecker):
 
 
 def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype,docstring-in-impl  # pylint entry point, signature fixed by pylint API; one-liner, not usage docs
-    """Register the checker with the linter."""
     linter.register_checker(GenericKeyDictChecker(linter))

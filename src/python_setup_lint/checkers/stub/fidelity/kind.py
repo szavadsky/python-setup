@@ -22,9 +22,11 @@ Topologically the upstream-most dispatcher: depends on ``_ast_helpers``
 from __future__ import annotations
 
 import structlog
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
-from ._ast_helpers import ClassComparisonCtx
+from ._ast_helpers import ClassComparisonCtx, _FidelityState
+
 from .annotation import (
     _compare_class_attrs,
     _compare_class_bases,
@@ -32,6 +34,7 @@ from .annotation import (
 )
 
 if TYPE_CHECKING:
+    from astroid import nodes
     from python_setup_lint.checkers.stub.checker import StubChecker
 
 log = structlog.get_logger(__name__)
@@ -40,9 +43,9 @@ __all__ = ["_emit_stub_symbol_check"]
 
 
 def _build_stub_kinds(
-    stub_vars: dict[str, object],
-    stub_callables: dict[str, object],
-    stub_classes: dict[str, object],
+    stub_vars: Mapping[str, object],
+    stub_callables: Mapping[str, object],
+    stub_classes: Mapping[str, object],
 ) -> dict[str, str]:
     stub_kinds: dict[str, str] = {}
     for vname in stub_vars:
@@ -55,17 +58,17 @@ def _build_stub_kinds(
 
 
 def _build_impl_kinds(
-    f: object,
+    f: _FidelityState,
     module_name: str,
     impl_all: set[str],
 ) -> dict[str, str]:
     impl_kinds: dict[str, str] = {}
     for iname in impl_all:
-        if iname in f.impl_callable_nodes.get(module_name, {}):  # type: ignore[union-attr]  # f is a _FidelityState; mypy cannot narrow the generic get
+        if iname in f.impl_callable_nodes.get(module_name, {}):
             impl_kinds[iname] = "callable"
-        elif iname in f.impl_class_nodes.get(module_name, {}):  # type: ignore[union-attr]  # f is a _FidelityState; mypy cannot narrow the generic get
+        elif iname in f.impl_class_nodes.get(module_name, {}):
             impl_kinds[iname] = "class"
-        elif iname in f.impl_annotations.get(module_name, {}):  # type: ignore[union-attr]  # f is a _FidelityState; mypy cannot narrow the generic get
+        elif iname in f.impl_annotations.get(module_name, {}):
             impl_kinds[iname] = "variable"
         else:
             impl_kinds[iname] = "unknown"
@@ -108,14 +111,16 @@ def _check_missing_symbols(
 
 
 def _compare_matched_classes(
-    stub_classes: dict[str, object],
-    f: object,
+    stub_classes: Mapping[str, nodes.ClassDef],
+    f: _FidelityState,
     checker: StubChecker,
     module_name: str,
 ) -> None:
     impl_node = checker._coverage.module_index.get(module_name, (None, None))[1]
+    if impl_node is None:
+        return
     for cname, stub_class in stub_classes.items():
-        impl_class = f.impl_class_nodes.get(module_name, {}).get(cname)  # type: ignore[union-attr]  # f is a _FidelityState; mypy cannot narrow the generic get
+        impl_class = f.impl_class_nodes.get(module_name, {}).get(cname)
         if impl_class is None:
             continue
         ctx = ClassComparisonCtx(

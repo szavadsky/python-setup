@@ -136,7 +136,7 @@ def _load_pyproject_toml(path: Path) -> dict[str, Any]:
     resolved = path.resolve()
     try:
         mtime = resolved.stat().st_mtime_ns
-    except OSError:
+    except OSError:  # pylint: disable=W9740  # best-effort stat fallback; logging would noise unavoidable IO degrade
         return {}
     key = (resolved, mtime)
     cached = _PYPROJECT_CACHE.get(key)
@@ -238,11 +238,11 @@ def _resolve_exclude_paths(
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     try:
         raw = shared_config.read_text(encoding="utf-8")
-    except OSError:
+    except OSError:  # pylint: disable=W9740  # best-effort config read fallback; logging would noise unavoidable IO degrade
         return shared_config
     try:
         data = json.loads(raw)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
         return shared_config
     if not isinstance(data, dict):
         return shared_config

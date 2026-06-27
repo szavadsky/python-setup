@@ -55,13 +55,13 @@ def _infer_package_name(cwd: Path) -> str | None:
     try:
         with open(pyproject, "rb") as f:
             data = tomllib.load(f)
-    except (OSError, tomllib.TOMLDecodeError):
+    except OSError, tomllib.TOMLDecodeError:  # pylint: disable=W9740  # best-effort pyproject parse fallback; logging would noise unavoidable parse/IO degrade
         return None
     try:
         packages: list[str] = data["tool"]["hatch"]["build"]["targets"]["wheel"][
             "packages"
         ]  # type: ignore[index]  # nested dict access; mypy cannot infer the deep key
-    except (KeyError, TypeError):
+    except KeyError, TypeError:  # pylint: disable=W9740  # best-effort config key lookup fallback; logging would noise unavoidable key-missing degrade
         return None
     if not packages:
         return None
@@ -125,7 +125,7 @@ def _print_config_status(
 
     try:
         version = importlib.metadata.version("python-setup")
-    except importlib.metadata.PackageNotFoundError:
+    except importlib.metadata.PackageNotFoundError:  # pylint: disable=W9740  # best-effort version lookup fallback; logging would noise unavoidable package-not-found degrade
         version = "unknown"
 
     from .cmd_build import _resolve_pylintrc
@@ -147,7 +147,8 @@ def _print_config_status(
             continue
 
         origin = _config_origin(
-            name, config_path,
+            name,
+            config_path,
             cli_overridden=cli_overridden,
             caller_config_paths=caller_config_paths,
             shipped_paths=shipped_paths,

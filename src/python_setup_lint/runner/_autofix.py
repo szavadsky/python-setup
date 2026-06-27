@@ -53,7 +53,7 @@ def _git_changed_files(cwd: Path, *, staged: bool) -> set[str]:
             check=False,
             timeout=30,
         )
-    except (FileNotFoundError, subprocess.TimeoutExpired):
+    except FileNotFoundError, subprocess.TimeoutExpired:  # pylint: disable=W9740  # best-effort git subprocess fallback; logging would noise unavoidable tool-not-found/timeout degrade
         return set()
     if proc.returncode != 0:
         return set()
@@ -69,7 +69,7 @@ def _ruff_parseability_errors(
     cmd = ["ruff", "check", "--no-fix", *paths]
     try:
         result = run_cmd(cmd, cwd=cwd, label="python-setup:autofix-canary")
-    except FileNotFoundError:
+    except FileNotFoundError:  # pylint: disable=W9740  # best-effort ruff subprocess fallback; logging would noise unavoidable tool-not-found degrade
         return set()
     e999: set[str] = set()
     for line in result.stdout.splitlines():
@@ -108,7 +108,7 @@ def _apply_autofix_conflict_aware(
         candidate = config.cwd / rel
         try:
             snapshot[candidate] = candidate.read_bytes()
-        except (FileNotFoundError, IsADirectoryError):
+        except FileNotFoundError, IsADirectoryError:  # pylint: disable=W9740  # best-effort snapshot read fallback; logging would noise unavoidable file-not-found/dir degrade
             continue
 
     strategy = _strategy_for(spec.name, spec)

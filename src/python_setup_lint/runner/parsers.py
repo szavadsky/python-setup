@@ -44,7 +44,7 @@ __all__ = [
 def _load_json_dict(data: str) -> dict[str, Any]:
     try:
         result = json.loads(data)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
         return {}
     return result if isinstance(result, dict) else {}
 
@@ -97,7 +97,7 @@ def _parse_pylint_json2(stdout: str, stderr: str) -> list[tuple[str, int]]:
     _ = stderr
     try:
         raw: Any = json.loads(stdout)
-    except (json.JSONDecodeError, TypeError):
+    except json.JSONDecodeError, TypeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
         return []
     if isinstance(raw, dict):
         raw = raw.get("messages", [])

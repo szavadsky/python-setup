@@ -14,7 +14,7 @@ from ._record_types import Record, _compare_records_key
 def _parse_int(text: str) -> int | None:
     try:
         return int(text)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:  # pylint: disable=W9740  # best-effort int parse fallback; logging would noise unavoidable parse degrade
         return None
 
 
@@ -70,7 +70,9 @@ def _parse_pylint_records(stdout: str) -> list[Record]:
                 )
                 records.append(
                     Record(
-                        None, None, None,
+                        None,
+                        None,
+                        None,
                         f"R0801:{spans[0]}<->{spans[1]}",
                         "Similar lines (R0801)",
                     )

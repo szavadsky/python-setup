@@ -91,7 +91,7 @@ class TestMinimalSampleProject:
     def test_setup_new_and_lint(
         self,
         tmp_path: Path,
-        capsys: pytest.CaptureFixture,
+        capsys: pytest.CaptureFixture[str],
         isolated_runner_registries: None,
     ) -> None:
         """Run lint on the sample project and verify all planted violations are reported.
@@ -129,7 +129,7 @@ class TestMinimalSampleProject:
     def test_config_overlay(
         self,
         tmp_path: Path,
-        capsys: pytest.CaptureFixture,
+        capsys: pytest.CaptureFixture[str],
         isolated_runner_registries: None,
     ) -> None:
         """Modify a config file to disable a rule and verify it no longer fires.
@@ -210,7 +210,7 @@ class TestMinimalSampleProject:
         _init_git(project)
 
         # Mock _run_uv to return success without network.
-        original_run_uv = _setup_mod._run_uv  # type: ignore[attr-defined]
+        original_run_uv = _setup_mod._run_uv
 
         def fake_run_uv(args: list[str], *, cwd: str | Path) -> tuple[int, str, str]:
             return 0, "", ""
@@ -244,7 +244,7 @@ class TestMinimalSampleProject:
                 capture_output=True,
                 check=True,
             )
-        except (FileNotFoundError, subprocess.CalledProcessError):
+        except FileNotFoundError, subprocess.CalledProcessError:
             pytest.skip("pre-commit not available")
 
         project = _copy_sample(tmp_path)

@@ -18,7 +18,7 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
 
 
 _HTTP_METHODS: frozenset[str] = frozenset(
@@ -47,19 +47,18 @@ class AsyncTimeoutChecker(BaseChecker):
     """AST visitor that flags await calls missing enclosing timeout context."""
 
     name: str = "asyncio-timeout"
-    msgs: dict[LintRuleId, MessageDef] = {
-        "W9703": MessageDef(
+    msgs = _msgs(
+        W9703=MessageDef(
             message="External async call '%s' without enclosing"
             " asyncio.timeout() / anyio.fail_after()",
             symbol="asyncio-timeout",
             description="External async calls must be wrapped in"
             " asyncio.timeout() or anyio.fail_after().",
         ),
-    }
+    )
 
     @beartype
     def visit_await(self, node: nodes.Await) -> None:  # pylint: disable=docstring-in-impl  # brief one-liner, not usage docs
-        """Flag await calls on HTTP methods missing enclosing timeout context."""
         if not isinstance(node.value, nodes.Call):
             return
         call = node.value
@@ -116,5 +115,4 @@ class AsyncTimeoutChecker(BaseChecker):
 
 
 def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype,docstring-in-impl  # pylint entry point, signature fixed by pylint API; one-liner, not usage docs
-    """Register the checker with the linter."""
     linter.register_checker(AsyncTimeoutChecker(linter))

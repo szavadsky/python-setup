@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
     from python_setup_lint.runner import LintResult
 
-def _make_tc(checker_class: type[BaseChecker]) -> CheckerTestCase:
+def _make_tc(checker_class: type[BaseChecker], /) -> CheckerTestCase:
     """Create a ``CheckerTestCase`` for *checker_class*.
 
     Sets ``CHECKER_CLASS``, calls ``setup_method()``, returns the test case.
@@ -35,6 +35,7 @@ def _make_tc(checker_class: type[BaseChecker]) -> CheckerTestCase:
 def _walk_and_release(
     code: str,
     checker_class: type[BaseChecker],
+    /,
     *,
     file_path: str | None = None,
     module_name: str = "",
@@ -124,7 +125,7 @@ def test_checked_main() -> None:
     "python_setup_lint.testing:test_checked_main"`` and delete local wrappers.
     """
 
-def assert_precommit_config_valid(repo_root: Path) -> None:
+def assert_precommit_config_valid(repo_root: Path, /) -> None:
     """Assert ``.pre-commit-config.yaml`` is valid YAML + passes ``validate-config``.
 
     Works against any ``python-setup``-generated config.  Requires
@@ -133,6 +134,7 @@ def assert_precommit_config_valid(repo_root: Path) -> None:
 
 def assert_precommit_hooks_shape(
     repo_root: Path,
+    /,
     *,
     baseline_filename: str = "lint.baseline",
 ) -> None:

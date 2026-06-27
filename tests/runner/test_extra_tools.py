@@ -87,7 +87,7 @@ def test_load_extras_valid_entry_returns_spec(tmp_path) -> None:
 # ── R4 failure table: per-shape ExtraToolsConfigError ─────────────
 
 
-def _expect_error(tmp_path, body, *, reason_starts=None, reason_eq=None):  # type: ignore[misc]
+def _expect_error(tmp_path, body, *, reason_starts=None, reason_eq=None):
     """Write *body*, call ``_load_extra_tools``, assert ExtraToolsConfigError; return err."""
     pyproject = write_pyproject(tmp_path, body)
     with pytest.raises(ExtraToolsConfigError) as exc_info:

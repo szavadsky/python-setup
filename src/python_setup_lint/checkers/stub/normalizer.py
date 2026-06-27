@@ -33,6 +33,7 @@ _REWRITE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
 
 _UNION_RE = re.compile(r"^typing\.Union\[(.+)\]$")
 
+
 class AnnotationNormalizer:
     """Two-phase annotation normalizer for stub-vs-impl comparison.
 
@@ -66,7 +67,7 @@ class AnnotationNormalizer:
         try:
             inferred = ann_node.infer()
             results = list(inferred)
-        except astroid.InferenceError:
+        except astroid.InferenceError:  # pylint: disable=W9740  # best-effort type inference fallback; logging would noise unavoidable inference degrade
             return None
 
         if not results:
@@ -250,15 +251,17 @@ class AnnotationNormalizer:
 
 
 # Build the dispatch table after the class body so all handlers exist.
-AnnotationNormalizer._AST_STRING_DISPATCH.update({
-    nodes.Name: AnnotationNormalizer._string_name,
-    nodes.Subscript: AnnotationNormalizer._string_subscript,
-    nodes.BinOp: AnnotationNormalizer._string_binop,
-    nodes.Attribute: AnnotationNormalizer._string_attribute,
-    nodes.Tuple: AnnotationNormalizer._string_tuple,
-    nodes.List: AnnotationNormalizer._string_list,
-    nodes.UnaryOp: AnnotationNormalizer._string_unaryop,
-    nodes.Starred: AnnotationNormalizer._string_starred,
-    nodes.Dict: AnnotationNormalizer._string_dict,
-    nodes.IfExp: AnnotationNormalizer._string_ifexp,
-})
+AnnotationNormalizer._AST_STRING_DISPATCH.update(
+    {
+        nodes.Name: AnnotationNormalizer._string_name,
+        nodes.Subscript: AnnotationNormalizer._string_subscript,
+        nodes.BinOp: AnnotationNormalizer._string_binop,
+        nodes.Attribute: AnnotationNormalizer._string_attribute,
+        nodes.Tuple: AnnotationNormalizer._string_tuple,
+        nodes.List: AnnotationNormalizer._string_list,
+        nodes.UnaryOp: AnnotationNormalizer._string_unaryop,
+        nodes.Starred: AnnotationNormalizer._string_starred,
+        nodes.Dict: AnnotationNormalizer._string_dict,
+        nodes.IfExp: AnnotationNormalizer._string_ifexp,
+    }
+)

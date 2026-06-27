@@ -15,7 +15,7 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
 
 # Optional dependency import patterns — try/except ImportError is allowed
 # for imports from these modules (declared in [project.optional-dependencies]).
@@ -43,13 +43,13 @@ class NoTryImportChecker(BaseChecker):
     """AST visitor that flags try blocks containing imports caught by ImportError / ModuleNotFoundError."""
 
     name: str = "no-try-import"
-    msgs: dict[LintRuleId, MessageDef] = {
-        "W9001": MessageDef(
+    msgs = _msgs(
+        W9001=MessageDef(
             message="Explicit handling of failed import via try/except %s",
             symbol="no-try-import",
             description="Imports must be unconditional. Use dependency management instead of try/except ImportError guards.",
         ),
-    }
+    )
 
     @beartype
     def visit_try(self, node: nodes.Try) -> None:

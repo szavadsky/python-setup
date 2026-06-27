@@ -88,11 +88,11 @@ def test_class_comparison_ctx_fields() -> None:
 
 
 def test_e97b1_message_code_registered() -> None:
-    assert "E97B1" in _make_tc().checker.msgs  # type: ignore[no-untyped-call]
+    assert "E97B1" in _make_tc().checker.msgs
 
 
 def test_e97b2_message_code_registered() -> None:
-    assert "E97B2" in _make_tc().checker.msgs  # type: ignore[no-untyped-call]
+    assert "E97B2" in _make_tc().checker.msgs
 
 
 # ── E97B1: stub symbol missing from impl ───────────────────────────

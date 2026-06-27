@@ -62,7 +62,7 @@ def _p(name: str, ann: str | None = None) -> ParamDescriptor:
     )
 
 
-def _build_descs(rows: list) -> list[ParamDescriptor]:
+def _build_descs(rows: list[tuple[str, Any, bool]]) -> list[ParamDescriptor]:
     """Build a list of ``ParamDescriptor`` from a row-tuple list."""
     return [
         ParamDescriptor(
@@ -115,7 +115,7 @@ def test_param_descriptor_no_annotation() -> None:
 def test_extract_param_descriptors(
     func_src: str,
     expected_names: list[str],
-    expected_kinds: list,
+    expected_kinds: list[Any],
 ) -> None:
     """Each row exercises a distinct parameter-kind classification path."""
     descs = _extract(_parse_func(func_src))
@@ -170,8 +170,8 @@ def test_extract_annotations(
     _COMPARE_DESCRIPTOR_CASES,
 )
 def test_compare_callable_descriptors(
-    a_rows: list,
-    b_rows: list,
+    a_rows: list[tuple[str, Any, bool]],
+    b_rows: list[tuple[str, Any, bool]],
     expected_failure: str | None,
 ) -> None:
     """Each row exercises a distinct mismatch kind (count/name/kind/default)."""
@@ -194,8 +194,8 @@ def test_compare_callable_descriptors(
     _COMPARE_ANNOTATION_CASES,
 )
 def test_compare_callable_annotations(
-    a_anns: list,
-    b_anns: list,
+    a_anns: list[str | None],
+    b_anns: list[str | None],
     expected_count: int,
     expected_first_arg_name: str | None,
 ) -> None:

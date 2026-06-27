@@ -28,6 +28,7 @@ from python_setup_lint.testing import _make_tc as _make_tc_factory
 
 if TYPE_CHECKING:
     from pylint.checkers import BaseChecker
+    from pylint.message import Message
 
     from python_setup_lint.checkers.stub.checker import StubChecker
     from python_setup_lint.checkers.stub.import_contract import ImportUsage
@@ -700,10 +701,10 @@ def make_coverage_checker(**config_kwargs: Any) -> tuple[StubChecker, CheckerTes
 
 def build_import_contract_state(
     *,
-    module_index: dict | None = None,
-    stub_index: dict | None = None,
-    declaration_index: dict | None = None,
-    import_usages: list | None = None,
+    module_index: dict[str, tuple[Path, Any]] | None = None,
+    stub_index: dict[str, Path] | None = None,
+    declaration_index: dict[str, set[str]] | None = None,
+    import_usages: list[ImportUsage] | None = None,
 ) -> tuple[StubChecker, CheckerTestCase]:
 
     tc = make_tc(_stub_checker_class())
@@ -747,7 +748,7 @@ def walk_both_release_for_pyi(
     code: str,
     py_path: Path,
     source_roots: list[str] | None = None,
-) -> list:
+) -> list[Message]:
     from pylint.testutils import UnittestLinter
     from pylint.utils import ASTWalker
 
@@ -896,7 +897,7 @@ def walk_stub_close_release(
     stub_opt_out: list[str] | None = None,
     stub_roots: list[str] | None = None,
     module_name: str = "test_module",
-) -> list:
+) -> list[Message]:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
     tc = _make_tc_factory(StubChecker)
@@ -950,6 +951,7 @@ def materialize_pyi_exempt_layout(
     tmp_path: Path,
     layout_kind: str,
     code: str,
+    /,
 ) -> tuple[str, list[str], str]:
     src = tmp_path / "src"
     if layout_kind == "init":
@@ -978,7 +980,7 @@ def materialize_pyi_exempt_layout(
 
 
 def _build_star_import_policy_state(
-    star_policy: str, import_usage_factory: Any
+    star_policy: str, import_usage_factory: Any, /
 ) -> tuple[CheckerTestCase, StubChecker]:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
@@ -1021,7 +1023,8 @@ def walk_stub_resolution_layout(
     layout_kind: str,
     code: str,
     module_name: str,
-) -> list:
+    /,
+) -> list[Message]:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
     tc = _make_tc_factory(StubChecker)
@@ -1067,7 +1070,9 @@ _RESOLVE_STUB_CASES: list[Any] = [
 ]
 
 
-def materialize_resolve_stub_layout(tmp_path: Path, layout_kind: str) -> tuple:
+def materialize_resolve_stub_layout(
+    tmp_path: Path, layout_kind: str, /
+) -> tuple[StubChecker, Path, Path | None]:
     if layout_kind == "inline":
         py_path = tmp_path / "mod.py"
         py_path.write_text("x = 1\n")
@@ -1113,7 +1118,7 @@ _EMIT_COVERAGE_CASES: list[Any] = [
 
 
 def make_emit_coverage_state(
-    tmp_path: Path, setup_kind: str, stub_missing_module: str
+    tmp_path: Path, setup_kind: str, stub_missing_module: str, /
 ) -> tuple[CheckerTestCase, MagicMock]:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
@@ -1143,6 +1148,7 @@ def _run_pylint(
     mod_py: str,
     mod_pyi: str,
     enable: str,
+    /,
     *,
     project_src: Path,
 ) -> str:
@@ -1249,8 +1255,9 @@ def walk_stub_checker_with_pair(
     tmp_path: Path,
     py_code: str,
     pyi_code: str,
+    /,
     module_name: str = "mod_a",
-) -> list:
+) -> list[Message]:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
     src = tmp_path / "src"
@@ -1279,7 +1286,7 @@ def setup_and_emit_import_contract(
     symbol: str | None,
     is_star: bool,
     star_policy: str | None,
-) -> tuple[CheckerTestCase, list]:
+) -> tuple[CheckerTestCase, list[Message]]:
     from python_setup_lint.checkers.stub.import_contract import (
         ImportUsage,
         emit_import_contract_violations,

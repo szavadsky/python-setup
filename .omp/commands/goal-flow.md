@@ -1,81 +1,71 @@
-
 # Goal Execution Workflow
 
 Role: **mechanical** orchestration. All technical work delegated to subagents.
-Achieve goal from `{F}/{goal}.md`. Iterative.
+Achieve goal from `{F}/goal.md`. Iterative.
 
 ## Variables
 
 | Var | Meaning |
 |-----|---------|
-| `{F}` | Goal file folder |
-| `{goal}` | Goal filename (no `.md`) |
-| `{pIt}` | Current plan iteration |
+| `{F}` | Goal file folder (contains `goal.md`) |
 | `{N}` | Max iterations before final report |
 
 ## Workflow
 
 ### 1. Locate goal file
 
-Find `{F}/{goal}.md`. Do NOT read or interpret — delegate to plan agent (higher reasoning).
+Confirm `{F}/goal.md` exists. Do NOT read or interpret — delegate to `plan-goal-execution` (higher reasoning).
 
-### 2. Spawn plan agent
+### 2–5. Iterate (plan → check → orchestrate → loop)
 
-Pass filename (not content) of `{F}/{goal}.md` + raw user instructions (no enrichment) except iteration count. Template:
+Steps 2–5 are purely mechanical. Run them as a single `eval` code block: a `for` loop over iterations, spawning the two schema-checked subagents with the **target plan path** as their only argument and branching on their structured `status`.
 
-```text
-Goal: {F}/{goal}.md (iteration {pIt}, max {N})
-{{Additional user instructions if any}}
-Read applicable {F}/summary{pIt-1}.md files (not previous plans).
-Review code quality and intent match of prior iterations. Be adversarial. Catch and rectify brush-offs, slops, and technical debt. Identify improvements.
+Both subagents accept only `{F}/plan{pIt}.md` (the plan path). The planner reads `{F}/goal.md` + prior `summary{1..pIt-1}.md` and writes that plan path; the orchestrator reads it and writes `{F}/summary{pIt}.md`. `{pIt}` is owned by the caller and baked into the path — no scanning, no races.
 
-Produce written plan: concrete sub-tasks, file paths, dependencies, sequence.
-Write plan to {F}/plan{pIt}.md.
+```python
+F, N = "{F}", {N}
 
-Planner MUST limit DIY searching, test running, reading. Launch `explore`/`task`/`librtarian` subagents instead.
-MUST START from launching `explore` subagent(s) and add more as needed.
-Consult high-reasoning `oracle` agent on uncertainties/alternatives/LOO.
-Specify scope of each workstream/task.
-Return only `plan created, work to do` or `Plan explains no material improvements needed, goal fully achieved`.
-Provide  plan that fully implements goal.
+PLAN_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "status": {"type": "string", "enum": ["plan_created", "goal_complete"]},
+        "plan_path": {"type": "string"},
+        "summary": {"type": "string"},
+    },
+    "required": ["status", "plan_path", "summary"],
+}
+IMPL_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "status": {"type": "string", "enum": ["implemented", "partial"]},
+        "summary_path": {"type": "string"},
+        "concerns": {"type": "string"},
+    },
+    "required": ["status", "summary_path", "concerns"],
+}
+
+final = "incomplete"
+for pIt in range(1, N + 1):
+    plan_path = f"{F}/plan{pIt}.md"
+
+    # Step 2 — plan (planner reads {F}/goal.md + prior summaries, writes plan_path).
+    plan_result = agent(plan_path, agent_type="plan-goal-execution", schema=PLAN_SCHEMA)
+
+    # Step 3 — termination check.
+    if plan_result["status"] == "goal_complete":
+        final = f"goal complete after {pIt} planning pass(es)"
+        break
+
+    # Step 4 — orchestrate (orchestrator reads plan_path, writes {F}/summary{pIt}.md).
+    impl_result = agent(plan_path, agent_type="orchestrate-goal-execution", schema=IMPL_SCHEMA)
+
+    # Step 5 — iteration count check.
+    if pIt == N:
+        final = f"max iterations ({N}) reached; last summary: {impl_result['summary_path']}"
+        break
+    # else: loop — planner re-evaluates remaining work against the new summary.
+
+print(final)
 ```
-WAIT for plan job. Do not poll.
 
-### 3. Check termination
-
-Plan agent reports goal complete (nothing delayed) → report final status, exit.
-
-### 4. Use task agent to implement plan
-
-Launch single `task` agent. Template:
-
-```
-Your role: orchestrate (no DIY) implementation of `{F}/plan{pIt}.md` via focused `task` subagents.
-
-## 1. Load `{F}/plan{pIt}.md`
-## 2. Plan execution
-   - Split into manageable (1..3 files, <200 LoC changes) tasks. Avoid scope creep.
-   - Do not override planner's technical decisions (high-reasoning).
-## 3. Execute plan
-   - ≥2 subagents per identified subtask.
-   - **Implementer** — implements per plan. Full tool access. Verify tests + lint pass.
-   - **Checker** — after implementer, review changes, independently run lint/test. Verify bona fide completion without regression. Decide:
-     - Commit if correct, no tech debt, no regression.
-     - Minor touch-ups then commit.
-     - More `task`/`checker` iterations or rollback (`git restore`) if wrong. Report decision.
-   - **Parallel sub-tasks**: spawn in isolation. Launch third `task` agent to merge results while no other agents active. Regression check after each merge.
-   - When additional subagents needed: checker identifies fix, or work + resolve merge conflict.
-   - Use `explore` subagent to understand status / define delta.
-## 4. Keep executing until plan fully implemented.
-## 5. Summary report
-
-Write execution summary + concerns to `{F}/summary{pIt}.md`.
-```
-
-### 5. Check iteration count
-
-Once task subagent from step 4 done: 
-
-- Fewer than `{N}` iterations → return to step 1. Planner re-evaluates remaining work.
-- `{N}` iterations done → report final status.
-
+The `agent()` calls pass only the plan path (a file name). The `schema=` args activate  structured-output path (parsed object returned + schema rendered into the subagent's system prompt);

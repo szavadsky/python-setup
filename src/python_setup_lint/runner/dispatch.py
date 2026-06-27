@@ -181,9 +181,11 @@ class _StubtestLintTool(LintTool):
         cmd = list(spec.command)
         config_paths = config.config_paths or {}
         mypy_config = config_paths.get("mypy")
+        pkg_name = config.package_name
+        if pkg_name is not None:
+            cmd.append(pkg_name)
         cmd.extend(
             [
-                config.package_name,
                 "--concise",
                 "--ignore-missing-stub",
                 "--mypy-config-file",
@@ -209,7 +211,10 @@ class _VerifyTypesLintTool(LintTool):
         cmd = list(spec.command)
         config_paths = config.config_paths or {}
         pyright_config = config_paths.get("pyright check")
-        cmd.extend([config.package_name, "--ignoreexternal", "--outputjson"])
+        pkg_name = config.package_name
+        if pkg_name is not None:
+            cmd.append(pkg_name)
+        cmd.extend(["--ignoreexternal", "--outputjson"])
         if pyright_config is not None:
             cmd.extend(["--project", str(pyright_config)])
         return cmd
@@ -271,7 +276,8 @@ class _PylintLintTool(LintTool):
         if _path is not None:
             paths = _find_py_files([_path], cwd=config.cwd)
         else:
-            paths = _find_py_files(config.default_py_dirs, cwd=config.cwd)
+            dirs = config.default_py_dirs or []
+            paths = _find_py_files(dirs, cwd=config.cwd)
 
         if paths:
             cmd.extend(paths)
@@ -307,7 +313,8 @@ class _PylintPyiLintTool(LintTool):
         if _path is not None:
             paths = _find_pyi_files([_path], cwd=config.cwd)
         else:
-            paths = _find_pyi_files(config.default_py_dirs, cwd=config.cwd)
+            dirs = config.default_py_dirs or []
+            paths = _find_pyi_files(dirs, cwd=config.cwd)
 
         if paths:
             cmd.extend(paths)

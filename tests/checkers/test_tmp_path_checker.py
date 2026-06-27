@@ -17,7 +17,7 @@ def _make_tc() -> Any:
 
 
 def _walk_and_release(code: str, *, file_path: str = "tests/test_mod.py") -> list[Any]:
-    tc = _make_tc()  # type: ignore[no-untyped-call]
+    tc = _make_tc()
     tc.checker.open()
     module = __import__("astroid").parse(code)
     module.file = file_path
@@ -181,7 +181,7 @@ class TestEdgeCases:
 
     def test_no_file_path_returns_false(self) -> None:
         """_is_test_file returns False when node.root().file is None."""
-        tc = _make_tc()  # type: ignore[no-untyped-call]
+        tc = _make_tc()
         tc.checker.open()
         module = __import__("astroid").parse(
             "import tempfile\n\nd = tempfile.mkdtemp()"

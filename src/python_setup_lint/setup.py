@@ -69,14 +69,19 @@ class SetupState:
 
     @property
     @beartype
-    def all_ok(self) -> bool:
+    def all_ok(self) -> bool:  # pylint: disable=docstring-in-impl  # usage docs in .pyi
+        """Return True if no errors were recorded during setup.
+
+        Returns:
+            True if no errors were recorded.
+        """
         return len(self.errors) == 0
 
 
 # ── Helpers ─────────────────────────────────────────────────────────
 
 
-def _compute_checksums(config_dir: Path, files: Sequence[str]) -> dict[str, str]:
+def _compute_checksums(config_dir: Path, files: Sequence[str], /) -> dict[str, str]:
     result: dict[str, str] = {}
     for fname in files:
         fpath = config_dir / fname
@@ -96,7 +101,7 @@ def _discover_checkers() -> list[str]:
             mod = __import__(m.name, fromlist=["register"])
             if hasattr(mod, "register"):
                 result.append(m.name)
-        except ImportError as e:
+        except ImportError as e:  # pylint: disable=W9740  # best-effort checker discovery fallback; logging would noise unavoidable import failures
             import warnings
 
             warnings.warn(
@@ -107,7 +112,7 @@ def _discover_checkers() -> list[str]:
     return sorted(result)
 
 
-def _read_pyproject_toml(project_dir: Path) -> dict[str, object] | None:
+def _read_pyproject_toml(project_dir: Path, /) -> dict[str, object] | None:
     toml_path = project_dir / "pyproject.toml"
     if not toml_path.is_file():
         return None
@@ -115,27 +120,27 @@ def _read_pyproject_toml(project_dir: Path) -> dict[str, object] | None:
         return tomllib.load(f)
 
 
-def _write_pyproject_toml(project_dir: Path, data: dict[str, object]) -> None:
+def _write_pyproject_toml(project_dir: Path, data: dict[str, object], /) -> None:
     import tomli_w
 
     toml_path = project_dir / "pyproject.toml"
     _atomic_write(toml_path, tomli_w.dumps(data))
 
 
-def _pylint_main_section(data: dict[str, object]) -> dict[str, object] | None:
-    tool = data.get("tool", {})
+def _pylint_main_section(data: dict[str, object], /) -> dict[str, object] | None:
+    tool = data.get("tool")
     if not isinstance(tool, dict):
         return None
-    pylint = tool.get("pylint", {})
+    pylint = tool.get("pylint")
     if not isinstance(pylint, dict):
         return None
-    main = pylint.get("main", {})
+    main = pylint.get("main")
     if not isinstance(main, dict):
         return None
-    return main
+    return main  # type: ignore[return-value]
 
 
-def _get_pylint_load_plugins(data: dict[str, object]) -> list[str]:
+def _get_pylint_load_plugins(data: dict[str, object], /) -> list[str]:
     main = _pylint_main_section(data)
     if main is None:
         return []
@@ -145,7 +150,7 @@ def _get_pylint_load_plugins(data: dict[str, object]) -> list[str]:
     return []
 
 
-def _ensure_pylint_main_section(data: dict[str, object]) -> dict[str, object] | None:
+def _ensure_pylint_main_section(data: dict[str, object], /) -> dict[str, object] | None:
     tool = data.setdefault("tool", {})
     if not isinstance(tool, dict):
         return None
@@ -158,13 +163,13 @@ def _ensure_pylint_main_section(data: dict[str, object]) -> dict[str, object] | 
     return main
 
 
-def _set_pylint_load_plugins(data: dict[str, object], plugins: list[str]) -> None:
+def _set_pylint_load_plugins(data: dict[str, object], plugins: list[str], /) -> None:
     main = _ensure_pylint_main_section(data)
     if main is not None:
         main["load-plugins"] = plugins
 
 
-def _get_dev_deps(data: dict[str, object]) -> list[str]:
+def _get_dev_deps(data: dict[str, object], /) -> list[str]:
     dg = data.get("dependency-groups", {})
     if not isinstance(dg, dict):
         return []
@@ -174,7 +179,7 @@ def _get_dev_deps(data: dict[str, object]) -> list[str]:
     return []
 
 
-def _has_python_setup_dep(dev_deps: list[str]) -> bool:
+def _has_python_setup_dep(dev_deps: list[str], /) -> bool:
     for dep in dev_deps:
         # PEP 508: package name is everything before first [ < > = ! ~ @
         # Strip extras [...], then version/URL specifiers
@@ -200,9 +205,9 @@ def _run_uv(args: list[str], *, cwd: Path) -> tuple[int, str, str]:
             check=False,
         )
         return proc.returncode, proc.stdout, proc.stderr
-    except FileNotFoundError:
+    except FileNotFoundError:  # pylint: disable=W9740  # best-effort uv subprocess fallback; logging would noise unavoidable tool-not-found degrade
         return 1, "", "uv not found — is it installed?"
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired:  # pylint: disable=W9740  # best-effort uv subprocess fallback; logging would noise unavoidable timeout degrade
         return 1, "", "uv command timed out"
 
 
@@ -221,6 +226,7 @@ def _get_package_dir() -> Path:
 def _step_add_dep(
     state: SetupState,
     project_dir: Path,
+    /,
     *,
     dev_path: str | None = None,
 ) -> None:
@@ -251,7 +257,7 @@ def _step_add_dep(
     print("  [dependency] Added python-setup to dev dependencies")
 
 
-def _step_pylint_plugins(state: SetupState, project_dir: Path) -> None:
+def _step_pylint_plugins(state: SetupState, project_dir: Path, /) -> None:
     data = _read_pyproject_toml(project_dir)
     if data is None:
         state.errors.append("pyproject.toml not found — cannot add pylint plugins")
@@ -278,7 +284,7 @@ def _step_pylint_plugins(state: SetupState, project_dir: Path) -> None:
     print(f"  [pylint] Added load-plugins: {', '.join(missing)}")
 
 
-def _step_coding_rules(state: SetupState, project_dir: Path) -> None:
+def _step_coding_rules(state: SetupState, project_dir: Path, /) -> None:
     target = project_dir / "CodingRules.md"
     if target.exists():
         state.coding_rules_skipped = True
@@ -295,7 +301,7 @@ def _step_coding_rules(state: SetupState, project_dir: Path) -> None:
     print("  [coding-rules] Copied CodingRules.md")
 
 
-def _save_state(project_dir: Path) -> None:
+def _save_state(project_dir: Path, /) -> None:
     pkg_dir = _get_package_dir()
     config_dir = pkg_dir / "config"
     checksums = _compute_checksums(config_dir, _BUNDLED_CONFIGS)
@@ -309,7 +315,7 @@ def _save_state(project_dir: Path) -> None:
     _atomic_write(state_path, json.dumps(state_data, indent=2, sort_keys=True) + "\n")
 
 
-def _format_install_summary(state: SetupState) -> list[str]:
+def _format_install_summary(state: SetupState, /) -> list[str]:
     actions: list[str] = []
     _summary_items: tuple[tuple[str, str], ...] = (
         ("dep_added", "added python-setup dependency"),
@@ -329,7 +335,7 @@ def _format_install_summary(state: SetupState) -> list[str]:
     return actions
 
 
-def _check_config_drift(project_dir: Path) -> list[str]:
+def _check_config_drift(project_dir: Path, /) -> list[str]:
     state_path = project_dir / _STATE_FILE
     if not state_path.exists():
         print("  [config] No .python-setup-state.json — skipping drift check")
@@ -338,7 +344,7 @@ def _check_config_drift(project_dir: Path) -> list[str]:
     try:
         saved = json.loads(state_path.read_text(encoding="utf-8"))
         saved_checksums: dict[str, str] = saved.get("config_checksums", {})
-    except json.JSONDecodeError, KeyError:
+    except json.JSONDecodeError, KeyError:  # pylint: disable=W9740  # best-effort state file parse fallback; logging would noise unavoidable parse/IO degrade
         print("  [config] .python-setup-state.json unreadable — skipping drift check")
         return []
 
@@ -390,11 +396,16 @@ def _run_update_steps(project_dir: Path) -> list[str]:
 
 
 @beartype
-def install(
+def install(  # pylint: disable=docstring-in-impl  # usage docs in .pyi
     project_dir: Path,
     *,
     dev_path: str | None = None,
 ) -> int:
+    """Run the full python-setup install workflow for the given project directory.
+
+    Returns:
+        Exit code: 0 on success, 1 on error.
+    """
     print(f"python-setup install → {project_dir}")
     state = SetupState()
 
@@ -432,7 +443,12 @@ def install(
 
 
 @beartype
-def update(project_dir: Path) -> int:
+def update(project_dir: Path) -> int:  # pylint: disable=docstring-in-impl  # usage docs in .pyi
+    """Update an existing python-setup installation, checking for config drift.
+
+    Returns:
+        Exit code: 0 on success, 1 on error.
+    """
     print(f"python-setup update → {project_dir}")
 
     errors = _run_update_steps(project_dir)
@@ -491,7 +507,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 @beartype
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:  # pylint: disable=docstring-in-impl  # usage docs in .pyi
+    """Entry point: parse CLI args and dispatch to install or update.
+
+    Returns:
+        Exit code: 0 on success, 1 on error.
+    """
     parser = _build_parser()
     args = parser.parse_args(argv)
 

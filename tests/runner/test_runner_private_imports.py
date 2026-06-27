@@ -51,7 +51,7 @@ def test_runner_imports_given_init_then_no_private_submodule() -> None:
     """Runner ``__init__`` MUST NOT import ``_``-prefixed submodules."""
     import python_setup_lint.runner as runner_pkg
 
-    init_path = Path(runner_pkg.__file__)  # type: ignore[arg-type]
+    init_path = Path(runner_pkg.__file__)
     init_text = init_path.read_text()
 
     # Check for imports of private submodules

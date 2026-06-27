@@ -19,6 +19,7 @@ from python_setup_lint.checkers._base import (
     MessageDef,
     _get_file_path,
     _is_under_source_root,
+    _msgs,
 )
 
 log = structlog.get_logger(__name__)
@@ -28,13 +29,13 @@ class BeartypeCoverageChecker(BaseChecker):
     """AST visitor that inventories @beartype coverage on public functions."""
 
     name: str = "beartype-coverage"
-    msgs: dict[LintRuleId, MessageDef] = {
-        "W9701": MessageDef(
+    msgs = _msgs(
+        W9701=MessageDef(
             message="Public function '%s' in '%s' is missing @beartype decorator",
             symbol="missing-beartype",
             description="All public functions should have @beartype for runtime type enforcement.",
         ),
-    }
+    )
     options = (
         (
             "source-roots",

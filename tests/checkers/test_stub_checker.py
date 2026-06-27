@@ -60,12 +60,12 @@ def _make_tc() -> Any:
 
 
 def test_checker_name() -> None:
-    assert _make_tc().checker.name == "stub-checker"  # type: ignore[no-untyped-call]
+    assert _make_tc().checker.name == "stub-checker"
 
 
 @pytest.mark.parametrize(("code", "expected_symbol"), _STUB_CHECKER_MSGS_CASES)
 def test_message_codes(code: str, expected_symbol: str) -> None:
-    msgs = _make_tc().checker.msgs  # type: ignore[no-untyped-call]
+    msgs = _make_tc().checker.msgs
     assert code in msgs
     assert msgs[code][1] == expected_symbol
 
@@ -81,7 +81,7 @@ def test_register_function() -> None:
 
 
 def test_close_logs_counts(tmp_path: Path) -> None:
-    msgs = walk_stub_close_release(  # type: ignore[no-untyped-call]
+    msgs = walk_stub_close_release(
         code="x = 1\n",
         file_path="/workspace/src/mod.py",
         source_roots=["/workspace/src"],
@@ -94,14 +94,14 @@ def test_close_logs_counts(tmp_path: Path) -> None:
 
 
 def test_default_source_roots() -> None:
-    tc = _make_tc()  # type: ignore[no-untyped-call]
+    tc = _make_tc()
     tc.checker.open()
     assert len(tc.checker._coverage.patterns.source_roots) == 1
     assert str(tc.checker._coverage.patterns.source_roots[0]).endswith("/src")
 
 
 def test_default_test_patterns() -> None:
-    tc = _make_tc()  # type: ignore[no-untyped-call]
+    tc = _make_tc()
     tc.checker.open()
     patterns = tc.checker._coverage.patterns.test_patterns
     assert "tests/" in patterns
@@ -110,11 +110,11 @@ def test_default_test_patterns() -> None:
 
 def test_defaults_opt_out_empty_and_custom_source_root() -> None:
     """Combined: default opt_out is empty; custom_source_root is honoured."""
-    tc = _make_tc()  # type: ignore[no-untyped-call]
+    tc = _make_tc()
     tc.checker.open()
     assert tc.checker._coverage.patterns.opt_out_patterns == []
 
-    tc2 = _make_tc()  # type: ignore[no-untyped-call]
+    tc2 = _make_tc()
     tc2.linter.config.source_roots = ["custom_src"]
     tc2.checker.open()
     roots = tc2.checker._coverage.patterns.source_roots
@@ -141,7 +141,7 @@ def test_file_classification_and_optout(
     stub_opt_out: list[str] | None,
     expected_e97a0_count: int,
 ) -> None:
-    msgs = walk_stub_close_release(  # type: ignore[no-untyped-call]
+    msgs = walk_stub_close_release(
         code="x = 1\n",
         file_path=file_path,
         source_roots=source_roots,
@@ -156,7 +156,7 @@ def test_production_file_under_src(tmp_path: Path) -> None:
     src = tmp_path / "src"
     src.mkdir()
     (src / "some_module.py").write_text("x = 1\n")
-    msgs = walk_stub_close_release(  # type: ignore[no-untyped-call]
+    msgs = walk_stub_close_release(
         code="x = 1\n",
         file_path=str(src / "some_module.py"),
         source_roots=[str(src)],
@@ -178,7 +178,7 @@ def test_stub_resolution_layout(
     module_name: str,
     expected_e97a0_count: int,
 ) -> None:
-    msgs = walk_stub_resolution_layout(tmp_path, layout_kind, code, module_name)  # type: ignore[no-untyped-call]
+    msgs = walk_stub_resolution_layout(tmp_path, layout_kind, code, module_name)
     assert (
         len([m for m in msgs if m.msg_id == "missing-module-stub"])
         == expected_e97a0_count
@@ -189,7 +189,7 @@ def test_stub_resolution_layout(
 
 
 def test_close_produces_log_record(tmp_path: Path) -> None:
-    tc = _make_tc()  # type: ignore[no-untyped-call]
+    tc = _make_tc()
     tc.checker.open()
     for mod_name in ("mod_a", "mod_b", "mod_c"):
         mock_node = MagicMock()
@@ -212,7 +212,7 @@ def test_close_produces_log_record(tmp_path: Path) -> None:
 
 
 def test_open_initialises_all_state() -> None:
-    tc = _make_tc()  # type: ignore[no-untyped-call]
+    tc = _make_tc()
     tc.checker.open()
     assert tc.checker._coverage.production_count == 0
     assert tc.checker._coverage.stub_found_count == 0
@@ -263,8 +263,8 @@ def test_pyi_exemption_logs_record(
     ("field_overrides", "expected_attr_checks"), _IMPORT_USAGE_FIELD_CASES
 )
 def test_import_usage_fields(
-    field_overrides: dict,
-    expected_attr_checks: dict,
+    field_overrides: dict[str, Any],
+    expected_attr_checks: dict[str, Any],
 ) -> None:
     u = ImportUsage(**field_overrides)
     for key, expected in expected_attr_checks.items():
@@ -405,7 +405,7 @@ def test_complete_pipeline(tmp_path: Path) -> None:
     (src / "mod_a.py").write_text("x: int = 1\n")
     (src / "mod_a.pyi").write_text("x: int\n")
     (src / "mod_b.py").write_text("from mod_a import x\n")
-    tc = _make_tc()  # type: ignore[no-untyped-call]
+    tc = _make_tc()
     tc.linter.config.source_roots = [str(src)]
     tc.checker.open()
     for mod_name, code in [

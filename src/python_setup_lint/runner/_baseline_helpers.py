@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from ._record_types import Record, _compare_records_key
 
@@ -83,18 +83,17 @@ def _dicts_to_records(payload: object) -> list[Record]:
 def _strip_pyright_volatile(diag: object) -> None:
     if not isinstance(diag, dict):
         return
-    d = cast("dict[str, Any]", diag)
+    d = diag
     d.pop("time", None)
     d.pop("version", None)
     summary = d.get("summary")
     if isinstance(summary, dict):
-        cast("dict[str, Any]", summary).pop("timeInSec", None)
+        summary.pop("timeInSec", None)
 
 
 def _diag_error_count(d: object) -> int:
     if isinstance(d, dict):
-        s = cast("dict[str, Any]", d).get("summary", {})
+        s = d.get("summary", {})
         if isinstance(s, dict):
-            sd = cast("dict[str, Any]", s)
-            return int(sd.get("errorCount", 0)) + int(sd.get("warningCount", 0))
+            return int(s.get("errorCount", 0)) + int(s.get("warningCount", 0))
     return 0

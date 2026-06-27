@@ -42,19 +42,19 @@ class _UvCallRecorder:
     def __enter__(self) -> Self:
         import python_setup_lint.setup as _m
 
-        self._orig = _m._run_uv  # type: ignore[attr-defined]
+        self._orig = _m._run_uv
 
         def fake(args: list[str], *, cwd: str | Path) -> tuple[int, str, str]:
             self.calls.append(args)
             return 0, "", ""
 
-        _m._run_uv = fake  # type: ignore[assignment]
+        _m._run_uv = fake
         return self
 
     def __exit__(self, *a: object) -> None:
         import python_setup_lint.setup as _m
 
-        _m._run_uv = self._orig  # type: ignore[assignment]
+        _m._run_uv = self._orig
 
 
 # ── Install artifact check functions ────────────────────────────────

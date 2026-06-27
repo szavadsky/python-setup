@@ -1,0 +1,142 @@
+"""Pylint checker: require bare except handlers to carry a justification comment.
+
+Every ``except:`` or ``except Exception:`` that does not re-raise must carry
+a comment explaining why the exception is suppressed.
+"""
+
+from __future__ import annotations
+
+
+import re
+from typing import TYPE_CHECKING
+
+from astroid import nodes
+from beartype import beartype
+from pylint.checkers import BaseChecker
+
+from python_setup_lint.checkers._base import (
+    LintRuleId,
+    MessageDef,
+    _msgs,
+    check_if_meaningful,
+)
+
+if TYPE_CHECKING:
+    from pylint.lint import PyLinter
+
+
+class BareExceptCommentChecker(BaseChecker):
+    """AST visitor that flags bare except handlers without justification."""
+
+    name: str = "bare-except-comment"
+    msgs = _msgs(
+        W9738=MessageDef(
+            message="Bare except without justification: 'except%s' must carry a comment explaining why the exception is suppressed",
+            symbol="bare-except-comment",
+            description="except without re-raise must comment why. Every bare except or except Exception "
+            "that doesn't re-raise needs a justifying comment.",
+        ),
+    )
+
+    @beartype
+    def visit_excepthandler(self, node: nodes.ExceptHandler) -> None:
+        # Only flag bare except or except Exception
+        if not self._is_bare_or_exception(node):
+            return
+
+        # Skip if the handler re-raises
+        if self._has_bare_raise(node):
+            return
+
+        # Check for justifying comment
+        if self._has_justifying_comment(node):
+            return
+
+        # Emit warning
+        except_str = self._get_except_str(node)
+        self.add_message(
+            "bare-except-comment",
+            node=node,
+            args=(except_str,),
+        )
+
+    @staticmethod
+    def _is_bare_or_exception(node: nodes.ExceptHandler) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+        """Return True if the handler catches bare except or Exception."""
+        if node.type is None:
+            return True
+        if isinstance(node.type, nodes.Name) and node.type.name == "Exception":
+            return True
+        return False
+
+    @staticmethod
+    def _has_bare_raise(node: nodes.ExceptHandler) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+        """Return True if the handler body contains a bare raise (re-raise)."""
+        for child in node.nodes_of_class(nodes.Raise):
+            if child.exc is None:
+                return True
+        return False
+
+    def _has_justifying_comment(self, node: nodes.ExceptHandler) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+        """Check if the except handler has a justifying comment."""
+        try:
+            stream = node.root().stream()  # type: ignore[union-attr]  # ModuleNode has stream() at runtime
+        except AttributeError, OSError:  # pylint: disable=W9740  # best-effort stream access fallback; logging would noise unavoidable attribute/IO degrade
+            return False
+
+        try:
+            raw = stream.read()
+        except OSError:  # pylint: disable=W9740  # best-effort stream read fallback; logging would noise unavoidable IO degrade
+            return False
+
+        if isinstance(raw, bytes):
+            source = raw.decode("utf-8")
+        else:
+            source = raw
+
+        lines = source.splitlines(keepends=True)
+
+        lineno = node.fromlineno
+        if lineno is None:
+            return False
+
+        # Check trailing comment on the except line
+        line = lines[lineno - 1] if lineno <= len(lines) else ""
+        trailing_match = re.search(r"#\s+(.+)", line)
+        if trailing_match:
+            comment_text = trailing_match.group(1).strip()
+            if check_if_meaningful(
+                text=comment_text,
+                rule="bare-except-comment",
+                code_context=line.strip(),
+                comment=comment_text,
+            ):
+                return True
+
+        # Check preceding line for a comment
+        if lineno > 1:
+            prev_line = lines[lineno - 2].strip()
+            if prev_line.startswith("#"):
+                comment_text = prev_line.lstrip("#").strip()
+                if check_if_meaningful(
+                    text=comment_text,
+                    rule="bare-except-comment",
+                    code_context=line.strip(),
+                    comment=comment_text,
+                ):
+                    return True
+
+        return False
+
+    @staticmethod
+    def _get_except_str(node: nodes.ExceptHandler) -> str:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+        """Get the string representation of the except clause."""
+        if node.type is None:
+            return ":"
+        if isinstance(node.type, nodes.Name):
+            return f" {node.type.name}:"
+        return ":"
+
+
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API; @beartype cannot resolve PyLinter forward ref
+    linter.register_checker(BareExceptCommentChecker(linter))

@@ -47,7 +47,7 @@ def test_normalize_infer(code: str, expected: str | None) -> None:
 def _ann_from_code(code: str) -> Any:
     """Parse ``x: <ann>`` and return the annotation node of body[0]."""
     module = astroid.parse(code, module_name="test_mod")
-    return module.body[0].annotation  # type: ignore[index]
+    return module.body[0].annotation
 
 
 @pytest.mark.parametrize(("code", "expected", "assert_mode"), _AST_STRING_CASES)

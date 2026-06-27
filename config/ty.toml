@@ -1,4 +1,9 @@
 [rules]
+# Pyright already handles type-checking; these rules overlap with static analysis
 unresolved-attribute = "ignore"
+# Dynamic attribute access (e.g. mock objects, SQLAlchemy) triggers false positives
 not-iterable = "ignore"
+# Decorated functions returning non-callable wrappers trigger false positives
 call-non-callable = "ignore"
+# sentence_transformers is an optional dependency (try/except ImportError); type-checker cannot resolve it
+unresolved-import = "ignore"

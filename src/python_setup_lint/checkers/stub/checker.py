@@ -14,7 +14,7 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
 from python_setup_lint.checkers.stub.coverage import (
     _CoverageState,
     _has_main_block,
@@ -48,58 +48,58 @@ class StubChecker(BaseChecker):
     """
 
     name = "stub-checker"
-    msgs: dict[LintRuleId, MessageDef] = {
-        "E97A0": MessageDef(
+    msgs = _msgs(
+        E97A0=MessageDef(
             message="Production module '%s' has no companion .pyi stub",
             symbol="missing-module-stub",
             description="Every production Python module must have a corresponding .pyi stub file.",
         ),
-        "E97A1": MessageDef(
+        E97A1=MessageDef(
             message="Symbol '%s' imported by '%s' is not declared in target stub '%s'",
             symbol="missing-import-declaration",
             description="Every project-local import must refer to a symbol declared in the target module's .pyi stub.",
         ),
-        "E97A2": MessageDef(
+        E97A2=MessageDef(
             message="Project-local module '%s' imported by '%s' has no .pyi stub",
             symbol="missing-module-stub-for-import",
             description="Every imported project-local module must have a .pyi stub.",
         ),
-        "E97A3": MessageDef(
+        E97A3=MessageDef(
             message="Star import from '%s' in '%s' cannot be statically resolved",
             symbol="star-import-unresolvable",
             description="Star imports from project-local modules are not statically resolvable.",
         ),
-        "E97B3": MessageDef(
+        E97B3=MessageDef(
             message="Signature mismatch on '%s' in module '%s': %s",
             symbol="signature-mismatch",
             description="Parameter count, name, kind, or default-presence differs between .pyi stub and .py implementation.",
         ),
-        "E97B4": MessageDef(
+        E97B4=MessageDef(
             message="Annotation mismatch on '%s' in module '%s': stub has '%s', impl has '%s'",
             symbol="annotation-mismatch",
             description="Variable annotation in .pyi differs from the .py implementation after normalization.",
         ),
-        "W97B5": MessageDef(
+        W97B5=MessageDef(
             message="Implementation of '%s' in '%s' has no annotation (stub annotates)",
             symbol="impl-missing-annotation",
             description="Variable is annotated in the .pyi stub but the .py implementation has no annotation.",
         ),
-        "I97B6": MessageDef(
+        I97B6=MessageDef(
             message="Annotation for '%s' in module '%s' could not be normalized",
             symbol="annotation-unverifiable",
             description="Annotation is too complex to normalize and compare. Manual review needed.",
         ),
-        "E97B1": MessageDef(
+        E97B1=MessageDef(
             message="Stub symbol '%s' in module '%s' has no implementation",
             symbol="stub-symbol-missing",
             description="Symbol declared in .pyi stub is absent from .py implementation.",
         ),
-        "E97B2": MessageDef(
+        E97B2=MessageDef(
             message="Kind mismatch for '%s' in module '%s': stub declares '%s', implementation has '%s'",
             symbol="symbol-kind-mismatch",
             description="Symbol exists in both stub and impl but their kinds differ (e.g. class vs function, variable vs class).",
         ),
-    }
+    )
     options = (
         (
             "source-roots",

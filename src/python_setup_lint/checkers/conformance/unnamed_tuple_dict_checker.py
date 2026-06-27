@@ -16,22 +16,22 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef
+from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
 
 
 class UnnamedTupleDictChecker(BaseChecker):
     """AST visitor that flags dict values that should be NamedTuples."""
 
     name: str = "unnamed-tuple-dict"
-    msgs: dict[LintRuleId, MessageDef] = {
-        "W9720": MessageDef(
+    msgs = _msgs(
+        W9720=MessageDef(
             message="Dict value is a bare tuple literal with %d unnamed fields; "
             "use a NamedTuple or dataclass instead",
             symbol="unnamed-tuple-dict-value",
             description="Dict values that are bare tuple literals with >1 unnamed "
             "positional fields should use a NamedTuple or dataclass for clarity.",
         ),
-    }
+    )
 
     @beartype
     def visit_annassign(self, node: nodes.AnnAssign) -> None:
@@ -91,11 +91,13 @@ class UnnamedTupleDictChecker(BaseChecker):
         for key, value in dict_node.items:
             if key is None:
                 continue  # skip splat (**dict)
+            if not isinstance(value, nodes.Tuple):
+                continue
             if self._is_unnamed_tuple(value):
                 self.add_message(
                     "unnamed-tuple-dict-value",
                     node=value,
-                    args=(len(self._get_tuple_elts(value)),),
+                    args=(len(value.elts),),
                 )
 
     @staticmethod

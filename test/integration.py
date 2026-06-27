@@ -13,7 +13,6 @@ import subprocess
 import textwrap
 from pathlib import Path
 
-import pytest
 
 from python_setup_lint.runner import RunnerConfig, run_lint
 from python_setup_lint.setup import install, update
