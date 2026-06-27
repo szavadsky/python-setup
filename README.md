@@ -52,15 +52,8 @@ uv add --dev "python-setup @ git+https://github.com/szavadsky/python-setup.git@v
 uv run python-setup install
 ```
 
-The installer does the following (all idempotent):
-
-| Step | What it does |
-|------|-------------|
-| Dependency | Adds `python-setup` to `[dependency-groups] dev` if missing |
-| Pylint plugins | Discovers custom checkers and adds them to `[tool.pylint.main] load-plugins` |
-| Pre-commit config | Writes `.pre-commit-config.yaml` with ruff-format, ruff-check, and a local lint hook that runs `python-setup lint --fix --no-fail-fast --baseline lint.baseline` |
-| Coding rules | Copies `CodingRules.md` to the project root |
-| AGENTS.md snippet | Appends pre-commit setup instructions to `AGENTS.md` (if it exists) |
+The installer adds the dependency, registers pylint plugins, writes pre-commit
+config, copies `CodingRules.md`, and appends setup instructions to `AGENTS.md`.
 
 ### 3. Install pre-commit hooks
 
@@ -110,15 +103,14 @@ parse strategies, and examples.
 ### Re-baselining
 
 The lint pipeline uses a baseline file (`lint.baseline`) to distinguish new
-violations from pre-existing ones. The runner's `_diff_baseline` compares
-current output against the saved baseline — any delta flags a regression.
+violations from pre-existing ones. See [docs/overlays.md](docs/overlays.md) for
+re-baselining commands and workflow.
 
-Shrinkage (fixing violations, removing files) auto-records silently. Use
-`--overwrite-baseline` for coordinated cleanup milestones:
+### Semantic justification
 
-```bash
-uv run lint --no-fail-fast --overwrite-baseline --baseline lint.baseline
-```
+See [docs/semantic-justification.md](docs/semantic-justification.md) for the
+semantic lint-justification system — how suppressed violations are tracked and
+validated with meaningful explanations.
 
 ## License
 

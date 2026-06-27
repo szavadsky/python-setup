@@ -21,6 +21,12 @@
   Validates `Annotated` predicates at call boundary. No manual `if` guards for
   type contracts.
 
+
+## Universal Exceptions
+
+- Tests may have functions with more parameters than production code would
+  normally allow (e.g., for parametrize fixtures), and this is an accepted
+  exception.
 ## Module Layout
 
 ```text

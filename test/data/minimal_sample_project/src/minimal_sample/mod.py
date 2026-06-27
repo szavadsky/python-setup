@@ -79,3 +79,27 @@ def create_temp_dir() -> str:
 # stdlib logging instead of structlog.
 
 logger = logging.getLogger(__name__)  # should trigger use-structlog
+
+
+# ── 9. docstring_checker (docstring-in-impl) ──────────────────────────
+# Usage docstring in .py that should be in .pyi.
+
+def public_func_with_usage_docstring(x: int, y: int) -> int:
+    """Calculate the sum of two numbers.
+
+    Args:
+        x: First number.
+        y: Second number.
+
+    Returns:
+        The sum of x and y.
+    """
+    return x + y
+
+
+# ── 10. docstring_checker (generic-return-requires-returns) ────────────
+# Function with non-None return type but no Returns: clause.
+
+def public_func_missing_returns_clause() -> int:
+    """Calculate something but missing Returns clause."""
+    return 42
