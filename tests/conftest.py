@@ -14,6 +14,8 @@ This file holds:
 """
 
 from __future__ import annotations
+import os
+
 
 import textwrap
 from collections.abc import Callable, Iterable
@@ -23,6 +25,15 @@ import pytest
 
 from python_setup_lint.runner import LINT_TOOLS, STRATEGIES, RunnerConfig
 from python_setup_lint.runner.extra_tools import _reset_extra_tools_cache
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _ensure_venv_on_path() -> None:
+    """Prepend the project's .venv/bin to PATH so subprocesses find tools."""
+    venv_bin = Path(__file__).resolve().parent.parent / ".venv" / "bin"
+    if str(venv_bin) not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = f"{venv_bin}:{os.environ.get('PATH', '')}"
+
 
 # ── Project fixtures for setup tests ────────────────────────────────
 
@@ -137,7 +148,10 @@ def isolated_runner_registries() -> Iterable[None]:
     LINT_TOOLS[:] = list(_BUILTIN_TOOLS)
     STRATEGIES.clear()
     STRATEGIES.update(
-        {spec.name: (_STRATEGY_CLASSES.get(spec.name) or LintTool)(spec) for spec in _BUILTIN_TOOLS}
+        {
+            spec.name: (_STRATEGY_CLASSES.get(spec.name) or LintTool)(spec)
+            for spec in _BUILTIN_TOOLS
+        }
     )
 
     yield

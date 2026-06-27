@@ -5,6 +5,8 @@ CLI helper functions for the lint pipeline.
 
 from .types import LintResult, ToolSpec
 
+def _print_tool_notes(spec: ToolSpec, *, fix: bool, path: str | None, exclude: str | None) -> None: ...
+def _handle_baseline(
     results: list[LintResult],
     baseline: str,
     *,

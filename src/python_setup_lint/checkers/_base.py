@@ -111,8 +111,30 @@ def check_if_meaningful(
         "todo",
         "fixme",
         "hack",
+        "fixed",
+        "works",
+        "broken",
+        "check",
+        "update",
+        "remove",
+        "change",
+        "improve",
+        "refactor",
+        "done",
+        "test",
+        "blank",
+        "empty",
     }
     if primary_lower in boilerplate:
+        return False
+    # Reject multi-word meaningless phrases.
+    meaningless_phrases = {
+        "fix this",
+        "need to check",
+        "maybe later",
+        "not sure",
+    }
+    if primary_lower in meaningless_phrases:
         return False
     # Reject justification that is just the rule symbol itself.
     if rule and primary_lower == rule.lower():

@@ -25,7 +25,6 @@ from .cmd_build import (
     _build_command,
     _build_statistics_flags,
     _config_flag_for,
-    _expand_globs,
     _find_py_files,
     _find_pyi_files,
     _resolve_pylintrc,

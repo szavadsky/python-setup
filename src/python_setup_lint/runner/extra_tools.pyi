@@ -39,11 +39,14 @@ class ExtraToolsConfigError(Exception):
 
     def __init__(self, location: str, reason: str) -> None: ...
 
+_EXTRA_TOOL_FIELDS: frozenset[str]
 """Allowed ``[[tool.python-setup-lint.extra-tools]]`` entry field set (v1)."""
 
+_EXTRA_TOOL_REQUIRED: tuple[str, ...]
 """Required v1 fields (``name``, ``command``)."""
 
 @dataclass(frozen=True)
+class _ExtraToolRegistration:
     """Bundle a validated extra's :class:`ToolSpec` + the registration kwargs.
 
     :func:`_load_extra_tools` returns these; :func:`_register_extra_tools`
@@ -58,12 +61,16 @@ class ExtraToolsConfigError(Exception):
     parser: Callable[..., list[tuple[str, int]]] | None
     config_flag: list[str] | None
 
+_REGEX_CACHE: dict[str, re.Pattern[str]]
 """Per-source cache of compiled regexes for ``regex_count`` parse strategy."""
 
+_EXTRA_TOOLS_CACHE: dict[tuple[Path, int], list[_ExtraToolRegistration]]
 """Per-process memo of ``_load_extra_tools`` results keyed by ``(path, mtime_ns)``."""
 
+_EXTRA_TOOLS_REGISTERED_PATHS: set[Path]
 """Paths whose extras have already been registered — prevents re-registration."""
 
+def _compile_regex_count(pattern: str) -> re.Pattern[str]:
     """Compile *pattern* once and cache the result by source string.
 
     Raises:
@@ -71,6 +78,7 @@ class ExtraToolsConfigError(Exception):
             exactly one capture group.
     """
 
+def _parse_regex_count(
     stdout: str, stderr: str, *, regex: str
 ) -> list[tuple[str, int]]:
     """Count distinct capture-group values across all stdout+stderr lines.
@@ -80,12 +88,14 @@ class ExtraToolsConfigError(Exception):
     stderr are scanned — most CLIs split diagnostics across the two streams.
     """
 
+def _parse_raw_lines(stdout: str, _stderr: str) -> list[tuple[str, int]]:
     """Count non-empty stdout lines as a single synthetic rule ``"line"``.
 
     Escape hatch for tools with no notion of rule identifiers.  stderr is
     ignored (most tools surface diagnostics on stdout).
     """
 
+def _extra_tool_parser(
     *,
     entry: dict[str, Any],
     location: str,
@@ -103,26 +113,32 @@ class ExtraToolsConfigError(Exception):
             ``parse_regex``, or a regex without exactly one capture group.
     """
 
+def _validate_extra_bool_fields(
     entry: dict[str, Any], location: str
 ) -> tuple[bool, bool, bool]:
     """Validate supports_fix, supports_path, supports_exclude fields."""
 
+def _validate_extra_list_field(
     entry: dict[str, Any], key: str, location: str
 ) -> list[str]:
     """Validate a list-of-strings field and return the validated list."""
 
+def _validate_extra_config_flag(
     entry: dict[str, Any], location: str
 ) -> list[str] | None:
     """Validate config_flag field (str, list[str], or None)."""
 
+def _validate_extra_fields(
     entry: dict[str, Any], location: str
 ) -> dict[str, Any]:
     """Validate all fields in an extra-tool entry and return validated values."""
 
+def _validate_extra_name(
     name: str, seen_names: set[str], location: str
 ) -> str:
     """Validate extra-tool name uniqueness and return the validated name."""
 
+def _validate_extra(
     entry: dict[str, Any],
     *,
     location: str,
@@ -139,6 +155,7 @@ class ExtraToolsConfigError(Exception):
         ExtraToolsConfigError: on any malformed shape per T8 R4.
     """
 
+def _reset_extra_tools_cache() -> None:
     """Clear the per-process memo for ``_load_extra_tools`` (test-only).
 
     Production callers should NOT invoke this; the cache invalidates on
@@ -146,6 +163,7 @@ class ExtraToolsConfigError(Exception):
     synthetic pyproject.toml in the same process.
     """
 
+def _load_extra_tools(cwd: Path) -> list[_ExtraToolRegistration]:
     """Load ``[[tool.python-setup-lint.extra-tools]]`` entries from ``cwd/pyproject.toml``.
 
     Returns ``[]`` when the file is missing, the section is absent, the
@@ -156,6 +174,7 @@ class ExtraToolsConfigError(Exception):
             ``[[...]]`` entry fails :func:`_validate_extra` (T8 R4 table).
     """
 
+def _register_extra_tools(registrations: list[_ExtraToolRegistration]) -> None:
     """Register each validated extra via :func:`register_lint_tool`.
 
     Idempotent — :func:`register_lint_tool` is already idempotent per

@@ -18,6 +18,8 @@ from python_setup_lint.checkers.stub.fidelity import _FidelityState
 class StubChecker(BaseChecker):
     """Enforce Invariant 1 (coverage), 2 (import contract), 3 (fidelity)."""
 
+    _coverage: _CoverageState
+    _fidelity: _FidelityState
 
     def __init__(self, linter: PyLinter) -> None:
         """Initialize state via dataclass aggregates."""
@@ -29,10 +31,12 @@ class StubChecker(BaseChecker):
         """Classify and index each .py file."""
 
 
+    def _is_module_exempt(
         self, node: nodes.Module, py_path: Path, module_name: str
     ) -> bool:
         """Check if a module is exempt from stub requirements."""
 
+    def _index_module(
         self, node: nodes.Module, py_path: Path, module_name: str
     ) -> None:
         """Index a module's stub and track coverage."""
@@ -50,6 +54,7 @@ class StubChecker(BaseChecker):
         stub-missing (standalone scripts exempt from stub requirement).
         """
 
+    def _index_impl_annotations(
         self,
         module_name: str,
         py_node: nodes.Module,
