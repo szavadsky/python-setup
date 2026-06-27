@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
-from pylint.typing import ExtraMessageOptions
 
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
@@ -24,7 +23,7 @@ class PyiUnderscoreChecker(BaseChecker):
     """AST visitor that flags _-prefixed symbols in .pyi files."""
 
     name: str = "pyi-underscore"
-    msgs: dict[str, tuple[str, str, str] | tuple[str, str, str, ExtraMessageOptions]]
+    msgs: dict[LintRuleId, MessageDef]
 
     def visit_module(self, node: nodes.Module) -> None:
         """Determine if this module is a .pyi file."""
