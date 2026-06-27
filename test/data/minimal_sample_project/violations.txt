@@ -24,3 +24,12 @@ tempfile-mkdtemp-in-test
 
 # structlog_checker — stdlib logging instead of structlog
 use-structlog
+
+# pyi_underscore_checker — _-prefixed symbol in .pyi
+pyi-underscore-symbol
+
+# docstring_checker — usage docstring in .py
+docstring-in-impl
+
+# docstring_checker — missing Returns clause
+generic-return-requires-returns
