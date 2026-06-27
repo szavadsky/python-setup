@@ -11,8 +11,20 @@ from typing import Any
 
 import pytest
 
-from python_setup_lint.runner import STRATEGIES, TOOLS, TOOLS_BY_NAME, RunnerConfig, ToolSpec, register_lint_tool, run_lint
-from python_setup_lint.runner.cmd_build import _build_command, _expand_globs, _find_py_files
+from python_setup_lint.runner import (
+    STRATEGIES,
+    TOOLS,
+    TOOLS_BY_NAME,
+    RunnerConfig,
+    ToolSpec,
+    register_lint_tool,
+    run_lint,
+)
+from python_setup_lint.runner.cmd_build import (
+    _build_command,
+    _expand_globs,
+    _find_py_files,
+)
 from python_setup_lint.runner.output import _print_result
 import python_setup_lint.runner.output as _output_module
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
@@ -32,7 +44,7 @@ _CONFIG = RunnerConfig(cwd=Path.cwd())
 
 
 class TestToolSpec:
-    """The static 11-tool table invariant."""
+    """The static 12-tool table invariant."""
 
     def test_known_tools_present(self) -> None:
         assert {t.name for t in TOOLS} == {
@@ -46,6 +58,7 @@ class TestToolSpec:
             "pyright check",
             "pyright verify types",
             "pylint",
+            "pylint-pyi",
             "detect-secrets",
         }
 
@@ -56,7 +69,7 @@ class TestToolSpec:
             "ty check",
         }
         assert all(t.name for t in TOOLS)
-        assert len({t.name for t in TOOLS}) == len(TOOLS) == 11
+        assert len({t.name for t in TOOLS}) == len(TOOLS) == 12
 
     def test_yamllint_default_paths_is_dot(self) -> None:
         """yamllint default_paths changed from config/*.yaml to . (T5 fix)."""
