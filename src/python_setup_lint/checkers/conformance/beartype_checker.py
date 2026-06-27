@@ -6,7 +6,7 @@ Informational (W-level) only — does not block builds.
 
 from __future__ import annotations
 
-import logging
+import structlog
 from pathlib import Path
 
 from astroid import nodes
@@ -14,9 +14,14 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef, _get_file_path, _is_under_source_root
+from python_setup_lint.checkers._base import (
+    LintRuleId,
+    MessageDef,
+    _get_file_path,
+    _is_under_source_root,
+)
 
-log = logging.getLogger(__name__)
+log = structlog.get_logger(__name__)
 
 
 class BeartypeCoverageChecker(BaseChecker):
@@ -68,7 +73,9 @@ class BeartypeCoverageChecker(BaseChecker):
     def _check_function(self, node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> None:
         # Skip modules outside source roots
         file_path = _get_file_path(node)
-        if file_path is None or not _is_under_source_root(file_path, self._source_roots):
+        if file_path is None or not _is_under_source_root(
+            file_path, self._source_roots
+        ):
             return
 
         # Skip __init__ — constructor beartype is an anti-pattern
@@ -105,7 +112,6 @@ class BeartypeCoverageChecker(BaseChecker):
             if isinstance(dec, nodes.Attribute) and dec.attrname == "no_type_check":
                 return True
         return False
-
 
 
 def register(  # pylint: disable=missing-beartype  # circular import — PyLinter not available at runtime

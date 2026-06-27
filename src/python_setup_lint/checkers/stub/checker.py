@@ -6,7 +6,7 @@ and signatures must match .py counterparts after normalization.
 
 from __future__ import annotations
 
-import logging
+import structlog
 from pathlib import Path
 
 from astroid import nodes
@@ -38,7 +38,7 @@ from python_setup_lint.checkers.stub.import_contract import (
     emit_import_contract_violations,
 )
 
-log = logging.getLogger(__name__)
+log = structlog.get_logger(__name__)
 
 
 class StubChecker(BaseChecker):
@@ -189,7 +189,9 @@ class StubChecker(BaseChecker):
         raw_opt_out = getattr(config, "stub_opt_out", None)
         c.patterns.opt_out_patterns = list(raw_opt_out) if raw_opt_out else []
         raw_stub_roots = getattr(config, "stub_roots", None)
-        c.patterns.stub_roots = [Path(r) for r in raw_stub_roots if r] if raw_stub_roots else []
+        c.patterns.stub_roots = (
+            [Path(r) for r in raw_stub_roots if r] if raw_stub_roots else []
+        )
         raw_star = getattr(config, "star_import_policy", None) or "error"
         c.star_import_policy = str(raw_star)
         raw_missing = getattr(config, "impl_missing_annotation", None) or "warn"
@@ -223,16 +225,18 @@ class StubChecker(BaseChecker):
         # ── conftest.py always exempt ─────────────────────────────────────
         if py_path.name == "conftest.py":
             log.info(
-                "Exempt %s: conftest.py (always exempt from stub requirement)",
-                module_name,
+                "Exempt conftest.py",
+                module=module_name,
+                reason="always exempt from stub requirement",
             )
             return True
 
         # ── trivial test data modules (outside source root) exempt ────────
         if _is_trivial_test_data(node) and not _is_under_source_root(self, py_path):
             log.info(
-                "Exempt %s: trivial test data module (only literal assignments)",
-                module_name,
+                "Exempt trivial test data module",
+                module=module_name,
+                reason="only literal assignments",
             )
             return True
 
@@ -247,7 +251,9 @@ class StubChecker(BaseChecker):
 
         # ── __init__.py exemption ─────────────────────────────────────────
         if py_path.name == "__init__.py" and _is_init_exempt(node):
-            log.info("Exempt %s: __init__.py with imports/__all__ only", module_name)
+            log.info(
+                "Exempt __init__.py", module=module_name, reason="imports/__all__ only"
+            )
             return True
 
         return False
@@ -274,7 +280,6 @@ class StubChecker(BaseChecker):
         else:
             c.stub_missing.add(module_name)
         self._index_impl_annotations(module_name, node)
-
 
     @beartype
     def visit_import(self, node: nodes.Import) -> None:
@@ -344,17 +349,21 @@ class StubChecker(BaseChecker):
             if mod_name not in imported_modules:
                 if mod_name in c.stub_missing:
                     c.stub_missing.discard(mod_name)
-                    log.info("Exempt %s: standalone script (not imported)", mod_name)
+                    log.info(
+                        "Exempt standalone script",
+                        module=mod_name,
+                        reason="not imported",
+                    )
 
         emit_coverage_violations(self)
         emit_import_contract_violations(self)
         emit_fidelity_violations(self)
 
         log.info(
-            "StubChecker: %d production modules, %d stubs found, %d violations emitted",
-            c.production_count,
-            c.stub_found_count,
-            len(c.stub_missing),
+            "StubChecker summary",
+            production_count=c.production_count,
+            stub_found_count=c.stub_found_count,
+            violations=len(c.stub_missing),
         )
 
     def _index_impl_annotations(

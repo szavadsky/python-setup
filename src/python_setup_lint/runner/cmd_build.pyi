@@ -15,6 +15,9 @@ from .types import RunnerConfig, ToolSpec
 def _find_py_files(dirs: Sequence[str], *, cwd: Path) -> list[str]:
     """Find all .py files under *dirs*, sorted uniquely relative to *cwd*."""
 
+def _find_pyi_files(dirs: Sequence[str], *, cwd: Path) -> list[str]:
+    """Find all .pyi files under *dirs*, sorted uniquely relative to *cwd*."""
+
 def _expand_globs(paths: Sequence[str], *, cwd: Path) -> list[str]:
     """Expand shell glob patterns (*, ?) in *paths* relative to *cwd*."""
 
@@ -26,7 +29,10 @@ def _config_flag_for(spec_name: str, config_path: Path | None) -> list[str]:
     """
 
 def _build_config_flags(
-    spec: ToolSpec, config: RunnerConfig, *, config_flag_override: list[str] | None = None
+    spec: ToolSpec,
+    config: RunnerConfig,
+    *,
+    config_flag_override: list[str] | None = None,
 ) -> list[str]:
     """Build config flags for a tool spec. Returns empty list if no config found."""
 

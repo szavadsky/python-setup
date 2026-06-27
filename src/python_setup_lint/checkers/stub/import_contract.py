@@ -8,7 +8,7 @@ Extracted from stub_checker.py. No logic change.
 
 from __future__ import annotations
 
-import logging
+import structlog
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -17,9 +17,10 @@ from astroid import nodes
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
-log = logging.getLogger(__name__)
+log = structlog.get_logger(__name__)
 
 # ── Import usage record ────────────────────────────────────────────────────────
+
 
 @dataclass
 class ImportUsage:
@@ -32,7 +33,9 @@ class ImportUsage:
     alias: str | None
     is_star: bool
 
+
 # ── TYPE_CHECKING guard detection ─────────────────────────────────────────────
+
 
 def _in_type_checking_block(node: nodes.Import | nodes.ImportFrom) -> bool:
     parent = node.parent
@@ -43,12 +46,15 @@ def _in_type_checking_block(node: nodes.Import | nodes.ImportFrom) -> bool:
         parent = parent.parent
     return False
 
+
 def _is_type_checking_guard(test: nodes.NodeNG) -> bool:
     if isinstance(test, nodes.Name) and test.name == "TYPE_CHECKING":
         return True
     return isinstance(test, nodes.Attribute) and test.attrname == "TYPE_CHECKING"
 
+
 # ── Import resolution helpers ─────────────────────────────────────────────────
+
 
 def _resolve_relative(
     current_module: str,
@@ -75,7 +81,9 @@ def _resolve_relative(
         parts.append(modname)
     return ".".join(parts)
 
+
 # ── Public API ─────────────────────────────────────────────────────────────────
+
 
 def emit_import_contract_violations(checker: StubChecker) -> None:  # pylint: disable=missing-beartype  # StubChecker is TYPE_CHECKING-only; beartype can't resolve at runtime
     c = checker._coverage

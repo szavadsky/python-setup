@@ -45,23 +45,79 @@ def make_tc(checker_class: type[BaseChecker]) -> CheckerTestCase:
 # ── no-try-import checker ──
 
 _NO_TRY_DETECT_CASES: list[Any] = [
-    _p("try:\n    import litellm\nexcept ImportError:\n    pass\n", 1, ("ImportError",), id="import_in_try_except_importerror"),
-    _p("try:\n    import litellm\nexcept ModuleNotFoundError:\n    pass\n", 1, (), id="import_in_try_except_modulenotfound"),
-    _p("try:\n    from pydantic import ValidationError\nexcept ImportError:\n    pass\n", 1, (), id="from_import_in_try_except_importerror"),
-    _p("try:\n    import httpx\nexcept:\n    pass\n", 1, ("bare except",), id="import_in_try_bare_except"),
-    _p("try:\n    import litellm\nexcept (ImportError, ModuleNotFoundError):\n    pass\n", 1, (), id="import_in_try_tuple_import_errors"),
-    _p("try:\n    import litellm\nexcept ImportError:\n    pass\n\ntry:\n    import httpx\nexcept ImportError:\n    pass\n", 2, (), id="two_imports_separate_try_blocks"),
-    _p("try:\n    import litellm\nexcept ImportError:\n    pass\nexcept ModuleNotFoundError:\n    pass\n", 2, (), id="two_imports_separate_handlers_one_try"),
-    _p("try:\n    import litellm\nexcept ValueError:\n    pass\n", 0, (), id="import_in_try_non_import_handler_not_flagged"),
-    _p("try:\n    import httpx\nexcept ValueError:\n    pass\nexcept ImportError:\n    pass\nexcept OSError:\n    pass\n", 1, (), id="handler_mixed_import_and_non_import"),
-    _p("try:\n    import litellm as _litellm\nexcept ImportError:\n    _litellm = None\n", 1, (), id="proxy_module_level_guard"),
+    _p(
+        "try:\n    import litellm\nexcept ImportError:\n    pass\n",
+        1,
+        ("ImportError",),
+        id="import_in_try_except_importerror",
+    ),
+    _p(
+        "try:\n    import litellm\nexcept ModuleNotFoundError:\n    pass\n",
+        1,
+        (),
+        id="import_in_try_except_modulenotfound",
+    ),
+    _p(
+        "try:\n    from pydantic import ValidationError\nexcept ImportError:\n    pass\n",
+        1,
+        (),
+        id="from_import_in_try_except_importerror",
+    ),
+    _p(
+        "try:\n    import httpx\nexcept:\n    pass\n",
+        1,
+        ("bare except",),
+        id="import_in_try_bare_except",
+    ),
+    _p(
+        "try:\n    import litellm\nexcept (ImportError, ModuleNotFoundError):\n    pass\n",
+        1,
+        (),
+        id="import_in_try_tuple_import_errors",
+    ),
+    _p(
+        "try:\n    import litellm\nexcept ImportError:\n    pass\n\ntry:\n    import httpx\nexcept ImportError:\n    pass\n",
+        2,
+        (),
+        id="two_imports_separate_try_blocks",
+    ),
+    _p(
+        "try:\n    import litellm\nexcept ImportError:\n    pass\nexcept ModuleNotFoundError:\n    pass\n",
+        2,
+        (),
+        id="two_imports_separate_handlers_one_try",
+    ),
+    _p(
+        "try:\n    import litellm\nexcept ValueError:\n    pass\n",
+        0,
+        (),
+        id="import_in_try_non_import_handler_not_flagged",
+    ),
+    _p(
+        "try:\n    import httpx\nexcept ValueError:\n    pass\nexcept ImportError:\n    pass\nexcept OSError:\n    pass\n",
+        1,
+        (),
+        id="handler_mixed_import_and_non_import",
+    ),
+    _p(
+        "try:\n    import litellm as _litellm\nexcept ImportError:\n    _litellm = None\n",
+        1,
+        (),
+        id="proxy_module_level_guard",
+    ),
 ]
 
 _NO_TRY_DO_NOT_DETECT_CASES: list[Any] = [
-    _p("try:\n    x = 1 / 0\nexcept ZeroDivisionError:\n    pass\n", id="try_without_import"),
+    _p(
+        "try:\n    x = 1 / 0\nexcept ZeroDivisionError:\n    pass\n",
+        id="try_without_import",
+    ),
     _p("import os\nx = os.path.join('a', 'b')\n", id="import_outside_try"),
     _p("", id="empty_module"),
-    _p("try:\n    result = api_call()\nexcept ConnectionError:\n    result = None\n", id="non_import_exception_handling"),
+    _p(
+        "try:\n    result = api_call()\nexcept ConnectionError:\n    result = None\n",
+        id="non_import_exception_handling",
+    ),
 ]
 
 
@@ -70,7 +126,9 @@ _NO_TRY_DO_NOT_DETECT_CASES: list[Any] = [
 _BEARTYPE_MISS_CASES: list[Any] = [
     _p("def foo(): pass", 1, None, id="plain_def"),
     _p("async def foo(): pass", 1, None, id="async_def"),
-    _p("class X:\n    def method(self): pass", 1, "method", id="public_method_in_class"),
+    _p(
+        "class X:\n    def method(self): pass", 1, "method", id="public_method_in_class"
+    ),
     _p("def foo(): pass\ndef bar(): pass\n", 2, None, id="multiple_public_functions"),
 ]
 
@@ -84,7 +142,11 @@ _BEARTYPE_SKIP_CASES: list[Any] = [
     _p("def public(): pass\ndef _private(): pass\n", 1, id="mixed_public_and_private"),
     _p("class X:\n    def __init__(self): pass", 0, id="init_skipped"),
     _p("class X:\n    def __str__(self): pass", 0, id="str_skipped"),
-    _p("class X:\n    def __init__(self): pass\n    def run(self): pass", 1, id="dunder_only_init_skipped_then_public"),
+    _p(
+        "class X:\n    def __init__(self): pass\n    def run(self): pass",
+        1,
+        id="dunder_only_init_skipped_then_public",
+    ),
 ]
 
 
@@ -101,11 +163,46 @@ _NORMALIZER_INFER_CASES: list[Any] = [
 # ── stub checker ──
 
 _STUB_FILE_CLASSIFICATION_CASES: list[Any] = [
-    _p("/workspace/tests/test_foo.py", ["/workspace/src"], None, None, 0, id="test_file_in_tests_dir"),
-    _p("/workspace/src/test_example.py", ["/workspace/src"], ["test_*.py", "tests/"], None, 0, id="test_file_named_test_prefixed"),
-    _p("/workspace/other/foo.py", ["/workspace/src"], None, None, 0, id="file_outside_source_root_skipped"),
-    _p("/workspace/src/generated/foo.py", ["/workspace/src"], None, ["src/generated/"], 0, id="opted_out_by_directory"),
-    _p("/workspace/src/vendor/external.py", ["/workspace/src"], None, ["src/vendor/"], 0, id="opted_out_by_filename"),
+    _p(
+        "/workspace/tests/test_foo.py",
+        ["/workspace/src"],
+        None,
+        None,
+        0,
+        id="test_file_in_tests_dir",
+    ),
+    _p(
+        "/workspace/src/test_example.py",
+        ["/workspace/src"],
+        ["test_*.py", "tests/"],
+        None,
+        0,
+        id="test_file_named_test_prefixed",
+    ),
+    _p(
+        "/workspace/other/foo.py",
+        ["/workspace/src"],
+        None,
+        None,
+        0,
+        id="file_outside_source_root_skipped",
+    ),
+    _p(
+        "/workspace/src/generated/foo.py",
+        ["/workspace/src"],
+        None,
+        ["src/generated/"],
+        0,
+        id="opted_out_by_directory",
+    ),
+    _p(
+        "/workspace/src/vendor/external.py",
+        ["/workspace/src"],
+        None,
+        ["src/vendor/"],
+        0,
+        id="opted_out_by_filename",
+    ),
 ]
 
 _RESOLVE_RELATIVE_CASES: list[Any] = [
@@ -126,8 +223,16 @@ _IS_TYPE_CHECKING_GUARD_CASES: list[Any] = [
 ]
 
 _IN_TYPE_CHECKING_BLOCK_POSITIVE_CASES: list[Any] = [
-    _p("if TYPE_CHECKING:\n    from foo import Bar\n", lambda m: m.body[0].body[0], id="under_type_checking"),
-    _p("if TYPE_CHECKING:\n    if True:\n        from foo import Bar\n", lambda m: m.body[0].body[0].body[0], id="nested_inside_type_checking"),
+    _p(
+        "if TYPE_CHECKING:\n    from foo import Bar\n",
+        lambda m: m.body[0].body[0],
+        id="under_type_checking",
+    ),
+    _p(
+        "if TYPE_CHECKING:\n    if True:\n        from foo import Bar\n",
+        lambda m: m.body[0].body[0].body[0],
+        id="nested_inside_type_checking",
+    ),
 ]
 
 _IN_TYPE_CHECKING_BLOCK_NEGATIVE_CASES: list[Any] = [
@@ -140,35 +245,95 @@ _IN_TYPE_CHECKING_BLOCK_NEGATIVE_CASES: list[Any] = [
 _MATCHES_PATH_CASES: list[Any] = [
     _p("/workspace/src/foo.py", [], False, id="empty_patterns_returns_false"),
     _p("src/generated/foo.py", ["src/generated/"], True, id="directory_prefix_match"),
-    _p("/workspace/src/generated/foo.py", ["src/generated/"], True, id="directory_prefix_with_leading_slash"),
-    _p("/workspace/src/handwritten/foo.py", ["src/generated/"], False, id="directory_prefix_no_match"),
+    _p(
+        "/workspace/src/generated/foo.py",
+        ["src/generated/"],
+        True,
+        id="directory_prefix_with_leading_slash",
+    ),
+    _p(
+        "/workspace/src/handwritten/foo.py",
+        ["src/generated/"],
+        False,
+        id="directory_prefix_no_match",
+    ),
     _p("/workspace/src/test_example.py", ["test_*.py"], True, id="fnmatch_full_path"),
     _p("/workspace/src/foo/bar_test.py", ["*_test.py"], True, id="fnmatch_basename"),
     _p("/workspace/src/prod.py", ["test_*.py"], False, id="fnmatch_no_match"),
     _p("src\\generated\\foo.py", ["src\\generated\\"], True, id="backslash_pattern"),
-    _p("/workspace/tests/test_foo.py", ["tests/", "test_*.py", "*_test.py"], True, id="multiple_patterns_any_match"),
-    _p("/workspace/src/prod.py", ["tests/", "test_*.py"], False, id="multiple_patterns_none_match"),
+    _p(
+        "/workspace/tests/test_foo.py",
+        ["tests/", "test_*.py", "*_test.py"],
+        True,
+        id="multiple_patterns_any_match",
+    ),
+    _p(
+        "/workspace/src/prod.py",
+        ["tests/", "test_*.py"],
+        False,
+        id="multiple_patterns_none_match",
+    ),
 ]
 
 _DEFAULT_TEST_PATTERNS = ["tests/", "test_*.py", "*_test.py", "conftest.py"]
 
 _IS_TEST_FILE_CASES: list[Any] = [
-    _p("/workspace/tests/test_foo.py", _DEFAULT_TEST_PATTERNS, True, id="tests_dir_match"),
-    _p("/workspace/src/test_example.py", _DEFAULT_TEST_PATTERNS, True, id="test_prefixed_filename"),
-    _p("/workspace/src/foo_test.py", _DEFAULT_TEST_PATTERNS, True, id="suffixed_filename"),
+    _p(
+        "/workspace/tests/test_foo.py",
+        _DEFAULT_TEST_PATTERNS,
+        True,
+        id="tests_dir_match",
+    ),
+    _p(
+        "/workspace/src/test_example.py",
+        _DEFAULT_TEST_PATTERNS,
+        True,
+        id="test_prefixed_filename",
+    ),
+    _p(
+        "/workspace/src/foo_test.py",
+        _DEFAULT_TEST_PATTERNS,
+        True,
+        id="suffixed_filename",
+    ),
     _p("/workspace/src/conftest.py", _DEFAULT_TEST_PATTERNS, True, id="conftest"),
-    _p("/workspace/src/prod.py", _DEFAULT_TEST_PATTERNS, False, id="production_file_not_test"),
+    _p(
+        "/workspace/src/prod.py",
+        _DEFAULT_TEST_PATTERNS,
+        False,
+        id="production_file_not_test",
+    ),
 ]
 
 _IS_TEST_FILE_CUSTOM_CASES: list[Any] = [
     _p("/workspace/specs/test_foo.py", ["specs/"], True, id="custom_pattern_matches"),
-    _p("/workspace/tests/test_foo.py", ["specs/"], False, id="custom_pattern_excludes_tests"),
+    _p(
+        "/workspace/tests/test_foo.py",
+        ["specs/"],
+        False,
+        id="custom_pattern_excludes_tests",
+    ),
 ]
 
 _IS_OPTED_OUT_CASES: list[Any] = [
-    _p("/workspace/src/generated/foo.py", ["src/generated/"], True, id="opted_out_by_directory"),
-    _p("/workspace/src/handwritten/foo.py", ["src/generated/"], False, id="not_opted_out"),
-    _p("/workspace/src/vendor_foo.py", ["vendor_*.py"], True, id="opted_out_by_filename"),
+    _p(
+        "/workspace/src/generated/foo.py",
+        ["src/generated/"],
+        True,
+        id="opted_out_by_directory",
+    ),
+    _p(
+        "/workspace/src/handwritten/foo.py",
+        ["src/generated/"],
+        False,
+        id="not_opted_out",
+    ),
+    _p(
+        "/workspace/src/vendor_foo.py",
+        ["vendor_*.py"],
+        True,
+        id="opted_out_by_filename",
+    ),
     _p("/workspace/src/foo.py", [], False, id="empty_opt_out"),
 ]
 
@@ -206,7 +371,12 @@ _HAS_MAIN_BLOCK_CASES: list[Any] = [
 _IS_UNDER_SOURCE_ROOT_CASES: list[Any] = [
     _p("/workspace/src/prod.py", ["/workspace/src"], True, id="path_under_root"),
     _p("/workspace/tests/foo.py", ["/workspace/src"], False, id="path_not_under_root"),
-    _p("/workspace/lib/foo.py", ["/workspace/src", "/workspace/lib"], True, id="multiple_roots"),
+    _p(
+        "/workspace/lib/foo.py",
+        ["/workspace/src", "/workspace/lib"],
+        True,
+        id="multiple_roots",
+    ),
 ]
 
 
@@ -214,16 +384,48 @@ _IS_UNDER_SOURCE_ROOT_CASES: list[Any] = [
 
 _EXTRACT_PARAM_CASES: list[Any] = [
     _p("def foo() -> None: ...", [], [], id="empty_function"),
-    _p("def foo(a, b, /) -> None: ...", ["a", "b"], [inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_ONLY], id="positional_only"),
-    _p("def foo(a, b) -> None: ...", ["a", "b"], [inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.POSITIONAL_OR_KEYWORD], id="positional_or_keyword"),
-    _p("def foo(*args) -> None: ...", ["args"], [inspect.Parameter.VAR_POSITIONAL], id="var_positional"),
-    _p("def foo(*, x, y) -> None: ...", ["x", "y"], [inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.KEYWORD_ONLY], id="keyword_only"),
-    _p("def foo(**kwargs) -> None: ...", ["kwargs"], [inspect.Parameter.VAR_KEYWORD], id="var_keyword"),
+    _p(
+        "def foo(a, b, /) -> None: ...",
+        ["a", "b"],
+        [inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_ONLY],
+        id="positional_only",
+    ),
+    _p(
+        "def foo(a, b) -> None: ...",
+        ["a", "b"],
+        [
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        ],
+        id="positional_or_keyword",
+    ),
+    _p(
+        "def foo(*args) -> None: ...",
+        ["args"],
+        [inspect.Parameter.VAR_POSITIONAL],
+        id="var_positional",
+    ),
+    _p(
+        "def foo(*, x, y) -> None: ...",
+        ["x", "y"],
+        [inspect.Parameter.KEYWORD_ONLY, inspect.Parameter.KEYWORD_ONLY],
+        id="keyword_only",
+    ),
+    _p(
+        "def foo(**kwargs) -> None: ...",
+        ["kwargs"],
+        [inspect.Parameter.VAR_KEYWORD],
+        id="var_keyword",
+    ),
 ]
 
 _EXTRACT_DEFAULT_CASES: list[Any] = [
     _p("def foo(a, b=1) -> None: ...", [False, True], id="default_presence_detected"),
-    _p("def foo(*, x, y='hello') -> None: ...", [False, True], id="default_presence_kwonly"),
+    _p(
+        "def foo(*, x, y='hello') -> None: ...",
+        [False, True],
+        id="default_presence_kwonly",
+    ),
 ]
 
 _EXTRACT_STRIP_SELF_CASES: list[Any] = [
@@ -233,7 +435,12 @@ _EXTRACT_STRIP_SELF_CASES: list[Any] = [
 ]
 
 _EXTRACT_ANNOTATION_CASES: list[Any] = [
-    _p("def foo(x: int, y: str | None) -> None: ...", "int", None, id="annotations_extracted"),
+    _p(
+        "def foo(x: int, y: str | None) -> None: ...",
+        "int",
+        None,
+        id="annotations_extracted",
+    ),
     _p("def foo(*args: int) -> None: ...", "int", None, id="vararg_annotation"),
     _p("def foo(**kwargs: str) -> None: ...", "str", None, id="kwarg_annotation"),
 ]
@@ -242,11 +449,45 @@ _EXTRACT_ANNOTATION_CASES: list[Any] = [
 # ── stub_callable: compare descriptors ──
 
 _COMPARE_DESCRIPTOR_CASES: list[Any] = [
-    _p([("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False), ("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)], [("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False), ("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)], None, id="identical_params"),
-    _p([("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False), ("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)], [("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)], "param_count", id="param_count_mismatch"),
-    _p([("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)], [("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)], "param_name", id="param_name_mismatch"),
-    _p([("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)], [("x", inspect.Parameter.KEYWORD_ONLY, False)], "param_kind", id="param_kind_mismatch"),
-    _p([("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, True)], [("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)], "param_default", id="default_presence_mismatch"),
+    _p(
+        [
+            ("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
+            ("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
+        ],
+        [
+            ("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
+            ("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
+        ],
+        None,
+        id="identical_params",
+    ),
+    _p(
+        [
+            ("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
+            ("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
+        ],
+        [("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
+        "param_count",
+        id="param_count_mismatch",
+    ),
+    _p(
+        [("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
+        [("b", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
+        "param_name",
+        id="param_name_mismatch",
+    ),
+    _p(
+        [("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
+        [("x", inspect.Parameter.KEYWORD_ONLY, False)],
+        "param_kind",
+        id="param_kind_mismatch",
+    ),
+    _p(
+        [("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, True)],
+        [("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False)],
+        "param_default",
+        id="default_presence_mismatch",
+    ),
     _p([], [], None, id="empty_lists"),
 ]
 
@@ -290,39 +531,115 @@ _IS_PUBLIC_METHOD_CASES: list[Any] = [
 # ── stub_class: E97B1 / E97B2 ──
 
 _STUB_SYMBOL_MISSING_CASES: list[Any] = [
-    _p("x: int = 1\n", "x: int\nclass Foo: ...\n", "stub-symbol-missing", 1, "Foo", id="stub_class_missing_from_impl"),
-    _p("x: int = 1\n", "x: int\ndef foo(): ...\n", "stub-symbol-missing", 1, "foo", id="stub_func_missing_from_impl"),
-    _p("x: int = 1\n", "x: int\ny: str\n", "stub-symbol-missing", 1, "y", id="stub_var_missing_from_impl"),
+    _p(
+        "x: int = 1\n",
+        "x: int\nclass Foo: ...\n",
+        "stub-symbol-missing",
+        1,
+        "Foo",
+        id="stub_class_missing_from_impl",
+    ),
+    _p(
+        "x: int = 1\n",
+        "x: int\ndef foo(): ...\n",
+        "stub-symbol-missing",
+        1,
+        "foo",
+        id="stub_func_missing_from_impl",
+    ),
+    _p(
+        "x: int = 1\n",
+        "x: int\ny: str\n",
+        "stub-symbol-missing",
+        1,
+        "y",
+        id="stub_var_missing_from_impl",
+    ),
 ]
 
 _KIND_MISMATCH_CASES: list[Any] = [
-    _p("Foo: int = 1\n", "class Foo: ...\n", "symbol-kind-mismatch", id="stub_class_impl_var"),
-    _p("foo: int = 1\n", "def foo(): ...\n", "symbol-kind-mismatch", id="stub_func_impl_var"),
-    _p("def Foo(): ...\n", "class Foo: ...\n", "symbol-kind-mismatch", id="stub_class_impl_func"),
-    _p("class Foo: ...\n", "Foo: int\n", "symbol-kind-mismatch", id="stub_var_impl_class"),
+    _p(
+        "Foo: int = 1\n",
+        "class Foo: ...\n",
+        "symbol-kind-mismatch",
+        id="stub_class_impl_var",
+    ),
+    _p(
+        "foo: int = 1\n",
+        "def foo(): ...\n",
+        "symbol-kind-mismatch",
+        id="stub_func_impl_var",
+    ),
+    _p(
+        "def Foo(): ...\n",
+        "class Foo: ...\n",
+        "symbol-kind-mismatch",
+        id="stub_class_impl_func",
+    ),
+    _p(
+        "class Foo: ...\n",
+        "Foo: int\n",
+        "symbol-kind-mismatch",
+        id="stub_var_impl_class",
+    ),
 ]
 
 
 # ── stub docstring checker ──
 
 _DOCSTRING_NO_COMPANION_CASES: list[Any] = [
-    _p('def foo():\n    """My docstring."""\n    pass\n', 0, id="no_companion_plain_func"),
-    _p('async def foo():\n    """My docstring."""\n    pass\n', 0, id="no_companion_async_func"),
-    _p('class MyClass:\n    def method(self):\n        """Method doc."""\n        pass\n', 0, id="no_companion_method"),
+    _p(
+        'def foo():\n    """My docstring."""\n    pass\n',
+        0,
+        id="no_companion_plain_func",
+    ),
+    _p(
+        'async def foo():\n    """My docstring."""\n    pass\n',
+        0,
+        id="no_companion_async_func",
+    ),
+    _p(
+        'class MyClass:\n    def method(self):\n        """Method doc."""\n        pass\n',
+        0,
+        id="no_companion_method",
+    ),
 ]
 
 _DOCSTRING_DOES_NOT_DETECT_CASES: list[Any] = [
     _p("def foo():\n    pass\n", id="no_docstring_no_message"),
     _p("def foo():\n    ...\n", id="empty_body_no_message"),
-    _p('class MyClass:\n    """Class-level docs."""\n    pass\n', id="class_docstring_no_message"),
+    _p(
+        'class MyClass:\n    """Class-level docs."""\n    pass\n',
+        id="class_docstring_no_message",
+    ),
     _p("def foo():\n    42\n    pass\n", id="non_string_first_expr"),
 ]
 
 _DOCSTRING_DETECT_CASES: list[Any] = [
-    _p('def foo():\n    """Usage docstring."""\n    pass\n', 1, "foo", id="function_docstring_detected"),
-    _p('async def foo():\n    """Usage docstring."""\n    pass\n', 1, None, id="async_function_docstring_detected"),
-    _p('class MyClass:\n    def method(self):\n        """Method doc."""\n        pass\n', 1, "method", id="method_docstring_detected"),
-    _p('def foo():\n    """Doc."""\n    pass\n\ndef bar():\n    pass\n', 1, None, id="mixed_docstrings_and_no_docstrings"),
+    _p(
+        'def foo():\n    """Usage docstring."""\n    pass\n',
+        1,
+        "foo",
+        id="function_docstring_detected",
+    ),
+    _p(
+        'async def foo():\n    """Usage docstring."""\n    pass\n',
+        1,
+        None,
+        id="async_function_docstring_detected",
+    ),
+    _p(
+        'class MyClass:\n    def method(self):\n        """Method doc."""\n        pass\n',
+        1,
+        "method",
+        id="method_docstring_detected",
+    ),
+    _p(
+        'def foo():\n    """Doc."""\n    pass\n\ndef bar():\n    pass\n',
+        1,
+        None,
+        id="mixed_docstrings_and_no_docstrings",
+    ),
 ]
 
 
@@ -333,8 +650,16 @@ _APPLY_REWRITES_CASES: list[Any] = [
     _p("typing.Dict[str, int]", "dict[str, int]", id="rewrite_typing_dict"),
     _p("typing.Optional[str]", "str | None", id="rewrite_typing_optional"),
     _p("typing.Union[str, int]", "str | int", id="rewrite_typing_union"),
-    _p("typing.Union[list[str], int]", "list[str] | int", id="rewrite_typing_union_nested_generic"),
-    _p("collections.abc.Callable", "collections.abc.Callable", id="rewrite_no_match_passes_through"),
+    _p(
+        "typing.Union[list[str], int]",
+        "list[str] | int",
+        id="rewrite_typing_union_nested_generic",
+    ),
+    _p(
+        "collections.abc.Callable",
+        "collections.abc.Callable",
+        id="rewrite_no_match_passes_through",
+    ),
 ]
 
 _SPLIT_OUTER_COMMAS_CASES: list[Any] = [
@@ -405,11 +730,13 @@ def build_import_contract_state(
 
 def _stub_checker_class() -> type[StubChecker]:
     from python_setup_lint.checkers.stub.checker import StubChecker
+
     return StubChecker
 
 
 def import_usage(*args: Any, **kwargs: Any) -> ImportUsage:
     from python_setup_lint.checkers.stub.import_contract import ImportUsage
+
     return ImportUsage(*args, **kwargs)
 
 
@@ -450,16 +777,100 @@ def walk_both_release_for_pyi(
 # ── stub_checker: import-usage / contract-violations tables ──
 
 _IMPORT_USAGE_FIELD_CASES: list[Any] = [
-    _p({"importer_module": "mod_a", "lineno": 5, "target_module": "mod_b", "symbol_name": "Foo", "alias": None, "is_star": False}, {"importer_module": "mod_a", "lineno": 5, "target_module": "mod_b", "symbol_name": "Foo", "alias": None, "is_star": False}, id="fields"),
-    _p({"importer_module": "mod_a", "lineno": 3, "target_module": "mod_b", "symbol_name": None, "alias": None, "is_star": False}, {"symbol_name": None}, id="module_import_symbol_name_none"),
-    _p({"importer_module": "mod_a", "lineno": 7, "target_module": "mod_b", "symbol_name": "*", "alias": None, "is_star": True}, {"is_star": True}, id="star_import_is_star"),
+    _p(
+        {
+            "importer_module": "mod_a",
+            "lineno": 5,
+            "target_module": "mod_b",
+            "symbol_name": "Foo",
+            "alias": None,
+            "is_star": False,
+        },
+        {
+            "importer_module": "mod_a",
+            "lineno": 5,
+            "target_module": "mod_b",
+            "symbol_name": "Foo",
+            "alias": None,
+            "is_star": False,
+        },
+        id="fields",
+    ),
+    _p(
+        {
+            "importer_module": "mod_a",
+            "lineno": 3,
+            "target_module": "mod_b",
+            "symbol_name": None,
+            "alias": None,
+            "is_star": False,
+        },
+        {"symbol_name": None},
+        id="module_import_symbol_name_none",
+    ),
+    _p(
+        {
+            "importer_module": "mod_a",
+            "lineno": 7,
+            "target_module": "mod_b",
+            "symbol_name": "*",
+            "alias": None,
+            "is_star": True,
+        },
+        {"is_star": True},
+        id="star_import_is_star",
+    ),
 ]
 
 _IMPORT_CONTRACT_CASES: list[Any] = [
-    _p("mod_a", False, None, "mod_a", "Foo", False, None, "missing-module-stub-for-import", 1, id="e97a2_when_target_no_stub"),
-    _p("mod_b", True, {"Foo"}, "mod_a", "Bar", False, None, "missing-import-declaration", 1, id="e97a1_when_symbol_not_declared"),
-    _p("mod_b", True, {"Foo"}, "mod_a", "Foo", False, None, None, 0, id="no_violation_when_symbol_declared"),
-    _p("mod_b", True, None, "mod_a", "*", True, "error", "star-import-unresolvable", 1, id="e97a3_star_import"),
+    _p(
+        "mod_a",
+        False,
+        None,
+        "mod_a",
+        "Foo",
+        False,
+        None,
+        "missing-module-stub-for-import",
+        1,
+        id="e97a2_when_target_no_stub",
+    ),
+    _p(
+        "mod_b",
+        True,
+        {"Foo"},
+        "mod_a",
+        "Bar",
+        False,
+        None,
+        "missing-import-declaration",
+        1,
+        id="e97a1_when_symbol_not_declared",
+    ),
+    _p(
+        "mod_b",
+        True,
+        {"Foo"},
+        "mod_a",
+        "Foo",
+        False,
+        None,
+        None,
+        0,
+        id="no_violation_when_symbol_declared",
+    ),
+    _p(
+        "mod_b",
+        True,
+        None,
+        "mod_a",
+        "*",
+        True,
+        "error",
+        "star-import-unresolvable",
+        1,
+        id="e97a3_star_import",
+    ),
 ]
 
 _STAR_POLICY_CASES: list[Any] = [
@@ -508,10 +919,30 @@ def walk_stub_close_release(
 # ── T1-pyi-exemption layout rows ──
 
 _PYI_EXEMPT_LOG_LAYOUT_CASES: list[Any] = [
-    _p("init", "from .sub import Foo\n", "Exempt mypkg: __init__.py", id="init_exempt_logs_record"),
-    _p("main", "\ndef run():\n    pass\nif __name__ == '__main__':\n    run()\n", "Exempt script: standalone", id="main_exempt_logs_record"),
-    _p("conftest", "import pytest\n", "Exempt conftest_root: conftest.py", id="conftest_exempt_logs_record"),
-    _p("trivial_data", "x = 1\ny = 'hello'\n", "Exempt tests.data.fixture_data: trivial test data", id="trivial_test_data_exempt_logs_record"),
+    _p(
+        "init",
+        "from .sub import Foo\n",
+        "Exempt __init__.py",
+        id="init_exempt_logs_record",
+    ),
+    _p(
+        "main",
+        "\ndef run():\n    pass\nif __name__ == '__main__':\n    run()\n",
+        "Exempt standalone script",
+        id="main_exempt_logs_record",
+    ),
+    _p(
+        "conftest",
+        "import pytest\n",
+        "Exempt conftest.py",
+        id="conftest_exempt_logs_record",
+    ),
+    _p(
+        "trivial_data",
+        "x = 1\ny = 'hello'\n",
+        "Exempt trivial test data module",
+        id="trivial_test_data_exempt_logs_record",
+    ),
 ]
 
 
@@ -546,7 +977,9 @@ def materialize_pyi_exempt_layout(
 # ── stub_checker: import-contract / star-policy state builders ──
 
 
-def _build_star_import_policy_state(star_policy: str, import_usage_factory: Any) -> tuple[CheckerTestCase, StubChecker]:
+def _build_star_import_policy_state(
+    star_policy: str, import_usage_factory: Any
+) -> tuple[CheckerTestCase, StubChecker]:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
     mock_b = MagicMock()
@@ -568,6 +1001,7 @@ def _build_star_import_policy_state(star_policy: str, import_usage_factory: Any)
 
 def _star_usage_factory() -> ImportUsage:
     from python_setup_lint.checkers.stub.import_contract import ImportUsage
+
     return ImportUsage("mod_a", 1, "mod_b", "*", None, True)
 
 
@@ -663,7 +1097,9 @@ def materialize_resolve_stub_layout(tmp_path: Path, layout_kind: str) -> tuple:
     stub_root.mkdir()
     stub_path = stub_root / "mod.pyi"
     stub_path.write_text("x: int\n")
-    checker, _tc = make_coverage_checker(source_roots=[str(src)], stub_roots=[str(stub_root)])
+    checker, _tc = make_coverage_checker(
+        source_roots=[str(src)], stub_roots=[str(stub_root)]
+    )
     return checker, py_path, stub_path
 
 
@@ -731,7 +1167,14 @@ source-roots = ["{src}"]
     )
     env = {**os.environ, "PYTHONPATH": str(project_src)}
     result = subprocess.run(
-        [sys.executable, "-m", "pylint", str(src), "--disable=all", f"--enable={enable}"],
+        [
+            sys.executable,
+            "-m",
+            "pylint",
+            str(src),
+            "--disable=all",
+            f"--enable={enable}",
+        ],
         capture_output=True,
         text=True,
         cwd=tmp_path,
@@ -744,16 +1187,58 @@ source-roots = ["{src}"]
 # ── class-fidelity end-to-end rows ──
 
 _CLASS_FIDELITY_INTEGRATION_CASES: list[Any] = [
-    _p("x: int = 1\n", "\nx: int\nclass Foo: ...\n", "stub-symbol-missing", "E97B1", id="integration_stub_symbol_missing"),
-    _p("Foo: int = 1\n", "class Foo: ...\n", "symbol-kind-mismatch", "E97B2", id="integration_kind_mismatch"),
-    _p("\nclass Foo:\n    x: int = 1\n", "\nclass Foo(BaseModel):\n    x: int\n", "annotation-mismatch", "E97B4", id="integration_base_class_mismatch"),
-    _p("x: str = 'hello'\n", "x: int\n", "annotation-mismatch", "E97B4", id="integration_variable_annotation_mismatch"),
-    _p("x = 1\n", "x: int\n", "impl-missing-annotation", "W97B5", id="integration_impl_missing_annotation"),
+    _p(
+        "x: int = 1\n",
+        "\nx: int\nclass Foo: ...\n",
+        "stub-symbol-missing",
+        "E97B1",
+        id="integration_stub_symbol_missing",
+    ),
+    _p(
+        "Foo: int = 1\n",
+        "class Foo: ...\n",
+        "symbol-kind-mismatch",
+        "E97B2",
+        id="integration_kind_mismatch",
+    ),
+    _p(
+        "\nclass Foo:\n    x: int = 1\n",
+        "\nclass Foo(BaseModel):\n    x: int\n",
+        "annotation-mismatch",
+        "E97B4",
+        id="integration_base_class_mismatch",
+    ),
+    _p(
+        "x: str = 'hello'\n",
+        "x: int\n",
+        "annotation-mismatch",
+        "E97B4",
+        id="integration_variable_annotation_mismatch",
+    ),
+    _p(
+        "x = 1\n",
+        "x: int\n",
+        "impl-missing-annotation",
+        "W97B5",
+        id="integration_impl_missing_annotation",
+    ),
 ]
 
 _CALLABLE_FIDELITY_INTEGRATION_CASES: list[Any] = [
-    _p("\ndef foo(x: int, y: str) -> None: ...\n", "\ndef foo(x: int) -> None: ...\n", "signature-mismatch", "E97B3", id="signature_mismatch"),
-    _p("\ndef foo() -> int: ...\n", "\ndef foo() -> str: ...\n", "annotation-mismatch", "E97B4", id="return_annotation_mismatch"),
+    _p(
+        "\ndef foo(x: int, y: str) -> None: ...\n",
+        "\ndef foo(x: int) -> None: ...\n",
+        "signature-mismatch",
+        "E97B3",
+        id="signature_mismatch",
+    ),
+    _p(
+        "\ndef foo() -> int: ...\n",
+        "\ndef foo() -> str: ...\n",
+        "annotation-mismatch",
+        "E97B4",
+        id="return_annotation_mismatch",
+    ),
 ]
 
 

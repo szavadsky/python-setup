@@ -7,7 +7,7 @@ those belong in .pyi. Implementation comments (why, tricks) stay in .py.
 
 from __future__ import annotations
 
-import logging
+import structlog
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
 
-log = logging.getLogger(__name__)
+log = structlog.get_logger(__name__)
 
 
 def _get_stub_checker(linter: PyLinter) -> StubChecker | None:
@@ -66,9 +66,8 @@ class StubDocstringChecker(BaseChecker):
     Also enforces:
     - Generic-return-requires-Returns: functions with non-None concrete return
       type annotations must have a ``Returns:`` clause in their docstring.
-    - Internal-helper-docstring-allowed: ``_``-prefixed helpers MAY have a
-      docstring (relaxes the existing rule for public functions).
     """
+
     name: str = "stub-docstring-checker"
     _enabled_for_module: bool
     _current_module_name: str | None
@@ -85,12 +84,6 @@ class StubDocstringChecker(BaseChecker):
             description="Functions with concrete return type annotations (e.g. -> int, -> str, -> bool) "
             "must have a 'Returns:' clause in their docstring describing the return value. "
             "CodingRules.md: 'Generic-typed returns require a Returns clause'.",
-        ),
-        "W9706": MessageDef(
-            message="Internal helper '%s' MAY have a docstring (not required)",
-            symbol="internal-helper-docstring-allowed",
-            description="'_'-prefixed helpers are allowed but not required to have docstrings. "
-            "CodingRules.md: '_'-prefixed helpers MAY have a docstring.",
         ),
     }
 
@@ -115,9 +108,13 @@ class StubDocstringChecker(BaseChecker):
 
         # Only process modules that passed stub_checker exemptions
         stub_checker = _get_stub_checker(self.linter)
-        if stub_checker is not None and module_name and module_name not in stub_checker._coverage.module_index:
+        if (
+            stub_checker is not None
+            and module_name
+            and module_name not in stub_checker._coverage.module_index
+        ):
             log.debug(
-                "Skip %s: not in stub_checker module_index (exempted)", module_name
+                "Skip module not in stub_checker module_index", module=module_name
             )
             return
 
@@ -144,14 +141,8 @@ class StubDocstringChecker(BaseChecker):
     ) -> None:
         # Rule 1: docstring-in-impl — flag usage docstrings in .py with companion .pyi
         if func_node.doc_node is not None:
-            # Internal-helper-docstring-allowed: _-prefixed helpers MAY have docstrings
-            if func_node.name.startswith("_"):
-                self.add_message(
-                    "internal-helper-docstring-allowed",
-                    node=func_node,
-                    args=(func_node.name,),
-                )
-            else:
+            # _-prefixed helpers MAY have docstrings (no message emitted)
+            if not func_node.name.startswith("_"):
                 self.add_message(
                     "docstring-in-impl",
                     node=func_node,
