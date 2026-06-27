@@ -67,7 +67,7 @@ uv run pre-commit install
 uv run lint
 ```
 
-Runs all 11 lint tools sequentially with baseline diffing, statistics aggregation,
+Runs all 12 lint tools sequentially with baseline diffing, statistics aggregation,
 and fail-fast / fail-fast-free modes.
 
 ### What you get
@@ -82,7 +82,7 @@ and fail-fast / fail-fast-free modes.
 
 When lint rules or checkers change in `python-setup`:
 
-1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.8.0"`
+1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.9.0"`
 2. Re-run the installer: `uv run python-setup install`
 3. Commit the updated config in the consuming project.
 
