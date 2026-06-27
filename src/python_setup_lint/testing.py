@@ -26,6 +26,7 @@ from python_setup_lint.runner import LintResult  # noqa: TCH001  # TYPE_CHECKING
 if TYPE_CHECKING:
     from pylint.checkers import BaseChecker
 
+
 def _make_tc(checker_class: type[BaseChecker]) -> CheckerTestCase:
     tc = CheckerTestCase()
     tc.CHECKER_CLASS = checker_class
@@ -97,7 +98,8 @@ class FakeRunCmd:
     are not run).
     """
 
-    results: dict[str, LintResult] | list[LintResult]
+    # tool labels are identifiers, a legitimate string-key category
+    results: dict[str, LintResult] | list[LintResult]  # pylint: disable=generic-key-dict
     calls: list[_FakeRunCmdRecord] = field(default_factory=list)
 
     def __call__(
@@ -118,7 +120,8 @@ class FakeRunCmd:
 
 @beartype
 def fake_run_cmd_factory(
-    results: dict[str, LintResult] | list[LintResult],
+    # tool labels are identifiers, a legitimate string-key category
+    results: dict[str, LintResult] | list[LintResult],  # pylint: disable=generic-key-dict
 ) -> FakeRunCmd:
     return FakeRunCmd(results=results)
 
@@ -161,8 +164,10 @@ def _load_precommit_config(repo_root: Path) -> dict[str, Any]:
 def assert_precommit_config_valid(repo_root: Path) -> None:
     config_path = repo_root / ".pre-commit-config.yaml"
     _load_precommit_config(repo_root)  # raises AssertionError on YAML/shape errors
-    result = subprocess.run(  # noqa: S603 - pre-commit is a trusted project tool
-        ["pre-commit", "validate-config", str(config_path)],  # noqa: S607 - pre-commit is a trusted project tool
+    # pre-commit is a trusted project tool; subprocess.run is the standard interface for running external commands
+    result = subprocess.run(  # noqa: S603
+        # pre-commit is a trusted project tool; full path not needed for well-known tool
+        ["pre-commit", "validate-config", str(config_path)],  # noqa: S607
         check=False,
         cwd=repo_root,
         capture_output=True,

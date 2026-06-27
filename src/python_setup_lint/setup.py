@@ -49,6 +49,7 @@ _BUNDLED_CONFIGS: tuple[str, ...] = (
 
 # ── Data structures ─────────────────────────────────────────────────
 
+
 @dataclass
 class SetupState:
     """Tracks what was done for idempotency reporting."""
@@ -70,7 +71,9 @@ class SetupState:
     def all_ok(self) -> bool:
         return len(self.errors) == 0
 
+
 # ── Helpers ─────────────────────────────────────────────────────────
+
 
 def _compute_checksums(config_dir: Path, files: Sequence[str]) -> dict[str, str]:
     result: dict[str, str] = {}
@@ -79,6 +82,7 @@ def _compute_checksums(config_dir: Path, files: Sequence[str]) -> dict[str, str]
         if fpath.is_file():
             result[fname] = hashlib.sha256(fpath.read_bytes()).hexdigest()
     return result
+
 
 def _discover_checkers() -> list[str]:
     import python_setup_lint.checkers as checkers_pkg
@@ -101,6 +105,7 @@ def _discover_checkers() -> list[str]:
             )
     return sorted(result)
 
+
 def _read_pyproject_toml(project_dir: Path) -> dict[str, object] | None:
     toml_path = project_dir / "pyproject.toml"
     if not toml_path.is_file():
@@ -108,11 +113,13 @@ def _read_pyproject_toml(project_dir: Path) -> dict[str, object] | None:
     with open(toml_path, "rb") as f:
         return tomllib.load(f)
 
+
 def _write_pyproject_toml(project_dir: Path, data: dict[str, object]) -> None:
     import tomli_w
 
     toml_path = project_dir / "pyproject.toml"
     _atomic_write(toml_path, tomli_w.dumps(data))
+
 
 def _pylint_main_section(data: dict[str, object]) -> dict[str, object] | None:
     tool = data.get("tool", {})
@@ -155,6 +162,7 @@ def _set_pylint_load_plugins(data: dict[str, object], plugins: list[str]) -> Non
     if main is not None:
         main["load-plugins"] = plugins
 
+
 def _get_dev_deps(data: dict[str, object]) -> list[str]:
     dg = data.get("dependency-groups", {})
     if not isinstance(dg, dict):
@@ -163,6 +171,7 @@ def _get_dev_deps(data: dict[str, object]) -> list[str]:
     if isinstance(dev, list):
         return [str(d) for d in dev]
     return []
+
 
 def _has_python_setup_dep(dev_deps: list[str]) -> bool:
     for dep in dev_deps:
@@ -177,9 +186,11 @@ def _has_python_setup_dep(dev_deps: list[str]) -> bool:
             return True
     return False
 
+
 def _run_uv(args: list[str], *, cwd: Path) -> tuple[int, str, str]:
     try:
-        proc = subprocess.run(  # noqa: S603 - uv is a trusted project tool
+        # uv is a trusted project tool; subprocess.run is the standard interface for running external commands
+        proc = subprocess.run(  # noqa: S603
             ["uv"] + args,
             cwd=cwd,
             capture_output=True,
@@ -193,6 +204,7 @@ def _run_uv(args: list[str], *, cwd: Path) -> tuple[int, str, str]:
     except subprocess.TimeoutExpired:
         return 1, "", "uv command timed out"
 
+
 def _get_package_dir() -> Path:
     import python_setup_lint
 
@@ -201,7 +213,9 @@ def _get_package_dir() -> Path:
         return pkg_dir
     return pkg_dir.parent.parent
 
+
 # ── Install steps ────────────────────────────────────────────────────
+
 
 def _step_add_dep(
     state: SetupState,
@@ -235,6 +249,7 @@ def _step_add_dep(
     state.dep_added = True
     print("  [dependency] Added python-setup to dev dependencies")
 
+
 def _step_pylint_plugins(state: SetupState, project_dir: Path) -> None:
     data = _read_pyproject_toml(project_dir)
     if data is None:
@@ -261,6 +276,7 @@ def _step_pylint_plugins(state: SetupState, project_dir: Path) -> None:
     state.pylint_plugins_added = True
     print(f"  [pylint] Added load-plugins: {', '.join(missing)}")
 
+
 def _step_coding_rules(state: SetupState, project_dir: Path) -> None:
     target = project_dir / "CodingRules.md"
     if target.exists():
@@ -277,6 +293,7 @@ def _step_coding_rules(state: SetupState, project_dir: Path) -> None:
     state.coding_rules_copied = True
     print("  [coding-rules] Copied CodingRules.md")
 
+
 def _save_state(project_dir: Path) -> None:
     pkg_dir = _get_package_dir()
     config_dir = pkg_dir / "config"
@@ -289,6 +306,7 @@ def _save_state(project_dir: Path) -> None:
     }
     state_path = project_dir / _STATE_FILE
     _atomic_write(state_path, json.dumps(state_data, indent=2, sort_keys=True) + "\n")
+
 
 def _format_install_summary(state: SetupState) -> list[str]:
     actions: list[str] = []
@@ -319,10 +337,8 @@ def _check_config_drift(project_dir: Path) -> list[str]:
     try:
         saved = json.loads(state_path.read_text(encoding="utf-8"))
         saved_checksums: dict[str, str] = saved.get("config_checksums", {})
-    except (json.JSONDecodeError, KeyError):
-        print(
-            "  [config] .python-setup-state.json unreadable — skipping drift check"
-        )
+    except json.JSONDecodeError, KeyError:
+        print("  [config] .python-setup-state.json unreadable — skipping drift check")
         return []
 
     pkg_dir = _get_package_dir()
@@ -344,6 +360,7 @@ def _check_config_drift(project_dir: Path) -> list[str]:
         print("  [config] All config checksums match — no drift")
 
     return drifted
+
 
 def _run_update_steps(project_dir: Path) -> list[str]:
     errors: list[str] = []
@@ -367,7 +384,9 @@ def _run_update_steps(project_dir: Path) -> list[str]:
 
     return errors
 
+
 # ── Install command ──────────────────────────────────────────────────
+
 
 @beartype
 def install(
@@ -407,7 +426,9 @@ def install(
 
     return 0
 
+
 # ── Update command ───────────────────────────────────────────────────
+
 
 @beartype
 def update(project_dir: Path) -> int:
@@ -428,7 +449,9 @@ def update(project_dir: Path) -> int:
     print("Update complete.")
     return 0
 
+
 # ── CLI entry point ──────────────────────────────────────────────────
+
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -464,6 +487,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
 
     return parser
+
 
 @beartype
 def main(argv: list[str] | None = None) -> int:

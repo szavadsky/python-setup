@@ -244,7 +244,7 @@ class TestMinimalSampleProject:
                 capture_output=True,
                 check=True,
             )
-        except FileNotFoundError, subprocess.CalledProcessError:
+        except (FileNotFoundError, subprocess.CalledProcessError):
             pytest.skip("pre-commit not available")
 
         project = _copy_sample(tmp_path)

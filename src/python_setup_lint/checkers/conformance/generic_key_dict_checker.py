@@ -24,14 +24,16 @@ from python_setup_lint.checkers._base import LintRuleId, MessageDef
 
 # Domain-type value names — dict values whose type name suggests a
 # domain concept rather than a generic string-keyed mapping.
-_DOMAIN_VALUE_TYPES: frozenset[str] = frozenset({
-    "MessageDef",
-    "Record",
-    "RuleEntry",
-    "LintResult",
-    "ToolSpec",
-    "RunnerConfig",
-})
+_DOMAIN_VALUE_TYPES: frozenset[str] = frozenset(
+    {
+        "MessageDef",
+        "Record",
+        "RuleEntry",
+        "LintResult",
+        "ToolSpec",
+        "RunnerConfig",
+    }
+)
 
 
 class GenericKeyDictChecker(BaseChecker):
@@ -67,9 +69,7 @@ class GenericKeyDictChecker(BaseChecker):
 
     @beartype
     def open(self) -> None:
-        self._allowed = {
-            c.strip() for c in self.linter.config.allow_string_keys_for
-        }
+        self._allowed = {c.strip() for c in self.linter.config.allow_string_keys_for}
 
     @beartype
     def visit_subscript(self, node: nodes.Subscript) -> None:
@@ -126,7 +126,11 @@ class GenericKeyDictChecker(BaseChecker):
 
     @staticmethod
     def _extract_type_name(node: nodes.NodeNG) -> str | None:
-        """Extract the type name from a subscript value node."""
+        """Extract the type name from a subscript value node.
+
+        Returns:
+            The type name as a string, or None if the node is not a recognized type reference.
+        """
         if isinstance(node, nodes.Name):
             return node.name
         if isinstance(node, nodes.Attribute):
@@ -141,23 +145,40 @@ class GenericKeyDictChecker(BaseChecker):
 
     @staticmethod
     def _infer_var_name(node: nodes.Subscript) -> str | None:
-        """Walk up to find the variable name this annotation is assigned to."""
+        """Walk up to find the variable name this annotation is assigned to.
+
+        Returns:
+            The variable name as a string, or None if the annotation is not assigned to a variable.
+        """
         parent = node.parent
         # AnnAssign: x: dict[str, X] = ...
-        if isinstance(parent, nodes.AnnAssign) and isinstance(parent.target, nodes.AssignName):
+        if isinstance(parent, nodes.AnnAssign) and isinstance(
+            parent.target, nodes.AssignName
+        ):
             return parent.target.name
         # Assign: x = ...  (type annotation on the value side)
-        if isinstance(parent, nodes.Assign) and isinstance(parent.targets[0], nodes.AssignName):
+        if isinstance(parent, nodes.Assign) and isinstance(
+            parent.targets[0], nodes.AssignName
+        ):
             return parent.targets[0].name
         return None
 
     def _is_allowed_category(self, var_name: str) -> bool:
-        """Check if a variable name suggests an allowed string-key category."""
+        """Check if a variable name suggests an allowed string-key category.
+
+        Returns:
+            True if the variable name matches an allowed string-key category.
+        """
         lower = var_name.lower()
         # ``msgs`` is the canonical pylint checker message dict — always allowed.
         if lower == "msgs":
             return True
-        if "filename" in lower or "file" in lower or "_path" in lower or "path" in lower:
+        if (
+            "filename" in lower
+            or "file" in lower
+            or "_path" in lower
+            or "path" in lower
+        ):
             return "filenames" in self._allowed or "paths" in self._allowed
         if "index" in lower or "map" in lower or "by_" in lower:
             return "identifiers" in self._allowed

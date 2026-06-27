@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from beartype import beartype
 
 # Cache directory for downloaded models (idempotent, .gitignored).
 _CACHE_DIR = Path.home() / ".cache" / "python-setup" / "semantic"
@@ -31,11 +32,15 @@ _RESULT_CACHE: dict[int, bool] = {}
 
 
 def _load_result_cache() -> dict[int, bool]:
-    """Load the persisted result cache from disk."""
+    """Load the persisted result cache from disk.
+
+    Returns:
+        The loaded cache dict, or an empty dict if the cache file is missing or corrupt.
+    """
     try:
         raw = _RESULT_CACHE_FILE.read_text()
         return {int(k): v for k, v in json.loads(raw).items()}
-    except (FileNotFoundError, json.JSONDecodeError, OSError, ValueError):
+    except FileNotFoundError, json.JSONDecodeError, OSError, ValueError:
         return {}
 
 
@@ -57,7 +62,11 @@ _RERANKER_MODEL = "jina-reranker-v2-base-multilingual"
 
 
 def _get_cache_dir() -> Path:
-    """Return the model cache directory, creating it if necessary."""
+    """Return the model cache directory, creating it if necessary.
+
+    Returns:
+        The cache directory path (created if it did not exist).
+    """
     cache = _CACHE_DIR
     cache.mkdir(parents=True, exist_ok=True)
     return cache
@@ -92,6 +101,7 @@ def _load_reranker():
         return None
 
 
+@beartype
 def semantic_check_if_meaningful(
     text: str,
     *,
@@ -99,24 +109,7 @@ def semantic_check_if_meaningful(
     code_context: str | None = None,
     comment: str | None = None,
 ) -> bool | None:
-    """Check if a suppression justification is semantically meaningful.
-
-    Single-stage NLP pipeline using a cross-encoder reranker:
-
-    1. Re-score the justification against the rule and code context.
-
-    Args:
-        text: The raw justification text (used as fallback when *comment*
-            is not provided).
-        rule: The lint rule identifier being suppressed (e.g. ``"E501"``).
-        code_context: Surrounding source code lines.
-        comment: The justification comment text (preferred over *text*).
-
-    Returns:
-        ``True`` if the justification is semantically meaningful,
-        ``False`` otherwise, or ``None`` if the NLP pipeline is unavailable
-        (sentence-transformers not installed or model download failed).
-    """
+    # Use comment as primary text, fall back to raw text.
     primary = (comment or text).strip()
     if not primary:
         return False

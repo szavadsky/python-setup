@@ -49,6 +49,16 @@ def check_if_meaningful(
     The semantic pipeline is enabled by default (``PYTHON_SETUP_LINT_SEMANTIC=1``)
     and requires the ``[semantic]`` extra (``sentence-transformers``).
 
-    Heuristic: non-empty, non-boilerplate, contains a noun not equal to the rule symbol.
+    Heuristic: non-empty, non-boilerplate, not equal to the rule symbol.
     Uses *comment* as the primary text if provided; falls back to *text*.
+    *rule* and *code_context* are reserved for future semantic analysis.
+
+    Args:
+        text: The raw justification text.
+        rule: The lint rule identifier being suppressed.
+        code_context: Surrounding source code lines.
+        comment: The justification comment text (preferred over *text*).
+
+    Returns:
+        True if the justification is meaningful, False otherwise.
     """

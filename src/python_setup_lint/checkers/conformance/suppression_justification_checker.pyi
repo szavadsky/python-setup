@@ -8,6 +8,7 @@ trailing comment on the same line, or as a comment on the preceding line.
 from typing import TYPE_CHECKING
 
 from pylint.checkers import BaseChecker
+from pylint.typing import ExtraMessageOptions
 
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
@@ -18,8 +19,15 @@ class SuppressionJustificationChecker(BaseChecker):
     """AST visitor that flags unjustified suppression comments."""
 
     name: str = "suppression-justification"
-    msgs: dict[LintRuleId, MessageDef]
+    msgs: dict[str, tuple[str, str, str] | tuple[str, str, str, ExtraMessageOptions]]
 
-    def visit_module(self, node: object) -> None: ...
+    def visit_module(self, node: object) -> None:
+        """Walk the module's source lines looking for bare suppressions.
 
-def register(linter: PyLinter) -> None: ...
+        Flags any ``# pylint: disable=...``, ``# noqa: <code>``, ``# type: ignore``
+        whose line lacks a meaningful technical reason.  The reason may appear as a
+        trailing comment on the same line, or as a comment on the preceding line.
+        """
+
+def register(linter: PyLinter) -> None:
+    """Register the checker with the linter."""
