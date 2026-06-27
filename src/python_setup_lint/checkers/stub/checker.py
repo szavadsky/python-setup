@@ -349,6 +349,7 @@ class StubChecker(BaseChecker):
             if mod_name not in imported_modules:
                 if mod_name in c.stub_missing:
                     c.stub_missing.discard(mod_name)
+                    c.production_count -= 1  # standalone script exempt — keep counts honest
                     log.info(
                         "Exempt standalone script",
                         module=mod_name,

@@ -333,7 +333,7 @@ def test_resolve_relative(
     ),
     _IMPORT_CONTRACT_CASES,
 )
-def test_emit_import_contract_violations(
+def test_emit_import_contract_violations(  # pylint: disable=too-many-positional-arguments  # parametrize table has 9 columns; test functions inherently have many args
     target_module: str,
     has_stub: bool,
     declared_symbols: set[str] | None,

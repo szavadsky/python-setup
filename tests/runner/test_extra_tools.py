@@ -144,21 +144,11 @@ def test_validate_config_flag_str_wraps_to_single_element(tmp_path) -> None:
 
 
 def test_parse_strategies_includes_all_keys() -> None:
-    """``PARSE_STRATEGIES`` includes T11 generic + ``none`` sentinel + 11 built-ins."""
+    """``PARSE_STRATEGIES`` includes T11 generic + ``none`` sentinel + built-ins from the parser map."""
+    from python_setup_lint.runner.parsers import _BUILTIN_PARSE_STRATEGY_TO_PARSER
+    builtin_names = set(_BUILTIN_PARSE_STRATEGY_TO_PARSER)
     assert {"regex_count", "raw_lines", "none"} <= set(PARSE_STRATEGIES)
-    assert {
-        "ruff_statistics",
-        "rumdl_statistics",
-        "pylint_json2",
-        "pyright_outputjson",
-        "pyright_verify_types",
-        "mypy_stderr",
-        "ty_concise",
-        "tach_json",
-        "yamllint_parsable",
-        "stubtest_stderr",
-        "detect_secrets_json",
-    } <= set(PARSE_STRATEGIES)
+    assert builtin_names <= set(PARSE_STRATEGIES)
 
 
 def test_load_extras_pyproject_unreadable_raises(tmp_path) -> None:

@@ -3,6 +3,7 @@
 Tests that the checker correctly flags unjustified suppression comments
 and passes justified ones.
 """
+# pylint: disable=unjustified-suppression  # test code strings contain suppression patterns as test data, not real suppressions
 
 from __future__ import annotations
 
@@ -42,6 +43,11 @@ x: int = 1  # type: ignore  # mypy 1.4 does not understand this pattern
 """
         msgs = _walk_and_release(code, SuppressionJustificationChecker)
         assert len(msgs) == 0, f"Expected no messages, got {msgs}"
+
+    def test_justified_ty_ignore_with_reason(self) -> None:
+        code = "x = 1  # ty:ignore[invalid-argument-type]  # ty cannot infer literal-int narrowing here\n"
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert len(msgs) == 0
 
     def test_justified_preceding_comment(self) -> None:
         code = """\
@@ -88,6 +94,19 @@ x = 1  # noqa: E501  # ignore
 """
         msgs = _walk_and_release(code, SuppressionJustificationChecker)
         assert len(msgs) == 1, f"Expected 1 message, got {len(msgs)}"
+        assert "unjustified-suppression" in _msg_ids(msgs)
+
+    def test_bare_ty_ignore(self) -> None:
+        code = "x = 1  # ty:ignore[invalid-argument-type]\n"
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert len(msgs) == 1
+        assert "unjustified-suppression" in _msg_ids(msgs)
+
+    def test_ty_ignore_brushoff_reason_not_meaningful(self) -> None:
+        # The exact brush-off planted in the integration sample — "# ty" is <5 chars
+        code = '_ = int("1")  # ty:ignore[invalid-argument-type]  # ty\n'
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert len(msgs) == 1
         assert "unjustified-suppression" in _msg_ids(msgs)
 
     def test_too_short_reason_not_meaningful(self) -> None:

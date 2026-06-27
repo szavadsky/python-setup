@@ -64,7 +64,7 @@ class TestSemanticCheck:
         result = semantic_check_if_meaningful(
             "circular import — PyLinter not available at runtime",
             rule="missing-beartype",
-            code_context="def foo():  # pylint: disable=missing-beartype",
+            code_context="def foo():  # pylint: disable=missing-beartype",  # noqa: W9704  # code_context string contains suppression pattern as test data, not a real suppression
             comment="circular import — PyLinter not available at runtime",
         )
         # If models are cached, this returns True/False; if not cached,
@@ -159,7 +159,7 @@ class TestSemanticCheck:
         result = semantic_check_if_meaningful(
             "circular import — PyLinter not available at runtime",
             rule="missing-beartype",
-            code_context="def foo():  # pylint: disable=missing-beartype",
+            code_context="def foo():  # pylint: disable=missing-beartype",  # noqa: W9704  # code_context string contains suppression pattern as test data, not a real suppression
             comment="circular import — PyLinter not available at runtime",
         )
         # With models downloaded, this should return a definitive bool.
@@ -176,7 +176,7 @@ class TestSemanticCheck:
         result = semantic_check_if_meaningful(
             "type stub not yet generated for this module",
             rule="import-error",
-            code_context="import foo  # type: ignore",
+            code_context="import foo  # type: ignore",  # noqa: W9704  # code_context string contains suppression pattern as test data, not a real suppression
             comment="type stub not yet generated for this module",
         )
         assert isinstance(result, bool)
@@ -192,7 +192,7 @@ class TestSemanticCheck:
         result = semantic_check_if_meaningful(
             "noqa",
             rule="E501",
-            code_context="x = 1  # noqa: E501",
+            code_context="x = 1  # noqa: E501",  # noqa: W9704  # code_context string contains suppression pattern as test data, not a real suppression
             comment="noqa",
         )
         # The heuristic would reject this; the semantic check may also

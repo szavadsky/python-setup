@@ -102,7 +102,7 @@ def test_e97b2_message_code_registered() -> None:
     ("py_code", "pyi_code", "msg_id", "expected_count", "name_in_args"),
     _STUB_SYMBOL_MISSING_CASES,
 )
-def test_stub_symbol_missing(
+def test_stub_symbol_missing(  # pylint: disable=too-many-positional-arguments  # parametrize table has 5 columns; test functions inherently have many args
     tmp_path: Path,
     py_code: str,
     pyi_code: str,
