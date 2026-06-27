@@ -1,83 +1,81 @@
----
-name: goal-flow
-description: Execute iterative goal workflow from goal.md — plan, implement, verify, iterate
-model: task
-thinking: high
----
 
 # Goal Execution Workflow
 
-Execute goal from `{F}/{goal}.md`. Iterative workflow.
+Role: **mechanical** orchestration. All technical work delegated to subagents.
+Achieve goal from `{F}/{goal}.md`. Iterative.
 
 ## Variables
 
 | Var | Meaning |
 |-----|---------|
-| `{F}` | Folder containing goal file |
-| `{goal}` | Goal filename (without `.md`) |
-| `{pIt}` | Current plan iteration number |
+| `{F}` | Goal file folder |
+| `{goal}` | Goal filename (no `.md`) |
+| `{pIt}` | Current plan iteration |
 | `{N}` | Max iterations before final report |
 
 ## Workflow
 
 ### 1. Locate goal file
 
-Locate `{F}/{goal}.md`. Do NOT read or understand content — delegate to plan agent (higher reasoning capability).
+Find `{F}/{goal}.md`. Do NOT read or interpret — delegate to plan agent (higher reasoning).
 
 ### 2. Spawn plan agent
 
-Delegate full user prompt (DO NOT ENRICH/INTERPRET) + filename (not content) of `{F}/{goal}.md`. Use this template:
+Pass filename (not content) of `{F}/{goal}.md` + raw user instructions (no enrichment) except iteration count. Template:
 
 ```text
 Goal: {F}/{goal}.md (iteration {pIt}, max {N})
-
+{{Additional user instructions if any}}
 Read applicable {F}/summary{pIt-1}.md files (not previous plans).
-Review code quality and intent match of prior iterations. Identify improvements.
+Review code quality and intent match of prior iterations. Be adversarial. Catch and rectify brush-offs, slops, and technical debt. Identify improvements.
 
 Produce written plan: concrete sub-tasks, file paths, dependencies, sequence.
 Write plan to {F}/plan{pIt}.md.
 
-
 Planner MUST limit DIY searching, test running, reading. Launch `explore`/`task`/`librtarian` subagents instead.
-MUST START from launching `explore` subagent(s) and add more as needed
-Consult with high reasoning `oracle` agent on uncertainties/alternativies/loo. 
-Specify scope of each workstream/task
+MUST START from launching `explore` subagent(s) and add more as needed.
+Consult high-reasoning `oracle` agent on uncertainties/alternatives/LOO.
+Specify scope of each workstream/task.
+Return only `plan created, work to do` or `Plan explains no material improvements needed, goal fully achieved`.
+Provide  plan that fully implements goal.
 ```
-WAIT for plan job to complete
-Plan agent writes `{F}/plan{pIt}.md`. Reads applicable `{F}/summary{pIt}.md` files (not previous plans).
+WAIT for plan job. Do not poll.
 
+### 3. Check termination
 
-### 3. Read plan
+Plan agent reports goal complete (nothing delayed) → report final status, exit.
 
-Load `{F}/plan{pIt}.md`. Plan agent reports goal already complete (and nothing delayed till next Phase) → report final status, exit.
+### 4. Use task agent to implement plan
 
-### 4. Execute sub-tasks
-Split into small, manageable substaks
-Per sub-task, spawn 2 sequential `task` agents:
+Launch single `task` agent. Template:
 
-- **Implementer** — implements sub-task per plan. Full tool access. Make sure test runs and lint is OK. Ha
-- **Checker** — after implementer finishes, review changes, and **independently execute lint/test**, checks if task is bonda fide done wirhout regression. Decide:
-  - Commit (git commit) if correct, no technical debt, no regression
-  - Minor touch-ups then commit
-  - Require more `task`/`checker` iterations or rollback (git restore) if wrong. Report decision.
+```
+Your role: orchestrate (no DIY) implementation of `{F}/plan{pIt}.md` via focused `task` subagents.
 
-**Parallel sub-tasks**: spawn in isolation. Launch third `task` agent to merge results while no other agents working. Regression check after each merge.
+## 1. Load `{F}/plan{pIt}.md`
+## 2. Plan execution
+   - Split into manageable (1..3 files, <200 LoC changes) tasks. Avoid scope creep.
+   - Do not override planner's technical decisions (high-reasoning).
+## 3. Execute plan
+   - ≥2 subagents per identified subtask.
+   - **Implementer** — implements per plan. Full tool access. Verify tests + lint pass.
+   - **Checker** — after implementer, review changes, independently run lint/test. Verify bona fide completion without regression. Decide:
+     - Commit if correct, no tech debt, no regression.
+     - Minor touch-ups then commit.
+     - More `task`/`checker` iterations or rollback (`git restore`) if wrong. Report decision.
+   - **Parallel sub-tasks**: spawn in isolation. Launch third `task` agent to merge results while no other agents active. Regression check after each merge.
+   - When additional subagents needed: checker identifies fix, or work + resolve merge conflict.
+   - Use `explore` subagent to understand status / define delta.
+## 4. Keep executing until plan fully implemented.
+## 5. Summary report
 
-### 5. Iterate
+Write execution summary + concerns to `{F}/summary{pIt}.md`.
+```
 
-Repeat step 4 until plan exhausted.
+### 5. Check iteration count
 
-### 6. Summary report
+Once task subagent from step 4 done: 
 
-Write plan execution + remaining work to `{F}/summary{pIt}.md`.
-
-### 7. Check iteration count
-
-- Fewer than `{N}` iterations → return to step 1. Planning agent re-evaluates remaining work.
+- Fewer than `{N}` iterations → return to step 1. Planner re-evaluates remaining work.
 - `{N}` iterations done → report final status.
 
-## Rules
-
-- Each iteration spawns fresh `plan` agent to re-evaluate remaining work.
-- Implementer and checker run sequentially per sub-task.
-- Checker MUST verify correctness, lack of regressions before committing. Wrong implementation → rollback, report what went wrong.
