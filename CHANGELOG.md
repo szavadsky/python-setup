@@ -1,5 +1,38 @@
 # Changelog
 
+## v0.9.0 (2026-06-27) — Iteration 7: pylint-pyi pass, self-consistency, semantic reranker-only, integration test
+  
+**WS1: Unmask .pyi checking.** Added `pylint-pyi` as a 12th lint tool — a second pylint pass
+that targets `.pyi` files with a `.pyi`-scoped rcfile. `pyi_underscore_checker` (W9707) now
+actually fires. Created `config/.pylintrc-pyi` that disables `.py`-only checkers.
+  
+**WS2: Remove try/except ImportError self-contradiction.** `check_if_meaningful` in `_base.py`
+now imports `_semantic` unconditionally (first-party module, always present). The feature is
+gated by env var, not import fallback. Resolves W9001 self-violation.
+  
+**WS3: Missing .pyi stubs + CodingRules.** Added stubs for `generic_key_dict_checker`,
+`unnamed_tuple_dict_checker`, and `structlog_checker`. Added Test Imports, Generic-key Dict,
+and Unnamed Tuple Dict Values sections to CodingRules.md.
+  
+**WS4: Semantic reranker-only.** Removed the embedder (`bge-small-en-v1.5`) from the semantic
+pipeline — kept only the cross-encoder reranker (`jina-reranker-v2-base-multilingual`).
+Arg-keyed SHA-256 cache persists results across processes. Cache dir is `~/.cache/python-setup/semantic/`
+(outside repo, effectively gitignored).
+  
+**WS5: Semantic tests — no importorskip.** Removed all `pytest.importorskip` calls from semantic
+tests. Slow tests fail visibly with ImportError when `sentence_transformers` is absent. Added
+cache-hit test (non-slow). Only cache-bypass tests are `@pytest.mark.slow`.
+  
+**WS6: Integration test + sample project.** Created `tests/integration.py` with 4 scenarios
+(setup+lint, config overlay, resetup idempotent, dry-run hooks). Extended
+`test/data/minimal_sample_project/` with `.secrets.baseline`, `tach.toml`, `AGENTS.md`,
+`tests/test_tempfile.py`, `standalone.pyi`.
+  
+**WS7: Test invariants for 12-tool set.** Updated all test invariants that hardcoded the old
+11-tool count. Non-slow test suite: 1002 passed in 15.55s (under 30s target).
+  
+**WS8: Version bump 0.8.0→0.9.0.** Updated `pyproject.toml`, README, CHANGELOG.
+
 ## v0.8.0 (2026-06-27) — Iteration 5+6 hardening: NLP rework, bug fixes, sample project, integration tests
 
 Hardening batch covering iteration 5 and 6 of the lint-goal:
