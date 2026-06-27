@@ -1,14 +1,10 @@
 """Pylint checker: prohibit generic-key ``dict[str, X]`` annotations."""
 
-from __future__ import annotations
-
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from python_setup_lint.checkers._base import LintRuleId, MessageDef
-
-_DOMAIN_VALUE_TYPES: frozenset[str]
 
 class GenericKeyDictChecker(BaseChecker):
     name: str = "generic-key-dict"

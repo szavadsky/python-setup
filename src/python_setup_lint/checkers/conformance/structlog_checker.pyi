@@ -1,7 +1,5 @@
 """Pylint checker: enforce structlog usage over stdlib logging."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from astroid import nodes
