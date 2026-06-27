@@ -1,0 +1,3 @@
+[[modules]]
+path = "src/minimal_sample"
+depends_on = []
