@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 _PAT_PYLINT_DISABLE = re.compile(r"#\s*pylint:\s*disable=")
 _PAT_NOQA = re.compile(r"#\s*noqa(?::\s*\S+)?")
 _PAT_TYPE_IGNORE = re.compile(r"#\s*type:\s*ignore")
+_PAT_TY_IGNORE = re.compile(r"#\s*ty:\s*ignore")
 _PAT_TRAILING_REASON = re.compile(r"#\s+(.+)")
 _PAT_PRECEDING_COMMENT = re.compile(r"^\s*#\s+(.+)")
 
@@ -92,6 +93,7 @@ class SuppressionJustificationChecker(BaseChecker):
             _PAT_PYLINT_DISABLE.search(line)
             or _PAT_NOQA.search(line)
             or _PAT_TYPE_IGNORE.search(line)
+            or _PAT_TY_IGNORE.search(line)
         )
 
     @staticmethod
@@ -109,7 +111,7 @@ class SuppressionJustificationChecker(BaseChecker):
         # Same-line trailing comment after the suppression.
         # Find the suppression comment position, then look for a second
         # ``#`` after it.
-        for pat in (_PAT_PYLINT_DISABLE, _PAT_NOQA, _PAT_TYPE_IGNORE):
+        for pat in (_PAT_PYLINT_DISABLE, _PAT_NOQA, _PAT_TYPE_IGNORE, _PAT_TY_IGNORE):
             m = pat.search(line)
             if m:
                 after = line[m.end() :]

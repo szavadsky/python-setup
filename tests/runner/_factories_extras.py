@@ -27,7 +27,7 @@ VALID_EXTRA_BLOCK = (
     "supports_path = true\n"
     'default_paths = ["src/", "tests/"]\n'
     'parse_strategy = "regex_count"\n'
-    'parse_regex = "^[^:]+:\\\\d+:.*# noqa: (\\\\S+)"\n'
+    'parse_regex = "^[^:]+:\\\\d+:.*# noqa: (\\\\S+)"\n'  # noqa: W9704  # string literal contains noqa pattern text, not a real suppression
 )
 
 EMPTY_LOADER_CASES: list[tuple[str, str | None]] = [

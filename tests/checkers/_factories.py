@@ -12,6 +12,7 @@ Tables here are pure data (no side effects, no `tmp_path`); row data is
 free LOC and does NOT count against the per-file LOC gate. Helpers that
 build astroid modules from source / assert message ids live here too.
 """
+# pylint: disable=too-many-lines  # data tables are free LOC per file docstring; parametrize rows don't count against per-file LOC gate
 
 from __future__ import annotations
 

@@ -21,18 +21,18 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-from python_setup_lint.checkers._base import MessageDef
+from python_setup_lint.checkers._base import MessageDef, _msgs
 
 
 class ExampleChecker(BaseChecker):
     name: str = "example-checker"
-    msgs: dict[str, MessageDef] = {
-        "W9901": MessageDef(
+    msgs = _msgs(
+        W9901=MessageDef(
             message="Example violation: '%s'",
             symbol="example-violation",
             description="Description of what this rule checks.",
         ),
-    }
+    )
 
     @beartype
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
