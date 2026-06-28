@@ -175,7 +175,7 @@ def _load_extra_tools(cwd: Path) -> list[_ExtraToolRegistration]:
     """
 
 def register_lint_tool(
-    tool: ToolSpec, *, statistics_flag: str | None = None, parser: Callable[..., list[tuple[str, int]]] | None = None,
+    tool: ToolSpec, *, statistics_flag: list[str] | None = None, parser: Callable[..., list[tuple[str, int]]] | None = None, config_flag: list[str] | None = None,
 ) -> None:
     """Register a custom lint tool (re-exported from dispatch)."""
 
