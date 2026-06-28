@@ -5,6 +5,16 @@ source-roots=src
 load-plugins=python_setup_lint.checkers.conformance.no_try_import_checker,python_setup_lint.checkers.conformance.beartype_checker,python_setup_lint.checkers.stub.checker,python_setup_lint.checkers.stub.docstring_checker,python_setup_lint.checkers.conformance.tmp_path_checker,python_setup_lint.checkers.conformance.asyncio_timeout_checker,python_setup_lint.checkers.conformance.suppression_justification_checker,python_setup_lint.checkers.conformance.unnamed_tuple_dict_checker,python_setup_lint.checkers.conformance.generic_key_dict_checker,python_setup_lint.checkers.conformance.pyi_underscore_checker,python_setup_lint.checkers.conformance.structlog_checker
 
 [MESSAGES CONTROL]
+# reason: Disabled built-in checks that conflict with stub conventions or are
+# superseded by custom conformance checkers. Grouped by rationale:
+#   - Stub docstring conventions: missing-function-docstring, missing-module-docstring, missing-class-docstring
+#   - Stub structural patterns: unnecessary-ellipsis, too-few-public-methods, invalid-name, redefined-outer-name, unused-argument, unused-import, unused-variable, reimported, import-outside-toplevel, global-statement, cyclic-import
+#   - Overload signatures: too-many-arguments, too-many-return-statements
+#   - False positives in stub code: broad-exception-caught, protected-access, cell-var-from-loop
+#   - Style preferences: line-too-long, trailing-newlines, superfluous-parens, wrong-import-order, bad-indentation, unnecessary-dunder-call, use-implicit-booleaness-not-comparison
+#   - Parser quirks: unknown-option-value, unspecified-encoding
+#   - Superseded by custom checkers: impl-missing-annotation
+#   - Structurally repetitive stubs: duplicate-code (min-similarity-lines=25 handles this)
 disable=unknown-option-value,unused-argument,broad-exception-caught,protected-access,missing-function-docstring,line-too-long,import-outside-toplevel,trailing-newlines,too-many-arguments,unspecified-encoding,unused-import,cell-var-from-loop,too-many-return-statements,too-few-public-methods,superfluous-parens,wrong-import-order,unused-variable,missing-module-docstring,missing-class-docstring,invalid-name,impl-missing-annotation,global-statement,cyclic-import,bad-indentation,unnecessary-ellipsis,unnecessary-dunder-call,redefined-outer-name,reimported,use-implicit-booleaness-not-comparison,duplicate-code
 enable=too-many-statements,too-many-branches,too-many-locals,too-many-nested-blocks,too-many-public-methods,too-complex,no-try-import,missing-beartype,pyi-underscore-symbol
 
