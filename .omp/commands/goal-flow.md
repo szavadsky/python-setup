@@ -14,16 +14,11 @@ Achieve goal from `{F}/goal.md`. Iterative.
 
 ### 1. Locate goal file
 
-Confirm `{F}/goal.md` exists. Do NOT read or interpret — delegate to `plan-goal-execution` (higher reasoning).
+Confirm `{F}/goal.md` exists. Do NOT read or interpret it.
 
-### 2–5. Iterate (plan → orchestrate → loop)
+### 2. Run the eval
 
-Steps 2–5 are purely mechanical. Run them as a single `eval` code block: a `for` loop over iterations, spawning the two schema-checked subagents with the **target plan path** as their only argument and branching on their structured `status`.
-
-Both subagents accept only `{F}/plan{pIt}.md` (the plan path). The planner reads `{F}/goal.md` + prior `summary{1..pIt-1}.md` and writes that plan path; the orchestrator reads it and writes `{F}/summary{pIt}.md`. `{pIt}` is owned by the caller and baked into the path — no scanning, no races.
-
-The loop is crash-resilient and restart-aware: it resumes from the highest existing `summary{K}.md`; each `agent()` call retries twice on subagent glitches; the loop halts on `failed`/`blocked` status.
-After orchestration, a `plan-completeness-checker` agent verifies completeness against the plan. If gaps are found, the orchestrator is relaunched with fresh context up to 2 times, passing the concerns forward as a follow-up message. Remaining concerns after 2 follow-ups are appended non-destructively to the summary.
+Run the Python code block below in an `eval` cell. All logic — restart-aware resume, glitch recovery, plan→orchestrate→completeness-check loop, halt conditions — lives in the code. Do NOT reason about file content, prompt amendment, or iteration state: the code handles it. Your only job is to launch the eval.
 
 ```python
 import shutil
@@ -61,83 +56,96 @@ CHECK_SCHEMA = {
 }
 MAX_FOLLOWUPS = 2
 
-def call_agent(plan_path, agent_name, schema, retries=2):
-    last_err = None
-    for attempt in range(retries + 1):
+def call_agent(plan_path, agent_name, schema, extra=None, retries=2):
+    """Call a subagent with structured output; retry on glitch (exception or bad output)."""
+    prompt = plan_path + ("\n\n" + extra if extra else "")
+    for attempt in range(1, retries + 2):
         try:
-            res = agent(plan_path, agent=agent_name, schema=schema)
+            log(f"call_agent: {agent_name} attempt {attempt}/{retries + 1}")
+            res = agent(prompt, agent=agent_name, schema=schema)
             if not isinstance(res, dict) or res.get("status") not in schema["properties"]["status"]["enum"]:
                 raise ValueError(f"bad structured output: {res!r}")
+            log(f"call_agent: {agent_name} → {res['status']}")
             return res
         except Exception as e:
-            last_err = e
-            if attempt < retries:
-                continue
-    raise last_err
+            log(f"call_agent: {agent_name} glitch on attempt {attempt}: {e}")
+    raise RuntimeError(f"{agent_name} failed after {retries + 1} attempts")
 
 goal_file = Path(f"{F}/goal.md")
 if not goal_file.is_file():
     raise ValueError(f"goal file not found: {F}/goal.md")
 
-# Restart-aware: resume after the highest completed summary.
+def iter_state(k):
+    """Classify iteration k by file presence: 'done' (summary exists), 'partial' (plan only), 'empty'."""
+    has_plan = Path(f"{F}/plan{k}.md").is_file()
+    has_summary = Path(f"{F}/summary{k}.md").is_file()
+    if has_summary:
+        return "done"
+    if has_plan:
+        return "partial"
+    return "empty"
+
+# Resume scan: find the first iteration without a completed summary.
+# 'done' iterations are skipped; the first 'partial' (plan exists, summary missing)
+# resumes mid-orchestration (glitch recovery — skip re-planning); the first 'empty'
+# starts fresh (plan → orchestrate). Everything from there on is fresh.
 start_pIt = 1
-for k in range(N, 0, -1):
-    if Path(f"{F}/summary{k}.md").is_file():
-        start_pIt = max(1, k + 1)
-        break
+skip_plan = False
+for k in range(1, N + 1):
+    st = iter_state(k)
+    if st == "done":
+        start_pIt = k + 1
+        continue
+    if st == "partial":
+        skip_plan = True
+    break
 
 final = "incomplete"
 for pIt in range(start_pIt, N + 1):
     plan_path = f"{F}/plan{pIt}.md"
+    summary_path = f"{F}/summary{pIt}.md"
 
     # Back up before overwrite (RCA-F).
-    if Path(plan_path).is_file():
-        shutil.copy2(plan_path, plan_path + ".bak")
+    for p in (plan_path, summary_path):
+        if Path(p).is_file():
+            shutil.copy2(p, p + ".bak")
 
-    # Step 2 — plan (planner reads {F}/goal.md + prior summaries, writes plan_path).
-    plan_result = call_agent(plan_path, "plan-goal-execution", PLAN_SCHEMA)
+    # Plan (skip on glitch recovery) or terminate early if goal is complete.
+    extra = None
+    if skip_plan:
+        extra = "It is relaunch of execution after glitch. Use fact-finder first to find out what is already done and what is left, then execute only remaining subtasks."
+        skip_plan = False
+    else:
+        plan_result = call_agent(plan_path, "plan-goal-execution", PLAN_SCHEMA)
+        if plan_result["status"] == "goal_complete":
+            final = f"goal complete after {pIt} planning pass(es)"
+            break
 
-    # Step 3 — termination check.
-    if plan_result["status"] == "goal_complete":
-        final = f"goal complete after {pIt} planning pass(es)"
-        break
+    # Orchestrate + follow-up loop (single call site per subagent).
+    # extra is set by: skip (glitch recovery), checker feedback (follow-up), or None (fresh).
+    for followup_count in range(MAX_FOLLOWUPS + 1):
+        impl_result = call_agent(plan_path, "orchestrate-goal-execution", IMPL_SCHEMA, extra=extra)
+        extra = None  # consumed
 
-    # Step 4 — orchestrate (orchestrator reads plan_path, writes {F}/summary{pIt}.md).
-    summary_path = f"{F}/summary{pIt}.md"
-    if Path(summary_path).is_file():
-        shutil.copy2(summary_path, summary_path + ".bak")
-    impl_result = call_agent(plan_path, "orchestrate-goal-execution", IMPL_SCHEMA)
+        if impl_result["status"] in {"failed", "blocked"}:
+            final = f"halted at iteration {pIt}: {impl_result['status']} — {impl_result.get('concerns','')}"
+            break
 
-    # --- Follow-up completeness loop (relaunch orchestrator on checker concerns) ---
-    if impl_result["status"] not in {"failed", "blocked"}:
-        followup_count = 0
-        while followup_count <= MAX_FOLLOWUPS:
-            check_result = call_agent(plan_path, "plan-completeness-checker", CHECK_SCHEMA)
-            if check_result["status"] == "complete":
-                break
-            # Concerns found — relaunch orchestrator with follow-up message (fresh context).
-            if followup_count < MAX_FOLLOWUPS:
-                followup_msg = plan_path + "\n\nFollow-up launch — plan completeness checker had these concerns:\n" + check_result["concerns"]
-                impl_result = call_agent(followup_msg, "orchestrate-goal-execution", IMPL_SCHEMA)
-                followup_count += 1
-                if impl_result["status"] in {"failed", "blocked"}:
-                    break
-            else:
-                # Follow-up budget exceeded — append concerns non-destructively to summary.
-                summary_path = impl_result.get("summary_path", f"{F}/summary{pIt}.md")
-                with open(summary_path, "a") as f:
-                    f.write("\n\n## Extra concerns from plan completeness checker\n\n" + check_result["concerns"])
-                break
+        check_result = call_agent(plan_path, "plan-completeness-checker", CHECK_SCHEMA)
+        if check_result["status"] == "complete":
+            break
+        if followup_count == MAX_FOLLOWUPS:
+            with open(summary_path, "a") as f:
+                f.write("\n\n## Extra concerns from plan completeness checker\n\n" + check_result["concerns"])
+            break
+        extra = "Follow-up launch — plan completeness checker had these concerns:\n" + check_result["concerns"]
 
-    # Step 5 — halt on failure states (RCA-E: loop never inspected concerns).
     if impl_result["status"] in {"failed", "blocked"}:
-        final = f"halted at iteration {pIt}: {impl_result['status']} — {impl_result.get('concerns','')}"
         break
 
     if pIt == N:
         final = f"max iterations ({N}) reached; last summary: {impl_result['summary_path']}"
         break
-    # else: loop — planner re-evaluates remaining work against the new summary.
 
 print(final)
 ```

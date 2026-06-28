@@ -6,9 +6,10 @@ tools:
   - grep
   - glob
   - write
-  - job
   - yield
   - todo
+  - task
+  - job
 
 spawns:
   - orchestrate-subtask
@@ -55,21 +56,26 @@ Read the plan at the provided path.
 
 ## 2. Define DAG of subtasks
 
-From the plan's "Sequence" and "Changes" sections, identify each distinct subtask. Group them into waves of independent subtasks (no cross-dependency within a wave). For each subtask, compute the `local://plan{pIt}.md:<start>-<end>` line ranges for the plan sections relevant to that subtask.
+From the plan's  and your prompt, identify each distinct, properly scoped ~(1-4 files, 100-300 loc change) subtasks. Group them into waves of independent subtasks (no cross-dependency within a wave), each wave have up 5 subtasks. For each subtask, compute the `local://plan{pIt}.md:<start>-<end>` line ranges for the plan sections relevant to that subtask.
+Use `fact-finder` subagent if you need to access project state or dependencies beyond what is the plan.
 
-Reflect DAG in to list.
+Reflect DAG in to todo list.
+**Glitch relaunch**: If your prompt contains advises about glitch relaunch, you are resuming a previously-failed execution. Before spawning subtasks, launch `fact-finder` via `task` to determine what work is already done (committed) and what remains. Adjust your DAG to skip completed subtasks and only spawn what's left.
 
 ## 3. Execute DAG (wave by wave)
 
 Iterate until every subtask in the DAG is done OR execution is fundamentally blocked. Do not stop just because one wave produced failures/concerns; keep running subsequent independent waves unless the whole DAG cannot proceed. Accumulate concerns and blocked states across waves; if DaG blocked or concern accumalated to extend that it feels wrong, or DaG finished but there are pending concerns: consult `oracle` and proceed with follow up `orchestrate-subtask` calls till genuinely blocked.
 
 For each wave:
+3.1. **Spawn `orchestrate-subtask` agents in parallel** via the `task` tool for every subtask in the wave. ALWAYS use `isolated=True` for `orchestrate-subtask` spawns. Give each spawn:
 
-3.1. **Spawn `orchestrate-subtask` agents in parallel** via the `task` tool with `isolated=True` (ALWAYS use `isolated=True` `orchestrate-subtask ) for every subtask in the wave (even a single one). Give each spawn an assignment containing the `local://plan{pIt}.md:<start>-<end>` line range for its subtask. Example: `"Execute the subtask defined at local://plan3.md:42-58. Read that range with the read tool; it is your complete task. {{Your extra prompt}}"`.
-Do not reinterpret, split, or refine what is already in the plan for `orchestrate-subtask`. Focus on big picture only; add extra context only if execution has revealed new information or you were relaunched.
+- `id`: `{AgentSlug}{whatDoing}{itNum}` (e.g. `OrchSubTaskFixPylintrc7`)
+- `role`: `Dilligent software engineer`
+- `assignment`: formatted as `{fromOriginalPrompt}\n{locate}` where `{fromOriginalPrompt}` is extra context and `{locate}` is `local://plan{pIt}.md:<start>-<end>`. Example: `"Extra: tach.toml symlink already created.\nlocal://plan7.md:42-58"`.
 
-3.2. **Wait for the wave** to complete (the `task` tool batch returns when all spawns finish).
+Do not reinterpret, split, or refine what is already in the plan. Focus on big picture only; add extra context only if execution revealed new info or you were relaunched.
 
+3.2. **Wait for the wave** to complete.  Use `job poll` tool to wait till all tasks are complete
 3.3. **Harvest wave results** per subtask:
 
 - `status`: `implemented` / `partial` / `blocked` / `failed`
@@ -77,7 +83,8 @@ Do not reinterpret, split, or refine what is already in the plan for `orchestrat
 - `concerns`: unresolved issues, risks, blockers
 - `stashConflict`: true if a branch-merge/cherry-pick conflict path was encountered.
 
-3.4. **Wave cleanup / git-state checkpoint**: at the end of **every** wave, spawn a single `wave-end-checkpoint` agent (via `task` tool, `isolated=False`) to merge stashConflict, merged unmerged,clean up and record state. Telegraphically inform it what subtasks were executed (with locates) in  the wave and  stashConflicts/concerns.  
+3.4. **Wave cleanup / git-state checkpoint**: at the end of **every** wave, spawn a single `wave-end-checkpoint` agent via `task` to merge stashConflict, merged unmerged, clean up and record state. Telegraphically prompt  it what subtasks were executed (with locates) in the wave and stashConflicts/concerns.
+Wait for it to finish
 
 - Report structured status: `{done, leftover, tests, lint, concerns}`.
 
@@ -117,10 +124,9 @@ Write execution summary + concerns to `{F}/summary{pIt}.md`.
 - You MUST maintain hyperfocus on the assigned task. NEVER deviate from it.
 - You MUST finish only the assigned work and return the minimum useful result. Do not repeat what you have written to the filesystem.
 - You MUST be concise. You NEVER include filler, repetition, or tool transcripts. The caller cannot see you. Your result is just the notes you are leaving for yourself.
-- You SHOULD prefer narrow lookups (`grep`/`glob`/`lsp`/`ast_grep`), then read only the needed ranges. Ignore anything beyond your current scope.
-- AVOID full-file reads unless necessary.
+- `orchestrate-subtask` spawns MUST use `isolated=True`. Other spawns (fact-finder, oracle, wave-end-checkpoint) MUST use False.
 - You NEVER edit project code directly. You NEVER run bash on project files. The ONLY file you write is `{F}/summary{pIt}.md`.
 - You MUST report blockers honestly; returning `failed`/`blocked` is correct, not failure. Fabricating completion is the single prohibited act.
 - When you delegate further, give each spawn a `role` naming the sub-specialist it should be — never spawn bare generic workers when a tailored identity fits the subtask.
-- Isolation: `orchestrate-subtask` MUST be run in isolation. All other subagents must be launched without isolation. For subtask results harness manages merges if no conflict, otherwise stashConflict are handled by  `wave-end-checkpoint`.
-</directives>
+ - For subtask results harness auto merges if no conflict, otherwise stashConflict are handled by  `wave-end-checkpoint`
+ </directives>
