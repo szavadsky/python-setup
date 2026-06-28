@@ -78,7 +78,7 @@ class RunnerConfig:
         default_py_dirs: Default directories for pylint ``_find_py_files``
             discovery when no ``--path`` is given.
         tools_override: Optional list of tool names to run.  ``None``
-            runs all 11 default tools.  Tool names map to internal
+            runs all 12 default tools.  Tool names map to internal
             :class:`ToolSpec` entries via ``TOOLS_BY_NAME`` (built-ins) and
             the live :data:`python_setup_lint.runner.dispatch.LINT_TOOLS`
             registry (built-ins + extras).  Unknown names raise

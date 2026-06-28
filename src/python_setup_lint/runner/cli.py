@@ -293,8 +293,8 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
     parser.add_argument(
         "--default-py-dirs",
         metavar="DIRS",
-        default="src,scripts,tests",
-        help="Default dirs for pylint file discovery (default: src,scripts,tests)",
+        default="src",
+        help="Default dirs for pylint file discovery (default: src)",
     )
     parser.add_argument(
         "--config",
