@@ -67,6 +67,7 @@ Feature batch covering WS-1 through WS-8:
 **WS-7: Justified-suppression linter.** New `suppression_justification_checker` flags `# pylint: disable`, `# noqa`, `# type: ignore` without a technical justification. `check_if_meaningful` heuristic in `_base.py`.
 
 **WS-8: Docstring rules + version + README + docs/.**
+
 - `stub_docstring_checker` gains `generic-return-requires-returns` and `internal-helper-docstring-allowed` rules.
 - `CodingRules.md` updated with docstring rule bullets.
 - `README.md` slimmed to user-focused content; detail moved to `docs/overlays.md` and `docs/custom-checks.md`.

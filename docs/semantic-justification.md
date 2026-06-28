@@ -52,6 +52,7 @@ Downloaded models are stored in `~/.cache/python-setup/semantic/`. This director
 ## Result Cache
 
 Semantic check results are cached both in-memory and on disk:
+
 - **In-memory**: `_RESULT_CACHE` dict, keyed by SHA-256 hash of (text, rule, code_context, comment, model IDs).
 - **On disk**: `~/.cache/python-setup/semantic/results.json`, loaded at startup and written on new entries.
 
