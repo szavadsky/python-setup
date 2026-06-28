@@ -129,6 +129,13 @@ class TestMinimalSampleProject:
             f"Output excerpt:\n{output[:3000]}"
         )
 
+        # Carry-from external library should NOT be flagged as unjustified-suppression
+        carry_from_violations = [
+            l for l in output.splitlines()
+            if "_carry_from_external" in l and "unjustified-suppression" in l
+        ]
+        assert not carry_from_violations, f"Carry-from should NOT trigger W9704:\n{carry_from_violations}"
+
         # ── All tool sections appear ──────────────────────────────────
         tool_names = {t.name for t in TOOLS}
         for name in sorted(tool_names):
