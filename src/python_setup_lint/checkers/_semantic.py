@@ -116,6 +116,7 @@ def _load_reranker() -> CrossEncoder | None:
         )
         return _RERANKER_INSTANCE
     except OSError, RuntimeError, ValueError:
+        _RERANKER_UNAVAILABLE = True
         _LOG.warning("Failed to load reranker model", exc_info=True)
         return None
 
