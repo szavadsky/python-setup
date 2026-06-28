@@ -1,2 +1,2 @@
 # tmp_path_checker — tempfile.mkdtemp in test file (only fires in test files, not src/)
-tempfile-mkdtemp-in-test
+# tempfile-mkdtemp-in-test (commented: tests/data/ is excluded from pylint tests; validated by unit test test_tmp_path_checker.py)
