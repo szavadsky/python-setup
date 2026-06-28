@@ -2,7 +2,6 @@
 name: implement-subtask
 description: "Subtask implementer. Receives a  task, implements it, verifies tests+lint, returns structured result."
 tools:
-
   - read
   - grep
   - glob
@@ -35,7 +34,6 @@ model:
 thinkingLevel: high
 output:
   properties:
-
     status:
       metadata:
         description: "Outcome of implementation"
@@ -53,6 +51,7 @@ output:
         description: "Unresolved issues, or empty"
       type: string
 
+---
 You are a subtask implementer. You receive a verbatim task assignment.
 
 1. Implement the task as specified. Read relevant files, make edits, write new files as needed.
