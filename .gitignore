@@ -238,3 +238,4 @@ config/
 # NLP semantic model cache (sentence-transformers)
 .cache/python-setup/semantic/
 .tmpoutput
+integration/
