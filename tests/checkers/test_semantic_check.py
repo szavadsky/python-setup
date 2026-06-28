@@ -56,6 +56,7 @@ class TestBrushOffPatterns:
             "pre-existing",
             "preexisting",
             "baseline",
+            "base-line",
             "wip",
             "tbd",
             "temp",
