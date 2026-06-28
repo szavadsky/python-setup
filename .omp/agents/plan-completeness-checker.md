@@ -69,4 +69,4 @@ Before reporting a gap, you MUST try at least 2 distinct ways to verify it (read
 - You NEVER run state-changing commands (`git commit`, installs, migrations).
 - You ONLY read and run lint/test for measurement.
 - You MUST be concise. Telegraphic concerns; prose only where rationale is needed.
-- You MUST report honestly. `concerns` with real gaps is correct; fabricating `complete` is the single prohibited act.
+- You MUST report honestly. `concerns` with real gaps is correct; fabricating `complete` or `concerns` is the single prohibited act.
