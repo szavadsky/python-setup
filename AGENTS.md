@@ -26,27 +26,43 @@ src/python_setup_lint/
 │   ├── extra_tools.py   # Declarative extra-tools loader (pyproject.toml [[extra-tools]])
 │   ├── output.py        # Statistics aggregation, subprocess runner, formatting
 │   └── __main__.py      # python -m shim
-├── checkers/            # Custom pylint plugins
-│   ├── stub/checker.py           # Orchestrator: coverage + import contract + fidelity
-│   ├── stub/coverage.py          # Phase 1: every .py needs a .pyi
-│   ├── stub/import_contract.py   # Phase 2: imports must reference declared stub symbols
-│   ├── stub_fidelity/            # Phase 3: stub-impl annotation/signature/kind matching
-│   │   ├── orchestrator.py       # Top-level dispatcher
-│   │   ├── kind.py               # Symbol presence + kind mismatch
-│   │   ├── annotation.py         # Variable + class annotation fidelity
-│   │   ├── signature.py          # Callable signature + param/return comparison
-│   │   ├── _ast_helpers.py       # Shared state types
-│   ├── stub/normalizer.py        # Two-phase annotation normalizer (infer + AST walk)
-│   ├── stub/docstring_checker.py # Docstring-in-.pyi verification
-│   ├── beartype_checker.py       # @beartype coverage inventory
-│   ├── asyncio_timeout_checker.py # Require asyncio.timeout() wrapping
-│   ├── no_try_import_checker.py  # Ban try/except ImportError
-│   └── conformance/tmp_path_checker.py       # Ban tempfile.* in tests
+├── checkers/            # Custom pylint plugins (20 checkers: 15 conformance + 5 stub)
+│   ├── _base.py         # Shared utilities (check_if_meaningful, SourceRootMixin, _msgs)
+│   ├── _semantic.py     # Semantic justification reranker (Track B)
+│   ├── stub/            # Stub checker package (5 checkers)
+│   │   ├── checker.py           # Orchestrator: coverage + import contract + fidelity
+│   │   ├── coverage.py          # Phase 1: every .py needs a .pyi
+│   │   ├── import_contract.py   # Phase 2: imports must reference declared stub symbols
+│   │   ├── fidelity/            # Phase 3: stub-impl annotation/signature/kind matching
+│   │   │   ├── orchestrator.py   # Top-level dispatcher
+│   │   │   ├── kind.py           # Symbol presence + kind mismatch
+│   │   │   ├── annotation.py     # Variable + class annotation fidelity
+│   │   │   ├── signature.py      # Callable signature + param/return comparison
+│   │   │   └── _ast_helpers.py   # Shared state types
+│   │   ├── normalizer.py        # Two-phase annotation normalizer (infer + AST walk)
+│   │   └── docstring_checker.py # Docstring-in-.pyi verification
+│   ├── conformance/     # Conformance checkers (15 checkers)
+│   │   ├── asyncio_timeout_checker.py    # Require asyncio.timeout() wrapping
+│   │   ├── bare_except_comment_checker.py # Require bare-except justification comments
+│   │   ├── beartype_checker.py            # @beartype coverage inventory
+│   │   ├── generic_key_dict_checker.py   # Ban generic-key dict annotations
+│   │   ├── missing_error_chain_checker.py # Require raise X from Y
+│   │   ├── missing_return_annotation_checker.py # Require return annotations on _-prefixed fns
+│   │   ├── no_try_import_checker.py      # Ban try/except ImportError
+│   │   ├── pyi_underscore_checker.py     # Ban _-prefix in .pyi stubs
+│   │   ├── redundant_type_guard_checker.py # Detect redundant TypeGuard
+│   │   ├── silent_except_checker.py      # Ban silent except (non-re-raising)
+│   │   ├── structlog_checker.py          # Require structlog usage
+│   │   ├── suppression_justification_checker.py # W9704: suppressions need justification
+│   │   ├── tmp_path_checker.py           # Ban tempfile.* in tests
+│   │   ├── trivial_wrapper_checker.py     # Detect trivial wrapper functions
+│   │   └── unnamed_tuple_dict_checker.py  # Ban unnamed-tuple dict values
+│   └── __init__.py
 ├── setup.py              # Idempotent install/update CLI
+├── _setup_update.py     # Update workflow (config drift + uv sync)
 ├── _setup_precommit.py   # Pre-commit template + AGENTS.md snippet
 ├── testing.py            # Shared test infrastructure + consumer-agnostic health checks
 └── py.typed              # PEP 561 marker
-```
 
 ### Data flow
 
@@ -71,16 +87,12 @@ src/python_setup_lint/
 | `src/python_setup_lint/` | Package root |
 | `src/python_setup_lint/runner/` | Lint pipeline orchestration, CLI, baseline, parsers |
 | `src/python_setup_lint/checkers/` | Custom pylint plugins (20 checkers: 15 conformance + 5 stub) |
-| `src/python_setup_lint/checkers/stub_fidelity/` | Stub-impl fidelity sub-package (5 modules) |
+| `src/python_setup_lint/checkers/stub/fidelity/` | Stub-impl fidelity sub-package (5 modules) |
 | `config/` | Shipped tool configs (ruff, pylint, mypy, pyright, rumdl, ty, yamllint) |
 | `tests/` | Test suite |
 | `tests/runner/` | Runner tests (pipeline, baseline, autofix, extras, setup) |
 | `tests/checkers/` | Checker unit tests |
 | `tests/fixtures/` | Test fixtures (dogfood-extra pyproject) |
-| `integration/` | Integration docs/benchmarks |
-| `reports/` | Analysis reports |
-
-## Development Commands
 
 ```bash
 # Run the full lint pipeline (all 12 tools)
@@ -227,7 +239,7 @@ mypackage/
 | `src/python_setup_lint/checkers/stub/checker.py` | Stub checker orchestrator |
 | `src/python_setup_lint/checkers/stub/coverage.py` | Phase 1: module coverage |
 | `src/python_setup_lint/checkers/stub/import_contract.py` | Phase 2: import contract |
-| `src/python_setup_lint/checkers/stub_fidelity/orchestrator.py` | Phase 3: stub-impl fidelity dispatcher |
+| `src/python_setup_lint/checkers/stub/fidelity/orchestrator.py` | Phase 3: stub-impl fidelity dispatcher |
 | `src/python_setup_lint/checkers/stub/normalizer.py` | Two-phase annotation normalizer |
 | `tests/conftest.py` | Shared pytest fixtures |
 
