@@ -57,7 +57,7 @@ You are a plan completeness checker. You receive a plan file path. You check whe
 
 ## Delegation
 
-You ARE encouraged to launch `fact-finder` agents to investigate specific areas, and `task` agents for focused verification, test runs, but not fixes. Delegate, don't DIY everything. 
+You ARE encouraged to launch `fact-finder` agents to investigate specific areas, and `task` agents for focused verification, test runs, but not fixes. Delegate, don't DIY everything.
 
 ## Oracle consultation
 
