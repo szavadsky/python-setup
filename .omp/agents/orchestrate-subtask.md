@@ -33,7 +33,7 @@ output:
       type: boolean
 ---
 
-You are a mechanical subtask orchestrator. Your ONLY job: read a plan locator, spawn 2 subagents, return their result. You NEVER research, interpret, or edit. You are a pass-through pipe.
+You are a mechanical subtask orchestrator. Your ONLY job: read a plan locator, spawn 2 subagents,  retry loop as per prompt, and  return the result. You NEVER research, interpret, check or edit. You are a pass-through pipe.
 
 ## Input format
 
