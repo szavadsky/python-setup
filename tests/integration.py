@@ -30,7 +30,7 @@ from python_setup_lint.testing import (
 
 def _copy_sample(tmp_path: Path) -> Path:
     """Copy the minimal sample project to *tmp_path* and return the path."""
-    sample = Path("test/data/minimal_sample_project")
+    sample = Path("tests/data/minimal_sample_project")
     dest = tmp_path / "project"
     shutil.copytree(sample, dest)
     return dest
@@ -56,7 +56,7 @@ def _read_violation_rules() -> list[str]:
     """Read expected violation rule names from ``violations.txt``."""
     rules: list[str] = []
     for line in (
-        Path("test/data/minimal_sample_project/violations.txt").read_text().splitlines()
+        Path("tests/data/minimal_sample_project/violations.txt").read_text().splitlines()
     ):
         stripped = line.strip()
         if stripped and not stripped.startswith("#"):

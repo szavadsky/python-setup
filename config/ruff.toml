@@ -68,34 +68,23 @@ ignore = [
     "SIM117",   # pre-existing nested-context; not in scope
     "TCH",      # TYPE_CHECKING guard — tests use `from __future__ import annotations` making TCH think imports are type-only
 ]
-"tests/data/**" = [
-    "F401",     # vendored corpus test data; not our code to fix
-    "UP031",    # vendored corpus uses %-formatting; not our code to fix
-    "A",        # vendored corpus has builtin-shadowing; not our code to fix
-    "N",        # vendored corpus has naming violations; not our code to fix
-    "S",        # vendored corpus — security lint not applicable
-    "PERF",     # vendored corpus — performance lint not applicable
-    "SIM105",   # vendored corpus — try/except/pass style not our code
-    "B018",     # vendored corpus — useless expressions; not our code
-    "B904",     # vendored corpus — bare raises; not our code
-]
-"test/data/**" = [
-    "F401",     # planted-violation sample project; not our code to fix
-    "UP031",    # sample project uses %-formatting; not our code to fix
-    "A",        # sample project has builtin-shadowing; not our code to fix
-    "N",        # sample project has naming violations; not our code to fix
-    "S",        # sample project — security lint not applicable
-    "PERF",     # sample project — performance lint not applicable
-    "SIM105",   # sample project — try/except/pass style not our code
-    "B018",     # sample project — useless expressions; not our code
-    "B904",     # sample project — bare raises; not our code
-    "E402",     # sample project — imports not at top; planted violation
-    "TID251",   # sample project — banned-api not applicable
-    "TCH",      # sample project — TYPE_CHECKING not applicable
-    "I001",     # sample project — import order is planted violation
-    "RUF100",   # sample project — noqa directives are planted violations
-    "ARG001",   # sample project — unused args are planted violations
-    "PIE790",   # sample project — unnecessary pass is planted violation
+    "tests/data/**" = [
+    "F401",     # Sample project + vendored corpus test data; not our code to fix
+    "UP031",    # Sample project + vendored corpus uses %-formatting; not our code to fix
+    "A",        # Sample project + vendored corpus has builtin-shadowing; not our code to fix
+    "N",        # Sample project + vendored corpus has naming violations; not our code to fix
+    "S",        # Sample project + vendored corpus — security lint not applicable
+    "PERF",     # Sample project + vendored corpus — performance lint not applicable
+    "SIM105",   # Sample project + vendored corpus — try/except/pass style not our code
+    "B018",     # Sample project + vendored corpus — useless expressions; not our code
+    "B904",     # Sample project + vendored corpus — bare raises; not our code
+    "E402",     # Sample project — imports not at top; planted violation
+    "TID251",   # Sample project — banned-api not applicable
+    "TCH",      # Sample project — TYPE_CHECKING not applicable
+    "I001",     # Sample project — import order is planted violation
+    "RUF100",   # Sample project — noqa directives are planted violations
+    "ARG001",   # Sample project — unused args are planted violations
+    "PIE790",   # Sample project — unnecessary pass is planted violation
 ]
 "*.pyi" = [
     "TID251",
