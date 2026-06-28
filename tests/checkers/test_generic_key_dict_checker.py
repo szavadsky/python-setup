@@ -15,7 +15,6 @@ from python_setup_lint.checkers.conformance.generic_key_dict_checker import (
 )
 from python_setup_lint.testing import _walk_and_release
 
-
 _DETECT_CASES: list[Any] = [
     pytest.param(
         "x: dict[str, MessageDef]",
@@ -110,7 +109,7 @@ def test_detects_generic_key_dict(code: str, expected_type: str) -> None:
     assert expected_type in msgs[0].args[0]
 
 
-@pytest.mark.parametrize(("code",), _DO_NOT_DETECT_CASES)
+@pytest.mark.parametrize("code", _DO_NOT_DETECT_CASES)
 def test_does_not_detect(code: str) -> None:
     """Checker must NOT flag dict[str, X] where X is not a domain type."""
     msgs = _walk_and_release(code, GenericKeyDictChecker)

@@ -4,7 +4,6 @@ Helper functions for baseline comparison (extracted to reduce module size).
 """
 
 
-from typing import Any
 
 from ._record_types import Record
 
@@ -21,7 +20,7 @@ def _compare_sorted(
     """
 
 
-def _record_to_dict(rec: Record) -> dict[str, Any]:
+def _record_to_dict(rec: Record) -> dict[str, object]:
     """Convert a Record to a plain dict for JSON serialisation."""
 
 
@@ -29,7 +28,7 @@ def _dict_to_record(d: object) -> Record | None:
     """Convert a plain dict back to a Record (or None on invalid input)."""
 
 
-def _records_to_dicts(records: list[Record]) -> list[dict[str, Any]]:
+def _records_to_dicts(records: list[Record]) -> list[dict[str, object]]:
     """Convert a list of Records to a list of plain dicts."""
 
 

@@ -1,24 +1,32 @@
 """Drift-resistant baseline capture + diff with silent shrinkage (T2)."""
-
+# consolidated import with pylint disable for mypy re-export
 from __future__ import annotations
 
 import json
 import re
-from collections.abc import Callable  # noqa: TCH003  # TYPE_CHECKING-only import; not available at runtime
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable  # TYPE_CHECKING-only import; not available at runtime
+from typing import TYPE_CHECKING
 
 import beartype
 
+from ._baseline_helpers import (  # pylint: disable=useless-import-alias  # as-alias needed for mypy strict re-export
+    _compare_sorted as _compare_sorted,
+)
 from ._baseline_helpers import (
-    _compare_sorted,
-    _diag_error_count,
-    _dicts_to_records,
-    _records_to_dicts,
-    _strip_pyright_volatile,
+    _diag_error_count as _diag_error_count,
+)
+from ._baseline_helpers import (
+    _dicts_to_records as _dicts_to_records,
+)
+from ._baseline_helpers import (
+    _records_to_dicts as _records_to_dicts,
+)
+from ._baseline_helpers import (
+    _strip_pyright_volatile as _strip_pyright_volatile,
 )
 from ._record_types import Record, _records_unchanged
 from .parsers import _RECORD_PARSERS
-from .types import LintResult  # noqa: TCH001  # TYPE_CHECKING-only import; not available at runtime
+from .types import LintResult  # TYPE_CHECKING-only import; not available at runtime
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -57,14 +65,12 @@ def peek_fallback_tools() -> frozenset[str]:  # pylint: disable=missing-beartype
 def _normalise_rumdl_timing(text: str) -> str:
     return re.sub(r"\(\d+ms\)", "(XXXms)", text)
 
-
 def _normalise_pyright_verifytypes_output(text: str) -> str:
     result = re.sub(r'"time":\s*"?\d+"?', "", text)
-    result = re.sub(r'"timeInSec":\s*[0-9.]+', "", result)
-    return result
+    return re.sub(r'"timeInSec":\s*[0-9.]+', "", result)
 
 
-def _try_rumdl_json(stdout: str | None) -> dict[str, Any] | list[dict[str, Any]] | None:
+def _try_rumdl_json(stdout: str | None) -> dict[str, object] | list[dict[str, object]] | None:
     if not stdout:
         return None
     try:
@@ -76,7 +82,7 @@ def _try_rumdl_json(stdout: str | None) -> dict[str, Any] | list[dict[str, Any]]
     return None
 
 
-def _capture_records_or_output(r: LintResult, entry: dict[str, Any]) -> dict[str, Any]:
+def _capture_records_or_output(r: LintResult, entry: dict[str, object]) -> dict[str, object]:
     parser = _RECORD_PARSERS.get(r.tool_name)
     if parser is not None:
         records = parser(r.stdout or "")
@@ -99,8 +105,8 @@ def _capture_records_or_output(r: LintResult, entry: dict[str, Any]) -> dict[str
     return entry
 
 
-def _capture_one(r: LintResult) -> dict[str, Any]:
-    entry: dict[str, Any] = {"tool": r.tool_name, "exit_code": r.exit_code}
+def _capture_one(r: LintResult) -> dict[str, object]:
+    entry: dict[str, object] = {"tool": r.tool_name, "exit_code": r.exit_code}
     # JSON-native tools: pyright + rumdl-when-JSON.
     if r.tool_name in _JSON_DIAGNOSTIC_TOOLS and r.stdout:
         try:
@@ -121,13 +127,13 @@ def _capture_one(r: LintResult) -> dict[str, Any]:
 
 
 @beartype.beartype
-def _capture_baseline(results: list[LintResult]) -> list[dict[str, Any]]:
+def _capture_baseline(results: list[LintResult]) -> list[dict[str, object]]:
     return [_capture_one(r) for r in results]
 
 
 def _remove_stale_tools(
-    saved: list[dict[str, Any]],
-    saved_map: dict[str, dict[str, Any]],
+    saved: list[dict[str, object]],
+    saved_map: dict[str, dict[str, object]],
     current_tool_names: set[str],
 ) -> bool:
     modified = False
@@ -142,7 +148,7 @@ def _remove_stale_tools(
 
 
 def _write_baseline_if_modified(
-    saved: list[dict[str, Any]],
+    saved: list[dict[str, object]],
     baseline_path: Path,
     baseline_modified: bool,
 ) -> list[str] | None:
@@ -156,8 +162,8 @@ def _write_baseline_if_modified(
     return None
 
 
-def _build_saved_map(saved: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    saved_map: dict[str, dict[str, Any]] = {}
+def _build_saved_map(saved: list[dict[str, object]]) -> dict[str, dict[str, object]]:
+    saved_map: dict[str, dict[str, object]] = {}
     for entry in saved:
         tool_name = entry.get("tool", "")
         if isinstance(tool_name, str):
@@ -174,10 +180,10 @@ def _diff_baseline(
 
     try:
         with open(baseline_path) as f:
-            raw: list[dict[str, Any]] = json.load(f)
+            raw: list[dict[str, object]] = json.load(f)
     except (json.JSONDecodeError, OSError) as exc:  # pylint: disable=W9740  # best-effort baseline read fallback; logging would noise unavoidable parse/IO degrade
         return [f"Cannot read baseline: {exc}"]
-    saved: list[dict[str, Any]] = raw
+    saved: list[dict[str, object]] = raw
 
     _FALLBACK_TOOLS.clear()
 
@@ -214,7 +220,7 @@ def _diff_baseline(
 
 
 def _check_exit_code(
-    r: LintResult, saved_entry: dict[str, Any]
+    r: LintResult, saved_entry: dict[str, object]
 ) -> tuple[list[str], bool | None]:
     saved_rc = saved_entry.get("exit_code", -1)
     if r.exit_code == saved_rc:
@@ -233,7 +239,7 @@ def _check_exit_code(
 
 def _compare_one_tool(
     r: LintResult,
-    saved_entry: dict[str, Any],
+    saved_entry: dict[str, object],
 ) -> tuple[list[str], bool]:
     violations: list[str] = []
 
@@ -258,7 +264,7 @@ def _compare_one_tool(
 
 def _compare_diagnostics(
     r: LintResult,
-    saved_entry: dict[str, Any],
+    saved_entry: dict[str, object],
     saved_diag: object,
 ) -> tuple[list[str], bool]:
     violations: list[str] = []
@@ -302,7 +308,7 @@ def _legacy_to_records(
 def _compare_record_sets(
     current_records: list[Record],
     saved_records: list[Record],
-    saved_entry: dict[str, Any],
+    saved_entry: dict[str, object],
     r: LintResult,
 ) -> tuple[list[str], bool]:
     violations: list[str] = []
@@ -321,7 +327,7 @@ def _compare_record_sets(
 
 
 def _resolve_saved_records(
-    saved_entry: dict[str, Any],
+    saved_entry: dict[str, object],
     parser: Callable[[str], list[Record]] | None,
     tool_name: str,
 ) -> tuple[list[Record], bool]:
@@ -329,7 +335,7 @@ def _resolve_saved_records(
     if saved_schema == _SCHEMA_V2:
         return _dicts_to_records(saved_entry.get("records")), False
     if parser is not None and isinstance(saved_entry.get("output"), str):
-        saved_output = saved_entry["output"]
+        saved_output = str(saved_entry["output"])
         saved_records = _legacy_to_records(saved_output, parser)
         if saved_output.strip():
             nonblank_saved_lines = sum(
@@ -347,7 +353,7 @@ def _resolve_saved_records(
 
 def _compare_records_path(
     r: LintResult,
-    saved_entry: dict[str, Any],
+    saved_entry: dict[str, object],
 ) -> tuple[list[str], bool]:
     violations: list[str] = []
     baseline_modified = False
@@ -422,11 +428,11 @@ def _legacy_current_output(r: LintResult) -> str:
     return _normalise_legacy_output(r.stdout or "", r.tool_name)
 
 
-def _legacy_saved_output(saved_entry: dict[str, Any], tool_name: str) -> str:
-    return _normalise_legacy_output(saved_entry.get("output") or "", tool_name)
+def _legacy_saved_output(saved_entry: dict[str, object], tool_name: str) -> str:
+    return _normalise_legacy_output(str(saved_entry.get("output") or ""), tool_name)
 
 
-def _diff_legacy_output(r: LintResult, saved_entry: dict[str, Any]) -> bool:
+def _diff_legacy_output(r: LintResult, saved_entry: dict[str, object]) -> bool:
     saved_norm = _legacy_saved_output(saved_entry, r.tool_name)
     current_norm = _legacy_current_output(r)
     if current_norm == saved_norm:
@@ -441,7 +447,7 @@ def _diff_legacy_output(r: LintResult, saved_entry: dict[str, Any]) -> bool:
     return False
 
 
-def _legacy_has_additions(r: LintResult, saved_entry: dict[str, Any]) -> bool:
+def _legacy_has_additions(r: LintResult, saved_entry: dict[str, object]) -> bool:
     saved_norm = _legacy_saved_output(saved_entry, r.tool_name)
     current_norm = _legacy_current_output(r)
     saved_lines = {line.rstrip() for line in saved_norm.splitlines()}

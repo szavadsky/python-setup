@@ -305,7 +305,7 @@ class TestInstallEdgeCases:
 class TestStepErrorPaths:
     """Step-level error path coverage."""
 
-    @pytest.mark.parametrize("step_fn,setup_fn,assert_fn", STEP_CASES)
+    @pytest.mark.parametrize(("step_fn", "setup_fn", "assert_fn"), STEP_CASES)
     def test_cases(
         self,
         tmp_path: Path,
@@ -316,7 +316,7 @@ class TestStepErrorPaths:
     ) -> None:
         d = tmp_path
         setup_fn(d, monkeypatch)  # type: ignore[operator]
-        state = SetupState()  # type: ignore[call-arg]
+        state = SetupState()
         step_fn(state, d)  # type: ignore[operator]
         assert assert_fn(state, d)  # type: ignore[operator]
 
@@ -385,7 +385,6 @@ class TestDownstreamIntegration:
                         "pylint",
                     ],
                 ),
-                no_fail_fast=True,
             )
             == 0
         )

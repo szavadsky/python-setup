@@ -10,15 +10,27 @@ Consolidates duplicate code across checker modules:
 from __future__ import annotations
 
 import fnmatch
+import logging
 import os
 from pathlib import Path
-from typing import NamedTuple, NewType
+from typing import TYPE_CHECKING, NamedTuple
+
+import structlog
+from astroid import nodes  # astroid is a pylint dependency, only used for type checking in this module
 from beartype import beartype
+from pylint.typing import MessageDefinitionTuple
 
-from astroid import nodes  # noqa: TCH002  # astroid is a pylint dependency, only used for type checking in this module
+# Configure structlog at import time to suppress debug/info noise from all checkers.
+# This runs when pylint loads the first checker plugin (pylint subprocess).
+# The wrapper_class filters at the bound-logger level, before events reach
+# the processor chain. Tests that use structlog.testing.capture_logs() must
+# save/restore the wrapper_class around their test.
+structlog.configure(
+    wrapper_class=structlog.make_filtering_bound_logger(logging.WARNING),
+)
 
-
-LintRuleId = NewType("LintRuleId", str)
+if TYPE_CHECKING:
+    from pylint.lint import PyLinter
 
 
 class MessageDef(NamedTuple):
@@ -33,9 +45,14 @@ class MessageDef(NamedTuple):
     description: str
 
 
-def _msgs(**definitions: MessageDef) -> dict[LintRuleId, MessageDef]:
-    """Build a checker msgs dict with domain-typed keys."""
-    return {LintRuleId(k): v for k, v in definitions.items()}
+def _msgs(**definitions: MessageDef) -> dict[str, MessageDefinitionTuple]:  # pylint: disable=trivial-wrapper  # typed factory: provides message-ID-keyed dict with MessageDef values, not a raw dict
+    """Build a checker msgs dict with domain-typed keys.
+
+    Returns:
+        A dict mapping message IDs (e.g. ``W9700``) to ``MessageDefinitionTuple``
+        records, suitable for assignment to a ``BaseChecker.msgs`` class attribute.
+    """
+    return dict(definitions.items())
 
 
 def _matches_path(str_path: str, patterns: list[str]) -> bool:
@@ -70,6 +87,52 @@ def _get_file_path(node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> Path | N
         return Path(file_val)
     except AttributeError, TypeError:  # pylint: disable=W9740  # best-effort file path extraction fallback; logging would noise unavoidable attribute/type degrade
         return None
+
+
+class SourceRootMixin:
+    """Mixin for checkers that filter by source root directories.
+
+    Provides shared ``options`` (``source-roots``), ``__init__``, ``open``,
+    ``visit_functiondef``, and ``visit_asyncfunctiondef`` boilerplate that
+    is structurally identical across multiple checkers by pylint API design.
+    """
+
+    _source_roots: list[Path] = []
+
+    options: tuple[tuple[str, dict[str, object]], ...] = (
+        (
+            "source-roots",
+            {
+                "type": "csv",
+                "metavar": "<dirs>",
+                "default": ["src"],
+                "help": "Source root directories for production code.",
+            },
+        ),
+    )
+
+    def __init__(self, linter: PyLinter) -> None:  # type: ignore[reportCallIssue]  # mixin: super().__init__ called with linter arg; BaseChecker.__init__ accepts it via MRO
+        super().__init__(linter)  # type: ignore[reportCallIssue]  # ty: ignore[too-many-positional-arguments]  # mixin: BaseChecker.__init__ accepts linter arg via MRO
+        self._source_roots: list[Path] = []
+
+    # pylint: disable=missing-beartype  # mixin: self.linter resolved at runtime via MRO; @beartype cannot resolve forward ref
+    def open(self) -> None:  # type: ignore[reportAttributeAccessIssue]  # mixin: self.linter exists when mixed with BaseChecker
+        config = self.linter.config  # type: ignore[reportAttributeAccessIssue]  # mixin: linter attr from BaseChecker
+        raw_roots = getattr(config, "source_roots", None)
+        self._source_roots = (
+            [Path(r).resolve() for r in raw_roots if r]
+            if raw_roots
+            else [Path("src").resolve()]
+        )
+
+    # pylint: disable=missing-beartype  # mixin: _check_function defined in subclass; @beartype cannot resolve forward ref
+    def visit_functiondef(self, node: nodes.FunctionDef) -> None:  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass
+        self._check_function(node)  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass
+
+    def visit_asyncfunctiondef(  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass  # pylint: disable=missing-beartype  # circular import — AsyncFunctionDef not available at runtime
+        self, node: nodes.AsyncFunctionDef
+    ) -> None:
+        self._check_function(node)  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass
 
 
 @beartype
@@ -140,6 +203,7 @@ def check_if_meaningful(
         "for now",
         "to do",
         "fixme later",
+        "carryover",
     }
     if primary_lower in boilerplate:
         return False
@@ -156,10 +220,9 @@ def check_if_meaningful(
         "not my code",
         "carry over",
         "from before",
+        "carry from",
     }
     if primary_lower in meaningless_phrases:
         return False
     # Reject justification that is just the rule symbol itself.
-    if rule and primary_lower == rule.lower():
-        return False
-    return True
+    return not (rule and primary_lower == rule.lower())

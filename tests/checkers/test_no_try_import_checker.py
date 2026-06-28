@@ -7,8 +7,9 @@ try/except+import patterns. All fixture src strings live in
 
 from __future__ import annotations
 
-import pytest
 from typing import Any
+
+import pytest
 
 from python_setup_lint.checkers.conformance.no_try_import_checker import (
     NoTryImportChecker,
@@ -45,7 +46,7 @@ def test_detects_no_try_import(
         )
 
 
-@pytest.mark.parametrize(("code",), _NO_TRY_DO_NOT_DETECT_CASES)
+@pytest.mark.parametrize("code", _NO_TRY_DO_NOT_DETECT_CASES)
 def test_does_not_detect_no_try_import(code: str) -> None:
     """Checker must NOT flag the listed valid-code rows."""
     msgs = _walk_and_release(code, NoTryImportChecker)

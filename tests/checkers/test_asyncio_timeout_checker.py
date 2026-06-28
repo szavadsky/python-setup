@@ -88,7 +88,7 @@ def test_detects_missing_timeout(code: str, expected_first_arg: str) -> None:
     )
 
 
-@pytest.mark.parametrize(("code",), _DO_NOT_DETECT_CASES)
+@pytest.mark.parametrize("code", _DO_NOT_DETECT_CASES)
 def test_does_not_detect(code: str) -> None:
     """Checker must NOT flag code with proper timeout wrapping."""
     msgs = _walk_and_release(code, AsyncTimeoutChecker)

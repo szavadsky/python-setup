@@ -1,16 +1,16 @@
 """Pylint checker: prohibit generic-key ``dict[str, X]`` annotations."""
 
+from typing import Any
+
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
-from typing import Any
-
-from python_setup_lint.checkers._base import LintRuleId, MessageDef
+from pylint.typing import MessageDefinitionTuple
 
 class GenericKeyDictChecker(BaseChecker):
     name: str = "generic-key-dict"
-    msgs: dict[LintRuleId, MessageDef]
-    options: tuple[tuple[str, dict[str, Any]], ...]
+    msgs: dict[str, MessageDefinitionTuple]
+    options: tuple[tuple[str, dict[str, Any]], ...]  # pylint option dict values are Any by API contract
 
     def __init__(self, linter: PyLinter) -> None: ...
     def open(self) -> None: ...
@@ -24,4 +24,3 @@ class GenericKeyDictChecker(BaseChecker):
 
 def register(linter: PyLinter) -> None:
     """Register the checker with the linter."""
-    ...

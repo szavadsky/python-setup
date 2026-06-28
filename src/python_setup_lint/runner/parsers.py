@@ -17,16 +17,28 @@ import json
 import re
 from typing import TYPE_CHECKING, Any
 
-from ._record_parsers import (  # noqa: F401  # re-exported for backward compat
-    _parse_mypy_records,
-    _parse_pylint_records,
-    _parse_pyright_records,
-    _parse_ruff_records,
-    _parse_rumdl_records,
-    _parse_ty_records,
-    _parse_yamllint_records,
+from ._record_parsers import (  # re-exported for backward compat; pylint: disable=useless-import-alias  # as-alias needed for mypy strict re-export
+    _parse_mypy_records as _parse_mypy_records,
 )
-from ._record_types import Record  # noqa: F401  # re-exported for backward compat
+from ._record_parsers import (
+    _parse_pylint_records as _parse_pylint_records,
+)
+from ._record_parsers import (
+    _parse_pyright_records as _parse_pyright_records,
+)
+from ._record_parsers import (
+    _parse_ruff_records as _parse_ruff_records,
+)
+from ._record_parsers import (
+    _parse_rumdl_records as _parse_rumdl_records,
+)
+from ._record_parsers import (
+    _parse_ty_records as _parse_ty_records,
+)
+from ._record_parsers import (
+    _parse_yamllint_records as _parse_yamllint_records,
+)
+from ._record_types import Record  # re-exported for backward compat
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -41,7 +53,7 @@ __all__ = [
 # ── Helpers ──────────────────────────────────────────────────────────
 
 
-def _load_json_dict(data: str) -> dict[str, Any]:
+def _load_json_dict(data: str) -> dict[str, Any]:  # JSON parse result, values accessed by known keys
     try:
         result = json.loads(data)
     except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
@@ -96,7 +108,7 @@ def _parse_rumdl_statistics(stdout: str, stderr: str) -> list[tuple[str, int]]:
 def _parse_pylint_json2(stdout: str, stderr: str) -> list[tuple[str, int]]:
     _ = stderr
     try:
-        raw: Any = json.loads(stdout)
+        raw: Any = json.loads(stdout)  # type: ignore[assignment]  # json.loads returns Any, narrowed by isinstance below
     except json.JSONDecodeError, TypeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
         return []
     if isinstance(raw, dict):

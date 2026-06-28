@@ -9,9 +9,21 @@ from typing import Any
 import pytest
 
 from python_setup_lint.runner import Record
-from python_setup_lint.runner.baseline import _capture_baseline, _compare_sorted, _diff_baseline
 from python_setup_lint.runner._record_types import _compare_records_key
-from python_setup_lint.runner.parsers import _parse_mypy_records, _parse_pylint_records, _parse_pyright_records, _parse_ruff_records, _parse_rumdl_records, _parse_ty_records, _parse_yamllint_records
+from python_setup_lint.runner.baseline import (  # private import for white-box testing
+    _capture_baseline,
+    _compare_sorted,
+    _diff_baseline,
+)
+from python_setup_lint.runner.parsers import (  # type: ignore[attr-defined]  # private import for white-box testing
+    _parse_mypy_records,
+    _parse_pylint_records,
+    _parse_pyright_records,
+    _parse_ruff_records,
+    _parse_rumdl_records,
+    _parse_ty_records,
+    _parse_yamllint_records,
+)
 from python_setup_lint.testing import make_lint_result
 
 

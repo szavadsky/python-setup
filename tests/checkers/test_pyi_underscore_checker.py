@@ -11,7 +11,6 @@ from python_setup_lint.checkers.conformance.pyi_underscore_checker import (
 )
 from python_setup_lint.testing import _walk_and_release
 
-
 # ── Failing cases: _-prefixed symbols in .pyi files ──
 
 

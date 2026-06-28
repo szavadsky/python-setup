@@ -7,7 +7,7 @@ is a no-op.
 
 import argparse
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 # ── Constants ───────────────────────────────────────────────────────
@@ -33,7 +33,7 @@ class SetupState:
     coding_rules_skipped: bool = False
     agents_appended: bool = False
     agents_skipped: bool = False
-    errors: list[str] = field(default_factory=list)
+    errors: list[str] = ...
 
     @property
     def all_ok(self) -> bool: ...
@@ -76,11 +76,11 @@ def install(
     Returns exit code (0 = success, 1 = errors).
     """
 
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry point for ``python-setup install`` / ``python-setup update``."""
+
 def update(project_dir: Path) -> int:
-    """Update python-setup in *project_dir* and report config drift.
+    """Update python-setup and check config drift.
 
     Returns exit code (0 = success, 1 = errors).
     """
-
-def main(argv: list[str] | None = None) -> int:
-    """CLI entry point for ``python-setup install`` / ``python-setup update``."""

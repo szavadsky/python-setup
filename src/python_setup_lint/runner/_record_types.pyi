@@ -5,7 +5,6 @@ Shared types for the runner module.
 
 
 from dataclasses import dataclass
-from typing import Any
 
 @dataclass(frozen=True)
 class Record:
@@ -23,5 +22,5 @@ class Record:
     msg: str
 
 
-def _compare_records_key(rec: Record) -> tuple[Any, Any, Any, str]: ...
+def _compare_records_key(rec: Record) -> tuple[tuple[str, ...], tuple[int, ...], tuple[int, ...], str]: ...
 def _records_unchanged(a: list[Record], b: list[Record]) -> bool: ...

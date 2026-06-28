@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 import astroid
 import pytest
 
-from python_setup_lint.checkers.stub.coverage import (
+from python_setup_lint.checkers.stub.coverage import (  # type: ignore[attr-defined]  # private import for white-box testing
     _has_main_block,
     _index_stub_declarations,
     _is_init_exempt,

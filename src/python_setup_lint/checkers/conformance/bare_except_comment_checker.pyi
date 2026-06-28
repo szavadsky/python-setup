@@ -15,8 +15,6 @@ class BareExceptCommentChecker(BaseChecker):
 
     def visit_excepthandler(self, node: nodes.ExceptHandler) -> None:
         """Check except handlers for bare except without justification."""
-        ...
 
 def register(linter: PyLinter) -> None:
     """Register the checker with the linter."""
-    ...

@@ -21,12 +21,12 @@ Topologically the upstream-most dispatcher: depends on ``_ast_helpers``
 
 from __future__ import annotations
 
-import structlog
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
-from ._ast_helpers import ClassComparisonCtx, _FidelityState
+import structlog
 
+from ._ast_helpers import ClassComparisonCtx, _FidelityState
 from .annotation import (
     _compare_class_attrs,
     _compare_class_bases,
@@ -35,6 +35,7 @@ from .annotation import (
 
 if TYPE_CHECKING:
     from astroid import nodes
+
     from python_setup_lint.checkers.stub.checker import StubChecker
 
 log = structlog.get_logger(__name__)

@@ -13,7 +13,7 @@ Shared linting, formatting, and dev-tooling infrastructure for Python projects.
 uv add /path/to/python-setup
 
 # Or from the published git repository
-uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.8.0"
+uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.11.0"
 ```
 
 After adding the dependency, run the setup command:
@@ -27,7 +27,7 @@ This is idempotent — running it twice is a no-op.
 ## Usage
 
 ```bash
-# Run the full lint pipeline (all 11 tools with baseline diffing)
+# Run the full lint pipeline (all 12 tools with baseline diffing)
 uv run lint
 
 # Install python-setup tooling into a target project
@@ -41,7 +41,7 @@ Both commands return exit code 0 on success, non-zero on failure.
 ### 1. Add the dependency
 
 ```bash
-uv add --dev "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.7.0"
+uv add --dev "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.11.0"
 ```
 
 ### 2. Run the installer
@@ -64,7 +64,7 @@ uv run pre-commit install
 uv run lint
 ```
 
-Runs all 12 lint tools sequentially with baseline diffing, statistics aggregation, and fail-fast / fail-fast-free modes.
+Runs all 12 lint tools sequentially with baseline diffing and statistics aggregation.
 
 ### What you get
 
@@ -78,7 +78,7 @@ Runs all 12 lint tools sequentially with baseline diffing, statistics aggregatio
 
 When lint rules or checkers change in `python-setup`:
 
-1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.10.0"`
+1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.11.0"`
 2. Re-run the installer: `uv run python-setup install`
 3. Commit the updated config in the consuming project.
 

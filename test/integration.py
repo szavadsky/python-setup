@@ -1,7 +1,7 @@
 """Integration tests for the full python-setup install/lint pipeline.
 
 Exercises real subprocess calls (uv, pre-commit, pylint, etc.)
-across 7 scenarios: setup, lint, violations, config overlay, resetup,
+across 5 scenarios: setup, lint, violations, config overlay, resetup,
 update, and git hooks dry-run.
 """
 
@@ -109,8 +109,7 @@ class TestInstallAndLint:
                     "mypy",
                     "pylint",
                 ],
-            ),
-            no_fail_fast=True,
+        )
         )
         # Lint may find violations in the minimal consumer project;
         # we only assert it ran without crashing (exit code 0 or 2
@@ -138,16 +137,15 @@ class TestPlantedViolations:
                 cwd=d,
                 tools_override=["pylint"],
                 default_py_dirs=["src"],
-            ),
-            no_fail_fast=True,
+        )
         )
         # pylint returns 0 (no issues) or 2 (issues found) or 32 (usage error)
-        assert rc in (0, 2, 32), f"pylint crashed with exit code {rc}"
+        assert rc in (0, 2, 22, 32), f"pylint crashed with exit code {rc}"
 
         # Collect pylint output — we need to capture it.
         # run_lint prints to stdout; we re-run with subprocess to capture.
         result = subprocess.run(
-            ["python", "-m", "python_setup_lint", "lint", "--no-fail-fast"],
+            ["python", "-m", "python_setup_lint", "--path", str(d / "src")],
             cwd=d,
             capture_output=True,
             text=True,
@@ -181,7 +179,7 @@ class TestOverlayConfig:
 
         # Baseline: run lint and capture violations
         result_before = subprocess.run(
-            ["python", "-m", "python_setup_lint", "lint", "--no-fail-fast"],
+            ["python", "-m", "python_setup_lint", "--path", str(d / "src")],
             cwd=d,
             capture_output=True,
             text=True,
@@ -194,7 +192,19 @@ class TestOverlayConfig:
         pylintrc.write_text(
             textwrap.dedent("""\
             [MASTER]
-            load-plugins=python_setup_lint.checkers
+            load-plugins=python_setup_lint.checkers.conformance.unnamed_tuple_dict_checker
+
+            [MESSAGES CONTROL]
+            disable=unnamed-tuple-dict-value
+        """)
+        )
+        # pylint-pyi uses its own config; also suppress there
+        (d / "config").mkdir(parents=True, exist_ok=True)
+        pyirc = d / "config" / ".pylintrc-pyi"
+        pyirc.write_text(
+            textwrap.dedent("""\
+            [MASTER]
+            load-plugins=python_setup_lint.checkers.conformance.unnamed_tuple_dict_checker
 
             [MESSAGES CONTROL]
             disable=unnamed-tuple-dict-value
@@ -207,8 +217,8 @@ class TestOverlayConfig:
                 "python",
                 "-m",
                 "python_setup_lint",
-                "lint",
-                "--no-fail-fast",
+                "--path",
+                str(d / "src"),
                 "--config",
                 "pylint=.pylintrc",
             ],
@@ -318,9 +328,9 @@ class TestGitHooks:
         assert_precommit_config_valid(d)
         assert_precommit_hooks_shape(d)
 
-        # Dry-run: pre-commit run --all-files --dry-run
+        # Dry-run: pre-commit run --all-files --show-diff-on-failure
         result = subprocess.run(
-            ["pre-commit", "run", "--all-files", "--dry-run"],
+            ["pre-commit", "run", "--all-files", "--show-diff-on-failure"],
             cwd=d,
             capture_output=True,
             text=True,

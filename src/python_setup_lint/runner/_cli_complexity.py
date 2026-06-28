@@ -7,7 +7,7 @@ entry point in :mod:`python_setup_lint.runner.cli`.
 
 from __future__ import annotations
 
-import argparse  # noqa: TCH003  # TYPE_CHECKING-only import; not available at runtime
+import argparse  # TYPE_CHECKING-only import; not available at runtime
 from pathlib import Path
 
 from ._config import (

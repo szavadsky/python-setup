@@ -966,7 +966,7 @@ wheels = [
 
 [[package]]
 name = "python-setup"
-version = "0.10.0"
+version = "0.11.0"
 source = { editable = "." }
 dependencies = [
     { name = "astroid" },
@@ -975,13 +975,20 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+semantic = [
+    { name = "sentence-transformers" },
+]
+
+[package.dev-dependencies]
 dev = [
+    { name = "beartype" },
     { name = "detect-secrets" },
     { name = "mypy" },
     { name = "pandas-stubs" },
     { name = "pre-commit" },
     { name = "pylint" },
     { name = "pyright" },
+    { name = "pytest" },
     { name = "ruff" },
     { name = "rumdl" },
     { name = "tach" },
@@ -1003,55 +1010,46 @@ dev = [
     { name = "types-tqdm" },
     { name = "yamllint" },
 ]
-semantic = [
-    { name = "sentence-transformers" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "beartype" },
-    { name = "pytest" },
-]
 
 [package.metadata]
 requires-dist = [
     { name = "astroid", specifier = ">=4.0.4" },
-    { name = "detect-secrets", marker = "extra == 'dev'", specifier = ">=1.5.0" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
-    { name = "pandas-stubs", marker = "extra == 'dev'", specifier = ">=3.0.3.260530" },
-    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.6.0" },
     { name = "pylint", specifier = ">=4.0.6" },
-    { name = "pylint", marker = "extra == 'dev'", specifier = ">=4.0.5" },
-    { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.410" },
     { name = "pytest", specifier = ">=9.1.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5" },
-    { name = "rumdl", marker = "extra == 'dev'", specifier = ">=0.2.15" },
     { name = "sentence-transformers", marker = "extra == 'semantic'", specifier = ">=3.0.0" },
-    { name = "tach", marker = "extra == 'dev'", specifier = ">=0.15" },
-    { name = "tomli-w", marker = "extra == 'dev'", specifier = ">=1.0" },
-    { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.49" },
-    { name = "typeguard", marker = "extra == 'dev'", specifier = ">=4.5.2" },
-    { name = "types-defusedxml", marker = "extra == 'dev'", specifier = ">=0.7.0.20260504" },
-    { name = "types-gunicorn", marker = "extra == 'dev'", specifier = ">=26.0.0.20260518" },
-    { name = "types-jsonschema", marker = "extra == 'dev'", specifier = ">=4.26.0.20260518" },
-    { name = "types-objgraph", marker = "extra == 'dev'", specifier = ">=3.6.0.20260508" },
-    { name = "types-pexpect", marker = "extra == 'dev'", specifier = ">=4.9.0.20260518" },
-    { name = "types-psutil", marker = "extra == 'dev'", specifier = ">=7.2.2.20260518" },
-    { name = "types-pygments", marker = "extra == 'dev'", specifier = ">=2.20.0.20260518" },
-    { name = "types-pysocks", marker = "extra == 'dev'", specifier = ">=1.7.1.20260518" },
-    { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6.0.12.20260518" },
-    { name = "types-regex", marker = "extra == 'dev'", specifier = ">=2026.5.9.20260518" },
-    { name = "types-requests", marker = "extra == 'dev'", specifier = ">=2.33.0.20260518" },
-    { name = "types-simplejson", marker = "extra == 'dev'", specifier = ">=3.20.0.20260518" },
-    { name = "types-tqdm", marker = "extra == 'dev'", specifier = ">=4.68.0.20260608" },
-    { name = "yamllint", marker = "extra == 'dev'", specifier = ">=1.35" },
 ]
-provides-extras = ["dev", "semantic"]
+provides-extras = ["semantic"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "beartype", specifier = ">=0.22.9" },
+    { name = "detect-secrets", specifier = ">=1.5.0" },
+    { name = "mypy", specifier = ">=1.10" },
+    { name = "pandas-stubs", specifier = ">=3.0.3.260530" },
+    { name = "pre-commit", specifier = ">=4.6.0" },
+    { name = "pylint", specifier = ">=4.0.5" },
+    { name = "pyright", specifier = ">=1.1.410" },
     { name = "pytest", specifier = ">=9.1.0" },
+    { name = "ruff", specifier = ">=0.5" },
+    { name = "rumdl", specifier = ">=0.2.15" },
+    { name = "tach", specifier = ">=0.15" },
+    { name = "tomli-w", specifier = ">=1.0" },
+    { name = "ty", specifier = ">=0.0.49" },
+    { name = "typeguard", specifier = ">=4.5.2" },
+    { name = "types-defusedxml", specifier = ">=0.7.0.20260504" },
+    { name = "types-gunicorn", specifier = ">=26.0.0.20260518" },
+    { name = "types-jsonschema", specifier = ">=4.26.0.20260518" },
+    { name = "types-objgraph", specifier = ">=3.6.0.20260508" },
+    { name = "types-pexpect", specifier = ">=4.9.0.20260518" },
+    { name = "types-psutil", specifier = ">=7.2.2.20260518" },
+    { name = "types-pygments", specifier = ">=2.20.0.20260518" },
+    { name = "types-pysocks", specifier = ">=1.7.1.20260518" },
+    { name = "types-pyyaml", specifier = ">=6.0.12.20260518" },
+    { name = "types-regex", specifier = ">=2026.5.9.20260518" },
+    { name = "types-requests", specifier = ">=2.33.0.20260518" },
+    { name = "types-simplejson", specifier = ">=3.20.0.20260518" },
+    { name = "types-tqdm", specifier = ">=4.68.0.20260608" },
+    { name = "yamllint", specifier = ">=1.35" },
 ]
 
 [[package]]

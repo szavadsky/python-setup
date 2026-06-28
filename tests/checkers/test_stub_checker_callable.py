@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import inspect
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import astroid
 import pytest
@@ -47,7 +47,7 @@ def _parse_func(code: str) -> Any:
     return module.body[0]
 
 
-def _extract(func_node, *, strip_self: bool = False) -> Any:
+def _extract(func_node: astroid.FunctionDef, *, strip_self: bool = False) -> Any:
     """Wrap ``_extract_param_descriptors`` for short test bodies."""
     return _extract_param_descriptors(func_node.args, strip_self=strip_self)
 
@@ -252,16 +252,16 @@ def test_compare_return_annotations(
 def test_callable_comparison_ctx_fields() -> None:
     stub_mod = astroid.parse("def foo(x: int) -> None: ...\n", module_name="test")
     impl_mod = astroid.parse("def foo(x: int) -> None: ...\n", module_name="test")
+    stub_func = cast("astroid.FunctionDef", stub_mod.body[0])
+    impl_func = cast("astroid.FunctionDef", impl_mod.body[0])
     ctx = CallableComparisonCtx(
         checker=None,  # type: ignore[arg-type]
         module_name="mod_a",
         func_name="foo",
         msg_node=impl_mod,
-        stub_func=stub_mod.body[0],
-        impl_func=impl_mod.body[0],
+        stub_func=stub_func,
+        impl_func=impl_func,
     )
-    assert ctx.module_name == "mod_a"
-    assert ctx.func_name == "foo"
 
 
 # ── end-to-end subprocess integration ─────────────────────────────

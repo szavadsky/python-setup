@@ -6,7 +6,7 @@ import structlog
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # TYPE_CHECKING-only import; pylint is a dev dependency
 
 from python_setup_lint.checkers._base import (
     MessageDef,

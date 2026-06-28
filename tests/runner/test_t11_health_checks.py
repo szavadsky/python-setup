@@ -58,7 +58,7 @@ repos:
     hooks:
       - id: lint
         name: lint (full pipeline, baseline-gated)
-        entry: python-setup lint --fix --no-fail-fast --baseline lint.baseline
+        entry: python-setup lint --fix --baseline lint.baseline
         language: system
         pass_filenames: false
         args: []
@@ -238,7 +238,7 @@ repos:
     hooks:
       - id: lint
         name: lint
-        entry: python-setup lint --fix --no-fail-fast --baseline lint.baseline
+        entry: python-setup lint --fix --baseline lint.baseline
         language: python
         pass_filenames: false
 """,
@@ -246,22 +246,6 @@ repos:
         with pytest.raises(AssertionError, match="language: system"):
             assert_precommit_hooks_shape(tmp_path)
 
-    def test_lint_missing_no_fail_fast_raises(self, tmp_path: Path) -> None:
-        _write_precommit(
-            tmp_path,
-            repos_yaml="""\
-repos:
-  - repo: local
-    hooks:
-      - id: lint
-        name: lint
-        entry: python-setup lint --fix --baseline lint.baseline
-        language: system
-        pass_filenames: false
-""",
-        )
-        with pytest.raises(AssertionError, match="--no-fail-fast"):
-            assert_precommit_hooks_shape(tmp_path)
 
     def test_wrong_baseline_filename_raises(self, tmp_path: Path) -> None:
         _write_precommit(
@@ -272,7 +256,7 @@ repos:
     hooks:
       - id: lint
         name: lint
-        entry: python-setup lint --fix --no-fail-fast --baseline .lint.baseline
+        entry: python-setup lint --fix --baseline .lint.baseline
         language: system
         pass_filenames: false
 """,
@@ -299,7 +283,7 @@ repos:
     hooks:
       - id: lint
         name: lint
-        entry: python-setup lint --fix --no-fail-fast --baseline .lint.baseline
+        entry: python-setup lint --fix --baseline .lint.baseline
         language: system
         pass_filenames: false
 """,
@@ -322,7 +306,7 @@ repos:
     hooks:
       - id: lint
         name: lint
-        entry: python-setup lint --fix --no-fail-fast --baseline lint.baseline
+        entry: python-setup lint --fix --baseline lint.baseline
         language: system
         pass_filenames: false
 """,
@@ -347,7 +331,7 @@ repos:
     hooks:
       - id: lint
         name: lint
-        entry: python-setup lint --fix --no-fail-fast --baseline lint.baseline
+        entry: python-setup lint --fix --baseline lint.baseline
         language: system
         pass_filenames: false
 """,
@@ -372,7 +356,7 @@ repos:
     hooks:
       - id: lint
         name: lint
-        entry: python-setup lint --fix --no-fail-fast --baseline lint.baseline
+        entry: python-setup lint --fix --baseline lint.baseline
         language: system
         pass_filenames: false
 """,

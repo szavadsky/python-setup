@@ -6,25 +6,27 @@ Informational (W-level) only — does not block builds.
 
 from __future__ import annotations
 
-import structlog
-from pathlib import Path
+from typing import TYPE_CHECKING
 
+import structlog
 from astroid import nodes
-from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
 from python_setup_lint.checkers._base import (
     MessageDef,
+    SourceRootMixin,
     _get_file_path,
     _is_under_source_root,
     _msgs,
 )
 
+if TYPE_CHECKING:
+    from pylint.lint import PyLinter
+
 log = structlog.get_logger(__name__)
 
 
-class BeartypeCoverageChecker(BaseChecker):
+class BeartypeCoverageChecker(SourceRootMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
     """AST visitor that inventories @beartype coverage on public functions."""
 
     name: str = "beartype-coverage"
@@ -35,40 +37,6 @@ class BeartypeCoverageChecker(BaseChecker):
             description="All public functions should have @beartype for runtime type enforcement.",
         ),
     )
-    options = (
-        (
-            "source-roots",
-            {
-                "type": "csv",
-                "metavar": "<dirs>",
-                "default": ["src"],
-                "help": "Source root directories for production code.",
-            },
-        ),
-    )
-
-    def __init__(self, linter: PyLinter) -> None:
-        super().__init__(linter)
-        self._source_roots: list[Path] = []
-
-    @beartype
-    def open(self) -> None:
-        config = self.linter.config
-        raw_roots = getattr(config, "source_roots", None)
-        self._source_roots = (
-            [Path(r).resolve() for r in raw_roots if r]
-            if raw_roots
-            else [Path("src").resolve()]
-        )
-
-    @beartype
-    def visit_functiondef(self, node: nodes.FunctionDef) -> None:
-        self._check_function(node)
-
-    def visit_asyncfunctiondef(  # pylint: disable=missing-beartype  # circular import — AsyncFunctionDef not available at runtime
-        self, node: nodes.AsyncFunctionDef
-    ) -> None:
-        self._check_function(node)
 
     def _check_function(self, node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> None:
         # Skip modules outside source roots

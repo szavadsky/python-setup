@@ -1,6 +1,6 @@
 """Python CLI runner for the python-setup lint pipeline.
 
-Replaces ``scripts/lint.sh``.  Runs all 11 lint steps sequentially with
+Replaces ``scripts/lint.sh``.  Runs all 12 lint steps sequentially with
 optional path scoping, fix mode, baseline diffing, flexible failure
 handling, statistics aggregation, declarative extra-tools (T11 v1), and
 autofix (T4).  See ``AGENTS.md`` for the full architecture.

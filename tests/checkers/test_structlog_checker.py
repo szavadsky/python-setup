@@ -32,7 +32,7 @@ def _walk_and_release(
     module = astroid.parse(code)
     module.file = file_path
     tc.walk(module)
-    return tc.linter.release_messages()
+    return tc.linter.release_messages()  # type: ignore[no-any-return]  # test fixture builds typed list from Any checker introspection
 
 
 def _msg_count(msgs: list[Any], msg_id: str) -> int:

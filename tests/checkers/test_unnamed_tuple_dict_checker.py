@@ -16,7 +16,6 @@ from python_setup_lint.checkers.conformance.unnamed_tuple_dict_checker import (
 )
 from python_setup_lint.testing import _walk_and_release
 
-
 # ── Failing cases: bare tuple literals as dict values ──
 
 _DETECT_CASES: list[Any] = [
@@ -96,7 +95,7 @@ _DO_NOT_DETECT_CASES: list[Any] = [
 ]
 
 
-@pytest.mark.parametrize(("code",), _DO_NOT_DETECT_CASES)
+@pytest.mark.parametrize("code", _DO_NOT_DETECT_CASES)
 def test_does_not_detect(code: str) -> None:
     """Checker must NOT flag named-tuple, dataclass, or non-tuple values."""
     msgs = _walk_and_release(code, UnnamedTupleDictChecker)

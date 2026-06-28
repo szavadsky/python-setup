@@ -15,8 +15,6 @@ class RedundantTypeGuardChecker(BaseChecker):
     name: str = "redundant-type-guard"
     def visit_if(self, node: nodes.If) -> None:
         """Flag isinstance guards redundant over parameter type annotations."""
-        ...
 
 def register(linter: PyLinter) -> None:
     """Register the checker with the linter."""
-    ...

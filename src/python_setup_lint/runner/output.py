@@ -14,10 +14,11 @@ call time so the patch is honoured.
 
 from __future__ import annotations
 
-import structlog
 import subprocess
 import time
 from typing import TYPE_CHECKING
+
+import structlog
 
 from .dispatch import STRATEGIES
 from .parsers import _STATISTICS_PARSERS
@@ -175,7 +176,7 @@ def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
             "PATH": f"{venv_bin}:{__import__('os').environ.get('PATH', '')}",
         }
     try:
-        proc = subprocess.run(
+        proc = subprocess.run(  # noqa: S603  # cmd is constructed internally from ToolSpec; cwd is lint scope
             cmd,
             cwd=cwd,
             capture_output=True,

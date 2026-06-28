@@ -6,12 +6,13 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
+import python_setup_lint.runner.output as _output_module
 from python_setup_lint.runner import TOOLS, LintResult, ViolationCount, run_lint
+from python_setup_lint.runner.cmd_build import _build_statistics_flags
 from python_setup_lint.runner.output import (
     _aggregate_statistics,
     _print_statistics_table,
 )
-from python_setup_lint.runner.cmd_build import _build_statistics_flags
 from python_setup_lint.runner.parsers import (
     _parse_detect_secrets_json,
     _parse_mypy_stderr,
@@ -19,7 +20,6 @@ from python_setup_lint.runner.parsers import (
     _parse_ty_concise,
     _parse_yamllint_parsable,
 )
-import python_setup_lint.runner.output as _output_module
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 
 if TYPE_CHECKING:
@@ -284,7 +284,6 @@ class TestStatisticsObservability:
             path="src/main.py",
             statistics=True,
             statistics_format="json",
-            no_fail_fast=True,
         )
         captured = capsys.readouterr()
         assert isinstance(rc, int)
@@ -316,7 +315,6 @@ class TestStatisticsObservability:
         rc = run_lint(
             path="src/main.py",
             statistics=True,
-            no_fail_fast=True,
         )
         captured = capsys.readouterr()
         assert isinstance(rc, int)
@@ -335,7 +333,6 @@ class TestStatisticsObservability:
             path="src/main.py",
             statistics=True,
             statistics_format="json",
-            no_fail_fast=True,
         )
         _ = rc
         captured = capsys.readouterr()

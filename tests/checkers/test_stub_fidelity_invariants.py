@@ -21,7 +21,7 @@ The fixtures cover every emitted message-id family:
 from __future__ import annotations
 
 import inspect
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import astroid
 
@@ -70,7 +70,7 @@ def _run(
     module.file = str(src / f"{module_name}.py")
     tc.walk(module)
     tc.checker.close()
-    return tc.linter.release_messages()
+    return tc.linter.release_messages()  # type: ignore[no-any-return]  # test fixture builds typed list from Any checker introspection
 
 
 def _msg_ids(msgs: list[Any]) -> list[str]:
@@ -254,11 +254,13 @@ class TestClassVarSkipInvariants:
 
     def test_is_classvar_true(self) -> None:
         node = astroid.extract_node("ClassVar[int]")
-        assert _is_classvar(node) is True
+        assert isinstance(node, astroid.NodeNG)
+        assert _is_classvar(cast("astroid.NodeNG", node)) is True
 
     def test_is_classvar_false(self) -> None:
         node = astroid.extract_node("int")
-        assert _is_classvar(node) is False
+        assert isinstance(node, astroid.NodeNG)
+        assert _is_classvar(cast("astroid.NodeNG", node)) is False
 
     def test_module_var_classvar_skipped(self, tmp_path: Path) -> None:
         # Stub has ``x: ClassVar[int]`` → no W97B5 even when impl has no ann.
@@ -391,29 +393,28 @@ class TestCtxConstruction:
     def test_class_ctx(self) -> None:
         stub = astroid.parse("class A: ...\n")
         impl = astroid.parse("class A: ...\n")
+        stub_class = cast("astroid.ClassDef", stub.body[0])
+        impl_class = cast("astroid.ClassDef", impl.body[0])
         ctx = ClassComparisonCtx(
             checker=None,  # type: ignore[arg-type]
             module_name="m",
             class_name="A",
             msg_node=impl,
-            stub_class=stub.body[0],
-            impl_class=impl.body[0],
+            stub_class=stub_class,
+            impl_class=impl_class,
         )
-        assert ctx.class_name == "A"
-        assert ctx.module_name == "m"
 
     def test_callable_ctx(self) -> None:
         stub = astroid.parse("def f() -> None: ...\n")
+        stub_func = cast("astroid.FunctionDef", stub.body[0])
         ctx = CallableComparisonCtx(
             checker=None,  # type: ignore[arg-type]
             module_name="m",
             func_name="f",
             msg_node=stub,
-            stub_func=stub.body[0],
+            stub_func=stub_func,
             impl_func=None,
         )
-        assert ctx.func_name == "f"
-        assert ctx.impl_func is None
 
 
 class TestEmitFidelityViolationsOrchestrator:

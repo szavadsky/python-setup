@@ -133,7 +133,7 @@ SET_PLUGINS_CASES = [
 
 
 class TestAtomicWrite:
-    @pytest.mark.parametrize("content,existing,should_raise", ATOMIC_WRITE_CASES)
+    @pytest.mark.parametrize(("content", "existing", "should_raise"), ATOMIC_WRITE_CASES)
     def test_cases(
         self, tmp_path: Path, content: str, existing: str | None, should_raise: bool
     ) -> None:
@@ -164,7 +164,7 @@ class TestAtomicWrite:
 
 
 class TestComputeChecksums:
-    @pytest.mark.parametrize("files,expected_count", CHECKSUM_CASES)
+    @pytest.mark.parametrize(("files", "expected_count"), CHECKSUM_CASES)
     def test_cases(self, tmp_path: Path, files: list[str], expected_count: int) -> None:
         d = tmp_path
         for f in ["a.txt", "b.txt"]:
@@ -235,15 +235,15 @@ class TestPyprojectTomlHelpers:
 
 
 class TestHasPythonSetupDep:
-    @pytest.mark.parametrize("deps,expected", HAS_DEP_CASES)
+    @pytest.mark.parametrize(("deps", "expected"), HAS_DEP_CASES)
     def test_cases(self, deps: list[str], expected: bool) -> None:
         assert _has_python_setup_dep(deps) is expected
 
 
 class TestSetupState:
     def test_all_ok(self) -> None:
-        assert SetupState().all_ok  # type: ignore[call-arg]
-        assert not SetupState(errors=["x"]).all_ok  # type: ignore[call-arg]
+        assert SetupState().all_ok
+        assert not SetupState(errors=["x"]).all_ok
 
 
 class TestUpdate:
@@ -251,7 +251,7 @@ class TestUpdate:
         with _UvCallRecorder() as r:
             assert update(configured_project) == 0
         assert any(c == ["sync"] for c in r.calls)
-        assert any(c == ["add", "--refresh-package", "python-setup"] for c in r.calls)
+        assert any(c == ["add", "python-setup", "--refresh-package", "python-setup"] for c in r.calls)
 
     def test_no_drift_and_missing_state(
         self, configured_project: Path, empty_project: Path
@@ -312,7 +312,7 @@ class TestMainCLI:
 
 
 class TestTemplates:
-    @pytest.mark.parametrize("content,present,absent", TEMPLATE_CASES)
+    @pytest.mark.parametrize(("content", "present", "absent"), TEMPLATE_CASES)
     def test_content(self, content: str, present: list[str], absent: list[str]) -> None:
         for s in present:
             assert s in content
@@ -365,7 +365,7 @@ class TestModuleSizeGates:
 
 
 class TestTomlHelperTypeSafety:
-    @pytest.mark.parametrize("fn_name,data,expected", TOML_TYPE_CASES)
+    @pytest.mark.parametrize(("fn_name", "data", "expected"), TOML_TYPE_CASES)
     def test_gets(self, fn_name: str, data: dict[str, Any], expected: object) -> None:
         fns = {
             "_get_dev_deps": _get_dev_deps,
@@ -385,7 +385,7 @@ class TestTomlHelperTypeSafety:
 
 
 class TestSetPylintLoadPluginsMerge:
-    @pytest.mark.parametrize("existing,new,expected", SET_PLUGINS_CASES)
+    @pytest.mark.parametrize(("existing", "new", "expected"), SET_PLUGINS_CASES)
     def test_cases(self, existing: object, new: list[str], expected: list[str]) -> None:
         d = {"tool": {"pylint": {"main": {"load-plugins": existing}}}}
         _set_pylint_load_plugins(d, new)  # type: ignore[arg-type]

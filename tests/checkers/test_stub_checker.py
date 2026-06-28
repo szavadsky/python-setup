@@ -10,12 +10,27 @@ Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 
 from __future__ import annotations
 
-import structlog
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import MagicMock
 
 import astroid
 import pytest
+import structlog
+
+
+@pytest.fixture(autouse=True)
+def _restore_structlog_wrapper() -> None:  # type: ignore[misc]  # fixture uses yield; Generator return type not needed for pytest
+    """Temporarily restore the default structlog wrapper_class for tests
+    that use structlog.testing.capture_logs(). The global configure in
+    _base.py sets a filtering wrapper_class that drops debug/info events
+    before they reach the processor chain, which breaks capture_logs()."""
+    import structlog
+    old_wrapper = structlog.get_config().get("wrapper_class")
+    structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(0))  # 0 = NOTSET = all levels pass
+    yield
+    if old_wrapper is not None:
+        structlog.configure(wrapper_class=old_wrapper)
 
 from python_setup_lint.checkers.stub.checker import StubChecker
 from python_setup_lint.checkers.stub.fidelity import _is_classvar
@@ -275,14 +290,14 @@ def test_import_usage_fields(
 
 
 @pytest.mark.parametrize(("code", "accessor"), _IN_TYPE_CHECKING_BLOCK_POSITIVE_CASES)
-def test_in_type_checking_block_positive(code: str, accessor) -> None:
+def test_in_type_checking_block_positive(code: str, accessor: Callable[[astroid.Module], astroid.NodeNG]) -> None:
     module = astroid.parse(code)
     import_node = accessor(module)
     assert _in_type_checking_block(import_node) is True
 
 
 @pytest.mark.parametrize(("code", "accessor"), _IN_TYPE_CHECKING_BLOCK_NEGATIVE_CASES)
-def test_in_type_checking_block_negative(code: str, accessor) -> None:
+def test_in_type_checking_block_negative(code: str, accessor: Callable[[astroid.Module], astroid.NodeNG]) -> None:
     module = astroid.parse(code)
     import_node = accessor(module)
     assert _in_type_checking_block(import_node) is False
@@ -385,7 +400,8 @@ def test_star_import_policy(star_policy: str, expected_e97a3_count: int) -> None
 @pytest.mark.parametrize(("expr_src", "expected_bool"), _VARIABLE_FIDELITY_CASES)
 def test_is_classvar(expr_src: str, expected_bool: bool) -> None:
     node = astroid.extract_node(expr_src)
-    assert _is_classvar(node) is expected_bool
+    assert isinstance(node, astroid.NodeNG)
+    assert _is_classvar(cast("astroid.NodeNG", node)) is expected_bool
 
 
 def test_annotation_normalizer_normalize() -> None:

@@ -20,9 +20,10 @@ Topologically downstream of ``_ast_helpers`` and ``signature``
 
 from __future__ import annotations
 
-import structlog
+from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING
 
+import structlog
 from astroid import nodes
 
 from python_setup_lint.checkers.stub.normalizer import AnnotationNormalizer
@@ -46,7 +47,7 @@ __all__ = [
 ]
 
 
-def _normalize_bases(bases: list[nodes.NodeNG]) -> list[str]:
+def _normalize_bases(bases: Sequence[nodes.NodeNG]) -> list[str]:
     normalized: list[str] = []
     for base in bases:
         if isinstance(base, nodes.Subscript):
@@ -78,8 +79,8 @@ def _is_classvar(ann_node: nodes.NodeNG) -> bool:
 
 
 def _compare_class_bases(ctx: ClassComparisonCtx) -> None:
-    stub_bases = _normalize_bases(ctx.stub_class.bases)
-    impl_bases = _normalize_bases(ctx.impl_class.bases)
+    stub_bases = _normalize_bases(ctx.stub_class.bases)  # type: ignore[arg-type]  # bases is list[SuccessfulInferenceResult]; _normalize_bases accepts Sequence[NodeNG]  # ty:ignore[invalid-argument-type]
+    impl_bases = _normalize_bases(ctx.impl_class.bases)  # type: ignore[arg-type]  # bases is list[SuccessfulInferenceResult]; _normalize_bases accepts Sequence[NodeNG]  # ty:ignore[invalid-argument-type]
     if stub_bases != impl_bases:
         stub_str = ", ".join(stub_bases) if stub_bases else "(none)"
         impl_str = ", ".join(impl_bases) if impl_bases else "(none)"
@@ -253,7 +254,7 @@ def _check_one_variable(
     var_name: str,
     stub_ann_node: nodes.AnnAssign,
     *,
-    impl_vars: dict[str, tuple[nodes.NodeNG | None, nodes.NodeNG | None]],
+    impl_vars: Mapping[str, tuple[nodes.NodeNG | None, nodes.NodeNG | None]],
     impl_node: nodes.Module,
     impl_missing_policy: str,
 ) -> None:

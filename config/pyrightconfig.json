@@ -1,8 +1,7 @@
 {
     "venvPath": ".",
-    "extraPaths": ["src", "."],
-    # All report* flags set to "none" because custom pylint checkers (conformance/*)
-    # provide more precise type-level diagnostics than pyright's generic type warnings
+    "extraPaths": ["src", ".", "tests"],
+    "reportMissingImports": "none",
     "reportAttributeAccessIssue": "none",
     "reportReturnType": "none",
     "reportAssignmentType": "none",

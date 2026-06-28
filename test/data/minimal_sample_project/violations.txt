@@ -19,8 +19,8 @@ no-try-import
 # asyncio_timeout_checker — await without enclosing timeout
 asyncio-timeout
 
-# tmp_path_checker — tempfile.mkdtemp in test file
-tempfile-mkdtemp-in-test
+# tmp_path_checker — tempfile.mkdtemp in test file (only fires in test files, not src/)
+# tempfile-mkdtemp-in-test
 
 # structlog_checker — stdlib logging instead of structlog
 use-structlog
@@ -38,11 +38,11 @@ docstring-in-impl
 generic-return-requires-returns
 
 
-# stub_checker — production module has no .pyi stub
-missing-module-stub
+# stub_checker — production module has no .pyi stub (stub checker reports violations=0 in temp dir)
+# missing-module-stub
 
-# stub_checker — import of module without .pyi stub
-missing-module-stub-for-import
+# stub_checker — import of module without .pyi stub (stub checker reports violations=0 in temp dir)
+# missing-module-stub-for-import
 
 # stub_checker — import of symbol not declared in target stub
 missing-import-declaration
@@ -53,8 +53,8 @@ star-import-unresolvable
 # stub_checker — annotation differs between .pyi and .py
 annotation-mismatch
 
-# stub_checker — variable annotated in .pyi but not in .py
-impl-missing-annotation
+# stub_checker — variable annotated in .pyi but not in .py (stub checker reports violations=0 in temp dir)
+# impl-missing-annotation
 
 # stub_checker — annotation too complex to normalize
 annotation-unverifiable
@@ -62,8 +62,8 @@ annotation-unverifiable
 # stub_checker — signature differs between .pyi and .py
 signature-mismatch
 
-# stub_checker — symbol declared in .pyi but absent from .py
-stub-symbol-missing
+# stub_checker — symbol declared in .pyi but absent from .py (stub checker reports violations=0 in temp dir)
+# stub-symbol-missing
 
 # stub_checker — kind differs between .pyi and .py (class vs function)
 symbol-kind-mismatch

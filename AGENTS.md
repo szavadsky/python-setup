@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-`python-setup` is a reusable Python package that encapsulates shared linting, formatting, and dev-tooling infrastructure for Python projects. It provides a unified lint pipeline (11 tools), custom pylint checkers, baseline-diffing for drift-resistant CI, and an idempotent installer that configures pre-commit hooks, pylint plugins, and config files in consumer projects.
+`python-setup` is a reusable Python package that encapsulates shared linting, formatting, and dev-tooling infrastructure for Python projects. It provides a unified lint pipeline (12 tools), custom pylint checkers, baseline-diffing for drift-resistant CI, and an idempotent installer that configures pre-commit hooks, pylint plugins, and config files in consumer projects.
 
 The package is consumed as a git dependency (e.g., `consultant-mcp`) and is **not** published to PyPI.
 
@@ -18,7 +18,7 @@ pyproject.toml  ──→  [project.scripts] lint → runner.cli:main
 src/python_setup_lint/
 ├── runner/              # Lint pipeline orchestration
 │   ├── cli.py           # Entry point (main, run_lint), autofix logic
-│   ├── dispatch.py      # Tool strategy registry (11 built-in tools)
+│   ├── dispatch.py      # Tool strategy registry (12 built-in tools)
 │   ├── types.py         # Core data types (ToolSpec, LintResult, RunnerConfig, ViolationCount)
 │   ├── cmd_build.py     # Command construction, path discovery, config composition
 │   ├── baseline.py      # Baseline capture + diff (drift-resistant)
@@ -27,21 +27,21 @@ src/python_setup_lint/
 │   ├── output.py        # Statistics aggregation, subprocess runner, formatting
 │   └── __main__.py      # python -m shim
 ├── checkers/            # Custom pylint plugins
-│   ├── stub_checker.py           # Orchestrator: coverage + import contract + fidelity
-│   ├── stub_coverage.py          # Phase 1: every .py needs a .pyi
-│   ├── stub_import_contract.py   # Phase 2: imports must reference declared stub symbols
+│   ├── stub/checker.py           # Orchestrator: coverage + import contract + fidelity
+│   ├── stub/coverage.py          # Phase 1: every .py needs a .pyi
+│   ├── stub/import_contract.py   # Phase 2: imports must reference declared stub symbols
 │   ├── stub_fidelity/            # Phase 3: stub-impl annotation/signature/kind matching
 │   │   ├── orchestrator.py       # Top-level dispatcher
 │   │   ├── kind.py               # Symbol presence + kind mismatch
 │   │   ├── annotation.py         # Variable + class annotation fidelity
 │   │   ├── signature.py          # Callable signature + param/return comparison
 │   │   ├── _ast_helpers.py       # Shared state types
-│   ├── stub_normalizer.py        # Two-phase annotation normalizer (infer + AST walk)
-│   ├── stub_docstring_checker.py # Docstring-in-.pyi verification
+│   ├── stub/normalizer.py        # Two-phase annotation normalizer (infer + AST walk)
+│   ├── stub/docstring_checker.py # Docstring-in-.pyi verification
 │   ├── beartype_checker.py       # @beartype coverage inventory
 │   ├── asyncio_timeout_checker.py # Require asyncio.timeout() wrapping
 │   ├── no_try_import_checker.py  # Ban try/except ImportError
-│   └── tmp_path_checker.py       # Ban tempfile.* in tests
+│   └── conformance/tmp_path_checker.py       # Ban tempfile.* in tests
 ├── setup.py              # Idempotent install/update CLI
 ├── _setup_precommit.py   # Pre-commit template + AGENTS.md snippet
 ├── testing.py            # Shared test infrastructure + consumer-agnostic health checks
@@ -50,7 +50,7 @@ src/python_setup_lint/
 
 ### Data flow
 
-1. **`uv run lint`** → `runner/cli.py:main()` parses args → `run_lint()` iterates over 11 built-in tools + any extras from `pyproject.toml [[tool.python-setup-lint.extra-tools]]`.
+1. **`uv run lint`** → `runner/cli.py:main()` parses args → `run_lint()` iterates over 12 built-in tools + any extras from `pyproject.toml [[tool.python-setup-lint.extra-tools]]`.
 2. Each tool is a `ToolSpec` (name, command, flags) wrapped in a `LintTool` strategy that builds the CLI command via `cmd_build.py:_build_command()`.
 3. Commands run via `output.py:_run_cmd()` → `LintResult` (exit_code, stdout, stderr, elapsed).
 4. Results are optionally diffed against `lint.baseline` via `baseline.py:_diff_baseline()` — only new violations (regressions) fail.
@@ -70,7 +70,7 @@ src/python_setup_lint/
 |------|---------|
 | `src/python_setup_lint/` | Package root |
 | `src/python_setup_lint/runner/` | Lint pipeline orchestration, CLI, baseline, parsers |
-| `src/python_setup_lint/checkers/` | Custom pylint plugins (8 checkers) |
+| `src/python_setup_lint/checkers/` | Custom pylint plugins (20 checkers: 15 conformance + 5 stub) |
 | `src/python_setup_lint/checkers/stub_fidelity/` | Stub-impl fidelity sub-package (5 modules) |
 | `config/` | Shipped tool configs (ruff, pylint, mypy, pyright, rumdl, ty, yamllint) |
 | `tests/` | Test suite |
@@ -83,7 +83,7 @@ src/python_setup_lint/
 ## Development Commands
 
 ```bash
-# Run the full lint pipeline (all 11 tools)
+# Run the full lint pipeline (all 12 tools)
 uv run lint
 
 # Run lint with path scoping
@@ -94,9 +94,6 @@ uv run lint --fix
 
 # Run lint with baseline diffing
 uv run lint --baseline lint.baseline
-
-# Run lint without fail-fast (report all, exit non-zero on any failure)
-uv run lint --no-fail-fast
 
 # Run lint with statistics
 uv run lint --statistics
@@ -218,7 +215,7 @@ mypackage/
 | `tach.toml` | Module dependency boundaries |
 | `.secrets.baseline` | detect-secrets baseline |
 | `src/python_setup_lint/runner/cli.py` | Main entry point (`main`, `run_lint`) |
-| `src/python_setup_lint/runner/dispatch.py` | Tool strategy registry (11 built-in tools) |
+| `src/python_setup_lint/runner/dispatch.py` | Tool strategy registry (12 built-in tools) |
 | `src/python_setup_lint/runner/types.py` | Core data types |
 | `src/python_setup_lint/runner/baseline.py` | Baseline capture + diff |
 | `src/python_setup_lint/runner/parsers.py` | Output parsers |
@@ -227,11 +224,11 @@ mypackage/
 | `src/python_setup_lint/runner/output.py` | Statistics aggregation, subprocess runner |
 | `src/python_setup_lint/setup.py` | Idempotent install/update CLI |
 | `src/python_setup_lint/testing.py` | Shared test infrastructure |
-| `src/python_setup_lint/checkers/stub_checker.py` | Stub checker orchestrator |
-| `src/python_setup_lint/checkers/stub_coverage.py` | Phase 1: module coverage |
-| `src/python_setup_lint/checkers/stub_import_contract.py` | Phase 2: import contract |
+| `src/python_setup_lint/checkers/stub/checker.py` | Stub checker orchestrator |
+| `src/python_setup_lint/checkers/stub/coverage.py` | Phase 1: module coverage |
+| `src/python_setup_lint/checkers/stub/import_contract.py` | Phase 2: import contract |
 | `src/python_setup_lint/checkers/stub_fidelity/orchestrator.py` | Phase 3: stub-impl fidelity dispatcher |
-| `src/python_setup_lint/checkers/stub_normalizer.py` | Two-phase annotation normalizer |
+| `src/python_setup_lint/checkers/stub/normalizer.py` | Two-phase annotation normalizer |
 | `tests/conftest.py` | Shared pytest fixtures |
 
 ## Runtime/Tooling Preferences
@@ -276,7 +273,9 @@ mypackage/
 - Near 100% for each layer + downstream (transitive).
 - Each layer tested independently.
 - Hard-to-inject failure paths and defensive behaviors annotated.
-- `--statistics` aggregation tested across all 11 tool parsers.
+- `--statistics` aggregation tested across all 12 tool parsers.
+
+Integration test (tests/integration.py) is the fit-for-purpose gate — runs all 12 tools on planted-violation sample project, NOT marked slow. Semantic brush-off tests: heuristic path always runs (fast); reranker path marked slow only for model-download tests.
 
 ### Baseline management
 

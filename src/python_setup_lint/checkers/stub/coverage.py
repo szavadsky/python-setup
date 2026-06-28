@@ -5,12 +5,12 @@ Extracted from stub_checker.py.  Mechanical cut-paste, no logic change.
 
 from __future__ import annotations
 
-import structlog
 from dataclasses import dataclass, field
-from pathlib import Path  # noqa: TCH003  # TYPE_CHECKING-only import; not available at runtime
+from pathlib import Path  # TYPE_CHECKING-only import; not available at runtime
 from typing import TYPE_CHECKING
 
 import astroid
+import structlog
 from astroid import nodes
 
 from python_setup_lint.checkers._base import _matches_path
@@ -90,13 +90,8 @@ def _is_logic_node(child: nodes.NodeNG) -> bool:
     if isinstance(child, (nodes.Import, nodes.ImportFrom)):
         return False
     if isinstance(child, nodes.Assign):
-        for target in child.targets:
-            if isinstance(target, nodes.AssignName) and target.name != "__all__":
-                return True
-        return False
-    if isinstance(child, _LOGIC_NODE_TYPES):
-        return True
-    return False
+        return any(isinstance(target, nodes.AssignName) and target.name != "__all__" for target in child.targets)
+    return bool(isinstance(child, _LOGIC_NODE_TYPES))
 
 
 def _is_init_exempt(node: nodes.Module) -> bool:

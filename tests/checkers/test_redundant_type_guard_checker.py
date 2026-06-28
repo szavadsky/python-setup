@@ -21,7 +21,7 @@ def _walk_and_release(code: str) -> list[Any]:
     tc = _make_tc()
     module = __import__("astroid").parse(code)
     tc.walk(module)
-    return tc.linter.release_messages()
+    return tc.linter.release_messages()  # type: ignore[no-any-return]  # test fixture builds typed list from Any checker introspection
 
 
 def _msg_ids(msgs: list[Any]) -> set[str]:

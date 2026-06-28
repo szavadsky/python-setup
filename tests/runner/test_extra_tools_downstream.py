@@ -13,10 +13,10 @@ from pathlib import Path
 
 import pytest
 
-from python_setup_lint.runner import RunnerConfig, ViolationCount, run_lint
-from python_setup_lint.runner.output import _aggregate_statistics
-from python_setup_lint.runner.extra_tools import _reset_extra_tools_cache
 import python_setup_lint.runner.output as _output_module
+from python_setup_lint.runner import RunnerConfig, ViolationCount, run_lint
+from python_setup_lint.runner.extra_tools import _reset_extra_tools_cache
+from python_setup_lint.runner.output import _aggregate_statistics
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 from tests.runner._factories import write_pyproject
 from tests.runner._factories_extras import (
@@ -36,10 +36,7 @@ from tests.runner._factories_extras import (
 class TestRunLintExtraDownstreamIntegration:
     """End-to-end fake-subprocess integration of the extras pipeline."""
 
-    @pytest.mark.parametrize(
-        "block,extra_name,extra_cmd,extra_stdout,expected_counts",
-        DOWNSTREAM_CASES,
-    )
+    @pytest.mark.parametrize(("block", "extra_name", "extra_cmd", "extra_stdout", "expected_counts"), DOWNSTREAM_CASES,)
     def test_extra_downstream_pipeline(
         self,
         tmp_path: Path,
@@ -64,7 +61,6 @@ class TestRunLintExtraDownstreamIntegration:
 
         rc = run_lint(
             config=RunnerConfig(cwd=tmp_path),
-            no_fail_fast=True,
             statistics=True,
             statistics_format="json",
         )
@@ -111,7 +107,7 @@ def _time_run_lint(cwd: Path, *, n: int = 50, clear_cache_each: bool = False) ->
         if clear_cache_each:
             _reset_extra_tools_cache()
         start = time.perf_counter()
-        run_lint(config=RunnerConfig(cwd=cwd), no_fail_fast=True)
+        run_lint(config=RunnerConfig(cwd=cwd))
         total += time.perf_counter() - start
     return total / n
 
@@ -141,10 +137,10 @@ def test_run_lint_with_extras_startup_overhead_within_10_percent(
     t_0_cold = _time_run_lint(no_extras_dir, clear_cache_each=True)
     t_10_cold = _time_run_lint(extras_dir, clear_cache_each=True)
     _reset_extra_tools_cache()
-    run_lint(config=RunnerConfig(cwd=no_extras_dir), no_fail_fast=True)
+    run_lint(config=RunnerConfig(cwd=no_extras_dir))
     t_0_warm = _time_run_lint(no_extras_dir)
     _reset_extra_tools_cache()
-    run_lint(config=RunnerConfig(cwd=extras_dir), no_fail_fast=True)
+    run_lint(config=RunnerConfig(cwd=extras_dir))
     t_10_warm = _time_run_lint(extras_dir)
 
     warm_ratio = t_10_warm / t_0_warm
@@ -194,7 +190,6 @@ class TestExtraStatisticsObservability:
         self._install(tmp_path, monkeypatch)
         rc = run_lint(
             config=RunnerConfig(cwd=tmp_path),
-            no_fail_fast=True,
             statistics=True,
             statistics_format=fmt,
         )

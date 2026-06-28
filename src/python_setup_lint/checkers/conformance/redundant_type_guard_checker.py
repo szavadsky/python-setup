@@ -7,11 +7,10 @@ on that parameter for the same type is redundant — the type checker and
 
 from __future__ import annotations
 
-
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # TYPE_CHECKING-only import; pylint is a dev dependency
 
 from python_setup_lint.checkers._base import MessageDef, _msgs
 
@@ -104,9 +103,7 @@ class RedundantTypeGuardChecker(BaseChecker):
         if not node.body:
             return False
         first_stmt = node.body[0]
-        if not isinstance(first_stmt, nodes.Raise):
-            return False
-        return True
+        return isinstance(first_stmt, nodes.Raise)
 
     @staticmethod
     def _get_isinstance_arg_name(call: nodes.Call) -> str | None:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
@@ -134,7 +131,7 @@ class RedundantTypeGuardChecker(BaseChecker):
     @staticmethod
     def _get_param_annotation(func: nodes.FunctionDef, param_name: str) -> str | None:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
         """Return the annotation type name for *param_name* in *func*, or None."""
-        for arg, ann in zip(func.args.args, func.args.annotations):
+        for arg, ann in zip(func.args.args, func.args.annotations, strict=True):  # type: ignore[arg-type]  # astroid's args/annotations are list | None; at runtime always list  # ty:ignore[invalid-argument-type]
             if arg.name == param_name:
                 if ann is None:
                     return None
@@ -146,6 +143,5 @@ class RedundantTypeGuardChecker(BaseChecker):
         return None
 
 
-@beartype
-def register(linter: PyLinter) -> None:
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API; @beartype cannot resolve PyLinter forward ref
     linter.register_checker(RedundantTypeGuardChecker(linter))

@@ -14,7 +14,8 @@ from __future__ import annotations
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.typing import MessageDefinitionTuple
 
 from python_setup_lint.checkers._base import MessageDef, _msgs
 
@@ -23,7 +24,7 @@ class UnnamedTupleDictChecker(BaseChecker):
     """AST visitor that flags dict values that should be NamedTuples."""
 
     name: str = "unnamed-tuple-dict"
-    msgs = _msgs(
+    msgs: dict[str, MessageDefinitionTuple] = _msgs(
         W9720=MessageDef(
             message="Dict value is a bare tuple literal with %d unnamed fields; "
             "use a NamedTuple or dataclass instead",
@@ -63,10 +64,8 @@ class UnnamedTupleDictChecker(BaseChecker):
             return False
 
         # Unwrap ClassVar[...]
-        if isinstance(ann, nodes.Subscript):
-            if isinstance(ann.value, nodes.Name) and ann.value.name == "ClassVar":
-                if ann.slice is not None and isinstance(ann.slice, nodes.Subscript):
-                    ann = ann.slice
+        if isinstance(ann, nodes.Subscript) and isinstance(ann.value, nodes.Name) and ann.value.name == "ClassVar" and ann.slice is not None and isinstance(ann.slice, nodes.Subscript):
+            ann = ann.slice
 
         if not isinstance(ann, nodes.Subscript):
             return False
@@ -82,9 +81,7 @@ class UnnamedTupleDictChecker(BaseChecker):
         key_ann = elts[0]
         if not isinstance(key_ann, nodes.Name):
             return False
-        if key_ann.name != "str":
-            return False
-        return True
+        return key_ann.name == "str"
 
     def _check_dict(self, dict_node: nodes.Dict) -> None:
         """Check all values in a dict literal for bare tuple values."""
@@ -117,9 +114,8 @@ class UnnamedTupleDictChecker(BaseChecker):
         for elt in elts:
             if not isinstance(elt, (nodes.Const, nodes.Name, nodes.UnaryOp)):
                 return False
-            if isinstance(elt, nodes.UnaryOp):
-                if not isinstance(elt.operand, nodes.Const):
-                    return False
+            if isinstance(elt, nodes.UnaryOp) and not isinstance(elt.operand, nodes.Const):
+                return False
         return True
 
     @staticmethod
@@ -127,6 +123,5 @@ class UnnamedTupleDictChecker(BaseChecker):
         return node.elts
 
 
-@beartype
-def register(linter: PyLinter) -> None:
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API; @beartype cannot resolve PyLinter forward ref
     linter.register_checker(UnnamedTupleDictChecker(linter))

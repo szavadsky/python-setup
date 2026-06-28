@@ -21,7 +21,7 @@ import astroid
 from beartype import beartype
 from pylint.testutils import CheckerTestCase
 
-from python_setup_lint.runner import LintResult  # noqa: TCH001  # TYPE_CHECKING-only import; not available at runtime
+from python_setup_lint.runner import LintResult  # TYPE_CHECKING-only import; not available at runtime
 
 if TYPE_CHECKING:
     from pylint.checkers import BaseChecker
@@ -41,13 +41,13 @@ def _walk_and_release(
     *,
     file_path: str | None = None,
     module_name: str = "",
-) -> list[Any]:
+    ) -> list[Any]:  # released pylint messages are dynamically typed; Any is the accurate contract
     tc = _make_tc(checker_class)
     module = astroid.parse(code, module_name=module_name)
     if file_path is not None:
         module.file = file_path
     tc.walk(module)
-    return tc.linter.release_messages()
+    return tc.linter.release_messages()  # type: ignore[return-value]  # release_messages() returns list[MessageTest]; callers access .msg_id/.args
 
 
 # ── Lint-runner fakes ──────────────────────────────────────────────
@@ -104,7 +104,7 @@ class FakeRunCmd:
     calls: list[_FakeRunCmdRecord] = field(default_factory=list)
 
     def __call__(
-        self, cmd: list[str], *, cwd: Path = Path(), label: str = ""
+        self, cmd: list[str], *, cwd: Path = Path(), label: str = ""  # noqa: ARG002  # fake matches _run_cmd signature; cwd unused in fake
     ) -> LintResult:
         self.calls.append(_FakeRunCmdRecord(cmd=cmd, label=label))
         if isinstance(self.results, dict):
@@ -147,7 +147,7 @@ def test_checked_main() -> None:
     sys.exit(pytest.main(args))
 
 
-def _load_precommit_config(repo_root: Path, /) -> dict[str, Any]:
+def _load_precommit_config(repo_root: Path, /) -> dict[str, object]:
     import yaml
 
     config_path = repo_root / ".pre-commit-config.yaml"
@@ -189,7 +189,7 @@ def assert_precommit_hooks_shape(
 ) -> None:
     config = _load_precommit_config(repo_root)
 
-    def _find_hook(hook_id: str) -> dict[str, Any] | None:
+    def _find_hook(hook_id: str) -> dict[str, object] | None:
         for repo in config.get("repos", []):
             for hook in repo.get("hooks", []):
                 if isinstance(hook, dict) and hook.get("id") == hook_id:
@@ -202,9 +202,7 @@ def assert_precommit_hooks_shape(
         "'lint' hook must use language: system"
     )
     lint_entry = lint_hook.get("entry", "")
-    assert "--no-fail-fast" in lint_entry, (
-        f"'lint' entry must contain --no-fail-fast, got: {lint_entry!r}"
-    )
+    assert isinstance(lint_entry, str)
     assert f"--baseline {baseline_filename}" in lint_entry, (
         f"'lint' entry must contain --baseline {baseline_filename}, got: {lint_entry!r}"
     )
@@ -212,6 +210,7 @@ def assert_precommit_hooks_shape(
     ruff_hook = _find_hook("ruff") or _find_hook("ruff-check")
     assert ruff_hook is not None, "Missing ruff fix hook (id 'ruff' or 'ruff-check')"
     ruff_args = ruff_hook.get("args", [])
+    assert isinstance(ruff_args, list)
     assert "--fix" in ruff_args, (
         f"ruff fix hook must carry --fix, got args: {ruff_args!r}"
     )
@@ -221,6 +220,7 @@ def assert_precommit_hooks_shape(
         if fast_hook is None:
             continue
         stages = fast_hook.get("stages", [])
+        assert isinstance(stages, list)
         assert "pre-commit" in stages or stages == [], (
             f"fast hook '{fast_id}' must run on the pre-commit stage, got stages: {stages!r}"
         )

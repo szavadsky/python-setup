@@ -7,11 +7,10 @@ lacks a ``from`` clause when it appears inside an ``except`` handler.
 
 from __future__ import annotations
 
-
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # TYPE_CHECKING-only import; pylint is a dev dependency
 
 from python_setup_lint.checkers._base import MessageDef, _msgs
 
@@ -71,6 +70,5 @@ class MissingErrorChainChecker(BaseChecker):
         return handler.type.as_string()
 
 
-@beartype
-def register(linter: PyLinter) -> None:
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API; @beartype cannot resolve PyLinter forward ref
     linter.register_checker(MissingErrorChainChecker(linter))

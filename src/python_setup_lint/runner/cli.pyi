@@ -10,7 +10,6 @@ def _run_tool_pipeline(
     *,
     config: RunnerConfig,
     fix: bool,
-    no_fail_fast: bool,
     path: str | None,
     exclude: str | None,
     statistics: bool,
@@ -35,7 +34,6 @@ def run_lint(
     fix: bool = False,
     baseline: str | None = None,
     exclude: str | None = None,
-    no_fail_fast: bool = False,
     statistics: bool = False,
     statistics_format: str = "table",
     overwrite_baseline: bool = False,
@@ -54,8 +52,6 @@ def run_lint(
         baseline: Path to a baseline JSON file. Created on first run,
             compared on subsequent runs.
         exclude: Exclude a file or directory pattern from supported tools.
-        no_fail_fast: Run all tools even if some fail, then report
-            aggregate exit code.
         statistics: Collect and display per-rule violation counts.
         statistics_format: ``"table"`` (default) or ``"json"``.
         overwrite_baseline: Force overwrite of existing baseline file

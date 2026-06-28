@@ -72,7 +72,7 @@ def test_skips(code: str, expected_missing_count: int) -> None:
 
 
 @pytest.mark.parametrize(
-    ("decorator_expr",),
+    "decorator_expr",
     [
         pytest.param(
             "from beartype import beartype\n@beartype\n", id="beartype_decorator"

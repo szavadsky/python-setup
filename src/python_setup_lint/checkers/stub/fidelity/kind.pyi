@@ -3,20 +3,25 @@
 See ``kind.py`` for full docstrings.
 """
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
+
+from astroid import nodes
+
+from ._ast_helpers import _FidelityState
 
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
 def _build_stub_kinds(
-    stub_vars: dict[str, object],
-    stub_callables: dict[str, object],
-    stub_classes: dict[str, object],
+    stub_vars: Mapping[str, object],
+    stub_callables: Mapping[str, object],
+    stub_classes: Mapping[str, object],
 ) -> dict[str, str]:
     """Build a symbol-name to kind mapping from stub declarations."""
 
 def _build_impl_kinds(
-    f: object,
+    f: _FidelityState,
     module_name: str,
     impl_all: set[str],
 ) -> dict[str, str]:
@@ -32,8 +37,8 @@ def _check_missing_symbols(
     """Emit violations for symbols present in stub but missing from impl."""
 
 def _compare_matched_classes(
-    stub_classes: dict[str, object],
-    f: object,
+    stub_classes: Mapping[str, nodes.ClassDef],
+    f: _FidelityState,
     checker: StubChecker,
     module_name: str,
 ) -> None:

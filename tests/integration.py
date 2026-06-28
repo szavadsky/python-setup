@@ -20,7 +20,6 @@ import pytest
 from python_setup_lint.runner import TOOLS, RunnerConfig, run_lint
 from python_setup_lint.runner._config import _SHIPPED_CONFIG_FILES
 
-
 # ── Helpers ────────────────────────────────────────────────────────────
 
 
@@ -104,7 +103,7 @@ class TestMinimalSampleProject:
         _init_git(project)
 
         config = _make_config(project)
-        rc = run_lint(config=config, no_fail_fast=True)
+        rc = run_lint(config=config)
         assert isinstance(rc, int), f"Expected int exit code, got {type(rc)}: {rc}"
 
         captured = capsys.readouterr()
@@ -117,6 +116,12 @@ class TestMinimalSampleProject:
                 f"Expected violation rule {rule!r} not found in lint output.\n"
                 f"Output excerpt:\n{output[:3000]}"
             )
+
+        # ── Brush-off suppression is detected ─────────────────────────
+        assert "pre-existing" in output, (
+            "Expected brush-off suppression 'pre-existing' to trigger W9704.\n"
+            f"Output excerpt:\n{output[:3000]}"
+        )
 
         # ── All tool sections appear ──────────────────────────────────
         tool_names = {t.name for t in TOOLS}
@@ -169,7 +174,7 @@ class TestMinimalSampleProject:
             package_name="minimal_sample",
             config_paths=config_paths,
         )
-        rc = run_lint(config=config, no_fail_fast=True)
+        rc = run_lint(config=config)
         assert isinstance(rc, int)
 
         captured = capsys.readouterr()

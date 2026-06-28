@@ -6,7 +6,6 @@ a comment explaining why the exception is suppressed.
 
 from __future__ import annotations
 
-
 import re
 from typing import TYPE_CHECKING
 
@@ -64,17 +63,12 @@ class BareExceptCommentChecker(BaseChecker):
         """Return True if the handler catches bare except or Exception."""
         if node.type is None:
             return True
-        if isinstance(node.type, nodes.Name) and node.type.name == "Exception":
-            return True
-        return False
+        return isinstance(node.type, nodes.Name) and node.type.name == "Exception"
 
     @staticmethod
-    def _has_bare_raise(node: nodes.ExceptHandler) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+    def _has_bare_raise(node: nodes.ExceptHandler) -> bool:  # pylint: disable=W9705,W9728  # private helper; return semantics evident from type + name; semantic helper: wraps any() with a specific predicate for bare-raise detection
         """Return True if the handler body contains a bare raise (re-raise)."""
-        for child in node.nodes_of_class(nodes.Raise):
-            if child.exc is None:
-                return True
-        return False
+        return any(child.exc is None for child in node.nodes_of_class(nodes.Raise))
 
     def _has_justifying_comment(self, node: nodes.ExceptHandler) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
         """Check if the except handler has a justifying comment."""
@@ -83,15 +77,13 @@ class BareExceptCommentChecker(BaseChecker):
         except AttributeError, OSError:  # pylint: disable=W9740  # best-effort stream access fallback; logging would noise unavoidable attribute/IO degrade
             return False
 
+        if stream is None:
+            return False
         try:
             raw = stream.read()
         except OSError:  # pylint: disable=W9740  # best-effort stream read fallback; logging would noise unavoidable IO degrade
             return False
-
-        if isinstance(raw, bytes):
-            source = raw.decode("utf-8")
-        else:
-            source = raw
+        source = raw.decode("utf-8") if isinstance(raw, bytes) else raw
 
         lines = source.splitlines(keepends=True)
 

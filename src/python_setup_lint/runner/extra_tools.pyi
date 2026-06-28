@@ -97,7 +97,7 @@ def _parse_raw_lines(stdout: str, _stderr: str) -> list[tuple[str, int]]:
 
 def _extra_tool_parser(
     *,
-    entry: dict[str, Any],
+    entry: dict[str, object],
     location: str,
 ) -> Callable[..., list[tuple[str, int]]] | None:
     """Resolve the parser callable for an extra-tools entry's ``parse_strategy``.
@@ -114,23 +114,23 @@ def _extra_tool_parser(
     """
 
 def _validate_extra_bool_fields(
-    entry: dict[str, Any], location: str
+    entry: dict[str, object], location: str
 ) -> tuple[bool, bool, bool]:
     """Validate supports_fix, supports_path, supports_exclude fields."""
 
 def _validate_extra_list_field(
-    entry: dict[str, Any], key: str, location: str
+    entry: dict[str, object], key: str, location: str
 ) -> list[str]:
     """Validate a list-of-strings field and return the validated list."""
 
 def _validate_extra_config_flag(
-    entry: dict[str, Any], location: str
+    entry: dict[str, object], location: str
 ) -> list[str] | None:
     """Validate config_flag field (str, list[str], or None)."""
 
-def _validate_extra_fields(
-    entry: dict[str, Any], location: str
-) -> dict[str, Any]:
+def _validate_extra_fields(  # validated dict, keys are known strings; return dict is built from validated fields, values are str|list[str]|None|bool by construction
+    entry: dict[str, object], location: str
+    ) -> dict[str, Any]:  # validated dict, keys are known strings; values are str|list[str]|None|bool by construction
     """Validate all fields in an extra-tool entry and return validated values."""
 
 def _validate_extra_name(
@@ -138,7 +138,7 @@ def _validate_extra_name(
 ) -> str:
     """Validate extra-tool name uniqueness and return the validated name."""
 
-def _validate_extra(
+def _validate_extra(  # validated dict, keys are known strings; Any because values are heterogeneous (str|list[str]|None|bool) by construction
     entry: dict[str, Any],
     *,
     location: str,

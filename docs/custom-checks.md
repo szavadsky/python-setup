@@ -40,8 +40,7 @@ class ExampleChecker(BaseChecker):
             self.add_message("example-violation", node=node, args=(node.name,))
 
 
-@beartype
-def register(linter: PyLinter) -> None:
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API
     linter.register_checker(ExampleChecker(linter))
 ```
 
@@ -51,7 +50,7 @@ Use `MessageDef` (a `NamedTuple` with `message`, `symbol`, `description` fields)
 
 ## Rule IDs
 
-Custom checkers use `W` (warning) or `C` (convention) codes in the range `W97xx`–`W99xx` and `C0xxx`. See `LintRuleId` in `checkers/_base.py` for the typed rule-id type.
+Custom checkers use `W` (warning) or `C` (convention) codes in the range `W97xx`–`W99xx` and `C0xxx`.
 
 ## Registration
 
@@ -78,7 +77,20 @@ def test_example_checker() -> None:
 
 ## Available helpers
 
-- `check_if_meaningful(text, *, rule, code_context, comment)` — heuristic check for meaningful suppression justifications (in `checkers/_base.py`).
+- `check_if_meaningful(text, *, rule, code_context, comment)` — heuristic + semantic reranker check for meaningful suppression justifications (in `checkers/_base.py`). Reranker-first with heuristic fallback when `PYTHON_SETUP_LINT_SEMANTIC` is set and `sentence-transformers` is available. Returns `True` (meaningful) or `False` (brush-off). The reranker threshold is 0.5; model configurable via `PYTHON_SETUP_LINT_RERANKER_MODEL` env var. Results cached by SHA-256 of (text, rule, code_context, comment).
 - `_matches_path(str_path, patterns)` — glob/directory path matching.
 - `_is_under_source_root(path, source_roots)` — source-root containment check.
 - `_get_file_path(node)` — resolve a node's file path.
+
+## Semantic pipeline
+
+The `check_if_meaningful` function implements a reranker-first with heuristic fallback pipeline:
+
+1. **Cross-encoder reranker** — when `PYTHON_SETUP_LINT_SEMANTIC` env var is set (default: enabled) and `sentence-transformers` is importable, the justification is re-scored against its context by a pairwise model. Scores >= 0.5 pass.
+2. **Heuristic fallback** — fast, zero-dependency check (non-empty, non-boilerplate, not equal to the rule symbol). Runs when the reranker is unavailable.
+
+**Configuration:**
+
+- `PYTHON_SETUP_LINT_SEMANTIC=0` — disable the reranker entirely (heuristic only).
+- `PYTHON_SETUP_LINT_RERANKER_MODEL` — override the default reranker model (default: `jina-reranker-v2-base-multilingual`).
+- **Cache**: results cached at `~/.cache/python-setup/semantic/results.json`, keyed by SHA-256 of (text, rule, code_context, comment).

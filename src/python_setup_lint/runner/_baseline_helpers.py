@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from ._record_types import Record, _compare_records_key
 
 
@@ -35,7 +33,7 @@ def _compare_sorted(
     return added, removed
 
 
-def _record_to_dict(rec: Record) -> dict[str, Any]:
+def _record_to_dict(rec: Record) -> dict[str, object]:
     return {
         "file": rec.file,
         "line": rec.line,
@@ -64,7 +62,7 @@ def _dict_to_record(d: object) -> Record | None:
     )
 
 
-def _records_to_dicts(records: list[Record]) -> list[dict[str, Any]]:
+def _records_to_dicts(records: list[Record]) -> list[dict[str, object]]:
     return [_record_to_dict(r) for r in records]
 
 
@@ -84,16 +82,16 @@ def _strip_pyright_volatile(diag: object) -> None:
     if not isinstance(diag, dict):
         return
     d = diag
-    d.pop("time", None)
-    d.pop("version", None)
+    d.pop("time", None)  # type: ignore[arg-type]  # dict value is object; pop expects _VT  # ty:ignore[no-matching-overload]
+    d.pop("version", None)  # type: ignore[arg-type]  # dict value is object; pop expects _VT  # ty:ignore[no-matching-overload]
     summary = d.get("summary")
     if isinstance(summary, dict):
-        summary.pop("timeInSec", None)
+        summary.pop("timeInSec", None)  # type: ignore[arg-type]  # dict value is object; pop expects _VT  # ty:ignore[no-matching-overload]
 
 
 def _diag_error_count(d: object) -> int:
     if isinstance(d, dict):
         s = d.get("summary", {})
         if isinstance(s, dict):
-            return int(s.get("errorCount", 0)) + int(s.get("warningCount", 0))
+            return int(s.get("errorCount", 0)) + int(s.get("warningCount", 0))  # type: ignore[arg-type]  # dict value is object; int() expects str | Buffer | SupportsInt  # ty:ignore[invalid-argument-type]
     return 0

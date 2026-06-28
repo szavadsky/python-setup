@@ -20,7 +20,7 @@ import functools
 import re
 import tomllib
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from .dispatch import TOOLS_BY_NAME, register_lint_tool
 from .parsers import _BUILTIN_PARSE_STRATEGY_TO_PARSER, PARSE_STRATEGIES
@@ -131,14 +131,14 @@ def _parse_raw_lines(stdout: str, _stderr: str) -> list[tuple[str, int]]:
 
 def _extra_tool_parser(
     *,
-    entry: dict[str, Any],
+    entry: dict[str, object],
     location: str,
 ) -> Callable[..., list[tuple[str, int]]] | None:
     strategy = entry.get("parse_strategy", "none")
     if strategy == "none":
         return None
     if strategy in _BUILTIN_PARSE_STRATEGY_TO_PARSER:
-        return _BUILTIN_PARSE_STRATEGY_TO_PARSER[strategy]
+        return _BUILTIN_PARSE_STRATEGY_TO_PARSER[cast(str, strategy)]
     if strategy == "raw_lines":
         return _parse_raw_lines
     if strategy == "regex_count":
@@ -159,7 +159,7 @@ def _extra_tool_parser(
 
 
 def _validate_extra_bool_fields(
-    entry: dict[str, Any], location: str
+    entry: dict[str, object], location: str
 ) -> tuple[bool, bool, bool]:
     supports_fix = entry.get("supports_fix", False)
     if not isinstance(supports_fix, bool):
@@ -176,7 +176,7 @@ def _validate_extra_bool_fields(
 
 
 def _validate_extra_list_field(
-    entry: dict[str, Any], key: str, location: str
+    entry: dict[str, object], key: str, location: str
 ) -> list[str]:
     raw = entry.get(key, [])
     if not isinstance(raw, list):
@@ -186,11 +186,11 @@ def _validate_extra_list_field(
             raise ExtraToolsConfigError(
                 location, f"wrong type: {key} must be list[str]"
             )
-    return list(raw)
+    return list(raw)  # type: ignore[return-value]  # raw is list[object]; validated as list[str] above  # ty:ignore[invalid-return-type]
 
 
 def _validate_extra_config_flag(
-    entry: dict[str, Any], location: str
+    entry: dict[str, object], location: str
 ) -> list[str] | None:
     config_flag_raw = entry.get("config_flag")
     if config_flag_raw is None:
@@ -203,13 +203,13 @@ def _validate_extra_config_flag(
                 raise ExtraToolsConfigError(
                     location, "wrong type: config_flag must be str | list[str]"
                 )
-        return list(config_flag_raw)
+        return list(config_flag_raw)  # type: ignore[return-value]  # config_flag_raw is list[object]; validated as list[str] above  # ty:ignore[invalid-return-type]
     raise ExtraToolsConfigError(
         location, "wrong type: config_flag must be str | list[str]"
     )
 
 
-def _validate_extra_fields(entry: dict[str, Any], location: str) -> dict[str, Any]:
+def _validate_extra_fields(entry: dict[str, object], location: str) -> dict[str, Any]:  # validated dict, keys are known strings; return dict is built from validated fields, values are str|list[str]|None|bool by construction
     unknown = set(entry) - _EXTRA_TOOL_FIELDS
     if unknown:
         allowed = ", ".join(sorted(_EXTRA_TOOL_FIELDS))
@@ -269,7 +269,7 @@ def _validate_extra_name(name: str, seen_names: set[str], location: str) -> str:
 
 
 def _validate_extra(
-    entry: dict[str, Any],
+    entry: dict[str, Any],  # validated dict, keys are known strings
     *,
     location: str,
     seen_names: set[str],

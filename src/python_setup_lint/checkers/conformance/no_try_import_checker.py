@@ -13,7 +13,7 @@ from __future__ import annotations
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # TYPE_CHECKING-only import; pylint is a dev dependency
 
 from python_setup_lint.checkers._base import MessageDef, _msgs
 
@@ -33,9 +33,8 @@ def _all_imports_optional(stmts: list[nodes.NodeNG]) -> bool:
             for alias in stmt.names:
                 if alias[0] not in _OPTIONAL_IMPORT_PATTERNS:
                     return False
-        elif isinstance(stmt, nodes.ImportFrom):
-            if stmt.modname not in _OPTIONAL_IMPORT_PATTERNS:
-                return False
+        elif isinstance(stmt, nodes.ImportFrom) and stmt.modname not in _OPTIONAL_IMPORT_PATTERNS:
+            return False
     return True
 
 
