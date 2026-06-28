@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.14.0 (2026-06-28) — Housekeeping: test/data move, git artifact cleanup, version sync, W9704 data-string fix
+
+**Moved test/data → tests/data** — sample project now under tests/data/. Updated code references (conftest.py, integration.py), config ignore-paths (.pylintrc, mypy.ini, ruff.toml), .gitignore.
+
+**Removed git-tracked test artifacts** — integration/bench-runner-overhead.md and _test_output.txt removed from git, added to .gitignore.
+
+**Synced version** — pyproject.toml bumped 0.11.0 → 0.13.0. README @v0.11.0 → @v0.13.0.
+
+**Fixed AGENTS.md architecture tree** — corrected stale paths (stub_fidelity/ → stub/fidelity/, checkers root → checkers/conformance/), removed non-existent reports/ reference, added missing modules.
+
+**Fixed semantic-justification.md pipeline order** — numbered list now matches heading ("reranker-first with heuristic fallback") and actual code flow.
+
 ## v0.13.0 (2026-06-28) — Runner clean, integration dedup, carry-from integration test
 
 **Fixed rumdl regression** — trailing space in .omp/agents/implement-subtask.md.

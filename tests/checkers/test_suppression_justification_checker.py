@@ -3,7 +3,6 @@
 Tests that the checker correctly flags unjustified suppression comments
 and passes justified ones.
 """
-# pylint: disable=unjustified-suppression  # test code strings contain suppression patterns as test data, not real suppressions
 
 from __future__ import annotations
 
@@ -116,3 +115,24 @@ x = 1  # noqa: E501  # ok
         msgs = _walk_and_release(code, SuppressionJustificationChecker)
         assert len(msgs) == 1, f"Expected 1 message, got {len(msgs)}"
         assert "unjustified-suppression" in _msg_ids(msgs)
+
+class TestDataStrings:
+    """Checker must NOT flag suppression patterns inside string literals."""
+
+    def test_data_string_not_flagged(self) -> None:
+        """Checker must NOT flag # type: ignore inside string literals."""
+        code = 'x = "# type: ignore"\n'
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert "unjustified-suppression" not in _msg_ids(msgs)
+
+    def test_data_string_noqa_not_flagged(self) -> None:
+        """Checker must NOT flag # noqa inside string literals."""
+        code = 'x = "# noqa: E501"\n'
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert "unjustified-suppression" not in _msg_ids(msgs)
+
+    def test_data_string_pylint_disable_not_flagged(self) -> None:
+        """Checker must NOT flag # pylint: disable= inside string literals."""
+        code = 'x = "# pylint: disable=missing-beartype"\n'
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert "unjustified-suppression" not in _msg_ids(msgs)
