@@ -1,0 +1,11 @@
+interfaces = []
+exclude = [
+    "**/*__pycache__",
+    "**/*egg-info",
+    "**/.venv",
+    "**/build",
+    "**/.tmp*",
+]
+source_roots = [
+    "src",
+]
