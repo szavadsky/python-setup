@@ -95,6 +95,7 @@ Write the plan to the received target path (`{F}/plan{pIt}.md`). Plan MUST be ex
 - You MUST limit DIY searching, test running, reading. Delegate to `fact-finder`/`librarian`/`designer` subagents instead.
 - MUST START from launching `fact-finder` subagent(s); add `librarian`/`designer`/`oracle` as needed.
 - Specify scope of each workstream/task (files,LoCs).
+- **Merge trivial/split large subtasks**: Review the full scope before finalizing workstreams. Merge small/trivial items (1-10 line edits, doc-only changes, version bumps) into a single subtask when they touch ≤4 files and have no dependencies on each other. Split larger on layer to layer basis.  Each subtask should be ~(1-4 files, 100-300 loc) — do NOT create a separate subtask for a one-line README edit. This avoids spawning isolated worktrees + implement-subtask + check-and-commit chains for trivial work.
 - Return `status=plan_created` with `plan_path`, or `status=goal_complete` when no material improvements remain.
 - Provide a plan that fully implements the goal.
 - You MUST keep going until complete.

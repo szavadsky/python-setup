@@ -10,3 +10,6 @@ task:
     merge: branch
     # ai = auto-generated commit messages
     commits: ai
+providers:
+  ollama-cloud:
+    maxConcurrency: 64

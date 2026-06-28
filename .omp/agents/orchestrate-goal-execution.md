@@ -56,7 +56,7 @@ Read the plan at the provided path.
 
 ## 2. Define DAG of subtasks
 
-From the plan's  and your prompt, identify each distinct, properly scoped ~(1-4 files, 100-300 loc change) subtasks. Group them into waves of independent subtasks (no cross-dependency within a wave), each wave have up 5 subtasks. For each subtask, compute the `local://plan{pIt}.md:<start>-<end>` line ranges for the plan sections relevant to that subtask.
+From the plan's  and your prompt, identify each distinct, properly scoped ~(1-4 files, 100-300 loc change) subtasks. Group them into waves of independent subtasks (no cross-dependency within a wave), each wave have up 5 subtasks. For each subtask, compute the `{F}/plan{pIt}.md:<start>-<end>` line ranges for the plan sections relevant to that subtask. Use repo-relative paths (e.g. `scratchpad/plan7.md:42-58`), NOT `local://` URIs — `local://` does not resolve inside isolated worktrees.
 Use `fact-finder` subagent if you need to access project state or dependencies beyond what is the plan.
 
 Reflect DAG in to todo list.
@@ -71,7 +71,7 @@ For each wave:
 
 - `id`: `{AgentSlug}{whatDoing}{itNum}` (e.g. `OrchSubTaskFixPylintrc7`)
 - `role`: `Dilligent software engineer`
-- `assignment`: formatted as `{fromOriginalPrompt}\n{locate}` where `{fromOriginalPrompt}` is extra context and `{locate}` is `local://plan{pIt}.md:<start>-<end>`. Example: `"Extra: tach.toml symlink already created.\nlocal://plan7.md:42-58"`.
+- `assignment`: formatted as `{fromOriginalPrompt}\n{locate}` where `{fromOriginalPrompt}` is extra context and `{locate}` is `{F}/plan{pIt}.md:<start>-<end>`. Example: `"Extra: tach.toml symlink already created.\nscratchpad/plan7.md:42-58"`.
 
 Do not reinterpret, split, or refine what is already in the plan. Focus on big picture only; add extra context only if execution revealed new info or you were relaunched.
 
