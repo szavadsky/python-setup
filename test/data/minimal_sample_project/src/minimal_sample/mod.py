@@ -49,6 +49,13 @@ def _bare_suppression() -> None:  # noqa: unused-argument
 def _brushoff_suppression() -> None:  # noqa: F401  # pre-existing
     pass
 
+# ── 3c. suppression_justification_checker (carry-from PASSING) ──────
+# Legitimate "carried from external library" justification — should NOT trigger W9704.
+
+
+def _carry_from_external() -> None:  # noqa: F401  # carried from external library httpx for type compatibility
+    pass
+
 
 # ── 4. beartype_checker ──────────────────────────────────────────────
 # Public function missing @beartype decorator.
