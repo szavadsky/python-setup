@@ -239,3 +239,4 @@ config/
 .cache/python-setup/semantic/
 .tmpoutput
 integration/
+_test_output.txt
