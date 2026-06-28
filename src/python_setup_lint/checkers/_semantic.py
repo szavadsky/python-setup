@@ -79,7 +79,7 @@ def _reset_cache() -> None:
 
     Clears the in-memory cache and removes the persisted cache file.
     """
-    global _RESULT_CACHE, _RERANKER_UNAVAILABLE  # pylint: disable=global-statement
+    global _RESULT_CACHE, _RERANKER_UNAVAILABLE  # pylint: disable=global-statement  # module-level cache reset requires global
     _RESULT_CACHE = None
     _RERANKER_UNAVAILABLE = False
     with contextlib.suppress(OSError):
@@ -103,7 +103,7 @@ def _load_reranker() -> CrossEncoder | None:
     Returns:
         CrossEncoder instance, or ``None`` on failure.
     """
-    global _RERANKER_INSTANCE, _RERANKER_UNAVAILABLE  # pylint: disable=global-statement
+    global _RERANKER_INSTANCE, _RERANKER_UNAVAILABLE  # pylint: disable=global-statement  # lazy-load singleton requires global
     if _RERANKER_UNAVAILABLE:
         return None
     if _RERANKER_INSTANCE is not None:
