@@ -18,7 +18,7 @@ from python_setup_lint.testing import _walk_and_release
 
 # ── Failing cases: bare tuple literals as dict values ──
 
-_DETECT_CASES: list[Any] = [
+_DETECT_CASES: list[Any] = [  # pylint: disable=unjustified-suppression  # test data; Any needed for heterogeneous pytest params
     pytest.param(
         "x: dict[str, tuple[str, str]] = {'a': ('hello', 'world')}",
         "unnamed-tuple-dict-value",
@@ -63,7 +63,7 @@ def test_detects_unnamed_tuple_dict_values(
 
 # ── Passing cases: named tuples, dataclasses, or non-tuple values ──
 
-_DO_NOT_DETECT_CASES: list[Any] = [
+_DO_NOT_DETECT_CASES: list[Any] = [  # pylint: disable=unjustified-suppression  # test data; Any needed for heterogeneous pytest params
     pytest.param(
         "x: dict[str, str] = {'a': 'hello'}",
         id="str-value-not-tuple",

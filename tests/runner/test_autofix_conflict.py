@@ -33,6 +33,7 @@ Each row exercises one logical-coverage branch named in the T4 envelope:
   python-setup repo itself.
 """
 
+# pylint: disable=trivial-wrapper  # test helper inner functions; readability over DRY
 from __future__ import annotations
 
 from pathlib import Path

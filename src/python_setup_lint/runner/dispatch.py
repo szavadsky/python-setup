@@ -170,7 +170,7 @@ class LintTool:
 
 
 # ── Per-tool strategy subclasses ─────────────────────────────────
-# Four built-in tools have fundamentally different command shapes that
+# Six built-ins have fundamentally different command shapes that
 # cannot be expressed via ToolSpec declarative fields alone.  Each
 # overrides ``build_command`` with tool-specific logic, eliminating
 # ``if spec.name ==`` branches from ``_build_command``.
@@ -337,7 +337,7 @@ class _PylintPyiLintTool(LintTool):
 
 
 class _PylintTestsLintTool(LintTool):
-    def build_command(  # pylint: disable=missing-beartype
+    def build_command(  # pylint: disable=missing-beartype  # subclass override; beartype overhead unnecessary
         self,
         *,
         config: RunnerConfig,

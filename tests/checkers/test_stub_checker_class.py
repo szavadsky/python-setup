@@ -35,7 +35,7 @@ from tests.checkers._factories import (
 PROJECT_SRC = Path(__file__).resolve().parents[3] / "src"
 
 
-def _make_tc() -> Any:
+def _make_tc() -> Any:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
     return _make_tc_factory(StubChecker)
 
 
@@ -75,7 +75,7 @@ def test_class_comparison_ctx_fields() -> None:
     stub_class = cast("astroid.ClassDef", stub_mod.body[0])
     impl_class = cast("astroid.ClassDef", impl_mod.body[0])
     ctx = ClassComparisonCtx(
-        checker=None,  # type: ignore[arg-type]
+        checker=None,  # type: ignore[arg-type]  # test fixture; None is valid sentinel for ClassComparisonCtx
         module_name="mod_a",
         class_name="Foo",
         msg_node=impl_mod,

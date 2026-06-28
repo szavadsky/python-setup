@@ -11,6 +11,7 @@ the binary is unavailable.
 
 from __future__ import annotations
 
+import logging
 import shutil
 import subprocess
 import textwrap
@@ -190,10 +191,7 @@ class TestMinimalSampleProject:
         # (pylint-pyi has its own rcfile resolution that doesn't use config_paths.)
         pylint_section_start = output.find("[pylint] FAILED")
         pylint_pyi_start = output.find("[pylint-pyi]")
-        if pylint_section_start >= 0 and pylint_pyi_start > pylint_section_start:
-            pylint_output = output[pylint_section_start:pylint_pyi_start]
-        else:
-            pylint_output = output
+        pylint_output = output[pylint_section_start:pylint_pyi_start] if 0 <= pylint_section_start < pylint_pyi_start else output
 
         assert "use-structlog" not in pylint_output, (
             "Expected 'use-structlog' to be disabled by config overlay in pylint output, "
@@ -255,7 +253,8 @@ class TestMinimalSampleProject:
                 capture_output=True,
                 check=True,
             )
-        except FileNotFoundError, subprocess.CalledProcessError:
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            logging.warning("pre-commit not available, skipping test")
             pytest.skip("pre-commit not available")
 
         project = _copy_sample(tmp_path)
@@ -267,15 +266,12 @@ class TestMinimalSampleProject:
         (project / ".pre-commit-config.yaml").write_text(_PRECOMMIT_TEMPLATE)
 
         # Run pre-commit validate-config.
-        result = subprocess.run(
+        subprocess.run(
             ["pre-commit", "validate-config"],
             cwd=project,
             capture_output=True,
             text=True,
-        )
-        assert result.returncode == 0, (
-            f"pre-commit validate-config failed (exit={result.returncode}).\n"
-            f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+            check=True,
         )
 
     def test_install_then_lint_clean_project(
@@ -352,6 +348,7 @@ class TestMinimalSampleProject:
                 check=True,
             )
         except (FileNotFoundError, subprocess.CalledProcessError):
+            logging.warning("pre-commit not available, skipping test")
             pytest.skip("pre-commit not available")
 
         d = tmp_path / "hooks"
@@ -389,13 +386,19 @@ class TestMinimalSampleProject:
         assert_precommit_hooks_shape(d)
 
         # Dry-run: pre-commit run --all-files --show-diff-on-failure
-        result = subprocess.run(
-            ["pre-commit", "run", "--all-files", "--show-diff-on-failure"],
-            cwd=d,
-            capture_output=True,
-            text=True,
-            timeout=60,
-        )
+        result: subprocess.CompletedProcess[str] | subprocess.CalledProcessError
+        try:
+            result = subprocess.run(
+                ["pre-commit", "run", "--all-files", "--show-diff-on-failure"],
+                cwd=d,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            logging.debug("pre-commit dry-run exited with code %d (expected 0 or 1)", exc.returncode)
+            result = exc
         # Dry-run should succeed (exit 0) or report hooks would change files (exit 1)
         assert result.returncode in (0, 1), (
             f"pre-commit dry-run failed (exit {result.returncode}):\n"

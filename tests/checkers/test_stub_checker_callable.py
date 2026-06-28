@@ -47,7 +47,7 @@ def _parse_func(code: str) -> Any:
     return module.body[0]
 
 
-def _extract(func_node: astroid.FunctionDef, *, strip_self: bool = False) -> Any:
+def _extract(func_node: astroid.FunctionDef, *, strip_self: bool = False) -> Any:  # pylint: disable=W9728  # test helper: shorter alias for _extract_param_descriptors
     """Wrap ``_extract_param_descriptors`` for short test bodies."""
     return _extract_param_descriptors(func_node.args, strip_self=strip_self)
 
@@ -181,7 +181,7 @@ def test_compare_callable_descriptors(
     if expected_failure is None:
         assert result is None
     else:
-        assert expected_failure in result, (  # type: ignore[operator]
+        assert expected_failure in result, (  # type: ignore[operator]  # result is Any from test fixture; in-check works at runtime
             f"result={result!r} (expected substring {expected_failure!r})"
         )
 
@@ -255,7 +255,7 @@ def test_callable_comparison_ctx_fields() -> None:
     stub_func = cast("astroid.FunctionDef", stub_mod.body[0])
     impl_func = cast("astroid.FunctionDef", impl_mod.body[0])
     ctx = CallableComparisonCtx(
-        checker=None,  # type: ignore[arg-type]
+        checker=None,  # type: ignore[arg-type]  # checker=None is valid; test creates checker-less test case
         module_name="mod_a",
         func_name="foo",
         msg_node=impl_mod,

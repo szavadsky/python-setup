@@ -12,7 +12,7 @@ from python_setup_lint.checkers.conformance.tmp_path_checker import TempFileChec
 from python_setup_lint.testing import _make_tc as _make_tc_factory
 
 
-def _make_tc() -> Any:
+def _make_tc() -> Any:  # pylint: disable=W9728  # test helper: type-specific alias for _make_tc_factory, avoids repeated imports
     return _make_tc_factory(TempFileChecker)
 
 

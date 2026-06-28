@@ -13,7 +13,7 @@ import pytest
 from python_setup_lint.checkers.conformance.asyncio_timeout_checker import AsyncTimeoutChecker
 from python_setup_lint.testing import _walk_and_release
 
-_DETECT_CASES: list[Any] = [
+_DETECT_CASES: list[Any] = [  # pylint: disable=unjustified-suppression  # test data; Any needed for heterogeneous pytest params
     pytest.param(
         "async def f():\n    async with httpx.AsyncClient() as c:\n        resp = await c.get('https://example.com')\n",
         "c.get",
@@ -41,7 +41,7 @@ _DETECT_CASES: list[Any] = [
     ),
 ]
 
-_DO_NOT_DETECT_CASES: list[Any] = [
+_DO_NOT_DETECT_CASES: list[Any] = [  # pylint: disable=unjustified-suppression  # test data; Any needed for heterogeneous pytest params
     pytest.param(
         "async def f():\n    async with asyncio.timeout(5):\n        async with httpx.AsyncClient() as c:\n            resp = await c.get('https://example.com')\n",
         id="asyncio_timeout_wrapping_async_client",

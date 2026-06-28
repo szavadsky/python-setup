@@ -56,7 +56,7 @@ def _commit_all(cwd: Path, msg: str = "init") -> None:
 
 def _make_canned_fix_results(
     *, canary_e999_files: tuple[str, ...] = (),
-) -> dict[str, LintResult]:
+) -> dict[str, LintResult]:  # pylint: disable=generic-key-dict  # dict[str, LintResult] is a test helper; string keys are fixture labels
     base = canned_results_all_tools(exit_code=0, stdout="")
     canary_stdout = "\n".join(
         f"{f}:1:1: E999 SyntaxError" for f in canary_e999_files
@@ -90,7 +90,7 @@ class _PostFixFakeRunCmd:
             self._post_fix_written = True
         try:
             after = self._post_fix_path.read_text(encoding="utf-8")
-        except FileNotFoundError:
+        except FileNotFoundError:  # pylint: disable=silent-except  # test helper; FileNotFoundError is expected during cleanup
             after = None
         self._post_call_snapshots.append((label, after))
         return self._inner(cmd, cwd=cwd, label=label)

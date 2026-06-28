@@ -89,7 +89,7 @@ class TestRegisterLintToolIdentity:
     def test_extra_tools_imports_dispatch_register(self) -> None:
         """extra_tools.register_lint_tool is dispatch.register_lint_tool (re-export)."""
         from python_setup_lint.runner.dispatch import register_lint_tool as dispatch_reg
-        from python_setup_lint.runner.extra_tools import register_lint_tool as extra_reg  # type: ignore[attr-defined]
+        from python_setup_lint.runner.extra_tools import register_lint_tool as extra_reg
 
         assert dispatch_reg is extra_reg, (
             "extra_tools.register_lint_tool must be the same function object "
@@ -136,7 +136,7 @@ class TestStrategyBuildCommand:
         from python_setup_lint.runner.dispatch import _PylintLintTool
 
         cwd = Path.cwd()
-        rcfile = _PylintLintTool._resolve_pylintrc({}, cwd)  # type: ignore[attr-defined]
+        rcfile = _PylintLintTool._resolve_pylintrc({}, cwd)  # type: ignore[attr-defined]  # private method accessed in test; pylint cannot resolve runtime
         assert rcfile is not None, "Expected auto-discovered rcfile"
         assert rcfile.name == ".pylintrc"
         assert rcfile.is_file()
@@ -147,14 +147,14 @@ class TestStrategyBuildCommand:
 
         fake_rc = tmp_path / "custom.pylintrc"
         fake_rc.write_text("[MASTER]\n")
-        rcfile = _PylintLintTool._resolve_pylintrc({"pylint": fake_rc}, Path.cwd())  # type: ignore[attr-defined]
+        rcfile = _PylintLintTool._resolve_pylintrc({"pylint": fake_rc}, Path.cwd())  # type: ignore[attr-defined]  # private method accessed in test; pylint cannot resolve runtime
         assert rcfile == fake_rc
 
     def test_pylint_rcfile_none_when_missing(self, tmp_path: Path) -> None:
         """_resolve_pylintrc returns None when no rcfile exists."""
         from python_setup_lint.runner.dispatch import _PylintLintTool
 
-        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)  # type: ignore[attr-defined]
+        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)  # type: ignore[attr-defined]  # private method accessed in test; pylint cannot resolve runtime
         assert rcfile is None
 
     def test_pylint_rcfile_project_root_fallback(self, tmp_path: Path) -> None:
@@ -163,7 +163,7 @@ class TestStrategyBuildCommand:
 
         # Create only project-root .pylintrc, NOT config/.pylintrc
         (tmp_path / ".pylintrc").write_text("[MASTER]\n")
-        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)  # type: ignore[attr-defined]
+        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)  # type: ignore[attr-defined]  # private method accessed in test; pylint cannot resolve runtime
         assert rcfile is not None
         assert rcfile == tmp_path / ".pylintrc"
         assert rcfile.is_file()
@@ -176,7 +176,7 @@ class TestStrategyBuildCommand:
         config_dir.mkdir()
         (config_dir / ".pylintrc").write_text("[MASTER]\nconfig\n")
         (tmp_path / ".pylintrc").write_text("[MASTER]\nroot\n")
-        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)  # type: ignore[attr-defined]
+        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)  # type: ignore[attr-defined]  # private method accessed in test; pylint cannot resolve runtime
         assert rcfile == config_dir / ".pylintrc"
         assert rcfile.read_text() == "[MASTER]\nconfig\n"
 
@@ -263,7 +263,7 @@ class TestPathHelpers:
         )
 
     @pytest.mark.parametrize(("paths", "check"), EXPAND_GLOBS_CASES)
-    def test_expand_globs(self, paths: list[str], check) -> None:  # type: ignore[no-untyped-def]
+    def test_expand_globs(self, paths: list[str], check) -> None:  # type: ignore[no-untyped-def]  # test function; signature varies by parametrize
         assert check(_expand_globs(paths, cwd=Path.cwd()))
 
     def test_expand_globs_yamllint_config_glob(self, tmp_path: Path) -> None:
@@ -430,7 +430,7 @@ class TestPrintResult:
     """``_print_result`` produces expected output format."""
 
     @pytest.mark.parametrize(("exit_code", "stdout", "stderr", "want_tokens"), PRINT_FORMAT_CASES)
-    def test_print_format(  # type: ignore[no-untyped-def]
+    def test_print_format(  # type: ignore[no-untyped-def]  # test function; signature varies by parametrize
         self, capsys: pytest.CaptureFixture[str], exit_code, stdout, stderr, want_tokens
     ) -> None:
         """One row per PASSED/FAILED — each asserts expected markers + content surface."""

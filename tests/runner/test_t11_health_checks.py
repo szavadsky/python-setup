@@ -74,7 +74,7 @@ class TestTestCheckedMainArgv:
     def test_assembles_typeguard_plugin_argv(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        captured: dict[str, Any] = {}
+        captured: dict[str, Any] = {}  # dict[str, Any] is a test helper; dict shape varies by test case
 
         def _fake_pytest_main(args: list[str]) -> int:
             captured["args"] = list(args)
@@ -93,7 +93,7 @@ class TestTestCheckedMainArgv:
         assert captured["args"][:4] == ["-p", "typeguard", "-q", "tests/unit"]
 
     def test_passthrough_extra_argv(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        captured: dict[str, Any] = {}
+        captured: dict[str, Any] = {}  # dict[str, Any] is a test helper; dict shape varies by test case
 
         def _fake_pytest_main(args: list[str]) -> int:
             captured["args"] = list(args)
@@ -114,7 +114,7 @@ class TestTestCheckedMainArgv:
         Asserts at runtime on the args passed to ``pytest.main`` (not on the
         source/docstring, which references the avoided flag in prose).
         """
-        captured: dict[str, Any] = {}
+        captured: dict[str, Any] = {}  # dict[str, Any] is a test helper; dict shape varies by test case
 
         def _fake_pytest_main(args: list[str]) -> int:
             captured["args"] = list(args)

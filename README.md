@@ -13,7 +13,7 @@ Shared linting, formatting, and dev-tooling infrastructure for Python projects.
 uv add /path/to/python-setup
 
 # Or from the published git repository
-uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.14.0"
+uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.15.0"
 ```
 
 After adding the dependency, run the setup command:
@@ -44,7 +44,7 @@ Both commands return exit code 0 on success, non-zero on failure.
 ### 1. Add the dependency
 
 ```bash
-uv add --dev "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.14.0"
+uv add --dev "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.15.0"
 ```
 
 ### 2. Run the installer
@@ -81,7 +81,7 @@ Runs all 13 lint tools sequentially with baseline diffing and statistics aggrega
 
 When lint rules or checkers change in `python-setup`:
 
-1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.14.0"`
+1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.15.0"`
 2. Re-run the installer: `uv run python-setup install`
 3. Commit the updated config in the consuming project.
 

@@ -101,7 +101,7 @@ def _expect_error(tmp_path: Path, body: str, *, reason_starts: str | None = None
 
 
 @pytest.mark.parametrize(("body", "reason_want", "want_kind"), R4_EXACT_REASON_CASES)
-def test_validate_r4_reason_matches(tmp_path: Path, body: str, reason_want: str, want_kind: str) -> None:
+def test_validate_r4_reason_matches(tmp_path: Path, body: str, reason_want: str, want_kind: str) -> None:  # pylint: disable=trivial-wrapper  # test function delegates to _expect_error
     """One row per R4 malformation — asserts locked reason (exact OR prefix)."""
     _expect_error(
         tmp_path,
@@ -112,7 +112,7 @@ def test_validate_r4_reason_matches(tmp_path: Path, body: str, reason_want: str,
 
 
 @pytest.mark.parametrize(("body_fragment", "reason_want"), R4_FLAG_WRONG_TYPE_CASES)
-def test_validate_r4_flag_wrong_type(tmp_path: Path, body_fragment: str, reason_want: str) -> None:
+def test_validate_r4_flag_wrong_type(tmp_path: Path, body_fragment: str, reason_want: str) -> None:  # pylint: disable=trivial-wrapper  # test function delegates to _expect_error
     """One row per wrong-type flag field — name + command are valid; the flag varies."""
     _expect_error(
         tmp_path,
@@ -122,7 +122,7 @@ def test_validate_r4_flag_wrong_type(tmp_path: Path, body_fragment: str, reason_
 
 
 @pytest.mark.parametrize("regex", REGEX_BAD_GROUP_CASES)
-def test_validate_regex_count_invalid_raises(tmp_path: Path, regex: str) -> None:
+def test_validate_regex_count_invalid_raises(tmp_path: Path, regex: str) -> None:  # pylint: disable=trivial-wrapper  # test function delegates to _expect_error
     """Zero groups / two groups / unparseable regex → locked R4 reason prefix."""
     _expect_error(
         tmp_path,
@@ -170,7 +170,7 @@ def test_load_extras_pyproject_unreadable_raises(tmp_path: Path) -> None:
     ),
 ],
 ids=["not_a_list", "entry_not_a_table"],)
-def test_load_extras_array_shape_raises(tmp_path: Path, body: str, reason: str) -> None:
+def test_load_extras_array_shape_raises(tmp_path: Path, body: str, reason: str) -> None:  # pylint: disable=trivial-wrapper  # test function delegates to _expect_error
     """``extra-tools`` not a list OR an entry that's not a table → wrong-type reason."""
     _expect_error(tmp_path, body, reason_eq=reason)
 
@@ -280,7 +280,7 @@ def _register_extra(
     )
 
 
-def _ctx(cwd: Path, *, config_paths: dict[str, Path] | None = None) -> RunnerConfig:
+def _ctx(cwd: Path, *, config_paths: dict[str, Path] | None = None) -> RunnerConfig:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
     """Build a minimal RunnerConfig (other fields irrelevant to build_command)."""
     return RunnerConfig(cwd=cwd, config_paths=config_paths or {})
 

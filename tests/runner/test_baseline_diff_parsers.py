@@ -27,7 +27,7 @@ from python_setup_lint.runner.parsers import (  # type: ignore[attr-defined]  # 
 from python_setup_lint.testing import make_lint_result
 
 
-def _sorted(records: list[Record]) -> list[Record]:
+def _sorted(records: list[Record]) -> list[Record]:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
     return sorted(records, key=_compare_records_key)
 
 

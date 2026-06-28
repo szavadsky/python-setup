@@ -50,14 +50,14 @@ class _UvCallRecorder:
     def __enter__(self) -> Self:
         import python_setup_lint.setup as _m
 
-        self._orig = _m._run_uv  # type: ignore[assignment]
+        self._orig = _m._run_uv  # type: ignore[assignment]  # dynamic import hides type; runtime reference for restoration
         _m._run_uv = self.fake
         return self
 
     def __exit__(self, *a: object) -> None:
         import python_setup_lint.setup as _m
 
-        _m._run_uv = self._orig  # type: ignore[assignment]
+        _m._run_uv = self._orig  # type: ignore[assignment]  # dynamic import hides type; runtime reference for restoration
 
 
 # ── Parametrize tables ──────────────────────────────────────────────
@@ -208,7 +208,7 @@ class TestPyprojectTomlHelpers:
 
     def test_read_and_get(self, empty_project: Path) -> None:
         d = _read_pyproject_toml(empty_project)
-        assert d and d["project"]["name"] == "test-project"  # type: ignore[index]
+        assert d and d["project"]["name"] == "test-project"  # type: ignore[index]  # _read_pyproject_toml returns dict[str, object] | None; dict key access on object is valid at runtime
         assert "ruff>=0.5" in _get_dev_deps(d)
 
     def test_get_dev_deps_missing(self) -> None:
@@ -223,15 +223,15 @@ class TestPyprojectTomlHelpers:
         ) == ["a.b"]
 
     def test_set_pylint_creates(self) -> None:
-        d: dict[str, Any] = {"project": {"name": "x"}}
+        d: dict[str, Any] = {"project": {"name": "x"}}  # Any needed for nested mutation; _set_pylint_load_plugins expects dict[str, object]
         _set_pylint_load_plugins(d, ["p.q"])
         assert _get_pylint_load_plugins(d) == ["p.q"]
 
     def test_write_read_roundtrip(self, empty_project: Path) -> None:
         d = _read_pyproject_toml(empty_project)
-        _set_pylint_load_plugins(d, ["a.b"])  # type: ignore[arg-type]
-        _write_pyproject_toml(empty_project, d)  # type: ignore[arg-type]
-        assert _get_pylint_load_plugins(_read_pyproject_toml(empty_project)) == ["a.b"]  # type: ignore[arg-type]
+        _set_pylint_load_plugins(d, ["a.b"])  # type: ignore[arg-type]  # d is dict[str, object] | None at runtime; _set_pylint_load_plugins expects dict[str, object]
+        _write_pyproject_toml(empty_project, d)  # type: ignore[arg-type]  # d is dict[str, object] | None at runtime; _write_pyproject_toml expects dict[str, object]
+        assert _get_pylint_load_plugins(_read_pyproject_toml(empty_project)) == ["a.b"]  # type: ignore[arg-type]  # _read_pyproject_toml returns dict[str, object] | None; _get_pylint_load_plugins expects dict[str, object]
 
 
 class TestHasPythonSetupDep:
@@ -324,17 +324,17 @@ class TestRunUv:
     def test_uv_not_found(self, tmp_path: Path) -> None:
         import python_setup_lint.setup as _m
 
-        orig = _m.subprocess.run  # type: ignore[attr-defined]
+        orig = _m.subprocess.run  # type: ignore[attr-defined]  # dynamic import hides type; subprocess.run accessed via module reference
 
         def fake_run(*a: object, **kw: object) -> object:
             raise FileNotFoundError("uv not found")
 
-        _m.subprocess.run = fake_run  # type: ignore[attr-defined]
+        _m.subprocess.run = fake_run  # type: ignore[attr-defined]  # dynamic import hides type; assigning callable to subprocess.run
         try:
             rc, _, err = _run_uv(["sync"], cwd=tmp_path)
             assert rc == 1 and "uv not found" in err
         finally:
-            _m.subprocess.run = orig  # type: ignore[attr-defined]
+            _m.subprocess.run = orig  # type: ignore[attr-defined]  # dynamic import hides type; restoring original reference
 
 
 class TestGetPackageDir:
@@ -380,16 +380,16 @@ class TestTomlHelperTypeSafety:
             {"tool": {"pylint": {"main": "nd"}}},
         ):
             cp = dict(d)
-            _set_pylint_load_plugins(cp, ["a.b"])  # type: ignore[arg-type]
-            assert _get_pylint_load_plugins(cp) == []  # type: ignore[arg-type]
+            _set_pylint_load_plugins(cp, ["a.b"])  # type: ignore[arg-type]  # cp is dict[str, str] at runtime; _set_pylint_load_plugins expects dict[str, object]
+            assert _get_pylint_load_plugins(cp) == []  # type: ignore[arg-type]  # cp is dict[str, str] at runtime; _get_pylint_load_plugins expects dict[str, object]
 
 
 class TestSetPylintLoadPluginsMerge:
     @pytest.mark.parametrize(("existing", "new", "expected"), SET_PLUGINS_CASES)
     def test_cases(self, existing: object, new: list[str], expected: list[str]) -> None:
         d = {"tool": {"pylint": {"main": {"load-plugins": existing}}}}
-        _set_pylint_load_plugins(d, new)  # type: ignore[arg-type]
-        assert _get_pylint_load_plugins(d) == expected  # type: ignore[arg-type]
+        _set_pylint_load_plugins(d, new)  # type: ignore[arg-type]  # d has nested object values; _set_pylint_load_plugins expects dict[str, object]
+        assert _get_pylint_load_plugins(d) == expected  # type: ignore[arg-type]  # d has nested object values; _get_pylint_load_plugins expects dict[str, object]
 
 
 class TestConfigDrift:

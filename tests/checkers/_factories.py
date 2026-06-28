@@ -39,13 +39,13 @@ _p = pytest.param
 # ── Generic message helpers ──
 
 
-def make_tc(checker_class: type[BaseChecker]) -> CheckerTestCase:
+def make_tc(checker_class: type[BaseChecker]) -> CheckerTestCase:  # pylint: disable=W9728  # test helper: type-specific alias for _make_tc_factory, avoids repeated imports
     return _make_tc_factory(checker_class)
 
 
 # ── no-try-import checker ──
 
-_NO_TRY_DETECT_CASES: list[Any] = [
+_NO_TRY_DETECT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "try:\n    import litellm\nexcept ImportError:\n    pass\n",
         1,
@@ -108,7 +108,7 @@ _NO_TRY_DETECT_CASES: list[Any] = [
     ),
 ]
 
-_NO_TRY_DO_NOT_DETECT_CASES: list[Any] = [
+_NO_TRY_DO_NOT_DETECT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "try:\n    x = 1 / 0\nexcept ZeroDivisionError:\n    pass\n",
         id="try_without_import",
@@ -124,7 +124,7 @@ _NO_TRY_DO_NOT_DETECT_CASES: list[Any] = [
 
 # ── beartype checker ──
 
-_BEARTYPE_MISS_CASES: list[Any] = [
+_BEARTYPE_MISS_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("def foo(): pass", 1, None, id="plain_def"),
     _p("async def foo(): pass", 1, None, id="async_def"),
     _p(
@@ -133,12 +133,12 @@ _BEARTYPE_MISS_CASES: list[Any] = [
     _p("def foo(): pass\ndef bar(): pass\n", 2, None, id="multiple_public_functions"),
 ]
 
-_BEARTYPE_SOURCE_ROOT_CASES: list[Any] = [
+_BEARTYPE_SOURCE_ROOT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("def foo(): pass", "tests/test_mod.py", 0, id="outside_source_root"),
     _p("def foo(): pass", "src/prod.py", 1, id="under_source_root"),
 ]
 
-_BEARTYPE_SKIP_CASES: list[Any] = [
+_BEARTYPE_SKIP_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("def _helper(): pass", 0, id="private_function"),
     _p("def public(): pass\ndef _private(): pass\n", 1, id="mixed_public_and_private"),
     _p("class X:\n    def __init__(self): pass", 0, id="init_skipped"),
@@ -153,7 +153,7 @@ _BEARTYPE_SKIP_CASES: list[Any] = [
 
 # ── stub normalizer ──
 
-_NORMALIZER_INFER_CASES: list[Any] = [
+_NORMALIZER_INFER_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("x: str", "str", id="infer_simple_name"),
     _p("x: list[int]", "list[int]", id="infer_builtin_list"),
     _p("x: str | None", "str | None", id="infer_native_union"),
@@ -163,7 +163,7 @@ _NORMALIZER_INFER_CASES: list[Any] = [
 
 # ── stub checker ──
 
-_STUB_FILE_CLASSIFICATION_CASES: list[Any] = [
+_STUB_FILE_CLASSIFICATION_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "/workspace/tests/test_foo.py",
         ["/workspace/src"],
@@ -206,7 +206,7 @@ _STUB_FILE_CLASSIFICATION_CASES: list[Any] = [
     ),
 ]
 
-_RESOLVE_RELATIVE_CASES: list[Any] = [
+_RESOLVE_RELATIVE_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("mod_a", 0, "os", False, "os", id="absolute_import"),
     _p("mod_a", 0, None, False, "", id="absolute_no_modname"),
     _p("mypkg", 1, None, True, "mypkg", id="same_package_init"),
@@ -216,14 +216,14 @@ _RESOLVE_RELATIVE_CASES: list[Any] = [
     _p("mod_a", 3, "other", True, "other", id="level_exceeds_depth"),
 ]
 
-_IS_TYPE_CHECKING_GUARD_CASES: list[Any] = [
+_IS_TYPE_CHECKING_GUARD_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("TYPE_CHECKING", True, id="name_form"),
     _p("typing.TYPE_CHECKING", True, id="typing_dot_name"),
     _p("SOME_FLAG", False, id="other_name"),
     _p("os.name", False, id="other_attribute"),
 ]
 
-_IN_TYPE_CHECKING_BLOCK_POSITIVE_CASES: list[Any] = [
+_IN_TYPE_CHECKING_BLOCK_POSITIVE_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "if TYPE_CHECKING:\n    from foo import Bar\n",
         lambda m: m.body[0].body[0],
@@ -236,14 +236,14 @@ _IN_TYPE_CHECKING_BLOCK_POSITIVE_CASES: list[Any] = [
     ),
 ]
 
-_IN_TYPE_CHECKING_BLOCK_NEGATIVE_CASES: list[Any] = [
+_IN_TYPE_CHECKING_BLOCK_NEGATIVE_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("from foo import Bar\n", lambda m: m.body[0], id="not_under_type_checking"),
 ]
 
 
 # ── stub coverage helper tests ──
 
-_MATCHES_PATH_CASES: list[Any] = [
+_MATCHES_PATH_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("/workspace/src/foo.py", [], False, id="empty_patterns_returns_false"),
     _p("src/generated/foo.py", ["src/generated/"], True, id="directory_prefix_match"),
     _p(
@@ -278,7 +278,7 @@ _MATCHES_PATH_CASES: list[Any] = [
 
 _DEFAULT_TEST_PATTERNS = ["tests/", "test_*.py", "*_test.py", "conftest.py"]
 
-_IS_TEST_FILE_CASES: list[Any] = [
+_IS_TEST_FILE_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "/workspace/tests/test_foo.py",
         _DEFAULT_TEST_PATTERNS,
@@ -306,7 +306,7 @@ _IS_TEST_FILE_CASES: list[Any] = [
     ),
 ]
 
-_IS_TEST_FILE_CUSTOM_CASES: list[Any] = [
+_IS_TEST_FILE_CUSTOM_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("/workspace/specs/test_foo.py", ["specs/"], True, id="custom_pattern_matches"),
     _p(
         "/workspace/tests/test_foo.py",
@@ -316,7 +316,7 @@ _IS_TEST_FILE_CUSTOM_CASES: list[Any] = [
     ),
 ]
 
-_IS_OPTED_OUT_CASES: list[Any] = [
+_IS_OPTED_OUT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "/workspace/src/generated/foo.py",
         ["src/generated/"],
@@ -338,7 +338,7 @@ _IS_OPTED_OUT_CASES: list[Any] = [
     _p("/workspace/src/foo.py", [], False, id="empty_opt_out"),
 ]
 
-_IS_INIT_EXEMPT_CASES: list[Any] = [
+_IS_INIT_EXEMPT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("", True, id="empty_body_exempt"),
     _p("from .sub import Foo\nimport os\n", True, id="only_imports_exempt"),
     _p("__all__ = ['Foo', 'Bar']\n", True, id="all_assignment_exempt"),
@@ -351,7 +351,7 @@ _IS_INIT_EXEMPT_CASES: list[Any] = [
     _p("import os\nif os.name == 'nt':\n    x = 1\n", False, id="if_block_not_exempt"),
 ]
 
-_IS_TRIVIAL_TEST_DATA_CASES: list[Any] = [
+_IS_TRIVIAL_TEST_DATA_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("", True, id="empty_module_trivial"),
     _p("x = 1\ny = 'hello'\nz = 3.14\n", True, id="literal_assignments_trivial"),
     _p("def helper(): pass\n", False, id="function_def_not_trivial"),
@@ -361,7 +361,7 @@ _IS_TRIVIAL_TEST_DATA_CASES: list[Any] = [
     _p("x = 1\nif True:\n    y = 2\n", False, id="if_block_not_trivial"),
 ]
 
-_HAS_MAIN_BLOCK_CASES: list[Any] = [
+_HAS_MAIN_BLOCK_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("if __name__ == '__main__':\n    main()\n", True, id="double_equals"),
     _p('if __name__ == "__main__":\n    main()\n', True, id="double_quotes"),
     _p("def foo(): pass\n", False, id="no_main_block"),
@@ -369,7 +369,7 @@ _HAS_MAIN_BLOCK_CASES: list[Any] = [
     _p("", False, id="empty_module"),
 ]
 
-_IS_UNDER_SOURCE_ROOT_CASES: list[Any] = [
+_IS_UNDER_SOURCE_ROOT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("/workspace/src/prod.py", ["/workspace/src"], True, id="path_under_root"),
     _p("/workspace/tests/foo.py", ["/workspace/src"], False, id="path_not_under_root"),
     _p(
@@ -383,7 +383,7 @@ _IS_UNDER_SOURCE_ROOT_CASES: list[Any] = [
 
 # ── stub_callable: extract param descriptors ──
 
-_EXTRACT_PARAM_CASES: list[Any] = [
+_EXTRACT_PARAM_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("def foo() -> None: ...", [], [], id="empty_function"),
     _p(
         "def foo(a, b, /) -> None: ...",
@@ -420,7 +420,7 @@ _EXTRACT_PARAM_CASES: list[Any] = [
     ),
 ]
 
-_EXTRACT_DEFAULT_CASES: list[Any] = [
+_EXTRACT_DEFAULT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("def foo(a, b=1) -> None: ...", [False, True], id="default_presence_detected"),
     _p(
         "def foo(*, x, y='hello') -> None: ...",
@@ -429,13 +429,13 @@ _EXTRACT_DEFAULT_CASES: list[Any] = [
     ),
 ]
 
-_EXTRACT_STRIP_SELF_CASES: list[Any] = [
+_EXTRACT_STRIP_SELF_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("def bar(self, x, y) -> None: ...", True, ["x", "y"], id="strip_self"),
     _p("def bar(cls, x, y) -> None: ...", True, ["x", "y"], id="strip_cls"),
     _p("def bar(a, b) -> None: ...", True, ["a", "b"], id="no_strip_non_method"),
 ]
 
-_EXTRACT_ANNOTATION_CASES: list[Any] = [
+_EXTRACT_ANNOTATION_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "def foo(x: int, y: str | None) -> None: ...",
         "int",
@@ -449,7 +449,7 @@ _EXTRACT_ANNOTATION_CASES: list[Any] = [
 
 # ── stub_callable: compare descriptors ──
 
-_COMPARE_DESCRIPTOR_CASES: list[Any] = [
+_COMPARE_DESCRIPTOR_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         [
             ("a", inspect.Parameter.POSITIONAL_OR_KEYWORD, False),
@@ -492,14 +492,14 @@ _COMPARE_DESCRIPTOR_CASES: list[Any] = [
     _p([], [], None, id="empty_lists"),
 ]
 
-_COMPARE_ANNOTATION_CASES: list[Any] = [
+_COMPARE_ANNOTATION_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(["int", "str"], ["int", "str"], 0, None, id="all_match_returns_empty"),
     _p(["int", "str"], ["int", "int"], 1, "y", id="param_annotation_mismatch_detected"),
     _p([None], ["int"], 0, None, id="skips_missing_annotations"),
     _p([None], [None], 0, None, id="skips_no_annotation_on_both"),
 ]
 
-_COMPARE_RETURN_CASES: list[Any] = [
+_COMPARE_RETURN_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(None, None, "skip_both_none", True, id="both_none"),
     _p(None, "int", "skip_both_none", True, id="stub_none_skipped"),
     _p("int", None, "skip_both_none", True, id="impl_none_skipped"),
@@ -511,7 +511,7 @@ _COMPARE_RETURN_CASES: list[Any] = [
 
 # ── stub_class fidelity: _normalize_bases ──
 
-_NORMALIZE_BASES_CASES: list[Any] = [
+_NORMALIZE_BASES_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("class Foo(BaseModel): ...\n", ["BaseModel"], id="simple_name"),
     _p("class Foo(pydantic.BaseModel): ...\n", ["BaseModel"], id="attribute_base"),
     _p("class Foo(object): ...\n", ["builtins.object"], id="builtins_object"),
@@ -519,7 +519,7 @@ _NORMALIZE_BASES_CASES: list[Any] = [
     _p("class Foo(Generic[T]): ...\n", ["Generic"], id="subscript_base"),
 ]
 
-_IS_PUBLIC_METHOD_CASES: list[Any] = [
+_IS_PUBLIC_METHOD_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("foo", True, id="plain_name"),
     _p("_helper", False, id="private_name"),
     _p("__str__", False, id="dunder_str"),
@@ -531,7 +531,7 @@ _IS_PUBLIC_METHOD_CASES: list[Any] = [
 
 # ── stub_class: E97B1 / E97B2 ──
 
-_STUB_SYMBOL_MISSING_CASES: list[Any] = [
+_STUB_SYMBOL_MISSING_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "x: int = 1\n",
         "x: int\nclass Foo: ...\n",
@@ -558,7 +558,7 @@ _STUB_SYMBOL_MISSING_CASES: list[Any] = [
     ),
 ]
 
-_KIND_MISMATCH_CASES: list[Any] = [
+_KIND_MISMATCH_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "Foo: int = 1\n",
         "class Foo: ...\n",
@@ -588,7 +588,7 @@ _KIND_MISMATCH_CASES: list[Any] = [
 
 # ── stub docstring checker ──
 
-_DOCSTRING_NO_COMPANION_CASES: list[Any] = [
+_DOCSTRING_NO_COMPANION_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         'def foo():\n    """My docstring."""\n    pass\n',
         0,
@@ -606,7 +606,7 @@ _DOCSTRING_NO_COMPANION_CASES: list[Any] = [
     ),
 ]
 
-_DOCSTRING_DOES_NOT_DETECT_CASES: list[Any] = [
+_DOCSTRING_DOES_NOT_DETECT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("def foo():\n    pass\n", id="no_docstring_no_message"),
     _p("def foo():\n    ...\n", id="empty_body_no_message"),
     _p(
@@ -616,7 +616,7 @@ _DOCSTRING_DOES_NOT_DETECT_CASES: list[Any] = [
     _p("def foo():\n    42\n    pass\n", id="non_string_first_expr"),
 ]
 
-_DOCSTRING_DETECT_CASES: list[Any] = [
+_DOCSTRING_DETECT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         'def foo():\n    """Usage docstring."""\n    pass\n',
         1,
@@ -646,7 +646,7 @@ _DOCSTRING_DETECT_CASES: list[Any] = [
 
 # ── AnnotationNormalizer._apply_rewrites ──
 
-_APPLY_REWRITES_CASES: list[Any] = [
+_APPLY_REWRITES_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("typing.List[str]", "list[str]", id="rewrite_typing_list"),
     _p("typing.Dict[str, int]", "dict[str, int]", id="rewrite_typing_dict"),
     _p("typing.Optional[str]", "str | None", id="rewrite_typing_optional"),
@@ -663,7 +663,7 @@ _APPLY_REWRITES_CASES: list[Any] = [
     ),
 ]
 
-_SPLIT_OUTER_COMMAS_CASES: list[Any] = [
+_SPLIT_OUTER_COMMAS_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("str, int, float", ["str", "int", "float"], id="simple"),
     _p("list[str], int", ["list[str]", "int"], id="with_brackets"),
 ]
@@ -671,7 +671,7 @@ _SPLIT_OUTER_COMMAS_CASES: list[Any] = [
 
 # ── AnnotationNormalizer._ast_string ──
 
-_AST_STRING_CASES: list[Any] = [
+_AST_STRING_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("x: list[str]", ["list"], "contains", id="subscript"),
     _p("x: int | str", ["int | str"], "equals", id="binary_op_union"),
     _p("x: typing.Optional[str]", ["typing.Optional"], "contains", id="attribute"),
@@ -748,7 +748,7 @@ def walk_both_release_for_pyi(
     code: str,
     py_path: Path,
     source_roots: list[str] | None = None,
-) -> list[Any]:
+) -> list[Any]:  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     from pylint.testutils import UnittestLinter
     from pylint.utils import ASTWalker
 
@@ -777,7 +777,7 @@ def walk_both_release_for_pyi(
 
 # ── stub_checker: import-usage / contract-violations tables ──
 
-_IMPORT_USAGE_FIELD_CASES: list[Any] = [
+_IMPORT_USAGE_FIELD_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         {
             "importer_module": "mod_a",
@@ -823,7 +823,7 @@ _IMPORT_USAGE_FIELD_CASES: list[Any] = [
     ),
 ]
 
-_IMPORT_CONTRACT_CASES: list[Any] = [
+_IMPORT_CONTRACT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "mod_a",
         False,
@@ -874,12 +874,12 @@ _IMPORT_CONTRACT_CASES: list[Any] = [
     ),
 ]
 
-_STAR_POLICY_CASES: list[Any] = [
+_STAR_POLICY_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("error", 1, id="star_policy_error"),
     _p("ignore", 0, id="star_policy_ignore"),
 ]
 
-_VARIABLE_FIDELITY_CASES: list[Any] = [
+_VARIABLE_FIDELITY_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("ClassVar[int]", True, id="classvar_skipped"),
     _p("int", False, id="non_classvar"),
 ]
@@ -897,7 +897,7 @@ def walk_stub_close_release(
     stub_opt_out: list[str] | None = None,
     stub_roots: list[str] | None = None,
     module_name: str = "test_module",
-) -> list[Any]:
+) -> list[Any]:  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     from python_setup_lint.checkers.stub.checker import StubChecker
 
     tc = _make_tc_factory(StubChecker)
@@ -919,7 +919,7 @@ def walk_stub_close_release(
 
 # ── T1-pyi-exemption layout rows ──
 
-_PYI_EXEMPT_LOG_LAYOUT_CASES: list[Any] = [
+_PYI_EXEMPT_LOG_LAYOUT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "init",
         "from .sub import Foo\n",
@@ -1009,7 +1009,7 @@ def _star_usage_factory() -> ImportUsage:
 
 # ── stub_checker: .pyi companion-resolution ──
 
-_STUB_RESOLUTION_CASES: list[Any] = [
+_STUB_RESOLUTION_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("inline", "x = 1\n", "has_stub", 0, id="inline_stub_detected"),
     _p("package", "x = 1\n", "mypkg", 0, id="package_init_stub_detected"),
     _p("stub_root", "x = 1\n", "foo", 0, id="stub_root_resolution"),
@@ -1024,7 +1024,7 @@ def walk_stub_resolution_layout(
     code: str,
     module_name: str,
     /,
-) -> list[Any]:
+) -> list[Any]:  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     from python_setup_lint.checkers.stub.checker import StubChecker
 
     tc = _make_tc_factory(StubChecker)
@@ -1062,7 +1062,7 @@ def walk_stub_resolution_layout(
 
 # ── stub_coverage: _resolve_stub layout ──
 
-_RESOLVE_STUB_CASES: list[Any] = [
+_RESOLVE_STUB_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("inline", "returns_pyi", id="inline_stub"),
     _p("package", "returns_pyi", id="package_init_stub"),
     _p("no_stub", "returns_none", id="no_stub_returns_none"),
@@ -1110,7 +1110,7 @@ def materialize_resolve_stub_layout(
 
 # ── stub_coverage: emit_coverage_violations ──
 
-_EMIT_COVERAGE_CASES: list[Any] = [
+_EMIT_COVERAGE_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("in_index", "mod_a", 1, id="one_missing_module"),
     _p("no_missing", "", 0, id="no_missing_emits_nothing"),
     _p("skip_module_not_in_index", "ghost_module", 0, id="skip_module_not_in_index"),
@@ -1192,7 +1192,7 @@ source-roots = ["{src}"]
 
 # ── class-fidelity end-to-end rows ──
 
-_CLASS_FIDELITY_INTEGRATION_CASES: list[Any] = [
+_CLASS_FIDELITY_INTEGRATION_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "x: int = 1\n",
         "\nx: int\nclass Foo: ...\n",
@@ -1230,7 +1230,7 @@ _CLASS_FIDELITY_INTEGRATION_CASES: list[Any] = [
     ),
 ]
 
-_CALLABLE_FIDELITY_INTEGRATION_CASES: list[Any] = [
+_CALLABLE_FIDELITY_INTEGRATION_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "\ndef foo(x: int, y: str) -> None: ...\n",
         "\ndef foo(x: int) -> None: ...\n",
@@ -1257,7 +1257,7 @@ def walk_stub_checker_with_pair(
     pyi_code: str,
     /,
     module_name: str = "mod_a",
-) -> list[Any]:
+) -> list[Any]:  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     from python_setup_lint.checkers.stub.checker import StubChecker
 
     src = tmp_path / "src"
@@ -1286,7 +1286,7 @@ def setup_and_emit_import_contract(
     symbol: str | None,
     is_star: bool,
     star_policy: str | None,
-) -> tuple[CheckerTestCase, list[Any]]:
+) -> tuple[CheckerTestCase, list[Any]]:  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     from python_setup_lint.checkers.stub.import_contract import (
         ImportUsage,
         emit_import_contract_violations,
@@ -1317,7 +1317,7 @@ def setup_and_emit_import_contract(
 
 # ── stub_checker: registered message codes ──
 
-_STUB_CHECKER_MSGS_CASES: list[Any] = [
+_STUB_CHECKER_MSGS_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("E97A0", "missing-module-stub", id="E97A0"),
     _p("E97A1", "missing-import-declaration", id="E97A1"),
     _p("E97A2", "missing-module-stub-for-import", id="E97A2"),

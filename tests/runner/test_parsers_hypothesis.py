@@ -88,7 +88,7 @@ def _check_record_invariants(records: list[Record], parser: Callable[[str], list
 
 class TestRuffRecords:
     @given(text=_ascii_text)
-    def test_ruff_records_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_ruff_records_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_ruff_records(text)
 
     @given(text=_ascii_text)
@@ -108,7 +108,7 @@ class TestRuffRecords:
 
 class TestMypyRecords:
     @given(text=_ascii_text)
-    def test_mypy_records_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_mypy_records_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_mypy_records(text)
 
     @given(text=_ascii_text)
@@ -128,7 +128,7 @@ class TestMypyRecords:
 
 class TestPylintRecords:
     @given(text=_ascii_text)
-    def test_pylint_records_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_pylint_records_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_pylint_records(text)
 
     @given(text=_ascii_text)
@@ -148,7 +148,7 @@ class TestPylintRecords:
 
 class TestTyRecords:
     @given(text=_ascii_text)
-    def test_ty_records_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_ty_records_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_ty_records(text)
 
     @given(text=_ascii_text)
@@ -168,7 +168,7 @@ class TestTyRecords:
 
 class TestYamllintRecords:
     @given(text=_ascii_text)
-    def test_yamllint_records_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_yamllint_records_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_yamllint_records(text)
 
     @given(text=_ascii_text)
@@ -188,7 +188,7 @@ class TestYamllintRecords:
 
 class TestRumdlRecords:
     @given(text=_ascii_text)
-    def test_rumdl_records_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_rumdl_records_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_rumdl_records(text)
 
     @given(text=_ascii_text)
@@ -208,7 +208,7 @@ class TestRumdlRecords:
 
 class TestPyrightRecords:
     @given(data=st.none() | st.booleans() | st.floats(allow_nan=False, allow_infinity=False) | st.integers() | st.text(max_size=50) | st.lists(_json_value, max_size=5) | st.dictionaries(st.text(max_size=20), _json_value, max_size=5))
-    def test_pyright_records_given_any_input_then_never_raises(self, data: object) -> None:
+    def test_pyright_records_given_any_input_then_never_raises(self, data: object) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_pyright_records(data)
 
     @given(data=st.dictionaries(st.text(max_size=20), _json_value, max_size=5))
@@ -254,7 +254,7 @@ def _check_statistics_invariants(result: list[tuple[str, int]], parser: Callable
 
 class TestRuffStatistics:
     @given(text=_ascii_text)
-    def test_ruff_statistics_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_ruff_statistics_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_ruff_statistics(text, "")
 
     @given(text=_ascii_text)
@@ -268,7 +268,7 @@ class TestRuffStatistics:
 
 class TestRumdlStatistics:
     @given(text=_ascii_text)
-    def test_rumdl_statistics_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_rumdl_statistics_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_rumdl_statistics(text, "")
 
     @given(text=_ascii_text)
@@ -282,7 +282,7 @@ class TestRumdlStatistics:
 
 class TestPylintJson2:
     @given(text=_ascii_text)
-    def test_pylint_json2_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_pylint_json2_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_pylint_json2(text, "")
 
     @given(text=_ascii_text)
@@ -299,7 +299,7 @@ class TestPylintJson2:
 
 class TestPyrightOutputjson:
     @given(text=_ascii_text)
-    def test_pyright_outputjson_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_pyright_outputjson_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_pyright_outputjson(text, "")
 
     @given(text=_ascii_text)
@@ -316,7 +316,7 @@ class TestPyrightOutputjson:
 
 class TestPyrightVerifyTypes:
     @given(text=_ascii_text)
-    def test_pyright_verify_types_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_pyright_verify_types_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_pyright_verify_types(text, "")
 
     @given(text=_ascii_text)
@@ -333,7 +333,7 @@ class TestPyrightVerifyTypes:
 
 class TestMypyStderr:
     @given(text=_ascii_text)
-    def test_mypy_stderr_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_mypy_stderr_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_mypy_stderr("", text)
 
     @given(text=_ascii_text)
@@ -347,7 +347,7 @@ class TestMypyStderr:
 
 class TestTyConcise:
     @given(text=_ascii_text)
-    def test_ty_concise_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_ty_concise_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_ty_concise(text, "")
 
     @given(text=_ascii_text)
@@ -361,7 +361,7 @@ class TestTyConcise:
 
 class TestTachJson:
     @given(text=_ascii_text)
-    def test_tach_json_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_tach_json_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_tach_json(text, "")
 
     @given(text=_ascii_text)
@@ -378,7 +378,7 @@ class TestTachJson:
 
 class TestYamllintParsable:
     @given(text=_ascii_text)
-    def test_yamllint_parsable_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_yamllint_parsable_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_yamllint_parsable(text, "")
 
     @given(text=_ascii_text)
@@ -392,7 +392,7 @@ class TestYamllintParsable:
 
 class TestStubtestStderr:
     @given(text=_ascii_text)
-    def test_stubtest_stderr_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_stubtest_stderr_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_stubtest_stderr("", text)
 
     @given(text=_ascii_text)
@@ -406,7 +406,7 @@ class TestStubtestStderr:
 
 class TestDetectSecretsJson:
     @given(text=_ascii_text)
-    def test_detect_secrets_json_given_any_text_then_never_raises(self, text: str) -> None:
+    def test_detect_secrets_json_given_any_text_then_never_raises(self, text: str) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_detect_secrets_json(text, "")
 
     @given(text=_ascii_text)

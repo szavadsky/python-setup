@@ -32,18 +32,26 @@ def _restore_structlog_wrapper() -> None:  # type: ignore[misc]  # fixture uses 
     if old_wrapper is not None:
         structlog.configure(wrapper_class=old_wrapper)
 
-from python_setup_lint.checkers.stub.checker import StubChecker
-from python_setup_lint.checkers.stub.fidelity import _is_classvar
-from python_setup_lint.checkers.stub.import_contract import (
+from python_setup_lint.checkers.stub.checker import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
+    StubChecker,
+)
+from python_setup_lint.checkers.stub.fidelity import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
+    _is_classvar,
+)
+from python_setup_lint.checkers.stub.import_contract import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
     ImportUsage,
     _in_type_checking_block,
     _is_type_checking_guard,
     _resolve_relative,
     emit_import_contract_violations,
 )
-from python_setup_lint.checkers.stub.normalizer import AnnotationNormalizer
-from python_setup_lint.testing import _make_tc as _make_tc_factory
-from tests.checkers._factories import (
+from python_setup_lint.checkers.stub.normalizer import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
+    AnnotationNormalizer,
+)
+from python_setup_lint.testing import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
+    _make_tc as _make_tc_factory,
+)
+from tests.checkers._factories import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
     _IMPORT_CONTRACT_CASES,
     _IMPORT_USAGE_FIELD_CASES,
     _IN_TYPE_CHECKING_BLOCK_NEGATIVE_CASES,
@@ -67,7 +75,7 @@ if TYPE_CHECKING:
     import pytest
 
 
-def _make_tc() -> Any:
+def _make_tc() -> Any:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
     return _make_tc_factory(StubChecker)
 
 

@@ -174,6 +174,12 @@ def _load_extra_tools(cwd: Path) -> list[_ExtraToolRegistration]:
             ``[[...]]`` entry fails :func:`_validate_extra` (T8 R4 table).
     """
 
+def register_lint_tool(
+    tool: ToolSpec, *, statistics_flag: str | None = None, parser: Callable[..., list[tuple[str, int]]] | None = None,
+) -> None:
+    """Register a custom lint tool (re-exported from dispatch)."""
+
+
 def _register_extra_tools(registrations: list[_ExtraToolRegistration]) -> None:
     """Register each validated extra via :func:`register_lint_tool`.
 
