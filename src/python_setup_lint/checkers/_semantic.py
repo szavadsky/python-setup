@@ -79,7 +79,7 @@ def _reset_cache() -> None:
 
     Clears the in-memory cache and removes the persisted cache file.
     """
-    global _RESULT_CACHE, _RERANKER_UNAVAILABLE
+    global _RESULT_CACHE, _RERANKER_UNAVAILABLE  # pylint: disable=global-statement
     _RESULT_CACHE = None
     _RERANKER_UNAVAILABLE = False
     with contextlib.suppress(OSError):
@@ -103,7 +103,7 @@ def _load_reranker() -> CrossEncoder | None:
     Returns:
         CrossEncoder instance, or ``None`` on failure.
     """
-    global _RERANKER_INSTANCE, _RERANKER_UNAVAILABLE
+    global _RERANKER_INSTANCE, _RERANKER_UNAVAILABLE  # pylint: disable=global-statement
     if _RERANKER_UNAVAILABLE:
         return None
     if _RERANKER_INSTANCE is not None:
@@ -139,7 +139,7 @@ def semantic_check_if_meaningful(
     # Use comment as primary text, fall back to raw text.
     primary = (comment or text).strip()
     # Lazy-init the result cache on first call.
-    global _RESULT_CACHE
+    global _RESULT_CACHE  # pylint: disable=global-statement
     if _RESULT_CACHE is None:
         _RESULT_CACHE = _load_result_cache()
     if not primary:
