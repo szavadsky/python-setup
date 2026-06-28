@@ -24,12 +24,14 @@ load-plugins=python_setup_lint.checkers.conformance.suppression_justification_ch
 # Tests exempt from docstring rules: missing-function-docstring, missing-module-docstring, missing-class-docstring
 # Tests exempt from complexity heuristics per CodingRules: too-many-arguments, too-many-positional-arguments, too-many-locals, too-many-branches, too-many-statements
 # Custom rules supersede builtins: invalid-name, impl-missing-annotation, use-implicit-booleaness-not-comparison, stub-symbol-missing (superseded by custom stub checker), useless-import-alias (re-exports need `as` for mypy strict re-export visibility)
-# Test/script patterns: import-outside-toplevel, redefined-outer-name, reimported, global-statement, cyclic-import
+# Test/script patterns: import-outside-toplevel, redefined-outer-name, reimported, cyclic-import
 # False positives in dynamic code: unused-argument, unused-import, unused-variable, cell-var-from-loop, protected-access
 # Style preferences: line-too-long, trailing-newlines, too-many-return-statements, too-few-public-methods, superfluous-parens, wrong-import-order, bad-indentation, unnecessary-ellipsis, unnecessary-dunder-call
+# Test error-path catch: broad-exception-caught (tests legitimately catch broad exceptions to verify error handling)
+# Repetitive test scaffolding: duplicate-code (parametrized/conflict tests share setup; production src/ checked by .pylintrc with min-similarity-lines=10)
 enable=unjustified-suppression,tempfile-mkdtemp-in-test,no-try-import,missing-error-chain,bare-except-comment,silent-except,trivial-wrapper,redundant-type-guard,unnamed-tuple-dict-value,generic-key-dict,missing-return-annotation,pyi-underscore-symbol
 #   - Parser quirk: unknown-option-value, unspecified-encoding
-disable=unknown-option-value,unused-argument,broad-exception-caught,protected-access,missing-function-docstring,line-too-long,import-outside-toplevel,trailing-newlines,too-many-arguments,too-many-positional-arguments,unspecified-encoding,unused-import,cell-var-from-loop,too-many-return-statements,too-few-public-methods,superfluous-parens,wrong-import-order,unused-variable,missing-module-docstring,missing-class-docstring,invalid-name,global-statement,cyclic-import,bad-indentation,unnecessary-ellipsis,unnecessary-dunder-call,redefined-outer-name,reimported,use-implicit-booleaness-not-comparison,useless-import-alias,stub-symbol-missing,too-many-locals,too-many-branches,too-many-statements,duplicate-code
+disable=unknown-option-value,unused-argument,broad-exception-caught,protected-access,missing-function-docstring,line-too-long,import-outside-toplevel,trailing-newlines,too-many-arguments,too-many-positional-arguments,unspecified-encoding,unused-import,cell-var-from-loop,too-many-return-statements,too-few-public-methods,superfluous-parens,wrong-import-order,unused-variable,missing-module-docstring,missing-class-docstring,invalid-name,cyclic-import,bad-indentation,unnecessary-ellipsis,unnecessary-dunder-call,redefined-outer-name,reimported,use-implicit-booleaness-not-comparison,useless-import-alias,stub-symbol-missing,too-many-locals,too-many-branches,too-many-statements,duplicate-code
 
 [DESIGN]
 max-statements=65
