@@ -90,7 +90,7 @@ Feature batch covering WS-1 through WS-8:
 
 **WS-2: Test perf under 30 s.** Default `pytest` excludes `@pytest.mark.slow` tests (benchmarks, real-subprocess runs). Slow-marked `TestPerfBenchmark` class.
 
-**WS-3: Sample project + integration tests.** `test/data/minimal_sample_project/` with planted violations. `test/integration.py` with scenario-based E2E tests. `.gitignore` updated for setup-generated artifacts.
+**WS-3: Sample project + integration tests.** `test/data/minimal_sample_project/` with planted violations. `tests/integration.py` with scenario-based E2E tests. `.gitignore` updated for setup-generated artifacts.
 
 **WS-4: Checkers reorg.** `checkers/` restructured into `conformance/` and `stub/` subfolders. `_checker_base.py` renamed to `_base.py`. `check_if_meaningful` helper added to `_base.py`.
 
