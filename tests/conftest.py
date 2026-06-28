@@ -167,4 +167,4 @@ def isolated_runner_registries() -> Iterable[None]:
 @pytest.fixture
 def sample_project() -> Path:
     """Path to the minimal sample project with planted violations."""
-    return Path("test/data/minimal_sample_project")
+    return Path("tests/data/minimal_sample_project")
