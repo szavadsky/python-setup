@@ -43,11 +43,11 @@ def canned_results_all_tools(
     stdout: str = "",
     overrides: Mapping[str, LintResult] | None = None,
 ) -> dict[str, LintResult]:
-    """Build the 12-tool canned-result dict for ``fake_run_cmd_factory``.
+    """Build the 13-tool canned-result dict for ``fake_run_cmd_factory``.
 
     Every built-in label maps to a ``LintResult`` with defaults; pass
     *overrides* to vary any subset. Used by the orchestration / smoke
-    tests so they stop repeating the 12-key dict literal.
+    tests so they stop repeating the 13-key dict literal.
     """
     # Late import to avoid any conftest-collection ordering surprise.
     from python_setup_lint.testing import make_lint_result

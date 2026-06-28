@@ -4,7 +4,7 @@ A :class:`LintTool` strategy wraps per-tool command construction, statistics
 flags, and statistics parsing.  Built-in tools reuse the module-level
 helpers in :mod:`python_setup_lint.runner.cmd_build` (command shape) and
 :mod:`python_setup_lint.runner.parsers` (statistics) via the default
-:class:`LintTool` methods; four built-ins override ``build_command`` for
+:class:`LintTool` methods; six built-ins override ``build_command`` for
 tool-specific shapes that cannot be expressed via :class:`~python_setup_lint.runner.types.ToolSpec`
 declarative fields alone.  Extras registered via :func:`register_lint_tool`
 land on :class:`GenericLintTool`, which composes the same generic flag logic
@@ -428,7 +428,7 @@ class GenericLintTool(LintTool):
 
 
 # Live registry of declared ``ToolSpec`` instances.
-# At import time it mirrors the 12 built-ins from :data:`TOOLS`; extras
+# At import time it mirrors the 13 built-ins from :data:`TOOLS`; extras
 # registered via :func:`register_lint_tool` append to it.  :data:`TOOLS`
 # stays the frozen built-in list and is kept as a legacy-compat alias.
 LINT_TOOLS: list[ToolSpec] = list(TOOLS)

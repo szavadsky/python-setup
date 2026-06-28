@@ -1,7 +1,6 @@
 """Stub for :mod:`python_setup_lint.runner.dispatch`.
 
-Per-tool strategy classes + the live strategy / tool registries.  Four
-built-ins override ``build_command`` for tool-specific command shapes
+Six built-ins override ``build_command`` for tool-specific command shapes
 (``mypy.stubtest``, ``pyright verify types``, ``detect-secrets``, ``pylint``);
 the rest inherit the default delegation to
 :mod:`python_setup_lint.runner.cmd_build`.
@@ -12,7 +11,7 @@ from collections.abc import Callable
 from .types import RunnerConfig, ToolSpec
 
 TOOLS: list[ToolSpec]
-"""All 12 tool specifications in execution order (built-ins)."""
+"""All 13 tool specifications in execution order (built-ins)."""
 
 TOOLS_BY_NAME: dict[str, ToolSpec]
 """Tool specs keyed by name for fast lookup (built-ins only)."""

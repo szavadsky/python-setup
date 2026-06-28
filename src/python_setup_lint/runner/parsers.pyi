@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 PARSE_STRATEGIES: frozenset[str]
-"""Closed ``parse_strategy`` enum — 12 built-in names + ``regex_count`` /
+"""Closed ``parse_strategy`` enum — 13 built-in names + ``regex_count`` /
 ``raw_lines`` + ``"none"``.  Update alongside ``_BUILTIN_PARSE_STRATEGY_TO_PARSER``
 when adding a parser.
 """
@@ -93,7 +93,7 @@ _STATISTICS_PARSERS: dict[str, Callable[..., list[tuple[str, int]]]]
 """Per-tool parser dispatch keyed by built-in :class:`~python_setup_lint.runner.types.ToolSpec` name."""
 
 _BUILTIN_PARSE_STRATEGY_TO_PARSER: dict[str, Callable[..., list[tuple[str, int]]]]
-"""``parse_strategy`` enum name → parser callable for the 12 built-in names.
+"""``parse_strategy`` enum name → parser callable for the 13 built-in names.
 
 ``regex_count`` is parameterised by the per-entry ``parse_regex`` source
 (resolved in :func:`python_setup_lint.runner.extra_tools._extra_tool_parser`);

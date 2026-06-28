@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-`python-setup` is a reusable Python package that encapsulates shared linting, formatting, and dev-tooling infrastructure for Python projects. It provides a unified lint pipeline (12 tools), custom pylint checkers, baseline-diffing for drift-resistant CI, and an idempotent installer that configures pre-commit hooks, pylint plugins, and config files in consumer projects.
+`python-setup` is a reusable Python package that encapsulates shared linting, formatting, and dev-tooling infrastructure for Python projects. It provides a unified lint pipeline (13 tools), custom pylint checkers, baseline-diffing for drift-resistant CI, and an idempotent installer that configures pre-commit hooks, pylint plugins, and config files in consumer projects.
 
 The package is consumed as a git dependency (e.g., `consultant-mcp`) and is **not** published to PyPI.
 
@@ -18,7 +18,7 @@ pyproject.toml  ──→  [project.scripts] lint → runner.cli:main
 src/python_setup_lint/
 ├── runner/              # Lint pipeline orchestration
 │   ├── cli.py           # Entry point (main, run_lint), autofix logic
-│   ├── dispatch.py      # Tool strategy registry (12 built-in tools)
+│   ├── dispatch.py      # Tool strategy registry (13 built-in tools)
 │   ├── types.py         # Core data types (ToolSpec, LintResult, RunnerConfig, ViolationCount)
 │   ├── cmd_build.py     # Command construction, path discovery, config composition
 │   ├── baseline.py      # Baseline capture + diff (drift-resistant)
@@ -66,7 +66,7 @@ src/python_setup_lint/
 
 ### Data flow
 
-1. **`uv run lint`** → `runner/cli.py:main()` parses args → `run_lint()` iterates over 12 built-in tools + any extras from `pyproject.toml [[tool.python-setup-lint.extra-tools]]`.
+1. **`uv run lint`** → `runner/cli.py:main()` parses args → `run_lint()` iterates over 13 built-in tools + any extras from `pyproject.toml [[tool.python-setup-lint.extra-tools]]`.
 2. Each tool is a `ToolSpec` (name, command, flags) wrapped in a `LintTool` strategy that builds the CLI command via `cmd_build.py:_build_command()`.
 3. Commands run via `output.py:_run_cmd()` → `LintResult` (exit_code, stdout, stderr, elapsed).
 4. Results are optionally diffed against `lint.baseline` via `baseline.py:_diff_baseline()` — only new violations (regressions) fail.
@@ -95,7 +95,7 @@ src/python_setup_lint/
 | `tests/fixtures/` | Test fixtures (dogfood-extra pyproject) |
 
 ```bash
-# Run the full lint pipeline (all 12 tools)
+# Run the full lint pipeline (all 13 tools)
 uv run lint
 
 # Run lint with path scoping
@@ -227,7 +227,7 @@ mypackage/
 | `tach.toml` | Module dependency boundaries |
 | `.secrets.baseline` | detect-secrets baseline |
 | `src/python_setup_lint/runner/cli.py` | Main entry point (`main`, `run_lint`) |
-| `src/python_setup_lint/runner/dispatch.py` | Tool strategy registry (12 built-in tools) |
+| `src/python_setup_lint/runner/dispatch.py` | Tool strategy registry (13 built-in tools) |
 | `src/python_setup_lint/runner/types.py` | Core data types |
 | `src/python_setup_lint/runner/baseline.py` | Baseline capture + diff |
 | `src/python_setup_lint/runner/parsers.py` | Output parsers |
@@ -285,9 +285,9 @@ mypackage/
 - Near 100% for each layer + downstream (transitive).
 - Each layer tested independently.
 - Hard-to-inject failure paths and defensive behaviors annotated.
-- `--statistics` aggregation tested across all 12 tool parsers.
+- `--statistics` aggregation tested across all 13 tool parsers.
 
-Integration test (tests/integration.py) is the fit-for-purpose gate — runs all 12 tools on planted-violation sample project, NOT marked slow. Verifies: all planted violations detected, brush-off "pre-existing" → W9704, carry-from external library → passes, install→lint E2E, pre-commit dry-run. Key regression catcher — any runner tool not working would fail here.
+Integration test (tests/integration.py) is the fit-for-purpose gate — runs all 13 tools on planted-violation sample project, NOT marked slow. Verifies: all planted violations detected, brush-off "pre-existing" → W9704, carry-from external library → passes, install→lint E2E, pre-commit dry-run. Key regression catcher — any runner tool not working would fail here.
 
 ### Baseline management
 

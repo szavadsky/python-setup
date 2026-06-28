@@ -27,7 +27,7 @@ This is idempotent — running it twice is a no-op.
 ## Usage
 
 ```bash
-# Run the full lint pipeline (all 12 tools with baseline diffing)
+# Run the full lint pipeline (all 13 tools with baseline diffing)
 uv run lint
 
 # Install python-setup tooling into a target project
@@ -67,7 +67,7 @@ uv run pre-commit install
 uv run lint
 ```
 
-Runs all 12 lint tools sequentially with baseline diffing and statistics aggregation.
+Runs all 13 lint tools sequentially with baseline diffing and statistics aggregation.
 
 ### What you get
 

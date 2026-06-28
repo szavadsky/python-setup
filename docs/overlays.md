@@ -1,6 +1,6 @@
 # Rule Overlay Configuration
 
-`python-setup` ships with shared config files for all 12 lint tools. Consumer projects can overlay their own rules on top of the shared base via `extend` in their `pyproject.toml`.
+`python-setup` ships with shared config files for all 13 lint tools. Consumer projects can overlay their own rules on top of the shared base via `extend` in their `pyproject.toml`.
 
 ## How overlays work
 
