@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.15.0 (2026-06-28)
+
+- Lint `tests/` with pylint via new `.pylintrc-tests` hybrid rcfile (W9704/W9702 now enforced on test code; production-only rules disabled for tests with justification).
+- Pipeline now 13 tools (added `pylint tests`).
+- `.pylintrc-pyi` disable list: removed unjustified `global-statement`; added per-rule justification for vague stub-pattern rules.
+- Version sync to 0.14.0; `tach.toml` moved to `config/` with root symlink (SSOT).
+- `docs/custom-checks.md`: fixed rule-ID range (W90xx-W97xx), added manual registration instructions.
+- `README.md`: documented `python-setup-test-checked` entry point.
+
 ## v0.14.0 (2026-06-28) — Housekeeping: test/data move, git artifact cleanup, version sync, W9704 data-string fix
 
 **Moved test/data → tests/data** — sample project now under tests/data/. Updated code references (conftest.py, integration.py), config ignore-paths (.pylintrc, mypy.ini, ruff.toml), .gitignore.
