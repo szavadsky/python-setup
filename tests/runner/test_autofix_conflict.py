@@ -132,28 +132,25 @@ class TestRuffParseabilityErrors:
         assert _ruff_parseability_errors(tmp_path, [], fake_run) == set()
         assert run_called == []  # short-circuit verified
 
-    @pytest.mark.parametrize(
-        "stdout,expected_files",
-        [
-            ("src/a.py:1:1: E999 SyntaxError\n", {"src/a.py"}),
-            (
-                "src/a.py:1:1: E999 first\nsrc/b.py:2:2: E999 second\n",
-                {"src/a.py", "src/b.py"},
-            ),
-            ("src/a.py:1:1: F401 unused import\n", set()),
-            ("", set()),
-            ("src/a.py:1:1: F401 unused\nsrc/b.py:2:2: E999 broken\n", {"src/b.py"}),
-            ("src/no-colon: line\n", set()),
-        ],
-        ids=[
-            "one_e999",
-            "two_e999",
-            "non_e999_only",
-            "empty",
-            "mixed_e999_and_other",
-            "no_colon",
-        ],
-    )
+    @pytest.mark.parametrize(("stdout", "expected_files"), [
+        ("src/a.py:1:1: E999 SyntaxError\n", {"src/a.py"}),
+        (
+            "src/a.py:1:1: E999 first\nsrc/b.py:2:2: E999 second\n",
+            {"src/a.py", "src/b.py"},
+        ),
+        ("src/a.py:1:1: F401 unused import\n", set()),
+        ("", set()),
+        ("src/a.py:1:1: F401 unused\nsrc/b.py:2:2: E999 broken\n", {"src/b.py"}),
+        ("src/no-colon: line\n", set()),
+    ],
+    ids=[
+        "one_e999",
+        "two_e999",
+        "non_e999_only",
+        "empty",
+        "mixed_e999_and_other",
+        "no_colon",
+    ],)
     def test_parses_e999_lines(
         self,
         tmp_path: Path,
@@ -240,7 +237,7 @@ class TestEnvVarAutofixOptOut:
         monkeypatch.setenv(_AUTOFIX_ENV_VAR, "1")
         fake = fake_run_cmd_factory(canned_results_all_tools())
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=tmp_config(tmp_path), fix=True, no_fail_fast=True)
+        run_lint(config=tmp_config(tmp_path), fix=True)
         captured = capsys.readouterr()
         # D4 (review T4-0): the prior form asserted only substring matches
         # for the env-var name AND the word "disabling" — soft tautology.
@@ -273,7 +270,7 @@ class TestEnvVarAutofixOptOut:
         canned = _make_canned_fix_results()
         fake = fake_run_cmd_factory(canned)
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=tmp_config(tmp_path), fix=True, no_fail_fast=True)
+        run_lint(config=tmp_config(tmp_path), fix=True)
         captured = capsys.readouterr()
         assert "disabling autofix" not in captured.err
         for record in fake.calls:
@@ -296,7 +293,7 @@ class TestEnvVarAutofixOptOut:
         canned = _make_canned_fix_results()
         fake = fake_run_cmd_factory(canned)
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=tmp_config(tmp_path), fix=True, no_fail_fast=True)
+        run_lint(config=tmp_config(tmp_path), fix=True)
         for record in fake.calls:
             if record.label in _FIX_TOOL_NAMES:
                 assert "--fix" in record.cmd

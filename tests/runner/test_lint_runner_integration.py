@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 
+import python_setup_lint.runner.output as _output_module
 from python_setup_lint.runner import (
     LINT_TOOLS,
     LintResult,
@@ -20,7 +21,6 @@ from python_setup_lint.runner import (
 )
 from python_setup_lint.runner.baseline import _capture_baseline, _diff_baseline
 from python_setup_lint.runner.output import _run_cmd
-import python_setup_lint.runner.output as _output_module
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 from tests.runner._factories import (
     diff_baseline_with,
@@ -64,44 +64,41 @@ class TestCaptureBaseline:
         assert baseline[0]["tool"] == "ruff check" and baseline[0]["exit_code"] == 0
         assert baseline[1]["exit_code"] == 1
 
-    @pytest.mark.parametrize(
-        "tool,stdout,want_in,want_not_in",
-        [
-            (
-                "pyright check",
-                json.dumps({"summary": {"errorCount": 1}}),
-                {"diagnostics": {"summary": {"errorCount": 1}}},
-                [],
-            ),
-            (
-                "pyright check",
-                json.dumps(
-                    {
-                        "summary": {
-                            "errorCount": 1,
-                            "timeInSec": 12.5,
-                            "filesAnalyzed": 100,
-                        }
+    @pytest.mark.parametrize(("tool", "stdout", "want_in", "want_not_in"), [
+        (
+            "pyright check",
+            json.dumps({"summary": {"errorCount": 1}}),
+            {"diagnostics": {"summary": {"errorCount": 1}}},
+            [],
+        ),
+        (
+            "pyright check",
+            json.dumps(
+                {
+                    "summary": {
+                        "errorCount": 1,
+                        "timeInSec": 12.5,
+                        "filesAnalyzed": 100,
                     }
-                ),
-                None,
-                ["timeInSec"],
-            ),  # volatile timeInSec stripped; filesAnalyzed kept
-            (
-                "rumdl check",
-                "\nSuccess: No issues found in 47 files (12ms)\n",
-                {"output": "\nSuccess: No issues found in 47 files (XXXms)\n"},
-                [],
+                }
             ),
-        ],
-        ids=[
-            "pyright_diagnostics",
-            "pyright_strips_time_in_sec",
-            "rumdl_strips_timing",
-        ],
-    )
-    def test_capture_strips_volatile_fields(  # type: ignore[no-untyped-def]
-        self, tool: str, stdout: str, want_in, want_not_in
+            None,
+            ["timeInSec"],
+        ),  # volatile timeInSec stripped; filesAnalyzed kept
+        (
+            "rumdl check",
+            "\nSuccess: No issues found in 47 files (12ms)\n",
+            {"output": "\nSuccess: No issues found in 47 files (XXXms)\n"},
+            [],
+        ),
+    ],
+    ids=[
+        "pyright_diagnostics",
+        "pyright_strips_time_in_sec",
+        "rumdl_strips_timing",
+    ],)
+    def test_capture_strips_volatile_fields(
+        self, tool: str, stdout: str, want_in: dict[str, object] | None, want_not_in: list[str] | None
     ) -> None:
         baseline = _capture_baseline([make_lint_result(tool_name=tool, stdout=stdout)])
         if want_in is not None:
@@ -111,7 +108,7 @@ class TestCaptureBaseline:
                 )
         for stripped_key in want_not_in or []:
             diag = baseline[0].get("diagnostics", {})
-            assert stripped_key not in diag.get("summary", {}), (
+            assert stripped_key not in diag.get("summary", {}), (  # type: ignore[attr-defined]  # object-typed variable from release_messages()
                 f"{stripped_key} should be stripped: {diag!r}"
             )
 
@@ -119,10 +116,7 @@ class TestCaptureBaseline:
 # ── _diff_baseline parametrised shrinkage/addition/mixed matrix ───
 
 
-@pytest.mark.parametrize(
-    "saved,current,want_kind,post_assert_id",
-    DIFF_BASELINE_CASES,
-)
+@pytest.mark.parametrize(("saved", "current", "want_kind", "post_assert_id"), DIFF_BASELINE_CASES,)
 def test_diff_baseline_matrix(
     tmp_path: Path,
     saved: dict[str, Any] | list[dict[str, Any]],
@@ -146,7 +140,7 @@ def test_diff_baseline_matrix(
 class TestDiffBaselineEdgeCases:
     """Baseline diff boundary cases that don't fit the matrix rows."""
 
-    @pytest.mark.parametrize("saved,current,want_kind", DIFF_EDGE_CASES)
+    @pytest.mark.parametrize(("saved", "current", "want_kind"), DIFF_EDGE_CASES)
     def test_diff_edge_case_matrix(
         self,
         tmp_path: Path,
@@ -162,7 +156,7 @@ class TestDiffBaselineEdgeCases:
         else:
             diff_violation_kind(violations, want_kind)
 
-    @pytest.mark.parametrize("saved,results,want_kind", DIFF_EDGE_INVARIANTS)
+    @pytest.mark.parametrize(("saved", "results", "want_kind"), DIFF_EDGE_INVARIANTS)
     def test_diff_edge_invariants(
         self,
         tmp_path: Path,
@@ -182,7 +176,7 @@ class TestDiffBaselineEdgeCases:
         else:
             diff_violation_kind(violations, want_kind)
 
-    @pytest.mark.parametrize("kind,body,want_substr", DIFF_BASELINE_PATH_ERRORS)
+    @pytest.mark.parametrize(("kind", "body", "want_substr"), DIFF_BASELINE_PATH_ERRORS)
     def test_diff_baseline_path_errors(  # type: ignore[no-untyped-def]
         self, tmp_path: Path, kind: str, body, want_substr
     ) -> None:
@@ -332,9 +326,9 @@ class TestOverwriteBaseline:
 
 
 class TestRunLintOrchestration:
-    """Fake-driven ``run_lint``: --no-fail-fast, tools_override, package_name."""
+    """Fake-driven ``run_lint``: tools_override, package_name."""
 
-    def test_no_fail_fast_captures_all_tools_and_returns_int(
+    def test_run_lint_captures_all_tools_and_returns_int(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
@@ -343,7 +337,7 @@ class TestRunLintOrchestration:
         fake, _ = install_fake_runner(monkeypatch)
         baseline_file = tmp_path / "noff.json"
         rc = run_lint(
-            config=tmp_config(tmp_path), baseline=str(baseline_file), no_fail_fast=True
+            config=tmp_config(tmp_path), baseline=str(baseline_file)
         )
         assert isinstance(rc, int)
         assert {c.label for c in fake.calls} == {t.name for t in LINT_TOOLS}
@@ -357,16 +351,13 @@ class TestRunLintOrchestration:
         run_lint(
             config=tmp_config(tmp_path, tools_override=["ruff check", "mypy"]),
             baseline=str(baseline_file),
-            no_fail_fast=True,
         )
         assert {e["tool"] for e in json.loads(baseline_file.read_text())} == {
             "ruff check",
             "mypy",
         }
 
-    @pytest.mark.parametrize(
-        "package_name,want_stubtest,want_count_delta", PACKAGE_NAME_STUBTEST_CASES
-    )
+    @pytest.mark.parametrize(("package_name", "want_stubtest", "want_count_delta"), PACKAGE_NAME_STUBTEST_CASES)
     def test_package_name_governs_stubtest_verifytypes(
         self,
         tmp_path: Path,
@@ -380,7 +371,6 @@ class TestRunLintOrchestration:
         run_lint(
             config=RunnerConfig(cwd=tmp_path, package_name=package_name),
             baseline=str(tmp_path / "pkg.json"),
-            no_fail_fast=True,
         )
         dispatched = {c.label for c in fake.calls}
         assert ("mypy.stubtest" in dispatched) == want_stubtest
@@ -405,7 +395,7 @@ def test_main_argparse_accepts_flag(
 class TestMainCLI:
     """argparse SystemExit boundary tests: --help exits 0, unknown flag non-zero."""
 
-    @pytest.mark.parametrize("args,want_code_zero", MAIN_EXIT_CODE_CASES)
+    @pytest.mark.parametrize(("args", "want_code_zero"), MAIN_EXIT_CODE_CASES)
     def test_main_exit_codes(self, args: list[str], want_code_zero: bool) -> None:
         """argparse exits 0 on --help, non-zero on unknown flag (CLI smoke)."""
         with pytest.raises(SystemExit) as exc_info:
@@ -422,7 +412,7 @@ class TestMainCLI:
 class TestRunLintIntegration:
     """End-to-end ``run_lint`` with the fake ``_run_cmd`` installed."""
 
-    @pytest.mark.parametrize("fix,override_stdout", RUFF_BASELINE_FIX_CASES)
+    @pytest.mark.parametrize(("fix", "override_stdout"), RUFF_BASELINE_FIX_CASES)
     def test_run_lint_baseline_capture_with_ruff(
         self,
         tmp_path: Path,
@@ -448,7 +438,6 @@ class TestRunLintIntegration:
             config=tmp_config(tmp_path),
             fix=fix,
             baseline=str(baseline_file),
-            no_fail_fast=True,
         )
         assert any(
             e["tool"] == "ruff check" for e in json.loads(baseline_file.read_text())
@@ -491,7 +480,7 @@ class TestRunLintIntegration:
 class TestRunCmd:
     """Subprocess runner returns structured results (quick commands only)."""
 
-    @pytest.mark.parametrize("cmd,label,exit_pred,stdout_want", RUN_CMD_CASES)
+    @pytest.mark.parametrize(("cmd", "label", "exit_pred", "stdout_want"), RUN_CMD_CASES)
     def test_run_cmd_success_and_failure(  # type: ignore[no-untyped-def]
         self, cmd, label, exit_pred, stdout_want
     ) -> None:

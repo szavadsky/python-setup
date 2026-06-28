@@ -8,12 +8,14 @@ Tests invariants:
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from python_setup_lint.runner import Record
 from python_setup_lint.runner._record_parsers import (
     _parse_mypy_records,
     _parse_pylint_records,
@@ -60,7 +62,7 @@ _json_value = st.recursive(
 # ── Record parser invariants ────────────────────────────────────────
 
 
-def _check_record_invariants(records, parser, text):
+def _check_record_invariants(records: list[Record], parser: Callable[[str], list[Record]], text: str) -> None:
     """Check common invariants for record parsers."""
     # 1. Idempotency: parsing same input twice yields identical sorted list
     records2 = parser(text)
@@ -233,7 +235,7 @@ class TestPyrightRecords:
 # ── Statistics parsers ──────────────────────────────────────────────
 
 
-def _check_statistics_invariants(result, parser, stdout, stderr=""):
+def _check_statistics_invariants(result: list[tuple[str, int]], parser: Callable[[str, str], list[tuple[str, int]]], stdout: str, stderr: str = "") -> None:
     """Check common invariants for statistics parsers."""
     # 1. Idempotency
     result2 = parser(stdout, stderr)

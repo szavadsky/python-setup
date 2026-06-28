@@ -7,17 +7,19 @@ those belong in .pyi. Implementation comments (why, tricks) stay in .py.
 
 from __future__ import annotations
 
-import structlog
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-from astroid import nodes  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
+import structlog
+from astroid import nodes  # TYPE_CHECKING-only import; pylint is a dev dependency
 from beartype import beartype
 from pylint.checkers import BaseChecker
+
 from python_setup_lint.checkers._base import MessageDef, _msgs
 
-
 if TYPE_CHECKING:
+    from pylint.lint import PyLinter
+
     from python_setup_lint.checkers.stub.checker import StubChecker
 
 
@@ -139,14 +141,12 @@ class StubDocstringChecker(BaseChecker):
         self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef
     ) -> None:
         # Rule 1: docstring-in-impl — flag usage docstrings in .py with companion .pyi
-        if func_node.doc_node is not None:
-            # _-prefixed helpers MAY have docstrings (no message emitted)
-            if not func_node.name.startswith("_"):
-                self.add_message(
-                    "docstring-in-impl",
-                    node=func_node,
-                    args=(self._current_module_name or "", func_node.name),
-                )
+        if func_node.doc_node is not None and not func_node.name.startswith("_"):
+            self.add_message(
+                "docstring-in-impl",
+                node=func_node,
+                args=(self._current_module_name or "", func_node.name),
+            )
 
         # Rule 2: generic-return-requires-Returns
         self._check_returns_clause(func_node)
@@ -192,11 +192,9 @@ class StubDocstringChecker(BaseChecker):
         """
         for line in doc_text.splitlines():
             stripped = line.strip()
-            if stripped.startswith("Returns:") or stripped.startswith("Yields:"):
+            if stripped.startswith(("Returns:", "Yields:")):
                 return True
         return False
 
-
-@beartype
-def register(linter: PyLinter) -> None:
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API; @beartype cannot resolve PyLinter forward ref
     linter.register_checker(StubDocstringChecker(linter))

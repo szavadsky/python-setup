@@ -22,10 +22,10 @@ from pathlib import Path
 
 import pytest
 
+import python_setup_lint.runner.output as _output_module
 from python_setup_lint.runner import RunnerConfig, run_lint
 from python_setup_lint.runner.cmd_build import _compose_ruff_config, _load_pyproject_toml
 from python_setup_lint.testing import fake_run_cmd_factory
-import python_setup_lint.runner.output as _output_module
 
 # ── RunnerConfig default-off + explicit-on ──────────────────────
 
@@ -231,7 +231,7 @@ class TestLoadPyprojectCache:
         first = _load_pyproject_toml(pp)
         second = _load_pyproject_toml(pp)
         assert first is second  # cached — same dict instance
-        assert first.get("project", {}).get("name") == "x"
+        assert first.get("project", {}).get("name") == "x"  # type: ignore[attr-defined]  # object-typed variable from release_messages()
 
     def test_cache_miss_on_mtime_change(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -246,7 +246,7 @@ class TestLoadPyprojectCache:
         os_utime(pp)
         second = _load_pyproject_toml(pp)
         assert first is not second
-        assert second.get("project", {}).get("name") == "y"
+        assert second.get("project", {}).get("name") == "y"  # type: ignore[attr-defined]  # object-typed variable from release_messages()
 
     def test_missing_pyproject_returns_empty(self, tmp_path: Path) -> None:
         """Missing file → empty dict (caller treats as no-override)."""
@@ -305,7 +305,7 @@ class TestRunLintConsumesOverrides:
         shared_before = config.config_paths["ruff check"]  # type: ignore[index]
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=config, no_fail_fast=True)
+        run_lint(config=config)
         assert config.config_paths["ruff check"] != shared_before  # type: ignore[index]
         assert "python_setup_lint_ruff_" in str(config.config_paths["ruff check"])  # type: ignore[index]
 
@@ -315,7 +315,7 @@ class TestRunLintConsumesOverrides:
         config = self._config_with_overrides(tmp_path)
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=config, no_fail_fast=True)
+        run_lint(config=config)
         assert config.config_paths["pyright check"] == tmp_path / "pyproject.toml"  # type: ignore[index]
 
     def test_ruff_command_uses_composed_path(
@@ -325,7 +325,7 @@ class TestRunLintConsumesOverrides:
         config = self._config_with_overrides(tmp_path)
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=config, no_fail_fast=True)
+        run_lint(config=config)
         ruff_rec = next((r for r in fake.calls if r.cmd[:2] == ["ruff", "check"]), None)
         assert ruff_rec is not None, (
             f"ruff check was not dispatched; calls={[r.cmd[:2] for r in fake.calls[:3]]}"
@@ -340,7 +340,7 @@ class TestRunLintConsumesOverrides:
         config = self._config_with_overrides(tmp_path)
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=config, no_fail_fast=True)
+        run_lint(config=config)
         pyright_rec = next((r for r in fake.calls if r.cmd[:1] == ["pyright"]), None)
         assert pyright_rec is not None, (
             f"pyright not dispatched; calls={[r.cmd[:2] for r in fake.calls[:3]]}"
@@ -367,6 +367,6 @@ class TestRunLintConsumesOverrides:
         snapshot_pyright = config.config_paths["pyright check"]  # type: ignore[index]
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=config, no_fail_fast=True)
+        run_lint(config=config)
         assert config.config_paths["ruff check"] == snapshot_ruff  # type: ignore[index]
         assert config.config_paths["pyright check"] == snapshot_pyright  # type: ignore[index]

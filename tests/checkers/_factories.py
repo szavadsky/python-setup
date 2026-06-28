@@ -29,7 +29,6 @@ from python_setup_lint.testing import _make_tc as _make_tc_factory
 
 if TYPE_CHECKING:
     from pylint.checkers import BaseChecker
-    from pylint.message import Message
 
     from python_setup_lint.checkers.stub.checker import StubChecker
     from python_setup_lint.checkers.stub.import_contract import ImportUsage
@@ -749,7 +748,7 @@ def walk_both_release_for_pyi(
     code: str,
     py_path: Path,
     source_roots: list[str] | None = None,
-) -> list[Message]:
+) -> list[Any]:
     from pylint.testutils import UnittestLinter
     from pylint.utils import ASTWalker
 
@@ -898,7 +897,7 @@ def walk_stub_close_release(
     stub_opt_out: list[str] | None = None,
     stub_roots: list[str] | None = None,
     module_name: str = "test_module",
-) -> list[Message]:
+) -> list[Any]:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
     tc = _make_tc_factory(StubChecker)
@@ -1025,7 +1024,7 @@ def walk_stub_resolution_layout(
     code: str,
     module_name: str,
     /,
-) -> list[Message]:
+) -> list[Any]:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
     tc = _make_tc_factory(StubChecker)
@@ -1258,7 +1257,7 @@ def walk_stub_checker_with_pair(
     pyi_code: str,
     /,
     module_name: str = "mod_a",
-) -> list[Message]:
+) -> list[Any]:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
     src = tmp_path / "src"
@@ -1287,7 +1286,7 @@ def setup_and_emit_import_contract(
     symbol: str | None,
     is_star: bool,
     star_policy: str | None,
-) -> tuple[CheckerTestCase, list[Message]]:
+) -> tuple[CheckerTestCase, list[Any]]:
     from python_setup_lint.checkers.stub.import_contract import (
         ImportUsage,
         emit_import_contract_violations,

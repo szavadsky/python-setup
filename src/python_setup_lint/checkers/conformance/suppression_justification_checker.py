@@ -10,8 +10,10 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
+from pylint.typing import MessageDefinitionTuple
 
 from python_setup_lint.checkers._base import (
     MessageDef,
@@ -36,15 +38,13 @@ class SuppressionJustificationChecker(BaseChecker):
     """AST visitor that flags unjustified suppression comments."""
 
     name: str = "suppression-justification"
-    msgs = _msgs(
+    msgs: dict[str, MessageDefinitionTuple] = _msgs(
         W9704=MessageDef(
             message="Suppression comment without technical justification: %s",
             symbol="unjustified-suppression",
-            description=(
-                "Suppression comments (# pylint: disable=..., # noqa, "
-                "# type: ignore) must be accompanied by a technical reason "
-                "on the same line or the preceding line."
-            ),
+            description="Suppression comments (pylint-disable, noqa, "
+            "type-ignore comments) must be accompanied by a technical reason "
+            "on the same line or the preceding line."
         ),
     )
 
@@ -61,10 +61,7 @@ class SuppressionJustificationChecker(BaseChecker):
         except OSError:  # pylint: disable=W9740  # best-effort stream read fallback; logging would noise unavoidable IO degrade
             return
 
-        if isinstance(raw, bytes):
-            source = raw.decode("utf-8")
-        else:
-            source = raw
+        source = raw.decode("utf-8") if isinstance(raw, bytes) else raw
 
         lines = source.splitlines(keepends=True)
 
@@ -77,9 +74,91 @@ class SuppressionJustificationChecker(BaseChecker):
             self.add_message(
                 "unjustified-suppression",
                 line=lineno,
-                node=node,
+                node=node,  # type: ignore[arg-type]  # node is object; add_message expects NodeNG | None  # ty:ignore[invalid-argument-type]
                 args=(stripped.strip(),),
             )
+
+    def visit_annassign(self, node: nodes.AnnAssign) -> None:  # pylint: disable=missing-beartype  # nodes.AnnAssign is TYPE_CHECKING-only; @beartype cannot resolve forward ref
+        self._check_any_annotation(node)
+
+    def _check_any_annotation(self, node: nodes.AnnAssign) -> None:
+        """Check Any annotations for trailing justification.
+
+        If the annotation is ``Any`` (or contains ``Any``, e.g. ``dict[str, Any]``)
+        and the line lacks a trailing ``# <reason>`` comment, emit
+        ``unjustified-suppression`` (W9704).
+        """
+        annotation = node.annotation
+        if annotation is None:
+            return
+
+        # Check if the annotation is or contains ``Any``.
+        if isinstance(annotation, nodes.Name) and annotation.name == "Any":
+            pass  # direct ``Any``
+        elif isinstance(annotation, nodes.Subscript):
+            # Walk subscript children for ``Any``.
+            if not self._subscript_contains_any(annotation):
+                return
+        else:
+            return
+
+        # Check the node's line for a trailing justification comment.
+        line = node.fromlineno
+        if line is None:
+            return
+
+        # We need the source line.  Try to get it from the parent module.
+        # Fall back to the node's own col_offset-based approach.
+        try:
+            parent = node.root()
+            stream = parent.stream()  # type: ignore[union-attr]  # parent.stream() returns a stream object with .read()
+            raw = stream.read()
+            source = raw.decode("utf-8") if isinstance(raw, bytes) else raw
+            lines = source.splitlines(keepends=True)
+            src_line = lines[line - 1].rstrip("\n")
+        except (AttributeError, OSError, IndexError):  # pylint: disable=W9740  # best-effort source line extraction; silently skip if unavailable
+            return
+
+        # Look for a trailing ``# <reason>`` after the annotation.
+        m = _PAT_TRAILING_REASON.search(src_line)
+        if m:
+            reason = m.group(1)
+            if check_if_meaningful(reason, comment=reason):
+                return
+
+        # No justification found — emit warning.
+        self.add_message(
+            "unjustified-suppression",
+            line=line,
+            node=node,  # type: ignore[arg-type]  # node is object; add_message expects NodeNG | None
+            args=(annotation.as_string(),),
+        )
+
+    @staticmethod
+    def _subscript_contains_any(node: nodes.Subscript) -> bool:
+        """Recursively check if a Subscript node contains ``Any``.
+
+        Returns:
+            True if any part of the subscript is ``Any``.
+        """
+        # Check the value (e.g. ``dict`` in ``dict[str, Any]``).
+        if isinstance(node.value, nodes.Name) and node.value.name == "Any":
+            return True
+        if isinstance(node.value, nodes.Subscript) and SuppressionJustificationChecker._subscript_contains_any(node.value):
+            return True
+        # Check the slice.
+        if isinstance(node.slice, nodes.Name) and node.slice.name == "Any":
+            return True
+        if isinstance(node.slice, nodes.Subscript) and SuppressionJustificationChecker._subscript_contains_any(node.slice):
+            return True
+        # Check tuple slices (e.g. ``dict[str, Any]`` has a Tuple slice).
+        if isinstance(node.slice, nodes.Tuple):
+            for elt in node.slice.elts:
+                if isinstance(elt, nodes.Name) and elt.name == "Any":
+                    return True
+                if isinstance(elt, nodes.Subscript) and SuppressionJustificationChecker._subscript_contains_any(elt):
+                    return True
+        return False
 
     @staticmethod
     def _is_suppression_line(line: str) -> bool:

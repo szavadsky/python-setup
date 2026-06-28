@@ -14,7 +14,7 @@ import json
 import tempfile
 import tomllib
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -132,7 +132,7 @@ def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
     return None
 
 
-def _load_pyproject_toml(path: Path) -> dict[str, Any]:
+def _load_pyproject_toml(path: Path) -> dict[str, object]:
     resolved = path.resolve()
     try:
         mtime = resolved.stat().st_mtime_ns
@@ -231,7 +231,7 @@ def _resolve_exclude_paths(
             new_excludes.append(rewritten)
             changed = True
         else:
-            new_excludes.append(entry if isinstance(entry, str) else entry)
+            new_excludes.append(entry if isinstance(entry, str) else entry)  # type: ignore[arg-type]  # entry is object; list expects str  # ty:ignore[invalid-argument-type]
     return new_excludes, changed
 
 

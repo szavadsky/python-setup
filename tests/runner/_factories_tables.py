@@ -5,8 +5,9 @@ Moved from ``_factories.py`` to keep each file under 500 lines (pylint C0302).
 
 from __future__ import annotations
 
-import pytest
 from typing import TYPE_CHECKING
+
+import pytest
 
 if TYPE_CHECKING:
     from _pytest.mark.structures import ParameterSet
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 # ── Parametrise tables ────────────────────────────────────────────
 
 # ``_build_command`` rows — one row per (tool spec, kwargs, expected cmd).
-BUILD_COMMAND_CASES: list["ParameterSet"] = [
+BUILD_COMMAND_CASES: list[ParameterSet] = [
     pytest.param(
         {
             "name": "test",
@@ -132,7 +133,7 @@ BUILD_COMMAND_CASES: list["ParameterSet"] = [
 ]
 
 # ``_build_statistics_flags`` rows — one row per (tool name, expected flag list).
-STATISTICS_FLAG_CASES: list["ParameterSet"] = [
+STATISTICS_FLAG_CASES: list[ParameterSet] = [
     pytest.param("ruff check", ["--statistics"], id="ruff_native"),
     pytest.param("rumdl check", ["--statistics"], id="rumdl_native"),
     pytest.param("pylint", ["--output-format=json2"], id="pylint_json2"),
@@ -144,13 +145,9 @@ STATISTICS_FLAG_CASES: list["ParameterSet"] = [
 ]
 
 # ``main([...])`` flag-acceptance rows.
-MAIN_ARGPARSE_CASES: list["ParameterSet"] = [
+MAIN_ARGPARSE_CASES: list[ParameterSet] = [
     pytest.param(["--path", "src/python_setup_lint/runner.py"], id="main_path"),
     pytest.param(["--fix", "--path", "src/python_setup_lint/runner.py"], id="main_fix"),
-    pytest.param(
-        ["--no-fail-fast", "--path", "src/python_setup_lint/runner.py"],
-        id="main_no_fail_fast",
-    ),
     pytest.param(
         ["--exclude", "tests/", "--path", "src/python_setup_lint/runner.py"],
         id="main_exclude",
@@ -176,7 +173,7 @@ MAIN_ARGPARSE_CASES: list["ParameterSet"] = [
 ]
 
 # ``main([... --statistics ...])`` flag-acceptance rows for T7 group/sort.
-MAIN_GROUP_SORT_CASES: list["ParameterSet"] = [
+MAIN_GROUP_SORT_CASES: list[ParameterSet] = [
     pytest.param(
         [
             "--statistics",
@@ -216,7 +213,7 @@ MAIN_GROUP_SORT_CASES: list["ParameterSet"] = [
 
 # Per-parser statistics table.
 ParserRow = tuple[str, str, str, list[tuple[str, int]]]
-PARSER_STATISTICS_CASES: list["ParameterSet"] = [
+PARSER_STATISTICS_CASES: list[ParameterSet] = [
     # ruff
     pytest.param(
         "ruff check",

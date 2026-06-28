@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .types import LintResult, ToolSpec  # noqa: TCH001  # TYPE_CHECKING-only import; not available at runtime
+from .types import LintResult, ToolSpec  # TYPE_CHECKING-only import; not available at runtime
 
 
 def _print_tool_notes(spec: ToolSpec, *, fix: bool, path: str | None, exclude: str | None) -> None:

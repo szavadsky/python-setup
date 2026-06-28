@@ -21,8 +21,8 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 from python_setup_lint.runner import TOOLS, LintResult, RunnerConfig
-from python_setup_lint.runner.extra_tools import ExtraToolsConfigError
 from python_setup_lint.runner.baseline import _diff_baseline
+from python_setup_lint.runner.extra_tools import ExtraToolsConfigError
 
 if TYPE_CHECKING:
     import pytest

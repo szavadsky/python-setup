@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 
+import python_setup_lint.runner.output as _output_module
 from python_setup_lint.runner import (
     STRATEGIES,
     TOOLS,
@@ -26,7 +27,6 @@ from python_setup_lint.runner.cmd_build import (
     _find_py_files,
 )
 from python_setup_lint.runner.output import _print_result
-import python_setup_lint.runner.output as _output_module
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 from tests.runner._factories import canned_results_all_tools
 from tests.runner._factories_extras import (
@@ -107,7 +107,7 @@ class TestRegisterLintToolIdentity:
 # ── _build_command (parametrised via shared table) ────────────────
 
 
-@pytest.mark.parametrize("spec_kwargs,build_kwargs,expected", BUILD_COMMAND_CASES)
+@pytest.mark.parametrize(("spec_kwargs", "build_kwargs", "expected"), BUILD_COMMAND_CASES)
 def test_build_command(
     spec_kwargs: dict[str, Any], build_kwargs: dict[str, Any], expected: list[str]
 ) -> None:
@@ -208,10 +208,7 @@ class TestStrategyBuildCommand:
             and all(a.endswith(".py") for a in cmd[1:])
         )
 
-    @pytest.mark.parametrize(
-        "strategy_name,package_name,expected_tokens",
-        STRATEGY_TOKENS_CASES,
-    )
+    @pytest.mark.parametrize(("strategy_name", "package_name", "expected_tokens"), STRATEGY_TOKENS_CASES,)
     def test_stubtest_and_verifytypes_strategy_with_package_name(
         self,
         strategy_name: str,
@@ -251,7 +248,7 @@ class TestPathHelpers:
         )
         assert files == sorted(files) and len(files) == len(set(files))
 
-    @pytest.mark.parametrize("paths,expected", FIND_PY_FILES_BOUNDARY_CASES)
+    @pytest.mark.parametrize(("paths", "expected"), FIND_PY_FILES_BOUNDARY_CASES)
     def test_find_py_files_boundary(
         self, paths: list[str], expected: list[str]
     ) -> None:
@@ -264,7 +261,7 @@ class TestPathHelpers:
             for f in _find_py_files(["src/python_setup_lint"], cwd=Path.cwd())
         )
 
-    @pytest.mark.parametrize("paths,check", EXPAND_GLOBS_CASES)
+    @pytest.mark.parametrize(("paths", "check"), EXPAND_GLOBS_CASES)
     def test_expand_globs(self, paths: list[str], check) -> None:  # type: ignore[no-untyped-def]
         assert check(_expand_globs(paths, cwd=Path.cwd()))
 
@@ -382,7 +379,7 @@ class TestObservabilitySkipLines:
         fake = fake_run_cmd_factory(canned_results_all_tools())
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         config = RunnerConfig(cwd=Path.cwd(), package_name=None)
-        run_lint(config=config, no_fail_fast=True)
+        run_lint(config=config)
         captured = capsys.readouterr()
         assert "SKIPPED: --package-name not set" in captured.err
         assert "[mypy.stubtest]" in captured.err
@@ -396,7 +393,7 @@ class TestObservabilitySkipLines:
         fake = fake_run_cmd_factory(canned_results_all_tools())
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
-        run_lint(config=config, fix=True, no_fail_fast=True)
+        run_lint(config=config, fix=True)
         captured = capsys.readouterr()
         assert "--fix: N/A" in captured.err
 
@@ -408,7 +405,7 @@ class TestObservabilitySkipLines:
         fake = fake_run_cmd_factory(canned_results_all_tools())
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
-        run_lint(config=config, path="src/main.py", no_fail_fast=True)
+        run_lint(config=config, path="src/main.py")
         captured = capsys.readouterr()
         assert "--path: N/A" in captured.err
 
@@ -420,7 +417,7 @@ class TestObservabilitySkipLines:
         fake = fake_run_cmd_factory(canned_results_all_tools())
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         config = RunnerConfig(cwd=Path.cwd(), package_name="python_setup_lint")
-        run_lint(config=config, exclude="tests/", no_fail_fast=True)
+        run_lint(config=config, exclude="tests/")
         captured = capsys.readouterr()
         assert "--exclude: N/A" in captured.err
 
@@ -431,7 +428,7 @@ class TestObservabilitySkipLines:
 class TestPrintResult:
     """``_print_result`` produces expected output format."""
 
-    @pytest.mark.parametrize("exit_code,stdout,stderr,want_tokens", PRINT_FORMAT_CASES)
+    @pytest.mark.parametrize(("exit_code", "stdout", "stderr", "want_tokens"), PRINT_FORMAT_CASES)
     def test_print_format(  # type: ignore[no-untyped-def]
         self, capsys: pytest.CaptureFixture[str], exit_code, stdout, stderr, want_tokens
     ) -> None:

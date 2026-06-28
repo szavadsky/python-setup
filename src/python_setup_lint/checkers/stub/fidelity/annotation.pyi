@@ -3,6 +3,7 @@
 See ``annotation.py`` for full docstrings.
 """
 
+from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING
 
 from astroid import nodes
@@ -12,7 +13,7 @@ from ._ast_helpers import ClassComparisonCtx
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
-def _normalize_bases(bases: list[nodes.NodeNG]) -> list[str]:
+def _normalize_bases(bases: Sequence[nodes.NodeNG]) -> list[str]:
     """Strips module prefix from ``Attribute`` nodes (e.g. ``pydantic.BaseModel``
     to ``BaseModel``). Treats ``builtins.object`` as ``object``. For subscript
     nodes (e.g. ``Generic[T]``), extracts the base name (``Generic``).
@@ -70,7 +71,7 @@ def _check_one_variable(
     var_name: str,
     stub_ann_node: nodes.AnnAssign,
     *,
-    impl_vars: dict[
+    impl_vars: Mapping[
         str, tuple[nodes.NodeNG | None, nodes.NodeNG | None]
     ],
     impl_node: nodes.Module,

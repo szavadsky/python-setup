@@ -24,9 +24,9 @@ from python_setup_lint.runner import (
     run_lint,
 )
 from python_setup_lint.runner._config import _SUPPORTED_CONFIG_KEYS
-from python_setup_lint.runner.parsers import _STATISTICS_PARSERS
 from python_setup_lint.runner.cmd_build import _build_command, _build_statistics_flags
 from python_setup_lint.runner.output import _print_statistics_grouped, _sort_counts
+from python_setup_lint.runner.parsers import _STATISTICS_PARSERS
 from tests.runner._factories import install_fake_runner, lint_config, write_pyproject
 from tests.runner._factories_extras import (
     CLEAN_EXTRAS_PYPROJECT_BODY,
@@ -45,7 +45,7 @@ from tests.runner._factories_tables import (
 _CONFIG = RunnerConfig(cwd=Path.cwd())
 
 
-@pytest.mark.parametrize("tool_name,expected", STATISTICS_FLAG_CASES)
+@pytest.mark.parametrize(("tool_name", "expected"), STATISTICS_FLAG_CASES)
 def test_build_statistics_flags(tool_name: str, expected: list[str]) -> None:
     spec = ToolSpec(tool_name, ["tool"])
     assert _build_statistics_flags(spec) == expected, f"{tool_name}: got {_build_statistics_flags(spec)!r}"
@@ -59,7 +59,7 @@ def test_statistics_flag_appended_to_build_command_and_empty_for_no_stat_tools()
         assert _build_statistics_flags(ToolSpec(name, ["tool"])) == [], f"{name} should have no flags"
 
 
-@pytest.mark.parametrize("tool_name,stdout,stderr,expected", PARSER_STATISTICS_CASES)
+@pytest.mark.parametrize(("tool_name", "stdout", "stderr", "expected"), PARSER_STATISTICS_CASES)
 def test_statistics_parser(tool_name: str, stdout: str, stderr: str, expected: list[tuple[str, int]]) -> None:
     parser = _STATISTICS_PARSERS[tool_name]
     result = parser(stdout, stderr)
@@ -80,15 +80,12 @@ def test_parse_strategies_includes_all_keys() -> None:
 
 
 class TestSortCounts:
-    @pytest.mark.parametrize(
-        "counts,sort_by_rule,expected_rules",
-        [
-            (SORT_DEFAULT_COUNTS, False, ["A001", "B001", "Z001"]),
-            (SORT_BY_RULE_COUNTS, True, None),
-        ],
-        ids=["default_sort_highest_count_first", "sort_by_rule"],
-    )
-    def test_sort_counts(self, counts, sort_by_rule: bool, expected_rules: list[str] | None) -> None:
+    @pytest.mark.parametrize(("counts", "sort_by_rule", "expected_rules"), [
+        (SORT_DEFAULT_COUNTS, False, ["A001", "B001", "Z001"]),
+        (SORT_BY_RULE_COUNTS, True, None),
+    ],
+    ids=["default_sort_highest_count_first", "sort_by_rule"],)
+    def test_sort_counts(self: object, counts: list[Any], sort_by_rule: bool, expected_rules: list[str] | None) -> None:
         result = _sort_counts(counts, sort_by_rule=sort_by_rule)
         if expected_rules is not None:
             assert [c.rule for c in result] == expected_rules
@@ -114,7 +111,7 @@ def test_run_lint_group_sort_by_rule_forwarded(monkeypatch: pytest.MonkeyPatch) 
 
 
 class TestGroupedOutput:
-    @pytest.mark.parametrize("group,counts,header,markers,tokens", GROUPED_OUTPUT_CASES)
+    @pytest.mark.parametrize(("group", "counts", "header", "markers", "tokens"), GROUPED_OUTPUT_CASES)
     def test_group_format_and_subtotals(
         self, capsys: pytest.CaptureFixture[str], group: str, counts: list[ViolationCount], header: str, markers: list[str], tokens: list[str]
     ) -> None:
@@ -134,14 +131,14 @@ class TestGroupedOutput:
 
 
 class TestT8FailFastConfig:
-    @pytest.mark.parametrize("body,reason_want,exact_match", MALFORMATION_CASES)
+    @pytest.mark.parametrize(("body", "reason_want", "exact_match"), MALFORMATION_CASES)
     def test_malformed_pyproject_raises(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None, body: str, reason_want: str, exact_match: bool
     ) -> None:
         pyproject = write_pyproject(tmp_path, body)
         install_fake_runner(monkeypatch)
         with pytest.raises(ExtraToolsConfigError) as exc_info:
-            run_lint(config=lint_config(tmp_path), no_fail_fast=True)
+            run_lint(config=lint_config(tmp_path))
         err = exc_info.value
         assert err.location == str(pyproject), f"location: got {err.location!r}, want {str(pyproject)!r}"
         if exact_match:
@@ -163,7 +160,7 @@ class TestT8FailFastConfig:
         install_fake_runner(monkeypatch)
         config = RunnerConfig(cwd=tmp_path, tools_override=["ruff check", "bogus-tool-name"])
         with pytest.raises(ExtraToolsConfigError) as exc_info:
-            run_lint(config=config, no_fail_fast=True)
+            run_lint(config=config)
         assert exc_info.value.reason.startswith("unknown tool name: 'bogus-tool-name'")
         assert "ruff check" in exc_info.value.reason
         assert exc_info.value.location == "<RunnerConfig.tools_override>"
@@ -174,7 +171,7 @@ class TestT8FailFastConfig:
         (tmp_path / "src" / "__init__.py").write_text("", encoding="utf-8")
         install_fake_runner(monkeypatch)
         config = lint_config(tmp_path, package_name="t8_clean", tools_override=["ruff check", "t8-grep-noqa"])
-        assert isinstance(run_lint(config=config, no_fail_fast=True), int)
+        assert isinstance(run_lint(config=config), int)
 
 
 # ── Strategy registry ──────────────────────────────────────────────
@@ -259,13 +256,10 @@ class TestGenericLintTool:
             "tests/",
         ]
 
-    @pytest.mark.parametrize(
-        "override,expected",
-        [
-            (["--stat-foo"], ["--stat-foo"]),  # explicit override wins
-        ],
-        ids=["stats_override_wins"],
-    )
+    @pytest.mark.parametrize(("override", "expected"), [
+        (["--stat-foo"], ["--stat-foo"]),  # explicit override wins
+    ],
+    ids=["stats_override_wins"],)
     def test_statistics_flags_use_override(
         self, override: list[str], expected: list[str]
     ) -> None:

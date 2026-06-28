@@ -39,7 +39,7 @@ def _walk_and_release(
     *,
     file_path: str | None = None,
     module_name: str = "",
-) -> list[Any]:
+    ) -> list[Any]:  # released pylint messages are dynamically typed; Any is the accurate contract
     """Parse *code*, walk *checker_class* over it, return released messages.
 
     Optionally set *file_path* for path-dependent logic (source-roots,
@@ -142,7 +142,7 @@ def assert_precommit_hooks_shape(
 
     Invariants (consumer-agnostic):
     * ``lint`` local hook exists, ``language: system``, entry has
-      ``--no-fail-fast`` and ``--baseline <baseline_filename>``;
+      ``--baseline <baseline_filename>``;
     * ruff fix hook carries ``--fix``;
     * fast hooks (``ruff-format``, ``ruff``/``ruff-check``) run on ``pre-commit``.
 

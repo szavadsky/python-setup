@@ -1,6 +1,6 @@
 # Rule Overlay Configuration
 
-`python-setup` ships with shared config files for all 11 lint tools. Consumer projects can overlay their own rules on top of the shared base via `extend` in their `pyproject.toml`.
+`python-setup` ships with shared config files for all 12 lint tools. Consumer projects can overlay their own rules on top of the shared base via `extend` in their `pyproject.toml`.
 
 ## How overlays work
 
@@ -45,7 +45,7 @@ The shared `config/pyrightconfig.json` is composed with project-specific setting
 
 ### Other tools
 
-Rumdl, ty, yamllint, and detect-secrets all follow the same pattern: shared config in `python-setup/config/`, consumer overrides via `extend` or `--config` flags.
+Rumdl, ty, and yamllint all follow the same pattern: shared config in ``python-setup/config/``, consumer overrides via ``extend`` or ``--config`` flags. (detect-secrets uses its own baseline file, not a shared config.)
 
 ## Custom checkers
 

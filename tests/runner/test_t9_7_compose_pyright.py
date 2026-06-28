@@ -31,10 +31,10 @@ from pathlib import Path
 
 import pytest
 
+import python_setup_lint.runner.output as _output_module
 from python_setup_lint.runner import RunnerConfig, run_lint
 from python_setup_lint.runner.cmd_build import _compose_pyright_config
 from python_setup_lint.testing import fake_run_cmd_factory
-import python_setup_lint.runner.output as _output_module
 
 # ── _compose_pyright_config surface-unit ─────────────────────────
 
@@ -281,7 +281,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         shipped_before = config.config_paths["pyright check"]  # type: ignore[index]
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=config, no_fail_fast=True)
+        run_lint(config=config)
         assert config.config_paths["pyright check"] != shipped_before  # type: ignore[index]
         assert "python_setup_lint_pyright_" in str(config.config_paths["pyright check"])  # type: ignore[index]
 
@@ -292,7 +292,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         config = self._config_with_shipped(tmp_path)
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=config, no_fail_fast=True)
+        run_lint(config=config)
         pyright_rec = next((r for r in fake.calls if r.cmd[:1] == ["pyright"]), None)
         assert pyright_rec is not None, (
             f"pyright not dispatched; calls={[r.cmd[:2] for r in fake.calls[:3]]}"
@@ -312,7 +312,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         config.pyright_project_override = override
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=config, no_fail_fast=True)
+        run_lint(config=config)
         # Override takes precedence — config_paths now points at the override.
         assert config.config_paths["pyright check"] == override  # type: ignore[index]
         # And the dispatched cmd uses the override, not a tmp path.
@@ -332,7 +332,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         )
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=config, no_fail_fast=True)
+        run_lint(config=config)
         # No tmp pyright config written.
         assert "pyright check" not in config.config_paths  # type: ignore[operator]
         out_dir = _temp_root() / f"python_setup_lint_pyright_{tmp_path.name}"
@@ -363,7 +363,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         )
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=config, no_fail_fast=True)
+        run_lint(config=config)
         # Both composed paths land.
         assert "python_setup_lint_ruff_" in str(config.config_paths["ruff check"])  # type: ignore[index]
         assert "python_setup_lint_pyright_" in str(config.config_paths["pyright check"])  # type: ignore[index]

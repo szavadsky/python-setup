@@ -10,8 +10,12 @@ from typing import Any
 import pytest
 
 from python_setup_lint.runner import Record, peek_fallback_tools
-from python_setup_lint.runner.baseline import _capture_baseline, _compare_sorted, _diff_baseline
 from python_setup_lint.runner._record_types import _compare_records_key
+from python_setup_lint.runner.baseline import (  # private import for white-box testing
+    _capture_baseline,
+    _compare_sorted,
+    _diff_baseline,
+)
 from python_setup_lint.testing import make_lint_result
 from tests.runner._factories import diff_baseline_with
 
@@ -67,17 +71,19 @@ class TestMixedSchemaLoad:
 @pytest.mark.slow
 class TestPerfBenchmark:
     def test_50k_line_baseline_compares_under_200ms(self) -> None:
-        records_saved: list[Record] = []
-        for f in range(1000):
-            file = f"src/file_{f:04d}.py"
-            for line in range(1, 51):
-                records_saved.append(Record(file, line, 1, "E001", "m"))
+        records_saved: list[Record] = [
+            Record(f"src/file_{f:04d}.py", line, 1, "E001", "m")
+            for f in range(1000)
+            for line in range(1, 51)
+        ]
         records_current = [
             r for r in records_saved
             if not (r.file == "src/file_0999.py" and r.line and r.line > 5)
         ]
-        for f in range(5000, 5500):
-            records_current.append(Record(f"src/new_{f:04d}.py", 1, 1, "E001", "m"))
+        records_current.extend(
+            Record(f"src/new_{f:04d}.py", 1, 1, "E001", "m")
+            for f in range(5000, 5500)
+        )
         records_saved.sort(key=_compare_records_key)
         records_current.sort(key=_compare_records_key)
         t0 = time.perf_counter()
@@ -88,11 +94,11 @@ class TestPerfBenchmark:
         assert elapsed_ms < 200.0, f"_compare_sorted took {elapsed_ms:.1f}ms (>200ms ceiling)"
 
     def test_diff_baseline_50k_end_to_end_under_1s(self, tmp_path: Path) -> None:
-        records: list[dict[str, Any]] = []
-        for f in range(1000):
-            file = f"src/file_{f:04d}.py"
-            for line in range(1, 51):
-                records.append({"file": file, "line": line, "col": 1, "rule": "E001", "msg": "m"})
+        records: list[dict[str, Any]] = [
+            {"file": f"src/file_{f:04d}.py", "line": line, "col": 1, "rule": "E001", "msg": "m"}
+            for f in range(1000)
+            for line in range(1, 51)
+        ]
         saved = [{"tool": "ruff check", "exit_code": 0, "schema": "v2", "records": records}]
         baseline_path = tmp_path / "big.json"
         baseline_path.write_text(json.dumps(saved))
@@ -319,7 +325,7 @@ class TestCaptureBaselineOnDisk:
             "src/a.py:1: E501 alpha-no-col\n"
         )
         cap = _capture_baseline([make_lint_result(tool_name="ruff check", stdout=stdout)])
-        records = cap[0]["records"]
+        records: Any = cap[0]["records"]
         keys = [
             (
                 () if r["file"] is None else (r["file"],),

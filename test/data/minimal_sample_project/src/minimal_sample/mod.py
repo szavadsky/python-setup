@@ -42,6 +42,13 @@ rule_registry: dict[str, MessageDef] = {
 def _bare_suppression() -> None:  # noqa: unused-argument
     pass
 
+# ── 3b. suppression_justification_checker (brush-off) ────────────────────
+# Brush-off justification that should trigger W9704.
+
+
+def _brushoff_suppression() -> None:  # noqa: F401  # pre-existing
+    pass
+
 
 # ── 4. beartype_checker ──────────────────────────────────────────────
 # Public function missing @beartype decorator.

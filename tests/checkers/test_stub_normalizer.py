@@ -59,16 +59,18 @@ def test_ast_string(code: str, expected: list[str] | None, assert_mode: str) -> 
       - ``equals``    — assert ``result == expected[0]`` (exact string match).
       - ``contains``  — assert every substring in ``expected`` is in ``result``.
     """
-    result = AnnotationNormalizer._ast_string(_ann_from_code(code))
+    result = AnnotationNormalizer._ast_string(_ann_from_code(code))  # type: ignore[attr-defined]  # private import for white-box testing
     if assert_mode == "not_none":
         assert result is not None, f"_ast_string({code!r}) returned None"
     elif assert_mode == "equals":
+        assert expected is not None
         assert result == expected[0], (
             f"_ast_string({code!r}) = {result!r} (expected {expected[0]!r})"
         )
     elif assert_mode == "contains":
         assert result is not None, f"_ast_string({code!r}) returned None"
-        for needle in expected or []:
+        assert expected is not None
+        for needle in expected:
             assert needle in result, f"substring {needle!r} missing from {result!r}"
     else:  # pragma: no cover - defensive
         raise AssertionError(f"unknown assert_mode {assert_mode!r}")
@@ -79,7 +81,7 @@ def test_ast_string(code: str, expected: list[str] | None, assert_mode: str) -> 
 
 @pytest.mark.parametrize(("input_str", "expected"), _APPLY_REWRITES_CASES)
 def test_apply_rewrites(input_str: str, expected: str) -> None:
-    assert AnnotationNormalizer._apply_rewrites(input_str) == expected
+    assert AnnotationNormalizer._apply_rewrites(input_str) == expected  # type: ignore[attr-defined]  # private import for white-box testing
 
 
 # ── _split_outer_commas ────────────────────────────────────────────
@@ -87,5 +89,5 @@ def test_apply_rewrites(input_str: str, expected: str) -> None:
 
 @pytest.mark.parametrize(("input_str", "expected_parts"), _SPLIT_OUTER_COMMAS_CASES)
 def test_split_outer_commas(input_str: str, expected_parts: list[str]) -> None:
-    parts = AnnotationNormalizer._split_outer_commas(input_str)
+    parts = AnnotationNormalizer._split_outer_commas(input_str)  # type: ignore[attr-defined]  # private import for white-box testing
     assert parts == expected_parts

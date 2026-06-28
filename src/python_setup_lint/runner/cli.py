@@ -20,9 +20,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import sys
 from pathlib import Path
+
+import structlog
 
 from ._autofix import (
     _AUTOFIX_ENV_VAR,
@@ -45,6 +48,11 @@ from .extra_tools import (
 )
 from .types import LintResult, RunnerConfig, ToolSpec
 
+# Configure structlog at import time to suppress debug/info noise from the runner.
+structlog.configure(
+    wrapper_class=structlog.make_filtering_bound_logger(logging.WARNING),
+)
+
 __all__ = [
     "_apply_autofix_conflict_aware",
     "_autofix_target_paths",
@@ -65,7 +73,6 @@ def _run_tool_pipeline(
     *,
     config: RunnerConfig,
     fix: bool,
-    no_fail_fast: bool,
     path: str | None,
     exclude: str | None,
     statistics: bool,
@@ -74,7 +81,7 @@ def _run_tool_pipeline(
     overall_rc = 0
     cwd = config.cwd
 
-    from .output import _run_cmd, _print_result
+    from .output import _print_result, _run_cmd
 
     for spec in selected:
         if (
@@ -108,8 +115,6 @@ def _run_tool_pipeline(
 
         if result.exit_code != 0:
             overall_rc = result.exit_code
-            if not no_fail_fast:
-                break
 
     return overall_rc, results
 
@@ -151,7 +156,6 @@ def run_lint(
     fix: bool = False,
     baseline: str | None = None,
     exclude: str | None = None,
-    no_fail_fast: bool = False,
     statistics: bool = False,
     statistics_format: str = "table",
     overwrite_baseline: bool = False,
@@ -186,7 +190,6 @@ def run_lint(
         selected,
         config=config,
         fix=fix,
-        no_fail_fast=no_fail_fast,
         path=path,
         exclude=exclude,
         statistics=statistics,
@@ -245,11 +248,6 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
         help="Exclude a file or directory pattern",
     )
     parser.add_argument(
-        "--no-fail-fast",
-        action="store_true",
-        help="Run all tools, accumulate failures",
-    )
-    parser.add_argument(
         "--overwrite-baseline",
         action="store_true",
         help="Force overwrite of existing baseline file (used with --baseline)",
@@ -290,7 +288,7 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
     parser.add_argument(
         "--tools",
         metavar="LIST",
-        help="Comma-separated tool names to run (default: all 11 tools)",
+        help="Comma-separated tool names to run (default: all 12 tools)",
     )
     parser.add_argument(
         "--default-py-dirs",
@@ -348,7 +346,6 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
         fix=args.fix,
         baseline=args.baseline,
         exclude=args.exclude,
-        no_fail_fast=args.no_fail_fast,
         overwrite_baseline=args.overwrite_baseline,
         statistics=args.statistics,
         statistics_format=args.format,

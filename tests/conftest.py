@@ -14,9 +14,8 @@ This file holds:
 """
 
 from __future__ import annotations
+
 import os
-
-
 import textwrap
 from collections.abc import Callable, Iterable
 from pathlib import Path
@@ -137,8 +136,11 @@ def isolated_runner_registries() -> Iterable[None]:
     Resets to builtins at setup so tests that don't use the fixture
     but leak mutations don't affect tests that do.
     """
+    from python_setup_lint.runner.dispatch import (  # type: ignore[attr-defined]  # private import for white-box testing
+        _STRATEGY_CLASSES,
+        LintTool,
+    )
     from python_setup_lint.runner.dispatch import TOOLS as _BUILTIN_TOOLS
-    from python_setup_lint.runner.dispatch import _STRATEGY_CLASSES, LintTool
 
     baseline_tools = list(LINT_TOOLS)
     baseline_strategies = dict(STRATEGIES)

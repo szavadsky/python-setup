@@ -8,10 +8,10 @@ Extracted from stub_checker.py. No logic change.
 
 from __future__ import annotations
 
-import structlog
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import structlog
 from astroid import nodes
 
 if TYPE_CHECKING:
@@ -40,9 +40,8 @@ class ImportUsage:
 def _in_type_checking_block(node: nodes.Import | nodes.ImportFrom) -> bool:
     parent = node.parent
     while parent is not None:
-        if isinstance(parent, nodes.If):
-            if _is_type_checking_guard(parent.test):
-                return True
+        if isinstance(parent, nodes.If) and _is_type_checking_guard(parent.test):
+            return True
         parent = parent.parent
     return False
 

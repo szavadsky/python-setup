@@ -17,20 +17,20 @@ if TYPE_CHECKING:
 class _FidelityState:
     """Phase 3 state aggregated for StubChecker."""
 
-    stub_variable_nodes: dict[str, dict[str, nodes.AnnAssign]]
+    stub_variable_nodes: dict[str, dict[str, nodes.AnnAssign]] = ...
     impl_annotations: dict[
         str,
         dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]],
-    ]
+    ] = ...
     stub_callable_nodes: dict[
         str, dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef]
-    ]
+    ] = ...
     impl_callable_nodes: dict[
         str, dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef]
-    ]
-    stub_class_nodes: dict[str, dict[str, nodes.ClassDef]]
-    impl_class_nodes: dict[str, dict[str, nodes.ClassDef]]
-    impl_all_names: dict[str, set[str]]
+    ] = ...
+    stub_class_nodes: dict[str, dict[str, nodes.ClassDef]] = ...
+    impl_class_nodes: dict[str, dict[str, nodes.ClassDef]] = ...
+    impl_all_names: dict[str, set[str]] = ...
 
 @dataclass
 class ParamDescriptor:

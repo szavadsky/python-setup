@@ -91,6 +91,7 @@ TOOLS: list[ToolSpec] = [
         supports_path=True,
         supports_exclude=True,
         fix_flags=("--fix",),
+        default_paths=["src"],
     ),
     ToolSpec(
         "mypy.stubtest",
@@ -268,6 +269,12 @@ class _PylintLintTool(LintTool):
         print(f"[pylint] Using rcfile: {rcfile}", file=sys.stderr)
         cmd.extend(_config_flag_for(spec.name, rcfile))
 
+        # ── Suppress structlog debug/info noise from checkers ──
+        cmd.extend([
+            "--init-hook",
+            "import structlog, logging; structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(logging.WARNING))",
+        ])
+
         # ── Fix flags ────────────────────────────────────────
         if _fix and spec.supports_fix:
             cmd.extend(spec.fix_flags)
@@ -321,7 +328,7 @@ class _PylintPyiLintTool(LintTool):
         return cmd
 
 
-# Populate the strategy registry from the 11 built-ins.
+# Populate the strategy registry from the 12 built-ins.
 _STRATEGY_CLASSES: dict[str, type[LintTool]] = {
     "mypy.stubtest": _StubtestLintTool,
     "pyright verify types": _VerifyTypesLintTool,
@@ -380,7 +387,7 @@ class GenericLintTool(LintTool):
 
 
 # Live registry of declared ``ToolSpec`` instances.
-# At import time it mirrors the 11 built-ins from :data:`TOOLS`; extras
+# At import time it mirrors the 12 built-ins from :data:`TOOLS`; extras
 # registered via :func:`register_lint_tool` append to it.  :data:`TOOLS`
 # stays the frozen built-in list and is kept as a legacy-compat alias.
 LINT_TOOLS: list[ToolSpec] = list(TOOLS)

@@ -13,13 +13,14 @@ Allowed categories (configurable via ``allow-string-keys-for``):
 """
 
 from __future__ import annotations
-from typing import Any
 
+from typing import Any
 
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.typing import MessageDefinitionTuple
 
 from python_setup_lint.checkers._base import MessageDef, _msgs
 
@@ -41,7 +42,7 @@ class GenericKeyDictChecker(BaseChecker):
     """AST visitor that flags ``dict[str, X]`` with domain-typed values."""
 
     name: str = "generic-key-dict"
-    msgs = _msgs(
+    msgs: dict[str, MessageDefinitionTuple] = _msgs(
         W9721=MessageDef(
             message="'dict[str, %s]' uses a generic string key; consider LintRuleId, enum, or Literal instead",
             symbol="generic-key-dict",
@@ -50,7 +51,7 @@ class GenericKeyDictChecker(BaseChecker):
             "Use 'allow-string-keys-for' config to suppress for legitimate categories.",
         ),
     )
-    options: tuple[tuple[str, dict[str, Any]], ...] = (
+    options: tuple[tuple[str, dict[str, Any]], ...] = (  # pylint option dict values are Any by API contract
         (
             "allow-string-keys-for",
             {
@@ -106,7 +107,7 @@ class GenericKeyDictChecker(BaseChecker):
             return
 
         # Extract the value type name
-        value_type = self._extract_type_name(value_node)
+        value_type = self._extract_type_name(value_node)  # type: ignore[arg-type]  # value_node is NodeNG | Proxy; _extract_type_name accepts NodeNG  # ty:ignore[invalid-argument-type]
         if value_type is None:
             return
 

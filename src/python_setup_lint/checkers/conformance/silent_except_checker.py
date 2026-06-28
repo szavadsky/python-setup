@@ -7,7 +7,6 @@ no ``raise`` statement is flagged.
 
 from __future__ import annotations
 
-
 from typing import TYPE_CHECKING
 
 from astroid import nodes
@@ -73,11 +72,10 @@ class SilentExceptChecker(BaseChecker):
                     if "log" in name:
                         return True
                 # logging.warning(...) — module-level access
-                if isinstance(func.expr, nodes.Attribute):
-                    if isinstance(func.expr.expr, nodes.Name):
-                        name = func.expr.expr.name.lower()
-                        if "log" in name:
-                            return True
+                if isinstance(func.expr, nodes.Attribute) and isinstance(func.expr.expr, nodes.Name):
+                    name = func.expr.expr.name.lower()
+                    if "log" in name:
+                        return True
         return False
 
     @staticmethod

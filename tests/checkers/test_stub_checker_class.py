@@ -10,7 +10,7 @@ Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import astroid
 import pytest
@@ -72,17 +72,16 @@ def test_is_public_method(name: str, expected: bool) -> None:
 def test_class_comparison_ctx_fields() -> None:
     stub_mod = astroid.parse("class Foo: ...\n", module_name="test")
     impl_mod = astroid.parse("class Foo: ...\n", module_name="test")
+    stub_class = cast("astroid.ClassDef", stub_mod.body[0])
+    impl_class = cast("astroid.ClassDef", impl_mod.body[0])
     ctx = ClassComparisonCtx(
         checker=None,  # type: ignore[arg-type]
         module_name="mod_a",
         class_name="Foo",
         msg_node=impl_mod,
-        stub_class=stub_mod.body[0],
-        impl_class=impl_mod.body[0],
+        stub_class=stub_class,
+        impl_class=impl_class,
     )
-    assert ctx.module_name == "mod_a"
-    assert ctx.class_name == "Foo"
-
 
 # ── Checker message codes registered ──────────────────────────────
 

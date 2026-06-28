@@ -34,7 +34,7 @@ def _walk_and_release(code: str, *, file_path: str = "src/test_mod.py") -> list[
 
 # ── Detect cases ──
 
-_DETECT_CASES: list[tuple[str, str]] = [
+_DETECT_CASES: list[Any] = [
     pytest.param(
         "def _helper():\n    return 42\n",
         "_helper",
@@ -69,7 +69,7 @@ def test_detects_missing_return_annotation(code: str, expected_name: str) -> Non
 
 # ── Non-detect cases ──
 
-_NON_DETECT_CASES: list[tuple[str, int]] = [
+_NON_DETECT_CASES: list[Any] = [
     pytest.param(
         "def _helper() -> int:\n    return 42\n",
         0,
@@ -118,7 +118,7 @@ def test_skips(code: str, expected_count: int) -> None:
 
 # ── Source root filtering ──
 
-_SOURCE_ROOT_CASES: list[tuple[str, str, int]] = [
+_SOURCE_ROOT_CASES: list[Any] = [
     pytest.param(
         "def _helper():\n    return 42\n",
         "src/my_mod.py",

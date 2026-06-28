@@ -7,13 +7,13 @@ Consolidates duplicate code across checker modules:
 """
 
 from pathlib import Path
+from typing import NamedTuple
 
 from astroid import nodes
-from typing import NamedTuple, NewType
+from pylint.lint import PyLinter
+from pylint.typing import MessageDefinitionTuple
 
-LintRuleId = NewType("LintRuleId", str)
-
-def _msgs(**definitions: MessageDef) -> dict[LintRuleId, MessageDef]:
+def _msgs(**definitions: MessageDef) -> dict[str, MessageDefinitionTuple]:
     """Build a checker msgs dict with domain-typed keys."""
 
 def _matches_path(str_path: str, patterns: list[str]) -> bool:
@@ -36,6 +36,24 @@ class MessageDef(NamedTuple):
     message: str
     symbol: str
     description: str
+
+class SourceRootMixin:
+    """Mixin for checkers that filter by source root directories.
+
+    Provides shared ``options`` (``source-roots``), ``__init__``, ``open``,
+    ``visit_functiondef``, and ``visit_asyncfunctiondef`` boilerplate that
+    is structurally identical across multiple checkers by pylint API design.
+    """
+
+    _source_roots: list[Path]
+
+    options: tuple[tuple[str, dict[str, object]], ...]
+
+    def __init__(self, linter: PyLinter) -> None: ...
+    def open(self) -> None: ...
+    def visit_functiondef(self, node: nodes.FunctionDef) -> None: ...
+    def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None: ...
+
 
 def check_if_meaningful(
     text: str,

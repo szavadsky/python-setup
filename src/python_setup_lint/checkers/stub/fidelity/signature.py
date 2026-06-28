@@ -25,9 +25,9 @@ to delegate public-method fidelity.
 from __future__ import annotations
 
 import inspect
-import structlog
 from typing import TYPE_CHECKING
 
+import structlog
 from astroid import nodes
 
 from python_setup_lint.checkers.stub.normalizer import AnnotationNormalizer
@@ -176,11 +176,11 @@ def _compare_callable_annotations(
         if (
             sp.annotation_normalized is not None
             and ip.annotation_normalized is not None
+            and sp.annotation_normalized != ip.annotation_normalized
         ):
-            if sp.annotation_normalized != ip.annotation_normalized:
-                mismatches.append(
-                    (sp.name, sp.annotation_normalized, ip.annotation_normalized)
-                )
+            mismatches.append(
+                (sp.name, sp.annotation_normalized, ip.annotation_normalized)
+            )
     return mismatches
 
 

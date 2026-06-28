@@ -9,7 +9,9 @@ import pytest
 
 from python_setup_lint.runner import Record
 from python_setup_lint.runner._record_types import _compare_records_key
-from python_setup_lint.runner.baseline import _compare_sorted
+from python_setup_lint.runner.baseline import (
+    _compare_sorted,  # private import for white-box testing
+)
 from python_setup_lint.testing import make_lint_result
 from tests.runner._factories import diff_baseline_with
 

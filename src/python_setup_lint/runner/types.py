@@ -136,6 +136,6 @@ class RunnerConfig:
 
     def __post_init__(self) -> None:
         if self.default_py_dirs is None:
-            self.default_py_dirs = ["src", "scripts", "tests"]
+            self.default_py_dirs = ["src"]
         if self.config_paths is None:
             self.config_paths = {}

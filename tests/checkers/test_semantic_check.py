@@ -8,14 +8,12 @@ Tests that hit the local model cache are **not** marked slow.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from unittest.mock import patch
 
 import pytest
 
 from python_setup_lint.checkers._base import check_if_meaningful
-
-
-# ── ImportError fallback ─────────────────────────────────────────────
 
 
 class TestImportErrorFallback:
@@ -31,11 +29,11 @@ class TestImportErrorFallback:
                 check_if_meaningful("circular import — PyLinter not available")
 
     @staticmethod
-    def _make_blocking_import():
+    def _make_blocking_import() -> Callable[..., object]:
         """Return a side-effect function that blocks _semantic imports."""
-        original_import = __builtins__["__import__"]
+        original_import = __builtins__["__import__"]  # type: ignore[index]  # __builtins__ is a Module
 
-        def _mock_import(name, *args, **kwargs):
+        def _mock_import(name: str, *args: object, **kwargs: object) -> object:
             if name == "python_setup_lint.checkers._semantic":
                 raise ImportError("No module named _semantic")
             return original_import(name, *args, **kwargs)
@@ -200,7 +198,7 @@ class TestSemanticCheck:
         """A cached result is returned without calling _load_reranker."""
         import hashlib
 
-        from python_setup_lint.checkers._semantic import (
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private import for white-box testing
             _RERANKER_MODEL,
             _reset_cache,
             semantic_check_if_meaningful,
@@ -308,7 +306,7 @@ class TestRerankerPairs:
         """A meaningful justification with context should score >= 0.5."""
         pytest.importorskip("sentence_transformers")
 
-        from python_setup_lint.checkers._semantic import (
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private import for white-box testing
             _reset_cache,
             semantic_check_if_meaningful,
         )
@@ -329,7 +327,7 @@ class TestRerankerPairs:
         """A weak justification with context should score < 0.5."""
         pytest.importorskip("sentence_transformers")
 
-        from python_setup_lint.checkers._semantic import (
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private import for white-box testing
             _reset_cache,
             semantic_check_if_meaningful,
         )
@@ -349,7 +347,7 @@ class TestRerankerPairs:
         """A brush-off justification with context should score < 0.5."""
         pytest.importorskip("sentence_transformers")
 
-        from python_setup_lint.checkers._semantic import (
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private import for white-box testing
             _reset_cache,
             semantic_check_if_meaningful,
         )
@@ -369,7 +367,7 @@ class TestRerankerPairs:
         """A meaningful justification without context should still score >= 0.5."""
         pytest.importorskip("sentence_transformers")
 
-        from python_setup_lint.checkers._semantic import (
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private import for white-box testing
             _reset_cache,
             semantic_check_if_meaningful,
         )

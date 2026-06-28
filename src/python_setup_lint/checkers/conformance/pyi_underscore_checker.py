@@ -14,7 +14,8 @@ from __future__ import annotations
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.typing import MessageDefinitionTuple
 
 from python_setup_lint.checkers._base import MessageDef, _msgs
 
@@ -23,7 +24,7 @@ class PyiUnderscoreChecker(BaseChecker):
     """AST visitor that flags _-prefixed symbols in .pyi files."""
 
     name: str = "pyi-underscore"
-    msgs = _msgs(
+    msgs: dict[str, MessageDefinitionTuple] = _msgs(
         W9707=MessageDef(
             message="Private symbol '%s' in .pyi stub file; remove it from the public API surface",
             symbol="pyi-underscore-symbol",
@@ -85,9 +86,8 @@ class PyiUnderscoreChecker(BaseChecker):
             return
         if isinstance(node.target, nodes.AssignName) and self._is_private(
             node.target.name
-        ):
-            if not _in_type_checking_block(node):
-                self.add_message("W9707", node=node, args=(node.target.name,))
+        ) and not _in_type_checking_block(node):
+            self.add_message("W9707", node=node, args=(node.target.name,))
 
     @beartype
     def visit_assign(self, node: nodes.Assign) -> None:
@@ -95,9 +95,8 @@ class PyiUnderscoreChecker(BaseChecker):
         if not self._is_pyi:
             return
         for target in node.targets:
-            if isinstance(target, nodes.AssignName) and self._is_private(target.name):
-                if not _in_type_checking_block(node):
-                    self.add_message("W9707", node=node, args=(target.name,))
+            if isinstance(target, nodes.AssignName) and self._is_private(target.name) and not _in_type_checking_block(node):
+                self.add_message("W9707", node=node, args=(target.name,))
 
 
 def _in_type_checking_block(node: nodes.NodeNG) -> bool:
@@ -108,9 +107,8 @@ def _in_type_checking_block(node: nodes.NodeNG) -> bool:
     """
     parent = node.parent
     while parent is not None:
-        if isinstance(parent, nodes.If):
-            if _is_type_checking_guard(parent.test):
-                return True
+        if isinstance(parent, nodes.If) and _is_type_checking_guard(parent.test):
+            return True
         parent = parent.parent
     return False
 
@@ -128,7 +126,6 @@ def _is_type_checking_guard(test: nodes.NodeNG) -> bool:
     return False
 
 
-@beartype
-def register(linter: PyLinter) -> None:
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API; @beartype cannot resolve PyLinter forward ref
     # Register the checker with the linter.
     linter.register_checker(PyiUnderscoreChecker(linter))

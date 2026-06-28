@@ -5,7 +5,6 @@ Uses synthetic code strings parsed via astroid.
 
 from __future__ import annotations
 
-
 from typing import Any
 
 from python_setup_lint.checkers.conformance.missing_error_chain_checker import (
@@ -26,7 +25,7 @@ def _walk_and_release(code: str, *, file_path: str = "tests/test_mod.py") -> lis
     if file_path is not None:
         module.file = file_path
     tc.walk(module)
-    return tc.linter.release_messages()
+    return tc.linter.release_messages()  # type: ignore[no-any-return]  # test fixture builds typed list from Any checker introspection
 
 
 def _msg_ids(msgs: list[Any]) -> set[str]:

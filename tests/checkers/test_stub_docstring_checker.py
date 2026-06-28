@@ -32,7 +32,7 @@ def _walk_and_release(code: str, file_path: str = "/workspace/src/mod.py") -> li
     module = astroid.parse(code)
     module.file = file_path
     tc.walk(module)
-    return tc.linter.release_messages()
+    return tc.linter.release_messages()  # type: ignore[no-any-return]  # test fixture builds typed list from Any checker introspection
 
 
 def _doc_msg_count(msgs: list[Any]) -> int:
@@ -52,7 +52,7 @@ def test_no_companion_stub_no_message(code: str, expected_count: int) -> None:
 # ── Does NOT detect — negative cases ────────────────────────────────
 
 
-@pytest.mark.parametrize(("code",), _DOCSTRING_DOES_NOT_DETECT_CASES)
+@pytest.mark.parametrize("code", _DOCSTRING_DOES_NOT_DETECT_CASES)
 def test_does_not_detect(code: str) -> None:
     """W9700 must NOT fire for the listed valid cases."""
     msgs = _walk_and_release(code)

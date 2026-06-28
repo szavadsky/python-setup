@@ -35,7 +35,7 @@ def test_consolidated_real_pipeline_smoke(
 
     config = RunnerConfig(cwd=tmp_path, package_name="smoke_test")
 
-    rc = run_lint(config=config, no_fail_fast=True)
+    rc = run_lint(config=config)
     assert isinstance(rc, int), f"Expected int exit code, got {type(rc)}: {rc}"
 
     captured = capsys.readouterr()

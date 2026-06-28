@@ -58,12 +58,9 @@ def _make_canned_fix_results(
     *, canary_e999_files: tuple[str, ...] = (),
 ) -> dict[str, LintResult]:
     base = canned_results_all_tools(exit_code=0, stdout="")
-    if canary_e999_files:
-        canary_stdout = "\n".join(
-            f"{f}:1:1: E999 SyntaxError" for f in canary_e999_files
-        )
-    else:
-        canary_stdout = ""
+    canary_stdout = "\n".join(
+        f"{f}:1:1: E999 SyntaxError" for f in canary_e999_files
+    ) if canary_e999_files else ""
     base[_CANARY_LABEL] = make_lint_result(
         tool_name=_CANARY_LABEL, exit_code=1, stdout=canary_stdout,
     )

@@ -46,7 +46,7 @@ class TestRunLintFixDownstream:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """Run ``run_lint(fix=True, no_fail_fast=True)`` to completion (returns int).
+        """Run ``run_lint(fix=True)`` to completion (returns int).
 
         D1 (review T4-0): the prior form asserted only
         ``isinstance(rc, int)`` — vacuously true even if ``run_lint``
@@ -73,14 +73,11 @@ class TestRunLintFixDownstream:
             package_name="python_setup_lint",
             default_py_dirs=["src", "scripts", "tests"],
         )
-        rc = run_lint(
-            config=config, fix=True, no_fail_fast=True, baseline=str(baseline)
-        )
+        rc = run_lint(config=config, fix=True, baseline=str(baseline))
         assert isinstance(rc, int)
         # (a) The baseline file was created and is non-empty — proves the
         # runner completed the tool loop AND reached the baseline-save
-        # branch (which only fires after all tools ran in no-fail-fast
-        # mode).
+        # branch (which only fires after all tools ran).
         assert baseline.exists(), "baseline file not created — runner did not finish"
         assert baseline.stat().st_size > 0, (
             f"baseline file empty: {baseline.read_text()!r}"
@@ -222,7 +219,7 @@ class TestRunLintFixDispatch:
         # canary short-circuits without calling run_cmd).
         _write_file(tmp_path, "src/main.py", "x = 1\n")
         _write_file(tmp_path, "tests/test_main.py", "y = 1\n")
-        run_lint(config=tmp_config(tmp_path), fix=True, no_fail_fast=True)
+        run_lint(config=tmp_config(tmp_path), fix=True)
         labels = [c.label for c in fake.calls]
         # ruff has default_paths=["src/", "tests/"] → canary fires once.
         assert _CANARY_LABEL in labels, (
@@ -249,7 +246,6 @@ class TestRunLintFixDispatch:
             config=tmp_config(tmp_path),
             path=str(target.relative_to(tmp_path)),
             fix=True,
-            no_fail_fast=True,
         )
         labels = [c.label for c in fake.calls]
         # All three supports_fix tools receive the --path → canary fires once each.
@@ -267,7 +263,7 @@ class TestRunLintFixDispatch:
         canned = canned_results_all_tools()
         fake = fake_run_cmd_factory(canned)
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        run_lint(config=tmp_config(tmp_path), fix=False, no_fail_fast=True)
+        run_lint(config=tmp_config(tmp_path), fix=False)
         labels = [c.label for c in fake.calls]
         assert _CANARY_LABEL not in labels
 
@@ -293,12 +289,9 @@ class TestAutofixRealGitIntegration:
         self, *, canary_e999_files: tuple[str, ...] = ()
     ) -> dict[str, LintResult]:
         base = canned_results_all_tools(exit_code=0, stdout="")
-        if canary_e999_files:
-            canary_stdout = "\n".join(
-                f"{f}:1:1: E999 SyntaxError" for f in canary_e999_files
-            )
-        else:
-            canary_stdout = ""
+        canary_stdout = "\n".join(
+            f"{f}:1:1: E999 SyntaxError" for f in canary_e999_files
+        ) if canary_e999_files else ""
         base[self._CANARY_LABEL] = make_lint_result(
             tool_name=self._CANARY_LABEL, exit_code=1, stdout=canary_stdout
         )

@@ -14,24 +14,26 @@ caller to fall back to the heuristic check.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import os
-import structlog
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import structlog
 from beartype import beartype
 
 _LOG = structlog.get_logger(__name__)
 if TYPE_CHECKING:
-    from sentence_transformers import CrossEncoder
+    from sentence_transformers import CrossEncoder  # type: ignore[import-not-found]  # optional semantic extra
 
 # Cache directory for downloaded models (idempotent, .gitignored).
 _CACHE_DIR = Path.home() / ".cache" / "python-setup" / "semantic"
 
 # Model singleton cache (loaded once, reused across calls).
 _RERANKER_INSTANCE: CrossEncoder | None = None
+_RERANKER_UNAVAILABLE: bool = False
 
 # Persisted result cache file.
 _RESULT_CACHE_FILE = _CACHE_DIR / "results.json"
@@ -53,7 +55,9 @@ def _load_result_cache() -> dict[int, bool]:
     try:
         raw = _RESULT_CACHE_FILE.read_text()
         return {int(k): v for k, v in json.loads(raw).items()}
-    except FileNotFoundError, json.JSONDecodeError, OSError, ValueError:
+    except FileNotFoundError:  # pylint: disable=W9740  # expected on first run, cache file doesn't exist yet
+        return {}
+    except (json.JSONDecodeError, OSError, ValueError):
         _LOG.warning("Failed to load result cache", exc_info=True)
         return {}
 
@@ -62,6 +66,7 @@ def _save_result_cache() -> None:
     """Persist the result cache to disk."""
     try:
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        assert _RESULT_CACHE is not None  # only called after lazy init
         _RESULT_CACHE_FILE.write_text(
             json.dumps({str(k): v for k, v in _RESULT_CACHE.items()})
         )
@@ -74,12 +79,11 @@ def _reset_cache() -> None:
 
     Clears the in-memory cache and removes the persisted cache file.
     """
-    global _RESULT_CACHE
+    global _RESULT_CACHE, _RERANKER_UNAVAILABLE
     _RESULT_CACHE = None
-    try:
+    _RERANKER_UNAVAILABLE = False
+    with contextlib.suppress(OSError):
         _RESULT_CACHE_FILE.unlink(missing_ok=True)
-    except OSError:
-        pass
 
 
 def _get_cache_dir() -> Path:
@@ -99,13 +103,16 @@ def _load_reranker() -> CrossEncoder | None:
     Returns:
         CrossEncoder instance, or ``None`` on failure.
     """
-    global _RERANKER_INSTANCE
+    global _RERANKER_INSTANCE, _RERANKER_UNAVAILABLE
+    if _RERANKER_UNAVAILABLE:
+        return None
     if _RERANKER_INSTANCE is not None:
         return _RERANKER_INSTANCE
     try:
-        from sentence_transformers import CrossEncoder
+        from sentence_transformers import CrossEncoder  # type: ignore[import-not-found]  # optional semantic extra
     except ImportError:
-        _LOG.warning("sentence_transformers not available, reranker disabled")
+        _RERANKER_UNAVAILABLE = True
+        _LOG.debug("sentence_transformers not available, reranker disabled")
         return None
 
     try:
@@ -173,7 +180,7 @@ def semantic_check_if_meaningful(
         pairs = [(primary, query)]
         scores = reranker.predict(pairs)
         score = float(scores[0])
-    except OSError, RuntimeError, ValueError:
+    except (OSError, RuntimeError, ValueError):
         _LOG.warning("Reranker prediction failed", exc_info=True)
         return None
 

@@ -11,7 +11,6 @@ in ``decisions.md`` per fallback).
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
 
 from .parsers import Record
 from .types import LintResult
@@ -29,7 +28,12 @@ def peek_fallback_tools() -> frozenset[str]:
     """
 
 
-def _capture_baseline(results: list[LintResult]) -> list[dict[str, Any]]:
+
+def _compare_sorted(  # pylint: disable=stub-symbol-missing  # imported via re-export in baseline.py
+    a: list[Record], b: list[Record]
+) -> tuple[list[Record], list[Record]]:
+    """Compare two sorted record lists. Returns (added, removed)."""
+def _capture_baseline(results: list[LintResult]) -> list[dict[str, object]]:
     """Capture structured baseline data from tool results.
 
     Each entry is the schema-v2 ``records`` form when a per-tool record
@@ -64,36 +68,36 @@ def _diff_baseline(current: list[LintResult], baseline_path: Path) -> list[str]:
             :func:`_capture_baseline`.
     """
 
-def _try_rumdl_json(stdout: str | None) -> dict[str, Any] | list[dict[str, Any]] | None:
+def _try_rumdl_json(stdout: str | None) -> dict[str, object] | list[dict[str, object]] | None:
     """Try to parse rumdl JSON output. Returns parsed dict/list or None."""
 
-def _capture_records_or_output(r: LintResult, entry: dict[str, Any]) -> dict[str, Any]:
+def _capture_records_or_output(r: LintResult, entry: dict[str, object]) -> dict[str, object]:
     """Decide whether to capture records or legacy output for a tool result."""
 def _normalise_legacy_output(text: str, tool_name: str) -> str:
     """Normalise legacy tool output for comparison, applying tool-specific transforms."""
 
 def _remove_stale_tools(
-    saved: list[dict[str, Any]],
-    saved_map: dict[str, dict[str, Any]],
+    saved: list[dict[str, object]],
+    saved_map: dict[str, dict[str, object]],
     current_tool_names: set[str],
 ) -> bool:
     """Remove baseline entries for tools no longer in current results."""
 
 
 def _write_baseline_if_modified(
-    saved: list[dict[str, Any]],
+    saved: list[dict[str, object]],
     baseline_path: Path,
     baseline_modified: bool,
 ) -> list[str] | None:
     """Write baseline if modified. Returns violations on write error, None on success."""
 
 
-def _build_saved_map(saved: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+def _build_saved_map(saved: list[dict[str, object]]) -> dict[str, dict[str, object]]:
     """Build a tool-name to entry map from the saved baseline list."""
 
 
 def _check_exit_code(
-    r: LintResult, saved_entry: dict[str, Any]
+    r: LintResult, saved_entry: dict[str, object]
 ) -> tuple[list[str], bool | None]:
     """Check exit code changes. Returns (violations, modified|None) where None = fall through."""
 
@@ -107,14 +111,14 @@ def _legacy_to_records(
 def _compare_record_sets(
     current_records: list[Record],
     saved_records: list[Record],
-    saved_entry: dict[str, Any],
+    saved_entry: dict[str, object],
     r: LintResult,
 ) -> tuple[list[str], bool]:
     """Compare current vs saved record sets. Returns (violations, modified)."""
 
 
 def _resolve_saved_records(
-    saved_entry: dict[str, Any],
+    saved_entry: dict[str, object],
     parser: Callable[[str], list[Record]] | None,
     tool_name: str,
 ) -> tuple[list[Record], bool]:

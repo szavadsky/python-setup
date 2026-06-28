@@ -7,11 +7,10 @@ to understand an internal dependency's interface. Otherwise inline.
 
 from __future__ import annotations
 
-
 from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
+from pylint.lint import PyLinter  # TYPE_CHECKING-only import; pylint is a dev dependency
 
 from python_setup_lint.checkers._base import MessageDef, _msgs
 
@@ -173,39 +172,30 @@ class TrivialWrapperChecker(BaseChecker):
                 if isinstance(call, nodes.Call):
                     return call
             # result = func(...)
-            if isinstance(stmt, nodes.Assign):
-                if len(stmt.targets) == 1 and isinstance(stmt.value, nodes.Call):
-                    return stmt.value
+            if isinstance(stmt, nodes.Assign) and len(stmt.targets) == 1 and isinstance(stmt.value, nodes.Call):
+                return stmt.value
 
         # 2-3 line body: could be assignment + return, or type-ignore comment
         if len(body) >= 2:
-            # result = func(...); return result
+            is_assign = isinstance(body[0], nodes.Assign)
+            is_return = isinstance(body[1], nodes.Return)
+            has_single_target = is_assign and len(body[0].targets) == 1
+            assign_is_call = is_assign and isinstance(body[0].value, nodes.Call)
+            return_is_name = is_return and body[1].value is not None and isinstance(body[1].value, nodes.Name)
+            target_is_assignname = has_single_target and isinstance(body[0].targets[0], nodes.AssignName)
             if (
-                isinstance(body[0], nodes.Assign)
-                and len(body[0].targets) == 1
-                and isinstance(body[0].value, nodes.Call)
-                and isinstance(body[1], nodes.Return)
-                and body[1].value is not None
+                target_is_assignname
+                and assign_is_call
+                and return_is_name
+                and body[1].value.name == body[0].targets[0].name
             ):
-                # Check the return is the same variable
-                if isinstance(body[1].value, nodes.Name) and isinstance(
-                    body[0].targets[0], nodes.AssignName
-                ):
-                    if body[1].value.name == body[0].targets[0].name:
-                        return body[0].value
-
+                return body[0].value
         return None
 
     @staticmethod
     def _is_self_call(call_node: nodes.Call) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
         """Check if the call is a method delegation to self (self.method(...))."""
-        if isinstance(call_node.func, nodes.Attribute):
-            if (
-                isinstance(call_node.func.expr, nodes.Name)
-                and call_node.func.expr.name == "self"
-            ):
-                return True
-        return False
+        return isinstance(call_node.func, nodes.Attribute) and isinstance(call_node.func.expr, nodes.Name) and call_node.func.expr.name == "self"
 
     @staticmethod
     def _get_call_target_name(call_node: nodes.Call) -> str | None:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
@@ -232,7 +222,7 @@ class TrivialWrapperChecker(BaseChecker):
             return False
 
         # Count function parameters (excluding self/cls)
-        num_params = len(func_args.args)  # type: ignore[arg-type]  # astroid's Arguments.args is list[AssignName] | None; at runtime it's always a list
+        num_params = len(func_args.args)  # type: ignore[arg-type]  # astroid's Arguments.args is list[AssignName] | None; at runtime it's always a list  # ty:ignore[invalid-argument-type]
         if func_args.vararg is not None:
             num_params += 1
         if func_args.kwarg is not None:
@@ -264,6 +254,5 @@ def _node_name(node: nodes.NodeNG) -> str:  # pylint: disable=W9705  # private h
     return "<expr>"
 
 
-@beartype
-def register(linter: PyLinter) -> None:
+def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API; @beartype cannot resolve PyLinter forward ref
     linter.register_checker(TrivialWrapperChecker(linter))

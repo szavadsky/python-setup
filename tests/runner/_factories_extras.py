@@ -5,8 +5,9 @@ Moved from ``_factories.py`` to keep each file under 500 lines (pylint C0302).
 
 from __future__ import annotations
 
-import pytest
 from typing import TYPE_CHECKING
+
+import pytest
 
 if TYPE_CHECKING:
     from _pytest.mark.structures import ParameterSet
@@ -45,7 +46,7 @@ def extra_block(entries: str) -> str:
 
 
 # Combined R4 reason-match table.
-R4_EXACT_REASON_CASES: list["ParameterSet"] = [
+R4_EXACT_REASON_CASES: list[ParameterSet] = [
     pytest.param(
         extra_block('name = "x"\ncommand = ["x"]\nbogus_field = 1\n'),
         "unknown field: ",
@@ -114,7 +115,7 @@ R4_EXACT_REASON_CASES: list["ParameterSet"] = [
 ]
 
 # Wrong-type flag fields (boolean / list / scalar shapes).
-R4_FLAG_WRONG_TYPE_CASES: list["ParameterSet"] = [
+R4_FLAG_WRONG_TYPE_CASES: list[ParameterSet] = [
     pytest.param(
         'supports_fix = "yes"\n',
         "wrong type: supports_fix must be bool",
@@ -186,7 +187,7 @@ NONE_BLOCK = (
     'parse_strategy = "none"\n'
 )
 
-DOWNSTREAM_CASES: list["ParameterSet"] = [
+DOWNSTREAM_CASES: list[ParameterSet] = [
     pytest.param(
         REGEX_BLOCK,
         "regextool",
@@ -212,7 +213,7 @@ EXTRA_OBSERV_NAME = "regextool"
 
 # ── T8 fail-fast malformation table ────────────────────────────────
 
-MALFORMATION_CASES: list["ParameterSet"] = [
+MALFORMATION_CASES: list[ParameterSet] = [
     pytest.param(
         '[tool.python-setup-lint]\nextra-tools = "not-a-list"\n',
         "wrong type: extra-tools must be a list of tables",
@@ -249,7 +250,7 @@ MALFORMATION_CASES: list["ParameterSet"] = [
 
 # ── Grouped statistics output table ────────────────────────────────
 
-GROUPED_OUTPUT_CASES: list["ParameterSet"] = [
+GROUPED_OUTPUT_CASES: list[ParameterSet] = [
     pytest.param(
         "tool",
         [
@@ -302,7 +303,7 @@ CLEAN_EXTRAS_PYPROJECT_BODY = (
 
 # ── FakeRunCmd dispatch contract table ─────────────────────────────
 
-DISPATCH_CASES: list["ParameterSet"] = [
+DISPATCH_CASES: list[ParameterSet] = [
     pytest.param(
         "dict",
         {"ruff check": _make_result("ruff check", exit_code=1, stdout="issues")},
@@ -346,7 +347,7 @@ DISPATCH_CASES: list["ParameterSet"] = [
 ]
 
 # Cmd + label capture table.
-CALLS_CAPTURED_CASES: list["ParameterSet"] = [
+CALLS_CAPTURED_CASES: list[ParameterSet] = [
     pytest.param(
         {"ruff check": _make_result("ruff check")},
         [(["ruff", "check", "src/", "--fix"], "ruff check")],
@@ -374,7 +375,7 @@ CALLS_CAPTURED_CASES: list["ParameterSet"] = [
 ]
 
 # Smoke-integration invariant table.
-RUN_LINT_FAKE_INVARIANT_CASES: list["ParameterSet"] = [
+RUN_LINT_FAKE_INVARIANT_CASES: list[ParameterSet] = [
     pytest.param(
         {"path": "src/python_setup_lint/runner.py"},
         lambda f: (
@@ -414,7 +415,7 @@ RUN_LINT_FAKE_INVARIANT_CASES: list["ParameterSet"] = [
 # ── Small parametrize tables ──────────────────────────────────────
 
 # Print result format rows.
-PRINT_FORMAT_CASES: list["ParameterSet"] = [
+PRINT_FORMAT_CASES: list[ParameterSet] = [
     pytest.param(
         0, "all good\n", None, ["[mytool]", "PASSED", "all good"], id="passed"
     ),
@@ -441,13 +442,13 @@ GROUPED_SORT_BY_RULE_COUNTS: list[ViolationCount] = [
 ]
 
 # ``TestRunCmd`` rows.
-RUN_CMD_CASES: list["ParameterSet"] = [
+RUN_CMD_CASES: list[ParameterSet] = [
     pytest.param(["echo", "hello"], "echo", lambda c: c == 0, "hello\n", id="success"),
     pytest.param(["false"], "false", lambda c: c != 0, None, id="failure"),
 ]
 
 # ``TestPathHelpers._find_py_files`` boundary rows.
-FIND_PY_FILES_BOUNDARY_CASES: list["ParameterSet"] = [
+FIND_PY_FILES_BOUNDARY_CASES: list[ParameterSet] = [
     pytest.param(["nonexistent_dir_xyz"], [], id="nonexistent_dir"),
     pytest.param(
         ["src/python_setup_lint/runner/types.py"],
@@ -470,14 +471,14 @@ def _is_empty(r: list[str]) -> bool:
     return r == []
 
 
-EXPAND_GLOBS_CASES: list["ParameterSet"] = [
+EXPAND_GLOBS_CASES: list[ParameterSet] = [
     pytest.param(["src/python_setup_lint"], _is_passthrough, id="passthrough"),
     pytest.param(["src/**/*.py"], _is_py_glob, id="expands_glob"),
     pytest.param(["*.nonexistent_ext_xyz"], _is_empty, id="empty_match"),
 ]
 
 # ``TestStrategyBuildCommand`` stubtest+verifytypes rows.
-STRATEGY_TOKENS_CASES: list["ParameterSet"] = [
+STRATEGY_TOKENS_CASES: list[ParameterSet] = [
     pytest.param(
         "mypy.stubtest",
         "python_setup_lint",
@@ -493,19 +494,19 @@ STRATEGY_TOKENS_CASES: list["ParameterSet"] = [
 ]
 
 # ``TestRunLintOrchestration.test_package_name_governs_stubtest_verifytypes`` rows.
-PACKAGE_NAME_STUBTEST_CASES: list["ParameterSet"] = [
+PACKAGE_NAME_STUBTEST_CASES: list[ParameterSet] = [
     pytest.param(None, False, -2, id="package_name_none_skips"),
     pytest.param("python_setup_lint", True, 0, id="package_name_set_runs"),
 ]
 
 # ``TestMainCLI.test_main_exit_codes`` rows.
-MAIN_EXIT_CODE_CASES: list["ParameterSet"] = [
+MAIN_EXIT_CODE_CASES: list[ParameterSet] = [
     pytest.param(["--help"], True, id="help_exits_zero"),
     pytest.param(["--nonexistent-flag"], False, id="unknown_flag_exits_nonzero"),
 ]
 
 # ``TestRunLintIntegration.test_run_lint_baseline_capture_with_ruff`` rows.
-RUFF_BASELINE_FIX_CASES: list["ParameterSet"] = [
+RUFF_BASELINE_FIX_CASES: list[ParameterSet] = [
     pytest.param(False, "no issues", id="ruff_present_in_baseline"),
     pytest.param(True, None, id="run_lint_fix"),
 ]

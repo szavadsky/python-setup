@@ -47,19 +47,20 @@ Read the plan at the provided path.
 
 From the plan's "Sequence" and "Changes" sections, identify each distinct subtask. Group them into waves of independent subtasks (no cross-dependency within a wave). For each subtask, compute the `local://plan{pIt}.md:<start>-<end>` line ranges for the plan sections relevant to that subtask.
 
-If the plan has no clear section boundaries, pass the whole plan range — but this defeats cognitive focus; the planner should structure plans with per-subtask sections.
-
 ## 3. Execute DAG (wave by wave)
 
 For each wave of independent subtasks:
 
-1. **Spawn `orchestrate-subtask` agents in parallel** via the `task` tool with `isolated=True` on every spawn (even single-agent waves). Each spawn receives an assignment containing the `local://plan{pIt}.md:<start>-<end>` locator for its subtask. Example assignment: `"Execute the subtask defined at local://plan3.md:42-58. Read that range with the read tool; it is your complete task. Implement via implement-subtask, then check-and-commit-subtask."`
+1. **Spawn `orchestrate-subtask` agents in parallel** via the `task` tool with `isolated=True` on every spawn (even single-agent waves). Each spawn receives an assignment containing the `local://plan{pIt}.md:<start>-<end>` locator for its subtask. Example assignment: `"Execute the subtask defined at local://plan3.md:42-58. Read that range with the read tool; it is your complete task. {{Your extra prompt}}"`
+Do Not reinterpret assigment or refine for `orchestrate-subtask`. He can do it. Focus on big picture. Add your extra if something  came during execution, or you are relaunching, etc.
 
 2. **Wait for the wave** to complete (the `task` tool batch returns when all spawns finish).
 
 3. **Handle `stashConflict`**: if a subtask result reports `stashConflict` (the branch-merge cherry-pick conflict path), launch a `task` agent to resolve the conflict and commit.
 
-4. **Accumulate concerns/blocked**: if any subtask returns `status=blocked` or `failed`, consult `oracle` (spawn via `task` tool) for unblock guidance; if oracle cannot resolve, record in the summary's Concerns and set own `status=partial` (or `failed` if all subtasks blocked).
+4. **Accumulate concerns/blocked over multiple subtask**: if any subtask returns `status=blocked` or `failed`, consult `oracle` (spawn via `task` tool) for unblock guidance; if oracle cannot resolve, record in the summary's Concerns and set own `status=partial` (or `failed` if all subtasks blocked). Bundle consult accross many issues unless you are blocked.
+
+Continue DAG execution till plan FULLY immplemented. No deferral, no brush off. ORCHESTRATE!Q
 
 ## 4. Summary report
 

@@ -13,7 +13,6 @@ import pytest
 
 from python_setup_lint.checkers._base import check_if_meaningful
 
-
 # ── Threshold test: 50+ calls ────────────────────────────────────────
 
 

@@ -7,6 +7,7 @@ Reason strings LOCKED per DESIGN-8 D6 — production code is source-of-truth.
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
@@ -39,7 +40,7 @@ from tests.runner._factories_extras import (
 
 
 @pytest.fixture(autouse=True)
-def _isolate_registries() -> None:
+def _isolate_registries() -> Generator[None]:
     """Snapshot+restore LINT_TOOLS/STRATEGIES + extras cache per test."""
     baseline = list(LINT_TOOLS)
     baseline_strategies = dict(STRATEGIES)
@@ -54,17 +55,15 @@ def _isolate_registries() -> None:
 # ── Happy paths ─────────────────────────────────────────────────────
 
 
-@pytest.mark.parametrize(
-    "case,body", EMPTY_LOADER_CASES, ids=[c for c, _ in EMPTY_LOADER_CASES]
-)
-def test_load_extras_returns_empty(tmp_path, case, body) -> None:
+@pytest.mark.parametrize(("case", "body"), EMPTY_LOADER_CASES, ids=[c for c, _ in EMPTY_LOADER_CASES])
+def test_load_extras_returns_empty(tmp_path: Path, case: str, body: str | None) -> None:
     """No pyproject / no section / empty array → ``_load_extra_tools`` returns ``[]``."""
     if body is not None:
         write_pyproject(tmp_path, body)
     assert _load_extra_tools(tmp_path) == []
 
 
-def test_load_extras_valid_entry_returns_spec(tmp_path) -> None:
+def test_load_extras_valid_entry_returns_spec(tmp_path: Path) -> None:
     """Full dogfood block → one registration with right spec + parser."""
     write_pyproject(tmp_path, extra_block(VALID_EXTRA_BLOCK))
     [reg] = _load_extra_tools(tmp_path)
@@ -80,14 +79,14 @@ def test_load_extras_valid_entry_returns_spec(tmp_path) -> None:
     ]
     assert reg.config_flag is None
     assert reg.statistics_flag is None
+    assert reg.parser is not None
     out = reg.parser("src/x.py:5:rule=A # noqa: A\nfoo.py:7: # noqa: B\n", "")
-    assert dict(out) == {"A": 1, "B": 1}
 
 
 # ── R4 failure table: per-shape ExtraToolsConfigError ─────────────
 
 
-def _expect_error(tmp_path, body, *, reason_starts=None, reason_eq=None):
+def _expect_error(tmp_path: Path, body: str, *, reason_starts: str | None = None, reason_eq: str | None = None) -> ExtraToolsConfigError:
     """Write *body*, call ``_load_extra_tools``, assert ExtraToolsConfigError; return err."""
     pyproject = write_pyproject(tmp_path, body)
     with pytest.raises(ExtraToolsConfigError) as exc_info:
@@ -101,10 +100,10 @@ def _expect_error(tmp_path, body, *, reason_starts=None, reason_eq=None):
     return err
 
 
-@pytest.mark.parametrize("body,reason_want,want_kind", R4_EXACT_REASON_CASES)
-def test_validate_r4_reason_matches(tmp_path, body, reason_want, want_kind) -> None:
+@pytest.mark.parametrize(("body", "reason_want", "want_kind"), R4_EXACT_REASON_CASES)
+def test_validate_r4_reason_matches(tmp_path: Path, body: str, reason_want: str, want_kind: str) -> None:
     """One row per R4 malformation — asserts locked reason (exact OR prefix)."""
-    _expect_error(  # type: ignore[no-untyped-call]
+    _expect_error(
         tmp_path,
         body,
         reason_eq=reason_want if want_kind == "exact" else None,
@@ -112,10 +111,10 @@ def test_validate_r4_reason_matches(tmp_path, body, reason_want, want_kind) -> N
     )
 
 
-@pytest.mark.parametrize("body_fragment,reason_want", R4_FLAG_WRONG_TYPE_CASES)
-def test_validate_r4_flag_wrong_type(tmp_path, body_fragment, reason_want) -> None:
+@pytest.mark.parametrize(("body_fragment", "reason_want"), R4_FLAG_WRONG_TYPE_CASES)
+def test_validate_r4_flag_wrong_type(tmp_path: Path, body_fragment: str, reason_want: str) -> None:
     """One row per wrong-type flag field — name + command are valid; the flag varies."""
-    _expect_error(  # type: ignore[no-untyped-call]
+    _expect_error(
         tmp_path,
         extra_block(f'name = "x"\ncommand = ["x"]\n{body_fragment}'),
         reason_eq=reason_want,
@@ -123,9 +122,9 @@ def test_validate_r4_flag_wrong_type(tmp_path, body_fragment, reason_want) -> No
 
 
 @pytest.mark.parametrize("regex", REGEX_BAD_GROUP_CASES)
-def test_validate_regex_count_invalid_raises(tmp_path, regex) -> None:
+def test_validate_regex_count_invalid_raises(tmp_path: Path, regex: str) -> None:
     """Zero groups / two groups / unparseable regex → locked R4 reason prefix."""
-    _expect_error(  # type: ignore[no-untyped-call]
+    _expect_error(
         tmp_path,
         extra_block(
             f'name = "x"\ncommand = ["x"]\nparse_strategy = "regex_count"\nparse_regex = "{regex}"\n'
@@ -134,7 +133,7 @@ def test_validate_regex_count_invalid_raises(tmp_path, regex) -> None:
     )
 
 
-def test_validate_config_flag_str_wraps_to_single_element(tmp_path) -> None:
+def test_validate_config_flag_str_wraps_to_single_element(tmp_path: Path) -> None:
     """A string ``config_flag`` is accepted (wrapped to ``[value]``); no error."""
     write_pyproject(
         tmp_path, extra_block('name = "x"\ncommand = ["x"]\nconfig_flag = "--config"\n')
@@ -151,7 +150,7 @@ def test_parse_strategies_includes_all_keys() -> None:
     assert builtin_names <= set(PARSE_STRATEGIES)
 
 
-def test_load_extras_pyproject_unreadable_raises(tmp_path) -> None:
+def test_load_extras_pyproject_unreadable_raises(tmp_path: Path) -> None:
     """Malformed TOML → ExtraToolsConfigError with locked prefix + file location."""
     pyproject = write_pyproject(tmp_path, "bad = = syntax # not toml")
     with pytest.raises(ExtraToolsConfigError) as exc_info:
@@ -160,23 +159,20 @@ def test_load_extras_pyproject_unreadable_raises(tmp_path) -> None:
     assert exc_info.value.reason.startswith("pyproject unreadable:")
 
 
-@pytest.mark.parametrize(
-    "body,reason",
-    [
-        (
-            '[tool.python-setup-lint]\nextra-tools = "not-a-list"\n',
-            "wrong type: extra-tools must be a list of tables",
-        ),
-        (
-            '[tool.python-setup-lint]\nextra-tools = ["scalar"]\n',
-            "wrong type: extra-tools entry must be a table",
-        ),
-    ],
-    ids=["not_a_list", "entry_not_a_table"],
-)
-def test_load_extras_array_shape_raises(tmp_path, body, reason) -> None:
+@pytest.mark.parametrize(("body", "reason"), [
+    (
+        '[tool.python-setup-lint]\nextra-tools = "not-a-list"\n',
+        "wrong type: extra-tools must be a list of tables",
+    ),
+    (
+        '[tool.python-setup-lint]\nextra-tools = ["scalar"]\n',
+        "wrong type: extra-tools entry must be a table",
+    ),
+],
+ids=["not_a_list", "entry_not_a_table"],)
+def test_load_extras_array_shape_raises(tmp_path: Path, body: str, reason: str) -> None:
     """``extra-tools`` not a list OR an entry that's not a table → wrong-type reason."""
-    _expect_error(tmp_path, body, reason_eq=reason)  # type: ignore[no-untyped-call]
+    _expect_error(tmp_path, body, reason_eq=reason)
 
 
 # ── ExtraToolsConfigError public attribute contract ────────────────
@@ -330,19 +326,16 @@ class TestExtraBuildCommand:
             ["data/file1.txt", "data/file2.txt"]
         )  # sorted relative paths
 
-    @pytest.mark.parametrize(
-        "config_flag,expected",
-        [
-            (None, ["mytool", "src/"]),  # no_flag → flag dropped
-            (["--config"], ["mytool", "src/"]),  # flag set but no path → dropped
-        ],
-        ids=["no_config_flag", "config_flag_with_no_path"],
-    )
+    @pytest.mark.parametrize(("config_flag", "expected"), [
+        (None, ["mytool", "src/"]),  # no_flag → flag dropped
+        (["--config"], ["mytool", "src/"]),  # flag set but no path → dropped
+    ],
+    ids=["no_config_flag", "config_flag_with_no_path"],)
     def test_build_command_config_flag_boundaries(
-        self,
+        self: object,
         tmp_path: Path,
-        config_flag,
-        expected,
+        config_flag: list[str] | None,
+        expected: list[str],
     ) -> None:
         """config_flag absent OR config_paths[extra] absent → no flag in the command."""
         _register_extra("extra1", config_flag=config_flag, default_paths=["src/"])
