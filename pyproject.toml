@@ -29,7 +29,21 @@ packages = ["src/python_setup_lint"]
 "CodingRules.md" = "python_setup_lint/CodingRules.md"
 
 [project.optional-dependencies]
+semantic = ["sentence-transformers>=3.0.0"]
+
+[tool.pytest.ini_options]
+addopts = "-m 'not slow'"
+markers = [
+    "slow: marks tests that are intentionally slow (benchmarks or full pipeline runs); use '-m slow' to include, '-m \"not slow\"' to exclude",
+    "no_external_api: marks tests that do not call external APIs or subprocesses",
+    "with_real_api: marks tests that call real external APIs or subprocesses",
+    "implementation_detail: marks tests of file-private helpers not reachable through public API",
+]
+
+[dependency-groups]
 dev = [
+    "beartype>=0.22.9",
+    "pytest>=9.1.0",
     "ruff>=0.5",
     "mypy>=1.10",
     "pylint>=4.0.5",
@@ -56,21 +70,4 @@ dev = [
     "types-regex>=2026.5.9.20260518",
     "types-simplejson>=3.20.0.20260518",
     "types-tqdm>=4.68.0.20260608",
-]
-
-semantic = ["sentence-transformers>=3.0.0"]
-
-[tool.pytest.ini_options]
-addopts = "-m 'not slow'"
-markers = [
-    "slow: marks tests that are intentionally slow (benchmarks or full pipeline runs); use '-m slow' to include, '-m \"not slow\"' to exclude",
-    "no_external_api: marks tests that do not call external APIs or subprocesses",
-    "with_real_api: marks tests that call real external APIs or subprocesses",
-    "implementation_detail: marks tests of file-private helpers not reachable through public API",
-]
-
-[dependency-groups]
-dev = [
-    "beartype>=0.22.9",
-    "pytest>=9.1.0",
 ]
