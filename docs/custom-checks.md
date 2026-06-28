@@ -50,11 +50,22 @@ Use `MessageDef` (a `NamedTuple` with `message`, `symbol`, `description` fields)
 
 ## Rule IDs
 
-Custom checkers use `W` (warning) or `C` (convention) codes in the range `W97xx`–`W99xx` and `C0xxx`.
+Custom checkers use `W` (warning) codes in the range `W90xx`–`W97xx`. Actual codes: W9001 (no-try-import), W9701 (missing-beartype), W9702 (tempfile-mkdtemp-in-test), W9703 (asyncio-timeout), W9704 (unjustified-suppression), W9707 (pyi-underscore), W9710/W9711 (structlog), W9720 (unnamed-tuple-dict), W9721 (generic-key-dict), W9728 (trivial-wrapper), W9729 (redundant-type-guard), W9738 (bare-except-comment), W9739 (missing-error-chain), W9740 (silent-except), W9741 (missing-return-annotation), plus stub-checker symbols.
 
 ## Registration
 
 The installer automatically discovers all modules in `checkers/` that export a `register` function. No manual plugin configuration is needed — the installer writes the `load-plugins` entry to the consumer's `pyproject.toml`.
+
+### Manual registration
+
+If not using the installer, register checkers manually in `.pylintrc` `[MAIN]`:
+
+```ini
+[MAIN]
+load-plugins=python_setup_lint.checkers.conformance.suppression_justification_checker,python_setup_lint.checkers.stub.checker,...
+```
+
+Each checker module exports `register(linter)`; pylint calls it at startup. See `config/.pylintrc` for the full load-plugins list.
 
 ## Testing
 
