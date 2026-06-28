@@ -11,6 +11,11 @@ tools:
   - task
   - irc
   - yield
+  - inspect_image
+  - checkpoint
+  - rewind
+  - job
+  - todo
 spawns:
   - task
   - fact-finder

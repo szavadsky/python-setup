@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.13.0 (2026-06-28) — Runner clean, integration dedup, carry-from integration test
+
+**Fixed rumdl regression** — trailing space in .omp/agents/implement-subtask.md.
+
+**Merged test/integration.py into tests/integration.py** — eliminated duplicate integration test (347 lines), merged 2 unique tests (install+lint E2E, pre-commit dry-run), fixed 16 ruff violations.
+
+**Added carry-from external library PASSING case to integration test** — verifies the one allowed brush-off variant passes W9704, per goal requirement.
+
+**Added carryover + carry from to brush-off pattern tests** — closed test coverage gap.
+
+**Fixed CLI --default-py-dirs default** — changed from "src,scripts,tests" to "src" to match RunnerConfig default.
+
+**Added per-rule justification for 4 uncovered disabled rules** in .pylintrc/.pylintrc-pyi.
+
+**Added test/data/** to ruff per-file-ignores** — sample project fixtures exempted from ruff.
+
+**Regenerated lint.baseline** — proper entries with output for all 12 tools, 0 records.
+
 ## v0.12.0 (2026-06-28) — Baseline clarity, noise suppression, stale docs, Any return-type coverage
 
 **Scoped pylint and ty to `src/` only** — removed 236 baked-in baseline violations from tests/ (194 pylint + 42 ty). Tests remain fully covered by mypy (strict) and pyright. Pylint's custom checkers validated via integration test on sample project.

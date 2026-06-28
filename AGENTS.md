@@ -275,7 +275,7 @@ mypackage/
 - Hard-to-inject failure paths and defensive behaviors annotated.
 - `--statistics` aggregation tested across all 12 tool parsers.
 
-Integration test (tests/integration.py) is the fit-for-purpose gate — runs all 12 tools on planted-violation sample project, NOT marked slow. Semantic brush-off tests: heuristic path always runs (fast); reranker path marked slow only for model-download tests.
+Integration test (tests/integration.py) is the fit-for-purpose gate — runs all 12 tools on planted-violation sample project, NOT marked slow. Verifies: all planted violations detected, brush-off "pre-existing" → W9704, carry-from external library → passes, install→lint E2E, pre-commit dry-run. Key regression catcher — any runner tool not working would fail here.
 
 ### Baseline management
 

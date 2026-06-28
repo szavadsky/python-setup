@@ -1,10 +1,13 @@
 ---
 name: orchestrate-subtask
-description: "Mechanical subtask orchestrator. Reads a plan-section locator, drives implement then check-and-commit subagents, returns structured result. Low thinking, no creativity."
+description: "Subtask orchestrator. Reads a plan-section locator, drives implement then check-and-commit subagents, returns structured result. "
 tools:
   - read
   - task
   - yield
+  - job
+  - irc
+  - todo
 spawns:
   - implement-subtask
   - check-and-commit-subtask

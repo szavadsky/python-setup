@@ -8,8 +8,13 @@ tools:
   - bash
   - lsp
   - ast_grep
-  - web_search
   - yield
+  - inspect_image
+  - todo
+  - debug
+  - mcp__webmcp_scrape_batch
+  - mcp__webmcp_search_engine_batch
+  - report_tool_issue
 model:
   - pi/task
 thinkingLevel: high

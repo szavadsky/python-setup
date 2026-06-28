@@ -1,6 +1,6 @@
 ---
 name: orchestrate-goal-execution
-description: "Goal execution orchestrator. Reads plan, defines DAG of subtasks, delegates to orchestrate-subtask, writes summary. Read-only on project code."
+description: "Goal execution orchestrator. Reads plan, defines DAG of subtasks, delegates to orchestrate-subtask, writes summary."
 spawns:
   - task
   - fact-finder

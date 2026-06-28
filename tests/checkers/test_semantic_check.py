@@ -71,6 +71,7 @@ class TestBrushOffPatterns:
             "for now",
             "to do",
             "fixme later",
+            "carryover",
             # Multi-word brush-off phrases
             "pre existing",
             "in baseline",
@@ -78,6 +79,7 @@ class TestBrushOffPatterns:
             "not my code",
             "carry over",
             "from before",
+            "carry from",
         ],
     )
     def test_brush_off_rejected(self, comment: str) -> None:

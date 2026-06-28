@@ -6,6 +6,7 @@
   },
   {
     "exit_code": 0,
+    "output": "All checks passed!\n",
     "tool": "ruff check"
   },
   {
@@ -15,6 +16,7 @@
   },
   {
     "exit_code": 0,
+    "output": "Success: no issues found in 112 source files\n",
     "tool": "mypy"
   },
   {
@@ -34,6 +36,15 @@
     "tool": "mypy.stubtest"
   },
   {
+    "diagnostics": {
+      "generalDiagnostics": [],
+      "summary": {
+        "errorCount": 0,
+        "filesAnalyzed": 171,
+        "informationCount": 0,
+        "warningCount": 0
+      }
+    },
     "exit_code": 0,
     "tool": "pyright check"
   },
