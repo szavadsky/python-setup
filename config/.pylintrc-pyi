@@ -13,7 +13,7 @@ load-plugins=python_setup_lint.checkers.conformance.no_try_import_checker,python
 #   - False positives in stub code: broad-exception-caught, protected-access, cell-var-from-loop
 #   - Style preferences: line-too-long, trailing-newlines, superfluous-parens, wrong-import-order, bad-indentation, unnecessary-dunder-call, use-implicit-booleaness-not-comparison
 #   - Parser quirks: unknown-option-value, unspecified-encoding
-#   - Superseded by custom checkers: impl-missing-annotation
+#   - Superseded by custom checkers: impl-missing-annotation, stub-symbol-missing (superseded by custom stub checker), useless-import-alias (re-exports need `as` for mypy strict re-export visibility)
 #   - Structurally repetitive stubs: duplicate-code (min-similarity-lines=25 handles this)
 disable=unknown-option-value,unused-argument,broad-exception-caught,protected-access,missing-function-docstring,line-too-long,import-outside-toplevel,trailing-newlines,too-many-arguments,unspecified-encoding,unused-import,cell-var-from-loop,too-many-return-statements,too-few-public-methods,superfluous-parens,wrong-import-order,unused-variable,missing-module-docstring,missing-class-docstring,invalid-name,impl-missing-annotation,global-statement,cyclic-import,bad-indentation,unnecessary-ellipsis,unnecessary-dunder-call,redefined-outer-name,reimported,use-implicit-booleaness-not-comparison,stub-symbol-missing,useless-import-alias
 enable=too-many-statements,too-many-branches,too-many-locals,too-many-nested-blocks,too-many-public-methods,too-complex,no-try-import,missing-beartype,pyi-underscore-symbol

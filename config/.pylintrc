@@ -9,7 +9,7 @@ load-plugins=python_setup_lint.checkers.conformance.no_try_import_checker,python
 # reason: Disabled built-in checks that conflict with project conventions or are
 # superseded by custom conformance checkers. Grouped by rationale:
 #   - Tests exempt from docstring rules: missing-function-docstring, missing-module-docstring, missing-class-docstring
-#   - Custom rules supersede builtins: invalid-name, impl-missing-annotation, use-implicit-booleaness-not-comparison
+#   - Custom rules supersede builtins: invalid-name, impl-missing-annotation, use-implicit-booleaness-not-comparison, stub-symbol-missing (superseded by custom stub checker), useless-import-alias (re-exports need `as` for mypy strict re-export visibility)
 #   - Test/script patterns: import-outside-toplevel, redefined-outer-name, reimported, global-statement, cyclic-import
 #   - False positives in dynamic code: unused-argument, unused-import, unused-variable, cell-var-from-loop, protected-access
 #   - Style preferences: line-too-long, trailing-newlines, too-many-arguments, too-many-return-statements, too-few-public-methods, superfluous-parens, wrong-import-order, bad-indentation, unnecessary-ellipsis, unnecessary-dunder-call

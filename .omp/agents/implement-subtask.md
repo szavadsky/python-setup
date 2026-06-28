@@ -1,6 +1,6 @@
 ---
 name: implement-subtask
-description: "Subtask implementer. Receives a verbatim task, implements it, verifies tests+lint, returns structured result."
+description: "Subtask implementer. Receives a  task, implements it, verifies tests+lint, returns structured result."
 tools:
   - read
   - grep
@@ -12,6 +12,17 @@ tools:
   - ast_grep
   - ast_edit
   - yield
+  - debug
+  - inspect_image
+  - checkpoint
+  - rewind
+  - task
+  - job
+  - irc
+  - todo
+  - resolve
+  - report_tool_issue
+  - generate_image
 spawns:
   - task
   - fact-finder

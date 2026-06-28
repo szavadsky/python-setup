@@ -12,8 +12,8 @@ the binary is unavailable.
 from __future__ import annotations
 
 import shutil
-import textwrap
 import subprocess
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -28,14 +28,12 @@ from python_setup_lint.testing import (
 
 # ── Helpers ────────────────────────────────────────────────────────────
 
-
 def _copy_sample(tmp_path: Path) -> Path:
     """Copy the minimal sample project to *tmp_path* and return the path."""
     sample = Path("test/data/minimal_sample_project")
     dest = tmp_path / "project"
     shutil.copytree(sample, dest)
     return dest
-
 
 def _init_git(project: Path) -> None:
     """Initialise a git repo in *project* (needed by detect-secrets)."""
@@ -54,7 +52,6 @@ def _init_git(project: Path) -> None:
     )
     subprocess.run(["git", "add", "."], cwd=project, capture_output=True, check=True)
 
-
 def _read_violation_rules() -> list[str]:
     """Read expected violation rule names from ``violations.txt``."""
     rules: list[str] = []
@@ -66,7 +63,6 @@ def _read_violation_rules() -> list[str]:
             rules.append(stripped)
     return rules
 
-
 def _shipped_config_paths() -> dict[str, Path]:
     """Build config_paths dict from the python-setup project root config/ dir."""
     config_root = Path("config")
@@ -77,7 +73,6 @@ def _shipped_config_paths() -> dict[str, Path]:
             paths[tool_label] = candidate.resolve()
     return paths
 
-
 def _make_config(project: Path) -> RunnerConfig:
     """Build a ``RunnerConfig`` for the sample project with shipped config paths."""
     return RunnerConfig(
@@ -86,9 +81,7 @@ def _make_config(project: Path) -> RunnerConfig:
         config_paths=_shipped_config_paths(),
     )
 
-
 # ── Tests ─────────────────────────────────────────────────────────────
-
 
 class TestMinimalSampleProject:
     """Integration tests exercising the full lint pipeline on the sample project."""

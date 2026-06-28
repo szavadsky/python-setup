@@ -9,6 +9,8 @@ tools:
   - lsp
   - ast_grep
   - yield
+  - inspect_image
+  - todo
 spawns:
   - quick_task
   - librarian
