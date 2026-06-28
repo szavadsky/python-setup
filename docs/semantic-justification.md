@@ -8,8 +8,8 @@ The standard suppression-justification checker uses a simple heuristic (non-empt
 
 The semantic pipeline replaces that heuristic with a **reranker-first with heuristic fallback** pipeline for higher accuracy:
 
-1. **Heuristic fallback** — fast, zero-dependency check that rejects empty, boilerplate, or rule-symbol-only justifications.
-2. **Cross-encoder reranker** — re-scores the justification against its context with a pairwise model. Scores above 0.5 pass; below that threshold the justification is considered insufficient.
+1. **Cross-encoder reranker** — re-scores the justification against its context with a pairwise model. Scores above 0.5 pass; below that threshold the justification is considered insufficient.
+2. **Heuristic fallback** — fast, zero-dependency check that rejects empty, boilerplate, or rule-symbol-only justifications. Used when the reranker is unavailable or returns `None`.
 
 If the reranker is unavailable (model download failure, OOM, `sentence-transformers` not installed), the pipeline defers to the heuristic fallback.
 
