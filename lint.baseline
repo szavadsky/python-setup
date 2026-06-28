@@ -10,8 +10,94 @@
     "tool": "ruff check"
   },
   {
-    "exit_code": 0,
-    "output": "\nSuccess: No issues found in 17 files (XXXms)\n",
+    "exit_code": 1,
+    "records": [
+      {
+        "col": 34,
+        "file": ".omp/agents/implement-subtask.md",
+        "line": 66,
+        "msg": "Trailing space found [*]",
+        "rule": "MD009"
+      },
+      {
+        "col": 1,
+        "file": ".omp/agents/implement-subtask.md",
+        "line": 67,
+        "msg": "List should be preceded by blank line [*]",
+        "rule": "MD032"
+      },
+      {
+        "col": 40,
+        "file": ".omp/agents/implement-subtask.md",
+        "line": 67,
+        "msg": "Trailing space found [*]",
+        "rule": "MD009"
+      },
+      {
+        "col": 142,
+        "file": ".omp/agents/implement-subtask.md",
+        "line": 69,
+        "msg": "Trailing space found [*]",
+        "rule": "MD009"
+      },
+      {
+        "col": 1,
+        "file": ".omp/agents/orchestrate-goal-execution.md",
+        "line": 12,
+        "msg": "Empty line has trailing spaces [*]",
+        "rule": "MD009"
+      },
+      {
+        "col": 1,
+        "file": ".omp/agents/orchestrate-goal-execution.md",
+        "line": 60,
+        "msg": "Multiple consecutive blank lines between content [*]",
+        "rule": "MD012"
+      },
+      {
+        "col": 493,
+        "file": ".omp/agents/orchestrate-goal-execution.md",
+        "line": 65,
+        "msg": "Trailing space found [*]",
+        "rule": "MD009"
+      },
+      {
+        "col": 1,
+        "file": ".omp/agents/orchestrate-goal-execution.md",
+        "line": 75,
+        "msg": "List should be preceded by blank line [*]",
+        "rule": "MD032"
+      },
+      {
+        "col": 1,
+        "file": ".omp/agents/orchestrate-goal-execution.md",
+        "line": 81,
+        "msg": "List should be preceded by blank line [*]",
+        "rule": "MD032"
+      },
+      {
+        "col": 1,
+        "file": ".omp/agents/orchestrate-goal-execution.md",
+        "line": 90,
+        "msg": "List should be preceded by blank line [*]",
+        "rule": "MD032"
+      },
+      {
+        "col": 1,
+        "file": ".omp/agents/wave-end-checkpoint.md",
+        "line": 68,
+        "msg": "List should be preceded by blank line [*]",
+        "rule": "MD032"
+      },
+      {
+        "col": 1,
+        "file": "CHANGELOG.md",
+        "line": 3,
+        "msg": "Multiple consecutive blank lines between content [*]",
+        "rule": "MD012"
+      }
+    ],
+    "schema": "v2",
     "tool": "rumdl check"
   },
   {

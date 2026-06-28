@@ -18,6 +18,14 @@ class SuppressionJustificationChecker(BaseChecker):
     def visit_annassign(self, node: nodes.AnnAssign) -> None:
         """Visit annotated assignments and check for unjustified Any annotations."""
 
+    @staticmethod
+    def _get_string_literal_spans(node: object) -> dict[int, list[tuple[int, int]]]:
+        """Return dict mapping 1-indexed line numbers to string literal column spans."""
+
+    @staticmethod
+    def _suppression_in_string(line: str, spans: list[tuple[int, int]]) -> bool:
+        """Return True if the suppression # on line is inside a string literal."""
+
 
     def _check_any_annotation(self, node: nodes.AnnAssign) -> None:
         """Check Any annotations for trailing justification."""

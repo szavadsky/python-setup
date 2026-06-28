@@ -1,6 +1,16 @@
 ---
 name: plan-goal-execution
 description: "Goal execution planner. Reads goal, analyzes codebase, produces implementation plan. Read-only on project code."
+tools:
+  - read
+  - grep
+  - glob
+  - lsp
+  - ast_grep
+  - write
+  - todo
+  - yield
+  - inspect_image
 spawns:
   - fact-finder
   - librarian

@@ -13,6 +13,7 @@ tools:
   - ast_edit
   - yield
   - debug
+  - eval
   - inspect_image
   - checkpoint
   - rewind
@@ -28,6 +29,7 @@ spawns:
   - fact-finder
   - quick_task
   - librarian
+  - oracle
 model:
   - pi/task
 thinkingLevel: high
@@ -61,4 +63,10 @@ You are a subtask implementer. You receive a verbatim task assignment.
 
 4. Return your structured result with `status`, `summary` (what changed, files touched), and `concerns`.
 
-Before returning `blocked`, you MUST try at least 2 distinct ways to unblock yourself (re-run with different flags, read the error trace, consult the code). Report in `concerns`: what failed, what you tried, what you need. Returning `blocked` after genuine effort is correct; fabricating `implemented` is the single prohibited act.
+You can delegate to the following
+
+   - small, tangible tasks `quick_task`
+   - API research : `librarian`
+   - If you are stuck, need advise of a Sr. engineer : `oracle`. His time is precious, in query refer to specific files/lns ranges, function.
+
+Before returning `blocked`, you MUST try at least 2 distinct ways to unblock yourself (re-run with different flags, read the error trace, consult the code, consult `oracle`). Report in `concerns`: what failed, what you tried, what you need. Returning `blocked` after genuine effort is correct; fabricating `implemented` is the single prohibited act.

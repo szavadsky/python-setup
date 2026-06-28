@@ -65,9 +65,14 @@ class SuppressionJustificationChecker(BaseChecker):
 
         lines = source.splitlines(keepends=True)
 
+        string_spans = self._get_string_literal_spans(node)
+
         for lineno, line in enumerate(lines, start=1):
             stripped = line.rstrip("\n")
             if not self._is_suppression_line(stripped):
+                continue
+            # Check if the suppression # is inside a string literal
+            if self._suppression_in_string(stripped, string_spans.get(lineno, [])):
                 continue
             if self._has_justification(lines, lineno - 1):
                 continue
@@ -173,6 +178,67 @@ class SuppressionJustificationChecker(BaseChecker):
             or _PAT_TYPE_IGNORE.search(line)
             or _PAT_TY_IGNORE.search(line)
         )
+
+    @staticmethod
+    def _get_string_literal_spans(node: object) -> dict[int, list[tuple[int, int]]]:
+        """Return dict mapping 1-indexed line numbers to string literal column spans.
+
+        Each entry is ``{lineno: [(start_col, end_col), ...]}`` where
+        ``start_col`` and ``end_col`` are 0-indexed character positions
+        (exclusive end) of string literal content on that line.
+        Falls back to empty dict if AST walking fails.
+
+        Returns:
+            Dict mapping line numbers to lists of ``(start, end)`` column spans.
+        """
+        spans: dict[int, list[tuple[int, int]]] = {}
+        try:
+            for const_node in node.nodes_of_class(nodes.Const):  # type: ignore[union-attr]  # node is ModuleNode at runtime; nodes_of_class is available
+                if not isinstance(const_node.value, str):
+                    continue
+                start_line = const_node.fromlineno
+                end_line = const_node.end_lineno
+                start_col = const_node.col_offset
+                end_col = const_node.end_col_offset
+                if start_line is None or end_line is None or start_col is None or end_col is None:
+                    continue
+                if start_line == end_line:
+                    spans.setdefault(start_line, []).append((start_col, end_col))
+                else:
+                    # Multi-line string: first line from start_col to end, last line from 0 to end_col
+                    spans.setdefault(start_line, []).append((start_col, 10**9))
+                    for mid in range(start_line + 1, end_line):
+                        spans.setdefault(mid, []).append((0, 10**9))
+                    spans.setdefault(end_line, []).append((0, end_col))
+        except AttributeError:  # pylint: disable=W9740  # node may not have nodes_of_class (e.g. non-Module node); fall back to empty spans  # best-effort fallback; logging would noise unavoidable attribute degrade
+            pass
+        return spans
+
+    @staticmethod
+    def _suppression_in_string(
+        line: str,
+        spans: list[tuple[int, int]],
+    ) -> bool:
+        """Return True if the suppression ``#`` on *line* is inside a string literal.
+
+        Args:
+            line: The source line (without trailing newline).
+            spans: List of ``(start_col, end_col)`` string literal spans on this line.
+
+        Returns:
+            True if the suppression ``#`` falls inside any string literal span.
+        """
+        if not spans:
+            return False
+        for pat in (_PAT_PYLINT_DISABLE, _PAT_NOQA, _PAT_TYPE_IGNORE, _PAT_TY_IGNORE):
+            m = pat.search(line)
+            if m:
+                hash_pos = m.start()
+                return any(
+                    start_col <= hash_pos < end_col
+                    for start_col, end_col in spans
+                )
+        return False
 
     @staticmethod
     def _has_justification(lines: list[str], idx: int) -> bool:
