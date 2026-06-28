@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import structlog
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -34,8 +35,13 @@ _RERANKER_INSTANCE: CrossEncoder | None = None
 
 # Persisted result cache file.
 _RESULT_CACHE_FILE = _CACHE_DIR / "results.json"
-# Loaded from disk at module level, written on new entries.
-_RESULT_CACHE: dict[int, bool] = {}
+# Lazy-loaded on first call to semantic_check_if_meaningful.
+_RESULT_CACHE: dict[int, bool] | None = None
+
+_RERANKER_MODEL = os.environ.get(
+    "PYTHON_SETUP_LINT_RERANKER_MODEL",
+    "jina-reranker-v2-base-multilingual",
+)
 
 
 def _load_result_cache() -> dict[int, bool]:
@@ -63,10 +69,17 @@ def _save_result_cache() -> None:
         _LOG.warning("Failed to save result cache", exc_info=True)
 
 
-# Load persisted cache at module level.
-_RESULT_CACHE = _load_result_cache()
+def _reset_cache() -> None:
+    """Reset the result cache (test helper).
 
-_RERANKER_MODEL = "jina-reranker-v2-base-multilingual"
+    Clears the in-memory cache and removes the persisted cache file.
+    """
+    global _RESULT_CACHE
+    _RESULT_CACHE = None
+    try:
+        _RESULT_CACHE_FILE.unlink(missing_ok=True)
+    except OSError:
+        pass
 
 
 def _get_cache_dir() -> Path:
@@ -117,6 +130,10 @@ def semantic_check_if_meaningful(
 ) -> bool | None:
     # Use comment as primary text, fall back to raw text.
     primary = (comment or text).strip()
+    # Lazy-init the result cache on first call.
+    global _RESULT_CACHE
+    if _RESULT_CACHE is None:
+        _RESULT_CACHE = _load_result_cache()
     if not primary:
         return False
 
