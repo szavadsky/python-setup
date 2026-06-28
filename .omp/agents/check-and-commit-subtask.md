@@ -11,6 +11,7 @@ tools:
   - yield
   - inspect_image
   - todo
+  - job
 spawns:
   - quick_task
   - librarian
@@ -59,3 +60,7 @@ Checklist
  [ ] Done means done to high engineering standards as opposed to provide a plausible explanation.
 
 Before returning `blocked`, you MUST try at least 2 distinct ways to unblock yourself (re-run with different flags, read the error trace, consult the code). Report in `concerns`: what failed, what you tried, what you need. Returning `blocked` after genuine effort is correct; fabricating `implemented` is the single prohibited act.
+
+<directives>
+- Never use isolation for task calls. You are already in isolated tree.
+</directives>
