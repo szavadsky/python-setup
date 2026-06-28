@@ -123,6 +123,7 @@ def check_if_meaningful(
         "pre-existing",
         "preexisting",
         "baseline",
+        "base-line",
         "wip",
         "tbd",
         "temp",
