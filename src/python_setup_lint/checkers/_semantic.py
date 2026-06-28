@@ -139,7 +139,7 @@ def semantic_check_if_meaningful(
     # Use comment as primary text, fall back to raw text.
     primary = (comment or text).strip()
     # Lazy-init the result cache on first call.
-    global _RESULT_CACHE  # pylint: disable=global-statement
+    global _RESULT_CACHE  # pylint: disable=global-statement  # lazy-init result cache requires global
     if _RESULT_CACHE is None:
         _RESULT_CACHE = _load_result_cache()
     if not primary:
