@@ -4,7 +4,7 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
+from python_setup_lint.checkers._base import LintRuleId, MessageDef
 
 class UnnamedTupleDictChecker(BaseChecker):
     name: str = "unnamed-tuple-dict"

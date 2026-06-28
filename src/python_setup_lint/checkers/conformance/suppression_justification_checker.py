@@ -14,7 +14,6 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 
 from python_setup_lint.checkers._base import (
-    LintRuleId,
     MessageDef,
     _msgs,
     check_if_meaningful,

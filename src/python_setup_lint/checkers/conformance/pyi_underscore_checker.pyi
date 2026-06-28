@@ -17,7 +17,7 @@ from pylint.checkers import BaseChecker
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
+from python_setup_lint.checkers._base import LintRuleId, MessageDef
 
 class PyiUnderscoreChecker(BaseChecker):
     """AST visitor that flags _-prefixed symbols in .pyi files."""
