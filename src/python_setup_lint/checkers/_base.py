@@ -119,6 +119,26 @@ def check_if_meaningful(
         "test",
         "blank",
         "empty",
+        # Brush-off / deferral patterns
+        "pre-existing",
+        "preexisting",
+        "baseline",
+        "wip",
+        "tbd",
+        "temp",
+        "temporary",
+        "existing",
+        "as-is",
+        "legacy",
+        "will fix",
+        "later",
+        "eventually",
+        "someday",
+        "placeholder",
+        "stub here",
+        "for now",
+        "to do",
+        "fixme later",
     }
     if primary_lower in boilerplate:
         return False
@@ -128,6 +148,13 @@ def check_if_meaningful(
         "need to check",
         "maybe later",
         "not sure",
+        # Brush-off / deferral multi-word patterns
+        "pre existing",
+        "in baseline",
+        "was already",
+        "not my code",
+        "carry over",
+        "from before",
     }
     if primary_lower in meaningless_phrases:
         return False
