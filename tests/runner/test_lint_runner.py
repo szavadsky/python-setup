@@ -44,7 +44,7 @@ _CONFIG = RunnerConfig(cwd=Path.cwd())
 
 
 class TestToolSpec:
-    """The static 12-tool table invariant."""
+    """The static 13-tool table invariant."""
 
     def test_known_tools_present(self) -> None:
         assert {t.name for t in TOOLS} == {
@@ -59,6 +59,7 @@ class TestToolSpec:
             "pyright verify types",
             "pylint",
             "pylint-pyi",
+            "pylint tests",
             "detect-secrets",
         }
 
@@ -69,7 +70,7 @@ class TestToolSpec:
             "ty check",
         }
         assert all(t.name for t in TOOLS)
-        assert len({t.name for t in TOOLS}) == len(TOOLS) == 12
+        assert len({t.name for t in TOOLS}) == len(TOOLS) == 13
 
     def test_yamllint_default_paths_is_dot(self) -> None:
         """yamllint default_paths changed from config/*.yaml to . (T5 fix)."""

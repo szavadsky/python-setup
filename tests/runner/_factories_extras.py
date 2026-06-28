@@ -379,9 +379,9 @@ RUN_LINT_FAKE_INVARIANT_CASES: list[ParameterSet] = [
     pytest.param(
         {"path": "src/python_setup_lint/runner.py"},
         lambda f: (
-            len(f.calls) == 12 and all(len(c.cmd) > 0 and c.label for c in f.calls)
+            len(f.calls) == 13 and all(len(c.cmd) > 0 and c.label for c in f.calls)
         ),
-        id="all_12_tools_dispatched",
+        id="all_13_tools_dispatched",
     ),
     pytest.param(
         {"path": "src/python_setup_lint/runner.py", "fix": True},

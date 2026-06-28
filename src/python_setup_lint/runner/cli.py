@@ -288,7 +288,7 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
     parser.add_argument(
         "--tools",
         metavar="LIST",
-        help="Comma-separated tool names to run (default: all 12 tools)",
+        help="Comma-separated tool names to run (default: all 13 tools)",
     )
     parser.add_argument(
         "--default-py-dirs",
