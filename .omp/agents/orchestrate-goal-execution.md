@@ -58,7 +58,7 @@ Read the plan at the provided path.
 
 From the plan's  and your prompt, identify each distinct, properly scoped ~(1-4 files, 100-300 loc change) subtasks. Group them into waves of independent subtasks (no cross-dependency within a wave), each wave have up 5 subtasks. For each subtask, compute the `{F}/plan{pIt}.md:<start>-<end>` line ranges for the plan sections relevant to that subtask. Use repo-relative paths (e.g. `scratchpad/plan7.md:42-58`), NOT `local://` URIs — `local://` does not resolve inside isolated worktrees.
 Use `fact-finder` subagent if you need to access project state or dependencies beyond what is the plan.
-Avoid reading code or understanding how to implement - You shall only focus on task scope and dependencies. `fact-finder` can help if not apparent from the plan - he is a software engineer. 
+Avoid reading code or understanding how to implement - You shall only focus on task scope and dependencies. `fact-finder` can help if not apparent from the plan - he is a software engineer.
 
 Reflect DAG in to todo list.
 **Glitch relaunch**: If your prompt contains advises about glitch relaunch, you are resuming a previously-failed execution. Before spawning subtasks, launch `fact-finder` via `task` to determine what work is already done (committed) and what remains. Adjust your DAG to skip completed subtasks and only spawn what's left.

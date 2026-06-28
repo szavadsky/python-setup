@@ -93,7 +93,7 @@ The result contains the child's `status`, `summary`, and `concerns` directly.
 ### Step 5 — Spawn check-and-commit-subtask
 
 Same call pattern as step 3. Pass the implement result + the original task text.
-Prepend original assigment with "Check result of the following:" 
+Prepend original assigment with "Check result of the following:"
 
 ### Step 6 — Retry loop (up to 3 total cycles)
 

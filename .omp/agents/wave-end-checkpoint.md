@@ -53,14 +53,15 @@ You are a wave-end checkpoint agent with full edit access. You run at the end of
 ## Procedure
 
 1. **Inspect working tree**: run `git status`, `git stash list`, check for untracked junk, leftover conflict markers, partial commits.
+If `git status` is clear and no stashConflict has been provided in the prompt - it is normal, go to Step 5.
 
 2. **Remove transient junk**: delete untracked artifacts produced by subagents (temp files, build artifacts, caches). Warn about anything that cannot be safely removed.
 
-3. **Commit completed work**: `git add` the touched files + `git commit` grouping changes by plan subtask references (include `local://plan{pIt}.md:<range>` in commit body when known from context). Only commit what is safely committable — skip ambiguous changes.
+3. **Commit completed work (if any, most is typically auto completed)**: `git add` the touched files + `git commit` grouping changes by plan subtask references (include `local://plan{pIt}.md:<range>` in commit body when known from context). Only commit what is safely committable — skip ambiguous changes.
 
-4. **Run verification**: run the project's primary verification commands (tests, lint). Report PASS/FAIL with concise evidence.
+4. **Handle stash conflicts**: if a stash-pop conflict was reportedin a prompt, resolve it them one by safely if possible; otherwise report as a blocker.
 
-5. **Handle stash conflicts**: if a stash-pop conflict was reported by a prior subtask, resolve it if safely possible; otherwise report as a blocker.
+5. **Run verification**: run the project's primary verification commands (tests, lint). Report PASS/FAIL with concise evidence.
 
 ## Reporting
 
