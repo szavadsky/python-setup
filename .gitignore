@@ -231,6 +231,7 @@ rumdl.toml
 ty.toml
 .yamllint
 config/
+!/config/tach.toml
 
 # But keep the sample project's planted source committed
 !/tests/data/minimal_sample_project/
