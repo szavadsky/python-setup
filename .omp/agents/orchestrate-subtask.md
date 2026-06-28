@@ -46,14 +46,14 @@ Your assignment is a string with this structure:
 ```
 
 - `{fromOriginalPrompt}` — extra context from the parent orchestrator (may be empty).
-- `{locate}` — one or more `local://plan{pIt}.md:<start>-<end>` ranges, comma-separated. This is your complete task spec.
+- `{locate}` — one or more `{F}/plan{pIt}.md:<start>-<end>` ranges (repo-relative paths, e.g. `scratchpad/plan7.md:42-58`), comma-separated. This is your complete task spec. Do NOT use `local://` URIs — they do not resolve inside isolated worktrees.
 - `{onSubsequentIterations= concerns}` — present only on retry passes. Previous concerns from check-and-commit-subtask to fix.
 
 ## Step-by-step procedure (follow EXACTLY)
 
 ### Step 1 — Read the locator
 
-Call `read` with each `local://plan{pIt}.md:<start>-<end>` range. Concatenate the results — that verbatim text IS your task spec. Do NOT read anything else. Do NOT interpret, research, or split it.
+Call `read` with each `{F}/plan{pIt}.md:<start>-<end>` range (repo-relative path). Concatenate the results — that verbatim text IS your task spec. Do NOT read anything else. Do NOT interpret, research, or split it.
 
 ### Step 2 — Build the child assignment
 
