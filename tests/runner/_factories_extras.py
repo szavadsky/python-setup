@@ -409,7 +409,7 @@ RUN_LINT_FAKE_INVARIANT_CASES: list[ParameterSet] = [
     pytest.param(
         {"package_name": None, "path": "src/python_setup_lint/runner.py"},
         lambda f: (
-            len(f.calls) == 10
+            len(f.calls) == 11
             and "mypy.stubtest" not in {c.label for c in f.calls}
             and "pyright verify types" not in {c.label for c in f.calls}
         ),

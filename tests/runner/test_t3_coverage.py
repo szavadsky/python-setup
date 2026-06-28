@@ -38,6 +38,7 @@ class TestParserCompleteness:
         "rumdl check",
         "pylint",
         "pylint-pyi",
+        "pylint tests",
         "pyright check",
         "pyright verify types",
         "mypy",
@@ -75,6 +76,7 @@ class TestParserCompleteness:
             "mypy.stubtest",
             "detect-secrets",
             "pylint-pyi",
+        "pylint tests",
         }, f"Tools with parsers but no flags: {no_flag_but_parser}"
 
 
