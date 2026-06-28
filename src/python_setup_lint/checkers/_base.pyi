@@ -13,6 +13,9 @@ from typing import NamedTuple, NewType
 
 LintRuleId = NewType("LintRuleId", str)
 
+def _msgs(**definitions: MessageDef) -> dict[LintRuleId, MessageDef]:
+    """Build a checker msgs dict with domain-typed keys."""
+
 def _matches_path(str_path: str, patterns: list[str]) -> bool:
     """Check if *str_path* matches any of the *patterns*.
 

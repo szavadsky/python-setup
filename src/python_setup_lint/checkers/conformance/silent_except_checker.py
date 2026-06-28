@@ -14,7 +14,7 @@ from astroid import nodes
 from beartype import beartype
 from pylint.checkers import BaseChecker
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
+from python_setup_lint.checkers._base import MessageDef, _msgs
 
 if TYPE_CHECKING:
     from pylint.lint import PyLinter

@@ -15,7 +15,7 @@ from beartype import beartype
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter  # noqa: TCH002  # TYPE_CHECKING-only import; pylint is a dev dependency
 
-from python_setup_lint.checkers._base import LintRuleId, MessageDef, _msgs
+from python_setup_lint.checkers._base import MessageDef, _msgs
 
 # Optional dependency import patterns — try/except ImportError is allowed
 # for imports from these modules (declared in [project.optional-dependencies]).
