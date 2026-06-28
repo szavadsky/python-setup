@@ -125,6 +125,7 @@ class TestMeaningfulPatterns:
             "mixin class designed for cooperative multiple inheritance",
             "abstract property defined in ABC base class",
             "classmethod used as alternative constructor",
+            "carried from external library httpx for type compatibility",
         ],
     )
     def test_meaningful_passes(self, comment: str) -> None:
