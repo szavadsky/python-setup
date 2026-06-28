@@ -2,7 +2,7 @@
 # Overrides global defaults for this workspace only.
 # See omp://settings.md for the full settings catalog.
 task:
-  maxConcurrency: 10
+  maxConcurrency: 32
   maxRecursionDepth: 7
   isolation:
     # auto = picks overlayfs (Linux) or APFS clone (macOS) automatically
