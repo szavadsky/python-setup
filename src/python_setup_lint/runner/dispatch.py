@@ -121,6 +121,14 @@ TOOLS: list[ToolSpec] = [
         default_paths=["src"],
     ),
     ToolSpec(
+        "pylint tests",
+        ["pylint"],
+        supports_fix=False,
+        supports_path=True,
+        supports_exclude=False,
+        default_paths=["tests"],
+    ),
+    ToolSpec(
         "detect-secrets",
         ["detect-secrets-hook"],
     ),
@@ -328,13 +336,46 @@ class _PylintPyiLintTool(LintTool):
         return cmd
 
 
-# Populate the strategy registry from the 12 built-ins.
+class _PylintTestsLintTool(LintTool):
+    def build_command(  # pylint: disable=missing-beartype
+        self,
+        *,
+        config: RunnerConfig,
+        _fix: bool = False,
+        _path: str | None = None,
+        _exclude: str | None = None,
+    ) -> list[str]:
+        spec = self.spec
+        cmd = list(spec.command)
+
+        # Use .pylintrc-tests
+        rcfile = config.cwd / "config" / ".pylintrc-tests"
+        if not rcfile.exists():
+            rcfile = (
+                Path(__file__).parent.parent.parent.parent / "config" / ".pylintrc-tests"
+            )
+        cmd.extend(["--rcfile", str(rcfile)])
+
+        # Find .py files in tests/ (excluding tests/data/)
+        if _path is not None:
+            paths = _find_py_files([_path], cwd=config.cwd)
+        else:
+            dirs = config.default_py_dirs or []
+            paths = _find_py_files(dirs, cwd=config.cwd)
+
+        if paths:
+            cmd.extend(paths)
+        return cmd
+
+
+# Populate the strategy registry from the 13 built-ins.
 _STRATEGY_CLASSES: dict[str, type[LintTool]] = {
     "mypy.stubtest": _StubtestLintTool,
     "pyright verify types": _VerifyTypesLintTool,
     "detect-secrets": _DetectSecretsLintTool,
     "pylint": _PylintLintTool,
     "pylint-pyi": _PylintPyiLintTool,
+    "pylint tests": _PylintTestsLintTool,
 }
 STRATEGIES: dict[str, LintTool] = {
     spec.name: (_STRATEGY_CLASSES.get(spec.name) or LintTool)(spec) for spec in TOOLS

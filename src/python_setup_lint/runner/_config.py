@@ -16,6 +16,7 @@ _SHIPPED_CONFIG_FILES: dict[str, str] = {
     "ruff check": "ruff.toml",
     "mypy": "mypy.ini",
     "pylint": ".pylintrc",
+    "pylint tests": ".pylintrc-tests",
     "pyright check": "pyrightconfig.json",
     "rumdl check": "rumdl.toml",
     "ty check": "ty.toml",
