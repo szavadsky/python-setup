@@ -3,6 +3,7 @@
 # See omp://settings.md for the full settings catalog.
 task:
   maxConcurrency: 10
+  maxRecursionDepth: 7
   isolation:
     # auto = picks overlayfs (Linux) or APFS clone (macOS) automatically
     mode: auto
