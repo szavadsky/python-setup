@@ -197,7 +197,7 @@ def test_fake_no_subprocess_spawned(monkeypatch: pytest.MonkeyPatch) -> None:
     def spy_run(*args: object, **kwargs: object) -> object:
         cmd = args[0] if args else kwargs.get("args", [])
         spy_calls.append(list(cmd) if isinstance(cmd, (list, tuple)) else [str(cmd)])
-        return original_run(*args, **kwargs, check=False)  # type: ignore[call-overload]
+        return original_run(*args, **kwargs, check=False)  # type: ignore[call-overload]  # test helper; check=False is valid at runtime
 
     monkeypatch.setattr(subprocess, "run", spy_run)
     fake = fake_run_cmd_factory(canned_results_all_tools())

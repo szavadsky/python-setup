@@ -42,7 +42,7 @@ def canned_results_all_tools(
     exit_code: int = 0,
     stdout: str = "",
     overrides: Mapping[str, LintResult] | None = None,
-) -> dict[str, LintResult]:
+) -> dict[str, LintResult]:  # pylint: disable=generic-key-dict  # dict[str, LintResult] is a test helper; string keys are tool labels
     """Build the 13-tool canned-result dict for ``fake_run_cmd_factory``.
 
     Every built-in label maps to a ``LintResult`` with defaults; pass
@@ -92,7 +92,7 @@ def install_fake_runner(
 
 def tmp_config(tmp_path: Path, **overrides: Any) -> RunnerConfig:
     """Build a default test ``RunnerConfig`` rooted at *tmp_path*; *overrides* win."""
-    defaults: dict[str, Any] = {
+    defaults: dict[str, Any] = {  # pylint: disable=W9704  # dict[str, Any] is a test helper; values are RunnerConfig kwargs of mixed types
         "cwd": tmp_path,
         "package_name": "python_setup_lint",
         "default_py_dirs": ["src", "scripts", "tests"],

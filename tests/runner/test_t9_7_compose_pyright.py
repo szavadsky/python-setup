@@ -278,12 +278,12 @@ class TestRunLintConsumesPyrightDefaultCompose:
     ) -> None:
         """After ``run_lint``, ``config.config_paths["pyright check"]`` ≠ shipped."""
         config = self._config_with_shipped(tmp_path)
-        shipped_before = config.config_paths["pyright check"]  # type: ignore[index]
+        shipped_before = config.config_paths["pyright check"]  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config)
-        assert config.config_paths["pyright check"] != shipped_before  # type: ignore[index]
-        assert "python_setup_lint_pyright_" in str(config.config_paths["pyright check"])  # type: ignore[index]
+        assert config.config_paths["pyright check"] != shipped_before  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
+        assert "python_setup_lint_pyright_" in str(config.config_paths["pyright check"])  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
 
     def test_pyright_command_uses_composed_project(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -314,7 +314,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config)
         # Override takes precedence — config_paths now points at the override.
-        assert config.config_paths["pyright check"] == override  # type: ignore[index]
+        assert config.config_paths["pyright check"] == override  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
         # And the dispatched cmd uses the override, not a tmp path.
         pyright_rec = next((r for r in fake.calls if r.cmd[:1] == ["pyright"]), None)
         assert pyright_rec is not None
@@ -334,7 +334,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config)
         # No tmp pyright config written.
-        assert "pyright check" not in config.config_paths  # type: ignore[operator]
+        assert "pyright check" not in config.config_paths  # type: ignore[operator]  # config_paths is dict[str, Path]; 'in' check is valid at runtime
         out_dir = _temp_root() / f"python_setup_lint_pyright_{tmp_path.name}"
         assert not out_dir.exists()
 
@@ -365,7 +365,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config)
         # Both composed paths land.
-        assert "python_setup_lint_ruff_" in str(config.config_paths["ruff check"])  # type: ignore[index]
-        assert "python_setup_lint_pyright_" in str(config.config_paths["pyright check"])  # type: ignore[index]
+        assert "python_setup_lint_ruff_" in str(config.config_paths["ruff check"])  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
+        assert "python_setup_lint_pyright_" in str(config.config_paths["pyright check"])  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
 
 

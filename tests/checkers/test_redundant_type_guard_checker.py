@@ -13,7 +13,7 @@ from python_setup_lint.checkers.conformance.redundant_type_guard_checker import 
 from python_setup_lint.testing import _make_tc as _make_tc_factory
 
 
-def _make_tc() -> Any:
+def _make_tc() -> Any:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
     return _make_tc_factory(RedundantTypeGuardChecker)
 
 

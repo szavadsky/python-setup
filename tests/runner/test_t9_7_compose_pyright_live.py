@@ -68,7 +68,7 @@ class TestLiveSmokePyrightConfigCollapse:
         (artifact / f"{label}.stderr.txt").write_text(result.stderr)
         try:
             data = json.loads(result.stdout)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:  # pylint: disable=silent-except  # test helper; exception expected during cleanup
             data = {
                 "summary": {"filesAnalyzed": -1, "errorCount": -1},
                 "generalDiagnostics": [],
@@ -184,7 +184,7 @@ class TestLiveSmokePyrightConfigCollapse:
         (artifact / "AFTER.stderr.txt").write_text(r.stderr)
         try:
             data = json.loads(r.stdout)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:  # pylint: disable=silent-except  # test helper; exception expected during cleanup
             data = {"summary": {}, "generalDiagnostics": []}
         summary = data.get("summary", {})
         diag = data.get("generalDiagnostics", [])

@@ -22,7 +22,7 @@ from tests.checkers._factories import (
 )
 
 
-def _make_tc() -> CheckerTestCase:
+def _make_tc() -> CheckerTestCase:  # pylint: disable=W9728  # test helper: type-specific alias for _make_tc_factory, avoids repeated imports
     return _make_tc_factory(BeartypeCoverageChecker)
 
 

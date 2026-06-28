@@ -15,7 +15,7 @@ from python_setup_lint.checkers.conformance.generic_key_dict_checker import (
 )
 from python_setup_lint.testing import _walk_and_release
 
-_DETECT_CASES: list[Any] = [
+_DETECT_CASES: list[Any] = [  # pylint: disable=W9704  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     pytest.param(
         "x: dict[str, MessageDef]",
         "MessageDef",
@@ -48,7 +48,7 @@ _DETECT_CASES: list[Any] = [
     ),
 ]
 
-_DO_NOT_DETECT_CASES: list[Any] = [
+_DO_NOT_DETECT_CASES: list[Any] = [  # pylint: disable=W9704  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     pytest.param(
         "x: dict[LintRuleId, MessageDef]",
         id="dict_LintRuleId_MessageDef",

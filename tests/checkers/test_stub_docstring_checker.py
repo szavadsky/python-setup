@@ -22,7 +22,7 @@ from tests.checkers._factories import (
 )
 
 
-def _make_tc() -> Any:
+def _make_tc() -> Any:  # pylint: disable=W9728  # test helper: type-specific alias for _make_tc_factory, avoids repeated imports
     return _make_tc_factory(StubDocstringChecker)
 
 
@@ -35,7 +35,7 @@ def _walk_and_release(code: str, file_path: str = "/workspace/src/mod.py") -> li
     return tc.linter.release_messages()  # type: ignore[no-any-return]  # test fixture builds typed list from Any checker introspection
 
 
-def _doc_msg_count(msgs: list[Any]) -> int:
+def _doc_msg_count(msgs: list[Any]) -> int:  # pylint: disable=W9728  # test helper: counts docstring-in-impl messages
     return sum(1 for m in msgs if m.msg_id == "docstring-in-impl")
 
 

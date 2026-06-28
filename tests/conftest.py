@@ -93,7 +93,7 @@ def tmp_baseline(tmp_path: Path) -> Callable[..., Path]:
     """Return ``write_baseline`` (from ``tests.runner._factories``) bound to *tmp_path*."""
     from tests.runner._factories import write_baseline
 
-    def _write(entries: list[dict[str, object]], name: str = "baseline.json") -> Path:
+    def _write(entries: list[dict[str, object]], name: str = "baseline.json") -> Path:  # pylint: disable=trivial-wrapper  # fixture binding write_baseline to tmp_path; readability over DRY
         return write_baseline(tmp_path, entries, name=name)
 
     return _write
@@ -165,6 +165,6 @@ def isolated_runner_registries() -> Iterable[None]:
 
 
 @pytest.fixture
-def sample_project() -> Path:
+def sample_project() -> Path:  # pylint: disable=trivial-wrapper  # fixture returning a constant path; readability over DRY
     """Path to the minimal sample project with planted violations."""
     return Path("tests/data/minimal_sample_project")

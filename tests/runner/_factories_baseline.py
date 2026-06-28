@@ -23,14 +23,14 @@ def find_tool_entry(entries: list[dict[str, Any]], tool: str) -> dict[str, Any]:
     return matches[0]
 
 
-def baseline_entry_for_tool(entries: list[dict[str, Any]], tool: str) -> dict[str, Any]:
+def baseline_entry_for_tool(entries: list[dict[str, Any]], tool: str) -> dict[str, Any]:  # pylint: disable=W9728  # typed alias for find_tool_entry, provides semantic name for callers
     """Return the first baseline entry whose ``tool`` equals *tool* (asserts at least one)."""
     return find_tool_entry(entries, tool)
 
 
 # ── ``_diff_baseline`` invariant matrix ────────────────────────────
 
-DIFF_BASELINE_CASES: list[Any] = [
+DIFF_BASELINE_CASES: list[Any] = [  # pylint: disable=W9704  # heterogeneous pytest.param tuples with varying dict structures
     _p(
         {
             "tool": "ruff check",
@@ -285,7 +285,7 @@ def _make_result(tool_name: str, exit_code: int = 0, stdout: str = "") -> LintRe
 
 # ── _diff_baseline edge-case tables ────────────────────────────────
 
-DIFF_EDGE_CASES: list[Any] = [
+DIFF_EDGE_CASES: list[Any] = [  # pylint: disable=W9704  # heterogeneous pytest.param tuples with varying dict structures
     _p(
         {
             "tool": "pyright check",
@@ -320,7 +320,7 @@ DIFF_EDGE_CASES: list[Any] = [
     ),
 ]
 
-DIFF_EDGE_INVARIANTS: list[Any] = [
+DIFF_EDGE_INVARIANTS: list[Any] = [  # pylint: disable=W9704  # heterogeneous pytest.param tuples with varying dict structures
     _p(
         {"tool": "test", "exit_code": 0, "output": "ok"},
         [_make_result("test", exit_code=1, stdout="ok")],
@@ -341,7 +341,7 @@ DIFF_EDGE_INVARIANTS: list[Any] = [
     ),
 ]
 
-DIFF_BASELINE_PATH_ERRORS: list[Any] = [
+DIFF_BASELINE_PATH_ERRORS: list[Any] = [  # pylint: disable=W9704  # heterogeneous pytest.param tuples with varying dict structures
     _p("missing", None, "not found", id="no_baseline_file"),
     _p("invalid", "not valid json", "Cannot read", id="invalid_json"),
     _p("empty", "[]", None, id="empty_baseline_no_current"),

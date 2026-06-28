@@ -16,7 +16,7 @@ from python_setup_lint.testing import make_lint_result
 from tests.runner._factories import diff_baseline_with
 
 
-def _sorted(records: list[Record]) -> list[Record]:
+def _sorted(records: list[Record]) -> list[Record]:  # pylint: disable=trivial-wrapper  # thin sorted wrapper; readability alias for sort key
     return sorted(records, key=_compare_records_key)
 
 

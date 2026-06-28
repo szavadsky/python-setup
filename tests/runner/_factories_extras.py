@@ -2,6 +2,7 @@
 
 Moved from ``_factories.py`` to keep each file under 500 lines (pylint C0302).
 """
+# pylint: disable=too-many-lines  # test factory module; parametrized cases need space
 
 from __future__ import annotations
 
@@ -13,9 +14,13 @@ if TYPE_CHECKING:
     from _pytest.mark.structures import ParameterSet
 
 
-from python_setup_lint.runner.types import ViolationCount
+from python_setup_lint.runner.types import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
+    ViolationCount,
+)
 
-from ._factories_baseline import _make_result
+from ._factories_baseline import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
+    _make_result,
+)
 
 # ── Extra-tools test data ──────────────────────────────────────────
 

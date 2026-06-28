@@ -48,7 +48,7 @@ if TYPE_CHECKING:
     pass
 
 
-def _parse(code: str, module_name: str = "") -> astroid.Module:
+def _parse(code: str, module_name: str = "") -> astroid.Module:  # pylint: disable=W9728  # test helper: typed alias for astroid.parse with default module_name
     return astroid.parse(code, module_name=module_name)
 
 

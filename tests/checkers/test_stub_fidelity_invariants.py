@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-def _make_tc() -> Any:
+def _make_tc() -> Any:  # pylint: disable=W9728  # test helper: type-specific alias for _make_tc_factory, avoids repeated imports
     return _make_tc_factory(StubChecker)
 
 
@@ -73,12 +73,12 @@ def _run(
     return tc.linter.release_messages()  # type: ignore[no-any-return]  # test fixture builds typed list from Any checker introspection
 
 
-def _msg_ids(msgs: list[Any]) -> list[str]:
+def _msg_ids(msgs: list[Any]) -> list[str]:  # pylint: disable=W9728  # test helper: extracts msg_ids with clear semantic name
     """Sorted msg-id list emitted."""
     return sorted(m.msg_id for m in msgs)
 
 
-def _args_of(msgs: list[Any], msg_id: str) -> list[tuple[Any, ...]]:
+def _args_of(msgs: list[Any], msg_id: str) -> list[tuple[Any, ...]]:  # pylint: disable=W9728  # test helper: filters and extracts args by msg_id
     """Args tuple for each emitted message with given msg_id, sorted."""
     return sorted(m.args for m in msgs if m.msg_id == msg_id)
 
@@ -333,7 +333,7 @@ class TestComparePureHelpersDirect:
 
     def test_descriptors_count_mismatch(self) -> None:
         a = [ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, None)]
-        assert "param_count" in _compare_callable_descriptors(a, [])  # type: ignore[operator]
+        assert "param_count" in _compare_callable_descriptors(a, [])  # type: ignore[operator]  # result is Any from test fixture; in-check works at runtime
 
     def test_annotations_match_returns_empty(self) -> None:
         a = [
@@ -396,7 +396,7 @@ class TestCtxConstruction:
         stub_class = cast("astroid.ClassDef", stub.body[0])
         impl_class = cast("astroid.ClassDef", impl.body[0])
         ctx = ClassComparisonCtx(
-            checker=None,  # type: ignore[arg-type]
+            checker=None,  # type: ignore[arg-type]  # checker=None is valid; test creates checker-less test case
             module_name="m",
             class_name="A",
             msg_node=impl,
@@ -408,7 +408,7 @@ class TestCtxConstruction:
         stub = astroid.parse("def f() -> None: ...\n")
         stub_func = cast("astroid.FunctionDef", stub.body[0])
         ctx = CallableComparisonCtx(
-            checker=None,  # type: ignore[arg-type]
+            checker=None,  # type: ignore[arg-type]  # checker=None is valid; test creates checker-less test case
             module_name="m",
             func_name="f",
             msg_node=stub,

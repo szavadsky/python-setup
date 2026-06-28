@@ -177,7 +177,7 @@ class TestDiffBaselineEdgeCases:
             diff_violation_kind(violations, want_kind)
 
     @pytest.mark.parametrize(("kind", "body", "want_substr"), DIFF_BASELINE_PATH_ERRORS)
-    def test_diff_baseline_path_errors(  # type: ignore[no-untyped-def]
+    def test_diff_baseline_path_errors(  # type: ignore[no-untyped-def]  # test function; signature varies by parametrize
         self, tmp_path: Path, kind: str, body, want_substr
     ) -> None:
         """Missing baseline → 'not found'; invalid JSON → 'Cannot read'; empty + empty → no violation."""
@@ -225,7 +225,7 @@ class TestDiffBaselineEdgeCases:
 
     def test_peek_fallback_tools_snapshot(self) -> None:
         """peek_fallback_tools returns a frozen snapshot of the per-run fallback set."""
-        from python_setup_lint.runner.baseline import (  # type: ignore[attr-defined]
+        from python_setup_lint.runner.baseline import (  # type: ignore[attr-defined]  # private module; pylint can't resolve runtime attributes
             _FALLBACK_TOOLS,
             peek_fallback_tools,
         )
@@ -240,7 +240,7 @@ class TestDiffBaselineEdgeCases:
 
     def test_peek_fallback_tools_cleared_per_diff(self, tmp_path: Path) -> None:
         """_diff_baseline clears _FALLBACK_TOOLS at the start of each call."""
-        from python_setup_lint.runner.baseline import (  # type: ignore[attr-defined]
+        from python_setup_lint.runner.baseline import (  # type: ignore[attr-defined]  # private module; pylint can't resolve runtime attributes
             _FALLBACK_TOOLS,
             peek_fallback_tools,
         )
@@ -481,7 +481,7 @@ class TestRunCmd:
     """Subprocess runner returns structured results (quick commands only)."""
 
     @pytest.mark.parametrize(("cmd", "label", "exit_pred", "stdout_want"), RUN_CMD_CASES)
-    def test_run_cmd_success_and_failure(  # type: ignore[no-untyped-def]
+    def test_run_cmd_success_and_failure(  # type: ignore[no-untyped-def]  # test function; signature varies by parametrize
         self, cmd, label, exit_pred, stdout_want
     ) -> None:
         r = _run_cmd(cmd, cwd=Path.cwd(), label=label)

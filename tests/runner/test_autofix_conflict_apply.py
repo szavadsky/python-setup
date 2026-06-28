@@ -24,7 +24,7 @@ from tests.runner._factories import tmp_config
 class TestApplyAutofixConflictAware:
     """Each conflict branch from the envelope — one parametrised row."""
 
-    def _make_spec(self) -> ToolSpec:
+    def _make_spec(self) -> ToolSpec:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
         return next(t for t in LINT_TOOLS if t.name == "ruff check")
 
     def test_no_conflict_baseline_applies_fix(

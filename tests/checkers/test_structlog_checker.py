@@ -16,7 +16,7 @@ from python_setup_lint.testing import _make_tc as _make_tc_factory
 pytestmark = pytest.mark.no_external_api
 
 
-def _make_tc() -> Any:
+def _make_tc() -> Any:  # pylint: disable=W9728  # test helper: type-specific alias for _make_tc_factory, avoids repeated imports
     return _make_tc_factory(StructlogChecker)
 
 
@@ -35,7 +35,7 @@ def _walk_and_release(
     return tc.linter.release_messages()  # type: ignore[no-any-return]  # test fixture builds typed list from Any checker introspection
 
 
-def _msg_count(msgs: list[Any], msg_id: str) -> int:
+def _msg_count(msgs: list[Any], msg_id: str) -> int:  # pylint: disable=W9728  # test helper: counts messages by msg_id
     return sum(1 for m in msgs if m.msg_id == msg_id)
 
 

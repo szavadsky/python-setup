@@ -94,7 +94,7 @@ class TestPerfBenchmark:
         assert elapsed_ms < 200.0, f"_compare_sorted took {elapsed_ms:.1f}ms (>200ms ceiling)"
 
     def test_diff_baseline_50k_end_to_end_under_1s(self, tmp_path: Path) -> None:
-        records: list[dict[str, Any]] = [
+        records: list[dict[str, Any]] = [  # dict shape: {"file": str, "line": int, "col": int, "rule": str, "msg": str}
             {"file": f"src/file_{f:04d}.py", "line": line, "col": 1, "rule": "E001", "msg": "m"}
             for f in range(1000)
             for line in range(1, 51)
@@ -177,7 +177,7 @@ class TestDiffBaselineErrors:
         violations = _diff_baseline(current, baseline_path)
         try:
             reloaded = json.loads(baseline_path.read_text()) if baseline_path.exists() else None
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:  # pylint: disable=silent-except  # test helper; exception expected
             reloaded = None
         assert check(violations, reloaded)
 
@@ -325,7 +325,7 @@ class TestCaptureBaselineOnDisk:
             "src/a.py:1: E501 alpha-no-col\n"
         )
         cap = _capture_baseline([make_lint_result(tool_name="ruff check", stdout=stdout)])
-        records: Any = cap[0]["records"]
+        records: Any = cap[0]["records"]  # Any: cap is list[dict[str, Any]] from _capture_baseline
         keys = [
             (
                 () if r["file"] is None else (r["file"],),

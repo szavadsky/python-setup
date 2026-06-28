@@ -302,12 +302,12 @@ class TestRunLintConsumesOverrides:
     ) -> None:
         """After ``run_lint``, ``config.config_paths["ruff check"]`` ≠ shared."""
         config = self._config_with_overrides(tmp_path)
-        shared_before = config.config_paths["ruff check"]  # type: ignore[index]
+        shared_before = config.config_paths["ruff check"]  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config)
-        assert config.config_paths["ruff check"] != shared_before  # type: ignore[index]
-        assert "python_setup_lint_ruff_" in str(config.config_paths["ruff check"])  # type: ignore[index]
+        assert config.config_paths["ruff check"] != shared_before  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
+        assert "python_setup_lint_ruff_" in str(config.config_paths["ruff check"])  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
 
     def test_pyright_config_replaced_with_override(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -316,7 +316,7 @@ class TestRunLintConsumesOverrides:
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config)
-        assert config.config_paths["pyright check"] == tmp_path / "pyproject.toml"  # type: ignore[index]
+        assert config.config_paths["pyright check"] == tmp_path / "pyproject.toml"  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
 
     def test_ruff_command_uses_composed_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -363,10 +363,10 @@ class TestRunLintConsumesOverrides:
             cwd=tmp_path,
             config_paths={"ruff check": shared, "pyright check": pyright_ship},
         )
-        snapshot_ruff = config.config_paths["ruff check"]  # type: ignore[index]
-        snapshot_pyright = config.config_paths["pyright check"]  # type: ignore[index]
+        snapshot_ruff = config.config_paths["ruff check"]  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
+        snapshot_pyright = config.config_paths["pyright check"]  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config)
-        assert config.config_paths["ruff check"] == snapshot_ruff  # type: ignore[index]
-        assert config.config_paths["pyright check"] == snapshot_pyright  # type: ignore[index]
+        assert config.config_paths["ruff check"] == snapshot_ruff  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
+        assert config.config_paths["pyright check"] == snapshot_pyright  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
