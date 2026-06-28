@@ -32,6 +32,9 @@ uv run lint
 
 # Install python-setup tooling into a target project
 uv run python-setup install
+
+# Run pytest with typeguard enabled (consumer-agnostic health check)
+uv run python-setup-test-checked
 ```
 
 Both commands return exit code 0 on success, non-zero on failure.

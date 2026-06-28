@@ -1,0 +1,49 @@
+[MAIN]
+# Test-code rcfile — reduced rule set for test files.
+#
+# Test code is inherently different from production (parametrized tests trigger
+# too-many-arguments; fixtures trigger unused-argument; tests use private
+# imports per CodingRules test exception). This rcfile enables the custom
+# checkers that DO apply to tests (W9704 suppression-justification, W9702
+# tempfile-in-test, error-chain, bare-except, silent-except, trivial-wrapper,
+# redundant-type-guard, unnamed-tuple, generic-key-dict, missing-return-
+# annotation, no-try-import) and disables the production-only
+# complexity/docstring/beartype/structlog/asyncio/stub rules that are false
+# positives or no-ops on test code.
+#
+# Reviewed by oracle: option C (hybrid rcfile) per plan7 WS-1.
+max-module-lines=500
+ignore-paths=tests/data/,\.venv,__pycache__,node_modules,build/,.tmp*/  # tests/data/ is planted-violation sample, excluded
+ignore-patterns=.*\.pyi$
+source-roots=src
+load-plugins=python_setup_lint.checkers.conformance.suppression_justification_checker,python_setup_lint.checkers.conformance.tmp_path_checker,python_setup_lint.checkers.conformance.no_try_import_checker,python_setup_lint.checkers.conformance.missing_error_chain_checker,python_setup_lint.checkers.conformance.bare_except_comment_checker,python_setup_lint.checkers.conformance.silent_except_checker,python_setup_lint.checkers.conformance.trivial_wrapper_checker,python_setup_lint.checkers.conformance.redundant_type_guard_checker,python_setup_lint.checkers.conformance.unnamed_tuple_dict_checker,python_setup_lint.checkers.conformance.generic_key_dict_checker,python_setup_lint.checkers.conformance.missing_return_annotation_checker,python_setup_lint.checkers.conformance.pyi_underscore_checker
+
+[MESSAGES CONTROL]
+# reason: Test-code rule set — enable checkers that apply to tests, disable
+# production-only complexity/docstring/beartype/structlog/asyncio/stub rules.
+# Tests exempt from docstring rules: missing-function-docstring, missing-module-docstring, missing-class-docstring
+# Tests exempt from complexity heuristics per CodingRules: too-many-arguments, too-many-positional-arguments, too-many-locals, too-many-branches, too-many-statements
+# Custom rules supersede builtins: invalid-name, impl-missing-annotation, use-implicit-booleaness-not-comparison, stub-symbol-missing (superseded by custom stub checker), useless-import-alias (re-exports need `as` for mypy strict re-export visibility)
+# Test/script patterns: import-outside-toplevel, redefined-outer-name, reimported, global-statement, cyclic-import
+# False positives in dynamic code: unused-argument, unused-import, unused-variable, cell-var-from-loop, protected-access
+# Style preferences: line-too-long, trailing-newlines, too-many-return-statements, too-few-public-methods, superfluous-parens, wrong-import-order, bad-indentation, unnecessary-ellipsis, unnecessary-dunder-call
+enable=unjustified-suppression,tempfile-mkdtemp-in-test,no-try-import,missing-error-chain,bare-except-comment,silent-except,trivial-wrapper,redundant-type-guard,unnamed-tuple-dict-value,generic-key-dict,missing-return-annotation,pyi-underscore-symbol
+#   - Parser quirk: unknown-option-value, unspecified-encoding
+disable=unknown-option-value,unused-argument,broad-exception-caught,protected-access,missing-function-docstring,line-too-long,import-outside-toplevel,trailing-newlines,too-many-arguments,too-many-positional-arguments,unspecified-encoding,unused-import,cell-var-from-loop,too-many-return-statements,too-few-public-methods,superfluous-parens,wrong-import-order,unused-variable,missing-module-docstring,missing-class-docstring,invalid-name,global-statement,cyclic-import,bad-indentation,unnecessary-ellipsis,unnecessary-dunder-call,redefined-outer-name,reimported,use-implicit-booleaness-not-comparison,useless-import-alias,stub-symbol-missing,too-many-locals,too-many-branches,too-many-statements
+
+[DESIGN]
+max-statements=65
+max-branches=16
+max-locals=20
+max-nested-blocks=8
+max-public-methods=30
+max-attributes=15
+
+[SIMILARITIES]
+min-similarity-lines=10
+ignore-comments=yes
+ignore-docstrings=yes
+ignore-imports=yes
+
+[REPORTS]
+output-format=json2
