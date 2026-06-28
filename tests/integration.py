@@ -12,6 +12,7 @@ the binary is unavailable.
 from __future__ import annotations
 
 import shutil
+import textwrap
 import subprocess
 from pathlib import Path
 
@@ -19,6 +20,11 @@ import pytest
 
 from python_setup_lint.runner import TOOLS, RunnerConfig, run_lint
 from python_setup_lint.runner._config import _SHIPPED_CONFIG_FILES
+from python_setup_lint.setup import install
+from python_setup_lint.testing import (
+    assert_precommit_config_valid,
+    assert_precommit_hooks_shape,
+)
 
 # ── Helpers ────────────────────────────────────────────────────────────
 
@@ -270,4 +276,132 @@ class TestMinimalSampleProject:
         assert result.returncode == 0, (
             f"pre-commit validate-config failed (exit={result.returncode}).\n"
             f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        )
+
+    def test_install_then_lint_clean_project(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """Create a clean project, run install, then run lint.
+
+        Verifies install artifacts are created and lint runs without crashing.
+        """
+        d = tmp_path / "consumer"
+        d.mkdir()
+        (d / "src/consumer").mkdir(parents=True)
+        (d / "src/consumer/__init__.py").write_text("# c\n")
+        (d / "tests").mkdir()
+        (d / "tests/__init__.py").write_text("# t\n")
+        (d / "pyproject.toml").write_text(
+            textwrap.dedent("""\
+            [project]
+            name = "consumer"
+            version = "0.1.0"
+            requires-python = ">=3.14"
+            [dependency-groups]
+            dev = ["ruff>=0.5", "python-setup"]
+        """)
+        )
+        (d / "AGENTS.md").write_text("# C\n")
+        _init_git(d)
+        (d / ".secrets.baseline").write_text(
+            '{"version":"1.0","plugins_used":[],"filters_used":[],'
+            '"results":{},"generated_at":"2025-01-01T00:00:00Z"}\n'
+        )
+        (d / "tach.toml").write_text(
+            '[[modules]]\npath = "src/consumer"\ndepends_on = []\n'
+        )
+
+        # Install
+        rc = install(d, dev_path=str(Path.cwd()))
+        assert rc == 0, f"install failed with exit code {rc}"
+
+        # Verify install artifacts
+        assert (d / ".pre-commit-config.yaml").exists()
+        assert (d / "CodingRules.md").exists()
+        assert "<!-- python-setup:pre-commit -->" in (d / "AGENTS.md").read_text()
+
+        # Run lint
+        rc = run_lint(
+            config=RunnerConfig(
+                cwd=d,
+                tools_override=[
+                    "ruff check",
+                    "mypy",
+                    "pylint",
+                ],
+            )
+        )
+        # Lint may find violations in the minimal consumer project;
+        # we only assert it ran without crashing (exit code 0 or 2
+        # for pylint-found issues, not a crash).
+        assert rc in (0, 2), f"lint crashed with exit code {rc}"
+
+    def test_pre_commit_dry_run(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """Install, validate pre-commit config, run dry-run.
+
+        Skips the test if ``pre-commit`` is not available.
+        """
+        try:
+            subprocess.run(
+                ["pre-commit", "--version"],
+                capture_output=True,
+                check=True,
+            )
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            pytest.skip("pre-commit not available")
+
+        d = tmp_path / "hooks"
+        d.mkdir()
+        (d / "src/consumer").mkdir(parents=True)
+        (d / "src/consumer/__init__.py").write_text("# c\n")
+        (d / "tests").mkdir()
+        (d / "tests/__init__.py").write_text("# t\n")
+        (d / "pyproject.toml").write_text(
+            textwrap.dedent("""\
+            [project]
+            name = "consumer"
+            version = "0.1.0"
+            requires-python = ">=3.14"
+            [dependency-groups]
+            dev = ["ruff>=0.5", "python-setup"]
+        """)
+        )
+        (d / "AGENTS.md").write_text("# C\n")
+        _init_git(d)
+        (d / ".secrets.baseline").write_text(
+            '{"version":"1.0","plugins_used":[],"filters_used":[],'
+            '"results":{},"generated_at":"2025-01-01T00:00:00Z"}\n'
+        )
+        (d / "tach.toml").write_text(
+            '[[modules]]\npath = "src/consumer"\ndepends_on = []\n'
+        )
+
+        # Install
+        rc = install(d, dev_path=str(Path.cwd()))
+        assert rc == 0, f"install failed with exit code {rc}"
+
+        # Validate pre-commit config shape
+        assert_precommit_config_valid(d)
+        assert_precommit_hooks_shape(d)
+
+        # Dry-run: pre-commit run --all-files --show-diff-on-failure
+        result = subprocess.run(
+            ["pre-commit", "run", "--all-files", "--show-diff-on-failure"],
+            cwd=d,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        # Dry-run should succeed (exit 0) or report hooks would change files (exit 1)
+        assert result.returncode in (0, 1), (
+            f"pre-commit dry-run failed (exit {result.returncode}):\n"
+            f"{result.stdout}\n{result.stderr}"
+        )
+        # Output should mention the hooks we expect
+        assert "ruff-format" in result.stdout or "ruff" in result.stdout, (
+            f"Expected ruff hooks in dry-run output:\n{result.stdout}"
         )
