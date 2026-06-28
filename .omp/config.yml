@@ -1,0 +1,13 @@
+# Project-local settings for python-setup
+# Overrides global defaults for this workspace only.
+# See omp://settings.md for the full settings catalog.
+
+task:
+  maxRecursionDepth: 7
+  isolation:
+    # auto = picks overlayfs (Linux) or APFS clone (macOS) automatically
+    mode: auto
+    # branch = commits to omp/task/<id>, cherry-picks into parent on completion
+    merge: branch
+    # ai = auto-generated commit messages
+    commits: ai
