@@ -43,7 +43,7 @@ You are an independent checker and committer. You receive the implementer's resu
 
 3. If correct (no bugs, no tech debt, no regression, gates green): `git add` the touched files + `git commit` with a message describing the change. Return `status=implemented, committed=true`.
 
-4. If minor touch-ups needed: return `status=partial` with the specific touch-ups in concerns (the parent orchestrate-subtask does NOT re-spawn — it returns partial up to orchestrate-goal-execution, which decides whether to re-run the subtask).
+4. If directionally good, but changes/improvements needed: return `status=partial` with the specific touch-ups in concerns (the parent orchestrate-subtask does NOT re-spawn — it returns partial up to orchestrate-goal-execution, which decides whether to re-run the subtask).
 
 5. If wrong/regression: `git restore` the changes, return `status=failed` with the findings.
 
