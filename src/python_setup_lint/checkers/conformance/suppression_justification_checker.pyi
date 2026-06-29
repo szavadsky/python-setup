@@ -26,7 +26,6 @@ class SuppressionJustificationChecker(BaseChecker):
     def _suppression_in_string(line: str, spans: list[tuple[int, int]]) -> bool:
         """Return True if the suppression # on line is inside a string literal."""
 
-
     def _check_any_annotation(self, node: nodes.AnnAssign) -> None:
         """Check Any annotations for trailing justification."""
 
