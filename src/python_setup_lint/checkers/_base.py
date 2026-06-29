@@ -221,6 +221,14 @@ def check_if_meaningful(
         "carry over",
         "from before",
         "carry from",
+        # Compound brush-off phrases
+        "pre-existing issue",
+        "baseline issue",
+        "todo later",
+        "existing issue",
+        "will fix later",
+        "fix later",
+        "preexisting issue",
     }
     if primary_lower in meaningless_phrases:
         return False
