@@ -4,13 +4,16 @@ Flags any ``# pylint: disable=...``, ``# noqa: <code>``, ``# type: ignore``
 whose line lacks a meaningful technical reason.  The reason may appear as a
 trailing comment on the same line, or as a comment on the preceding line.
 
-Any-annotation enforcement scope: only standalone annotated assignments
-(``x: Any = ...``, ``y: dict[str, Any] = ...``) via ``visit_annassign``.
-Function parameter and return annotations are NOT checked — they are
-enforced by code review + the ``Any``-justification convention, because
-extending would false-positive on legitimate test helpers
-(``**kwargs: Any``) and multiline defs where the justification sits on
-the def line. All src/ param/return Any carry same-line justification.
+Any-annotation enforcement scope:
+- Standalone annotated assignments (``x: Any = ...``, ``y: dict[str, Any] = ...``)
+  via ``visit_annassign`` — fires on ALL files (tests included).
+- Function parameter and return annotations via ``visit_functiondef`` /
+  ``visit_asyncfunctiondef`` — fires ONLY under configured source roots
+  (production code).  Test files are excluded by source-root filtering so
+  that test helpers (``**kwargs: Any``, factory returns) are not flagged.
+  Each Any-bearing param/return line must carry a trailing ``# <reason>``
+  comment on that same line; def-line justification does NOT propagate to
+  individual param lines.
 """
 
 from __future__ import annotations
@@ -25,6 +28,9 @@ from pylint.typing import MessageDefinitionTuple
 
 from python_setup_lint.checkers._base import (
     MessageDef,
+    SourceRootMixin,
+    _get_file_path,
+    _is_under_source_root,
     _msgs,
     check_if_meaningful,
 )
@@ -42,7 +48,7 @@ _PAT_TRAILING_REASON = re.compile(r"#\s+(.+)")
 _PAT_PRECEDING_COMMENT = re.compile(r"^\s*#\s+(.+)")
 
 
-class SuppressionJustificationChecker(BaseChecker):
+class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
     """AST visitor that flags unjustified suppression comments."""
 
     name: str = "suppression-justification"
@@ -94,61 +100,92 @@ class SuppressionJustificationChecker(BaseChecker):
     def visit_annassign(self, node: nodes.AnnAssign) -> None:  # pylint: disable=missing-beartype  # nodes.AnnAssign is TYPE_CHECKING-only; @beartype cannot resolve forward ref
         self._check_any_annotation(node)
 
-    def _check_any_annotation(self, node: nodes.AnnAssign) -> None:
-        """Check Any annotations for trailing justification.
-
-        If the annotation is ``Any`` (or contains ``Any``, e.g. ``dict[str, Any]``)
-        and the line lacks a trailing ``# <reason>`` comment, emit
-        ``unjustified-suppression`` (W9704).
-
-        Scope: AnnAssign nodes only (standalone assignments). Param/return Any
-        are out of scope — see module docstring.
-        """
-        annotation = node.annotation
-        if annotation is None:
+    def _check_function(self, node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> None:
+        # Skip modules outside source roots — param/return Any checks are
+        # production-only.  Test files (tests/) are excluded so that test
+        # helpers (``**kwargs: Any``, factory returns) are not flagged.
+        file_path = _get_file_path(node)
+        if file_path is None or not _is_under_source_root(
+            file_path, self._source_roots
+        ):
             return
 
-        # Check if the annotation is or contains ``Any``.
+        # Collect every annotation-bearing parameter plus the return annotation.
+        # astroid stores annotations in parallel arrays aligned with the arg
+        # lists; ``varargannotation``/``kwargannotation`` are single nodes.
+        args = node.args
+        candidates: list[nodes.NodeNG] = []
+        candidates.extend(a for a in args.posonlyargs_annotations if a is not None)
+        candidates.extend(a for a in args.annotations if a is not None)
+        candidates.extend(a for a in args.kwonlyargs_annotations if a is not None)
+        if args.varargannotation is not None:
+            candidates.append(args.varargannotation)
+        if args.kwargannotation is not None:
+            candidates.append(args.kwargannotation)
+        if node.returns is not None:
+            candidates.append(node.returns)
+
+        for annotation in candidates:
+            if not self._annotation_contains_any(annotation):
+                continue
+            lineno = annotation.fromlineno
+            if lineno is None:
+                continue
+            self._emit_if_unjustified(annotation, lineno)
+
+    @staticmethod
+    def _annotation_contains_any(annotation: nodes.NodeNG) -> bool:
+        # Direct ``Any`` name.
         if isinstance(annotation, nodes.Name) and annotation.name == "Any":
-            pass  # direct ``Any``
-        elif isinstance(annotation, nodes.Subscript):
-            # Walk subscript children for ``Any``.
-            if not self._subscript_contains_any(annotation):
-                return
-        else:
-            return
+            return True
+        # Subscript containing ``Any`` (e.g. ``dict[str, Any]``).
+        if isinstance(annotation, nodes.Subscript):
+            return SuppressionJustificationChecker._subscript_contains_any(annotation)
+        return False
 
-        # Check the node's line for a trailing justification comment.
-        line = node.fromlineno
-        if line is None:
-            return
-
-        # We need the source line.  Try to get it from the parent module.
-        # Fall back to the node's own col_offset-based approach.
+    def _emit_if_unjustified(
+        self, annotation: nodes.NodeNG, lineno: int
+    ) -> None:
+        # Extract the source line for *lineno* and look for a trailing
+        # ``# <reason>`` comment on that same line.
         try:
-            parent = node.root()
+            parent = annotation.root()
             stream = parent.stream()  # type: ignore[union-attr]  # parent.stream() returns a stream object with .read()
             raw = stream.read()
             source = raw.decode("utf-8") if isinstance(raw, bytes) else raw
             lines = source.splitlines(keepends=True)
-            src_line = lines[line - 1].rstrip("\n")
+            src_line = lines[lineno - 1].rstrip("\n")
         except (AttributeError, OSError, IndexError):  # pylint: disable=W9740  # best-effort source line extraction; silently skip if unavailable
             return
 
-        # Look for a trailing ``# <reason>`` after the annotation.
         m = _PAT_TRAILING_REASON.search(src_line)
         if m:
             reason = m.group(1)
             if check_if_meaningful(reason, comment=reason):
                 return
 
-        # No justification found — emit warning.
         self.add_message(
             "unjustified-suppression",
-            line=line,
-            node=node,  # type: ignore[arg-type]  # node is object; add_message expects NodeNG | None
+            line=lineno,
+            node=annotation,  # type: ignore[arg-type]  # annotation is NodeNG; add_message expects NodeNG | None
             args=(annotation.as_string(),),
         )
+
+    def _check_any_annotation(self, node: nodes.AnnAssign) -> None:
+        # Check Any annotations for trailing justification.
+        #
+        # If the annotation is ``Any`` (or contains ``Any``, e.g.
+        # ``dict[str, Any]``) and the line lacks a trailing ``# <reason>``
+        # comment, emit ``unjustified-suppression`` (W9704).
+        annotation = node.annotation
+        if annotation is None:
+            return
+        if not self._annotation_contains_any(annotation):
+            return
+        line = node.fromlineno
+        if line is None:
+            return
+        self._emit_if_unjustified(annotation, line)
 
     @staticmethod
     def _subscript_contains_any(node: nodes.Subscript) -> bool:
