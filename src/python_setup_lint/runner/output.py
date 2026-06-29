@@ -203,7 +203,7 @@ def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
             elapsed=elapsed,
         )
 
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired:  # pylint: disable=W9740  # timeout: tool exceeded 600s limit; return timeout result so runner continues
         elapsed = time.monotonic() - start
         return LintResult(
             tool_name=label,

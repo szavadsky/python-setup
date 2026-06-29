@@ -349,7 +349,7 @@ class TestRerankerPairs:
         """A meaningful justification with context should score >= 0.5."""
         pytest.importorskip("sentence_transformers")
 
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private import for white-box testing
+        from python_setup_lint.checkers._semantic import (  # private import for white-box testing
             _reset_cache,
             semantic_check_if_meaningful,
         )
@@ -370,7 +370,7 @@ class TestRerankerPairs:
         """A weak justification with context should score < 0.5."""
         pytest.importorskip("sentence_transformers")
 
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private import for white-box testing
+        from python_setup_lint.checkers._semantic import (  # private import for white-box testing
             _reset_cache,
             semantic_check_if_meaningful,
         )
@@ -390,7 +390,7 @@ class TestRerankerPairs:
         """A brush-off justification with context should score < 0.5."""
         pytest.importorskip("sentence_transformers")
 
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private import for white-box testing
+        from python_setup_lint.checkers._semantic import (  # private import for white-box testing
             _reset_cache,
             semantic_check_if_meaningful,
         )
@@ -410,7 +410,7 @@ class TestRerankerPairs:
         """A meaningful justification without context should still score >= 0.5."""
         pytest.importorskip("sentence_transformers")
 
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private import for white-box testing
+        from python_setup_lint.checkers._semantic import (  # private import for white-box testing
             _reset_cache,
             semantic_check_if_meaningful,
         )
