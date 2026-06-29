@@ -298,7 +298,7 @@ class TestCaptureOneEdgeCases:
                 lambda cap: (
                     "time" not in cap[0].get("output", "")
                     and "timeInSec" not in cap[0].get("output", "")
-                    and "version" in cap[0].get("output", "")
+                    and "version" not in cap[0].get("output", "")
                 ),
                 id="pyright_verifytypes_volatile_fields_stripped",
             ),
@@ -340,7 +340,7 @@ class TestCaptureOneEdgeCases:
         }]
         baseline_path.write_text(json.dumps(saved))
         current = [make_lint_result(tool_name="pyright verify types", stdout=json.dumps(
-            {"version": "1.1.410", "time": "1782394247000", "timeInSec": 0.72, "diagnostics": []},
+            {"version": "1.1.411", "time": "1782394247000", "timeInSec": 0.72, "diagnostics": []},
         ))]
         violations = _diff_baseline(current, baseline_path)
         assert violations == []

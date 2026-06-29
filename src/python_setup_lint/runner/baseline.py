@@ -67,7 +67,8 @@ def _normalise_rumdl_timing(text: str) -> str:
 
 def _normalise_pyright_verifytypes_output(text: str) -> str:
     result = re.sub(r'"time":\s*"?\d+"?', "", text)
-    return re.sub(r'"timeInSec":\s*[0-9.]+', "", result)
+    result = re.sub(r'"timeInSec":\s*[0-9.]+', "", result)
+    return re.sub(r'"version":\s*"[^"]*"', "", result)
 
 
 def _try_rumdl_json(stdout: str | None) -> dict[str, object] | list[dict[str, object]] | None:
