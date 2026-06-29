@@ -111,6 +111,14 @@ class TestBrushOffPatterns:
             "carry over",
             "from before",
             "carry from",
+            # Compound brush-off phrases
+            "pre-existing issue",
+            "baseline issue",
+            "todo later",
+            "existing issue",
+            "will fix later",
+            "fix later",
+            "preexisting issue",
         ],
     )
     def test_brush_off_rejected(self, comment: str) -> None:
@@ -157,6 +165,8 @@ class TestMeaningfulPatterns:
             "abstract property defined in ABC base class",
             "classmethod used as alternative constructor",
             "carried from external library httpx for type compatibility",
+            "carried from library",
+            "external library carry",
         ],
     )
     def test_meaningful_passes(self, comment: str) -> None:
