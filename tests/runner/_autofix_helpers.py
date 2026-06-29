@@ -6,13 +6,10 @@ import subprocess
 from collections.abc import Callable
 from pathlib import Path
 
-from python_setup_lint.runner import LINT_TOOLS, LintResult
-from python_setup_lint.testing import make_lint_result
-from tests.runner._factories import canned_results_all_tools
-from python_setup_lint.runner import RunnerConfig, ToolSpec
+from python_setup_lint.runner import LINT_TOOLS, LintResult, RunnerConfig, ToolSpec
 from python_setup_lint.runner._autofix import _apply_autofix_conflict_aware
-from python_setup_lint.testing import fake_run_cmd_factory
-from tests.runner._factories import tmp_config
+from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
+from tests.runner._factories import canned_results_all_tools, tmp_config
 
 _CANARY_LABEL = "python-setup:autofix-canary"
 
@@ -112,7 +109,7 @@ def _setup_e999_canary_revert(
     original: str,
     post_fix: str,
     target: Path,
-    canned: dict[str, LintResult],
+    canned: dict[str, LintResult],  # pylint: disable=generic-key-dict  # test helper; string keys are tool labels
     make_spec: Callable[[], ToolSpec],
     config: RunnerConfig | None = None,
 ) -> _PostFixFakeRunCmd:
