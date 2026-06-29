@@ -203,6 +203,16 @@ def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
             elapsed=elapsed,
         )
 
+    except subprocess.TimeoutExpired:
+        elapsed = time.monotonic() - start
+        return LintResult(
+            tool_name=label,
+            exit_code=124,
+            stdout="",
+            stderr=f"Command timed out: {cmd}",
+            elapsed=elapsed,
+        )
+
 
 def _print_result(result: LintResult) -> None:
     status = "PASSED" if result.exit_code == 0 else f"FAILED (exit={result.exit_code})"
