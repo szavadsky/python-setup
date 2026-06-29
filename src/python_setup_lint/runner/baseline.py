@@ -42,7 +42,7 @@ _SCHEMA_V2 = "v2"
 # rather than the records path.  pyright always emits JSON; rumdl may emit
 # JSON OR text (its JSON form is consumed as diagnostics when ``stdout``
 # parses cleanly).
-_JSON_DIAGNOSTIC_TOOLS: frozenset[str] = frozenset({"pyright check"})
+_JSON_DIAGNOSTIC_TOOLS: frozenset[str] = frozenset({"pyright check", "pyright verify types"})
 
 # Tools whose stdout we currently do NOT parse into records — they keep
 # the legacy rstrip-set path AND are recorded in ``decisions.md`` (D3).
@@ -68,7 +68,8 @@ def _normalise_rumdl_timing(text: str) -> str:
 def _normalise_pyright_verifytypes_output(text: str) -> str:
     result = re.sub(r'"time":\s*"?\d+"?', "", text)
     result = re.sub(r'"timeInSec":\s*[0-9.]+', "", result)
-    return re.sub(r'"version":\s*"[^"]*"', "", result)
+    result = re.sub(r'"version":\s*"[^"]*"', "", result)
+    return re.sub(r'Completed in \d+\.\d+sec', "", result)
 
 
 def _try_rumdl_json(stdout: str | None) -> dict[str, object] | list[dict[str, object]] | None:
