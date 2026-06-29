@@ -41,6 +41,37 @@ class TestImportErrorFallback:
         return _mock_import
 
 
+# ── Default-user fallback (semantic returns None → heuristic) ────────
+
+
+class TestDefaultUserFallback:
+    """Default-user path: semantic returns None → heuristic fallback executes."""
+
+    def test_fallback_to_heuristic_when_reranker_unavailable(self) -> None:
+        """When sentence_transformers absent, check_if_meaningful falls through to heuristic."""
+        from python_setup_lint.checkers._semantic import _reset_cache
+
+        _reset_cache()
+        with patch(
+            "python_setup_lint.checkers._semantic._load_reranker",
+            return_value=None,
+        ):
+            result = check_if_meaningful("circular import — PyLinter not available at runtime")
+        assert result is True
+
+    def test_fallback_rejects_brushoff_when_reranker_unavailable(self) -> None:
+        """The heuristic fallback must still reject brush-off justifications."""
+        from python_setup_lint.checkers._semantic import _reset_cache
+
+        _reset_cache()
+        with patch(
+            "python_setup_lint.checkers._semantic._load_reranker",
+            return_value=None,
+        ):
+            result = check_if_meaningful("pre-existing")
+        assert result is False
+
+
 # ── Brush-off pattern detection (heuristic) ──────────────────────────
 
 
