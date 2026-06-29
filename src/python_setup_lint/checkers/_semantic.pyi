@@ -25,3 +25,7 @@ def semantic_check_if_meaningful(
         ``False`` otherwise, or ``None`` if the NLP pipeline is unavailable
         (sentence-transformers not installed or model download failed).
     """
+
+
+def _reset_cache() -> None:
+    """Reset the in-memory result cache and remove the persisted cache file."""
