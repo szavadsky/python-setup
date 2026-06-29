@@ -26,6 +26,7 @@ import sys
 from pathlib import Path
 
 import structlog
+from beartype import beartype
 
 from ._autofix import (
     _AUTOFIX_ENV_VAR,
@@ -61,11 +62,6 @@ __all__ = [
 ]
 
 
-# pylint: disable=missing-beartype  # beartype cannot type-check the full
-#   pipeline body (dynamic dispatch, external subprocess calls, complex
-#   control flow); the function is the top-level orchestrator, not a
-#   leaf utility — beartype's overhead on this entry point is not
-#   justified.
 
 
 def _run_tool_pipeline(
@@ -149,6 +145,7 @@ def _emit_statistics(
         _print_statistics_table(vcounts)
 
 
+@beartype
 def run_lint(
     *,
     config: RunnerConfig | None = None,
@@ -215,11 +212,7 @@ def run_lint(
     return overall_rc
 
 
-# pylint: disable=missing-beartype  # beartype cannot type-check the full
-#   CLI entry point (argparse parsing, dynamic RunnerConfig construction,
-#   external subprocess dispatch); the function is the top-level
-#   orchestrator, not a leaf utility — beartype's overhead on this entry
-#   point is not justified.
+@beartype
 def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -> int:
     # Ensure .venv/bin is on PATH so subprocesses find installed tools.
     _venv_bin = Path(__file__).resolve().parent.parent.parent / ".venv" / "bin"
