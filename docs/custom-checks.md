@@ -90,7 +90,7 @@ def test_example_checker() -> None:
 
 ## Available helpers
 
-- `check_if_meaningful(text, *, rule, code_context, comment)` — heuristic + semantic reranker check for meaningful suppression justifications (in `checkers/_base.py`). Reranker-first with heuristic fallback when `PYTHON_SETUP_LINT_SEMANTIC` is set and `sentence-transformers` is available. Returns `True` (meaningful) or `False` (brush-off). The reranker threshold is 0.5; model configurable via `PYTHON_SETUP_LINT_RERANKER_MODEL` env var. Results cached by SHA-256 of (text, rule, code_context, comment).
+- `check_if_meaningful(text, *, rule, code_context, comment)` — heuristic + semantic reranker check for meaningful suppression justifications (in `checkers/_base.py`). Reranker-first with heuristic fallback when `PYTHON_SETUP_LINT_SEMANTIC` is set and `sentence-transformers` is available. Returns `True` (meaningful) or `False` (brush-off). The reranker threshold is 0.5; model configurable via `PYTHON_SETUP_LINT_RERANKER_MODEL` env var. Results cached by SHA-256 of (text, rule, code_context, comment, model) — changing the reranker model invalidates the cache.
 - `_matches_path(str_path, patterns)` — glob/directory path matching.
 - `_is_under_source_root(path, source_roots)` — source-root containment check.
 - `_get_file_path(node)` — resolve a node's file path.
@@ -106,4 +106,4 @@ The `check_if_meaningful` function implements a reranker-first with heuristic fa
 
 - `PYTHON_SETUP_LINT_SEMANTIC=0` — disable the reranker entirely (heuristic only).
 - `PYTHON_SETUP_LINT_RERANKER_MODEL` — override the default reranker model (default: `jina-reranker-v2-base-multilingual`).
-- **Cache**: results cached at `~/.cache/python-setup/semantic/results.json`, keyed by SHA-256 of (text, rule, code_context, comment).
+keyed by SHA-256 of (text, rule, code_context, comment, model) — changing ``PYTHON_SETUP_LINT_RERANKER_MODEL`` invalidates the cache.
