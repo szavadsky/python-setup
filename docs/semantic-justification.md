@@ -15,7 +15,7 @@ If the reranker is unavailable (model download failure, OOM, `sentence-transform
 
 ## Opt-in Mechanism
 
-The semantic pipeline is **enabled by default** (``PYTHON_SETUP_LINT_SEMANTIC=1``). The ``_semantic`` module is a first-party module imported unconditionally; the env var gates whether the pipeline actually runs the reranker. Install the optional dependency:
+The semantic pipeline is **enabled by default** (``PYTHON_SETUP_LINT_SEMANTIC=1``). The ``_semantic`` module is imported lazily — only when the env var is set — inside ``check_if_meaningful``; the env var gates both the import and whether the reranker runs. With ``PYTHON_SETUP_LINT_SEMANTIC=0`` the module is never imported and the heuristic runs alone. Install the optional dependency:
 
 ```bash
 pip install python-setup[semantic]
