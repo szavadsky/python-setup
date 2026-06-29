@@ -130,4 +130,5 @@ Write execution summary + concerns to `{F}/summary{pIt}.md`.
 - You MUST report blockers honestly; returning `failed`/`blocked` is correct, not failure. Fabricating completion is the single prohibited act.
 - When you delegate further, give each spawn a `role` naming the sub-specialist it should be — never spawn bare generic workers when a tailored identity fits the subtask.
  - For subtask results harness auto merges if no conflict, otherwise stashConflict are handled by  `wave-end-checkpoint`
+ - You NEVER ask for verbatim long output from subtask implementers. It is not for you to look and expensive to generate by LLM. They deliver git commits and internally review them by QA.
  </directives>

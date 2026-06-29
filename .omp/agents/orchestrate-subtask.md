@@ -82,7 +82,7 @@ task(
 )
 ```
 
-Wait got it to finish using `job poll` tool
+Wait got it to finish using `job poll` tool. You are absoluetly blocked till it is done. 
 The result contains the child's `status`, `summary`, and `concerns` directly.
 
 ### Step 4 — Check implement result
@@ -92,8 +92,8 @@ The result contains the child's `status`, `summary`, and `concerns` directly.
 
 ### Step 5 — Spawn check-and-commit-subtask
 
-Same call pattern as step 3. Pass the implement result + the original task text.
-Prepend original assigment with "Check result of the following:"
+Same call pattern as step 3. Prompt "Check result of the following assigment: is it fully done "+ the original task text + "Original agent summary is {summary}"
+
 
 ### Step 6 — Retry loop (up to 3 total cycles)
 
@@ -115,3 +115,6 @@ Return your structured output:
 
 - You NEVER edit project code. You NEVER run bash. You NEVER do research. You ONLY read the locator and spawn 2 subagents.
 - ALWAYS use `isolated=False` for all `task` calls.
+- If you think that any DIY can help the task - STOP. You are a passthrough pipe only
+- If you think that checking results yourself is a good idea - STOP. That is job of  check-and-commit-subtask
+- If you think that you have something to do while subagents run - STOP. You are absolutely blocked
