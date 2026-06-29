@@ -15,6 +15,7 @@ from tests.runner._autofix_helpers import (
     _git_init,
     _make_canned_fix_results,
     _PostFixFakeRunCmd,
+    _setup_e999_canary_revert,
     _stage,
     _write_file,
 )
@@ -172,16 +173,13 @@ class TestApplyAutofixConflictAware:
         post_fix = "x = 2  # fixed-broken\n"
         target = _write_file(tmp_path, "src/main.py", original)
         canned = _make_canned_fix_results(canary_e999_files=("src/main.py",))
-        wrapped = _PostFixFakeRunCmd(
-            fake_run_cmd_factory(canned),
-            post_fix_path=target,
-            post_fix_content=post_fix,
-        )
-        _apply_autofix_conflict_aware(
-            self._make_spec(),
-            config=tmp_config(tmp_path),
-            paths_to_check=["src/main.py"],
-            run_cmd=wrapped,
+        wrapped = _setup_e999_canary_revert(
+            tmp_path,
+            original=original,
+            post_fix=post_fix,
+            target=target,
+            canned=canned,
+            make_spec=self._make_spec,
         )
         captured = capsys.readouterr()
         assert "autofix reverted src/main.py: E999 after fix" in captured.err

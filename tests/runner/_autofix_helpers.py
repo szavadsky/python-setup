@@ -9,6 +9,10 @@ from pathlib import Path
 from python_setup_lint.runner import LINT_TOOLS, LintResult
 from python_setup_lint.testing import make_lint_result
 from tests.runner._factories import canned_results_all_tools
+from python_setup_lint.runner import RunnerConfig, ToolSpec
+from python_setup_lint.runner._autofix import _apply_autofix_conflict_aware
+from python_setup_lint.testing import fake_run_cmd_factory
+from tests.runner._factories import tmp_config
 
 _CANARY_LABEL = "python-setup:autofix-canary"
 
@@ -100,3 +104,31 @@ class _PostFixFakeRunCmd:
             if seen_label == label:
                 return after
         return None
+
+
+def _setup_e999_canary_revert(
+    tmp_path: Path,
+    *,
+    original: str,
+    post_fix: str,
+    target: Path,
+    canned: dict[str, LintResult],
+    make_spec: Callable[[], ToolSpec],
+    config: RunnerConfig | None = None,
+) -> _PostFixFakeRunCmd:
+    """Set up the E999-canary-revert test scenario and return the wrapped run_cmd.
+
+    The caller must call ``capsys.readouterr()`` after this returns.
+    """
+    wrapped = _PostFixFakeRunCmd(
+        fake_run_cmd_factory(canned),
+        post_fix_path=target,
+        post_fix_content=post_fix,
+    )
+    _apply_autofix_conflict_aware(
+        make_spec(),
+        config=config or tmp_config(tmp_path),
+        paths_to_check=["src/main.py"],
+        run_cmd=wrapped,
+    )
+    return wrapped
