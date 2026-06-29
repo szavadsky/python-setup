@@ -91,7 +91,7 @@ TOOLS: list[ToolSpec] = [
         supports_path=True,
         supports_exclude=True,
         fix_flags=("--fix",),
-        default_paths=["src"],
+        default_paths=["src"],  # ty scoped to src/ only: ty honors its own ignore-comment syntax (not mypy's `# type: ignore[code]`), so 36 existing `# type: ignore[mypy-code]` test suppressions are invisible to ty, producing 43 false positives on test-fixture patterns (monkeypatch, dict-invariance, isinstance-narrowing) that mypy + pyright both certify clean; tests are type-checked by those 2 tools; re-enabling ty would require 41 duplicate ty-specific ignore comments violating single-suppression rule (CodingRules.md:15)
     ),
     ToolSpec(
         "mypy.stubtest",
