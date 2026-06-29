@@ -3,6 +3,14 @@
 Flags any ``# pylint: disable=...``, ``# noqa: <code>``, ``# type: ignore``
 whose line lacks a meaningful technical reason.  The reason may appear as a
 trailing comment on the same line, or as a comment on the preceding line.
+
+Any-annotation enforcement scope: only standalone annotated assignments
+(``x: Any = ...``, ``y: dict[str, Any] = ...``) via ``visit_annassign``.
+Function parameter and return annotations are NOT checked — they are
+enforced by code review + the ``Any``-justification convention, because
+extending would false-positive on legitimate test helpers
+(``**kwargs: Any``) and multiline defs where the justification sits on
+the def line. All src/ param/return Any carry same-line justification.
 """
 
 from __future__ import annotations
@@ -92,6 +100,9 @@ class SuppressionJustificationChecker(BaseChecker):
         If the annotation is ``Any`` (or contains ``Any``, e.g. ``dict[str, Any]``)
         and the line lacks a trailing ``# <reason>`` comment, emit
         ``unjustified-suppression`` (W9704).
+
+        Scope: AnnAssign nodes only (standalone assignments). Param/return Any
+        are out of scope — see module docstring.
         """
         annotation = node.annotation
         if annotation is None:

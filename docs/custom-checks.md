@@ -52,6 +52,8 @@ Use `MessageDef` (a `NamedTuple` with `message`, `symbol`, `description` fields)
 
 Custom checkers use `W` (warning) codes in the range `W90xx`–`W97xx`. Actual codes: W9001 (no-try-import), W9701 (missing-beartype), W9702 (tempfile-mkdtemp-in-test), W9703 (asyncio-timeout), W9704 (unjustified-suppression), W9707 (pyi-underscore), W9710/W9711 (structlog), W9720 (unnamed-tuple-dict), W9721 (generic-key-dict), W9728 (trivial-wrapper), W9729 (redundant-type-guard), W9738 (bare-except-comment), W9739 (missing-error-chain), W9740 (silent-except), W9741 (missing-return-annotation), plus stub-checker symbols.
 
+W9704 (unjustified-suppression) checks ``Any`` in standalone annotated assignments only; function param/return ``Any`` are out of scope (justified by code-review convention to avoid test-helper false-positives).
+
 ## Registration
 
 The installer automatically discovers all modules in `checkers/` that export a `register` function. No manual plugin configuration is needed — the installer writes the `load-plugins` entry to the consumer's `pyproject.toml`.
