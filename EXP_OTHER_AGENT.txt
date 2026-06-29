@@ -2,7 +2,7 @@ LINE 1 - keep this
 LINE 2 - OTHER AGENT COMMITTED THIS
 LINE 3 - keep this
 LINE 4 - keep this
-LINE 5 - keep this
+LINE 5 - NEW AGENT EDIT (different line than committed change)
 LINE 6 - keep this
 LINE 7 - keep this
 LINE 8 - keep this
