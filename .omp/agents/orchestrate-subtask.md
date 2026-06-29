@@ -82,7 +82,7 @@ task(
 )
 ```
 
-Wait got it to finish using `job poll` tool. You are absoluetly blocked till it is done. 
+Wait got it to finish using `job poll` tool. You are absoluetly blocked till it is done.
 The result contains the child's `status`, `summary`, and `concerns` directly.
 
 ### Step 4 — Check implement result
@@ -93,7 +93,6 @@ The result contains the child's `status`, `summary`, and `concerns` directly.
 ### Step 5 — Spawn check-and-commit-subtask
 
 Same call pattern as step 3. Prompt "Check result of the following assigment: is it fully done "+ the original task text + "Original agent summary is {summary}"
-
 
 ### Step 6 — Retry loop (up to 3 total cycles)
 

@@ -23,6 +23,7 @@ tools:
   - report_tool_issue
   - generate_image
   - job
+  - irc
 spawns:
   - task
   - fact-finder
