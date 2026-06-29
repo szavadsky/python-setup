@@ -12,6 +12,7 @@ tools:
   - inspect_image
   - todo
   - debug
+  - irc
   - mcp__webmcp_scrape_batch
   - mcp__webmcp_search_engine_batch
   - report_tool_issue

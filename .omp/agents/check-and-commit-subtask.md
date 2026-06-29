@@ -12,8 +12,10 @@ tools:
   - inspect_image
   - todo
   - job
+  - irc
 spawns:
   - quick_task
+  - task
   - librarian
 model:
   - pi/task

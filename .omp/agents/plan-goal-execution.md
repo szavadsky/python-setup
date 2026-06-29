@@ -10,6 +10,7 @@ tools:
   - write
   - todo
   - yield
+  - irc
   - inspect_image
 spawns:
   - fact-finder
