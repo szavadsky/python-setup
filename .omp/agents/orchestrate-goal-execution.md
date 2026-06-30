@@ -64,11 +64,18 @@ Iterate until DAG done or fundamentally blocked. Do not stop for partial wave fa
 
 3.1. **Spawn `orchestrate-subtask` agents in parallel** via single `task` call with `tasks` array — one entry per subtask. ALWAYS `isolated=True`. Use `agent="orchestrate-subtask"`. Provide `context` with plan iteration number and project root. Each spawn:
 
+Start  referring `orchestrate-subtask` to specific line numbers in the plan. Only once concerns are reported by downstream agents, and only after consulting  `oracle` you can add more.
+
 - `id`: `{AgentSlug}{whatDoing}{itNum}`
-- `role`: `Dilligent software engineer`
-- `assignment`: `{fromOriginalPrompt}\n{locate}` — e.g. `"Extra: tach.toml symlink already created.\nscratchpad/plan7.md:42-58"`. Downstream agents read the plan locator themselves; you only pass the path+range.
+- `role`: `Task implementation orchestrator`
+- `assignment`: `Follow your system prompt to orchestrate task, see {locate} {extraInformation}` — e.g. `"Extra: tach.toml symlink already created.\nscratchpad/plan7.md:42-58"`. `orchestrate-subtask` read the plan locator themselves; you only pass the path+range.
 - `description`: short label for UI
 
+<directive>
+   - always use role `Task implementation orchestrator`
+   - always start assigment with `Follow your system prompt to orchestrate task`
+   - do not re-interpet plan, system prompt,  or `oracle` recommndations. You role is split it to tangible, independent, right sized tasks.
+</directive>
 Do not reinterpret the plan. Add extra context only if execution revealed new info or relaunch.
 
 3.2. **Wait** via `job poll` with spawned IDs.
