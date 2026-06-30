@@ -27,7 +27,6 @@
 - Added `pylint-pyi` as a 12th lint tool — a second pylint pass targeting `.pyi` files with `.pyi`-scoped rcfile.
 - Semantic reranker-only — removed the embedder (bge-small-en-v1.5), kept only the cross-encoder reranker (jina-reranker-v2-base-multilingual).
 
-
 ## v0.7.0 (2026-06-26)
 
 - New `unnamed_tuple_dict_checker` — flags `dict` values that are bare `tuple`/`Tuple[...]` literals with >1 unnamed positional fields.

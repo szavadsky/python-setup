@@ -69,7 +69,6 @@ def _is_opted_out(checker: StubChecker, path: Path) -> bool:
 
 
 _LOGIC_NODE_TYPES: tuple[type, ...] = (
-    nodes.AnnAssign,
     nodes.If,
     nodes.Try,
     nodes.With,
@@ -91,6 +90,13 @@ def _is_logic_node(child: nodes.NodeNG) -> bool:
         return False
     if isinstance(child, nodes.Assign):
         return any(isinstance(target, nodes.AssignName) and target.name != "__all__" for target in child.targets)
+    if isinstance(child, nodes.AnnAssign):
+        # __version__/__all__ annotated assignments are package metadata, not logic —
+        # __init__.py carrying only these (plus docs/imports) needs no .pyi (CodingRules.md:37).
+        return not (
+            isinstance(child.target, nodes.AssignName)
+            and child.target.name in {"__version__", "__all__"}
+        )
     return bool(isinstance(child, _LOGIC_NODE_TYPES))
 
 

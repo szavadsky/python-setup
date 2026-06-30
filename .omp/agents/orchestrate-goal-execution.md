@@ -73,7 +73,7 @@ Do not reinterpret the plan. Add extra context only if execution revealed new in
 
 3.2. **Wait** via `job poll` with spawned IDs.
 
-3.3. **Harvest results**: status, committed, concerns, stashConflict.
+3.3. **Harvest results**: status, committed, concerns (array of `{slug, resolution}`), stashConflict.
 
 3.4. **Wave checkpoint**: after every wave, spawn `wave-end-checkpoint` via `task` with `agent="wave-end-checkpoint"`, `context` with iteration info, and a single task. `assignment`: list each subtask's locate (`{F}/plan{pIt}.md:<start>-<end>`) and stashConflicts/concerns. `isolated=False` Wait for it.
 

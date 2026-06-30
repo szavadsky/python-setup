@@ -46,7 +46,11 @@ _RERANKER_MODEL = os.environ.get(
 
 
 def _cache_dir() -> Path:
-    """Lazily resolve cache dir on first use (respects test monkeypatch of Path.home)."""
+    """Lazily resolve cache dir on first use (respects test monkeypatch of Path.home).
+
+    Returns:
+        The path to the semantic cache directory.
+    """
     global _CACHE_DIR  # pylint: disable=global-statement  # lazy init requires global
     if _CACHE_DIR is None:
         _CACHE_DIR = Path.home() / ".cache" / "python-setup" / "semantic"
