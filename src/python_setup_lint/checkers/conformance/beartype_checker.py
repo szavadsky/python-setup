@@ -77,7 +77,10 @@ class BeartypeCoverageChecker(SourceRootMixin, BaseChecker):  # type: ignore[mis
                 "no_type_check",
             }:
                 return True
-            if isinstance(dec, nodes.Attribute) and dec.attrname == "no_type_check":
+            if isinstance(dec, nodes.Attribute) and dec.attrname in {
+                "no_type_check",
+                "beartype",
+            }:
                 return True
         return False
 

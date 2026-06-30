@@ -84,6 +84,9 @@ def test_skips(code: str, expected_missing_count: int) -> None:
         pytest.param(
             "import typing\n@typing.no_type_check\n", id="typing_no_type_check"
         ),
+        pytest.param(
+            "import beartype\n@beartype.beartype\n", id="beartype_module_decorator"
+        ),
     ],
 )
 def test_decorated_skipped(decorator_expr: str) -> None:
