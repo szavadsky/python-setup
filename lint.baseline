@@ -27,7 +27,7 @@
   },
   {
     "exit_code": 0,
-    "output": "All checks passed!\n",
+    "output": "",
     "tool": "ty check"
   },
   {
@@ -69,7 +69,6 @@
         "missingDefaultParamCount": 1,
         "missingFunctionDocStringCount": 35,
         "moduleName": "python_setup_lint",
-        "moduleRootDirectory": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint",
         "modules": [
           {
             "name": "python_setup_lint"
@@ -204,8 +203,6 @@
           "withUnknownType": 0
         },
         "packageName": "python_setup_lint",
-        "packageRootDirectory": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint",
-        "pyTypedPath": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/py.typed",
         "symbols": [
           {
             "category": "module",
@@ -490,7 +487,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/beartype_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/beartype_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.beartype_checker.BeartypeCoverageChecker.open\"",
                 "range": {
                   "end": {
@@ -515,7 +512,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/beartype_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/beartype_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.beartype_checker.BeartypeCoverageChecker.visit_functiondef\"",
                 "range": {
                   "end": {
@@ -540,7 +537,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/beartype_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/beartype_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.beartype_checker.BeartypeCoverageChecker.visit_asyncfunctiondef\"",
                 "range": {
                   "end": {
@@ -592,7 +589,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/_base.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/_base.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers._base.SourceRootMixin.open\"",
                 "range": {
                   "end": {
@@ -617,7 +614,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/_base.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/_base.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers._base.SourceRootMixin.visit_functiondef\"",
                 "range": {
                   "end": {
@@ -642,7 +639,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/_base.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/_base.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers._base.SourceRootMixin.visit_asyncfunctiondef\"",
                 "range": {
                   "end": {
@@ -667,7 +664,7 @@
             "category": "function",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/beartype_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/beartype_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.beartype_checker.register\"",
                 "range": {
                   "end": {
@@ -743,7 +740,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/generic_key_dict_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/generic_key_dict_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.generic_key_dict_checker.GenericKeyDictChecker.open\"",
                 "range": {
                   "end": {
@@ -768,7 +765,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/generic_key_dict_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/generic_key_dict_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.generic_key_dict_checker.GenericKeyDictChecker.visit_subscript\"",
                 "range": {
                   "end": {
@@ -829,7 +826,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/missing_error_chain_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/missing_error_chain_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.missing_error_chain_checker.MissingErrorChainChecker.visit_raise\"",
                 "range": {
                   "end": {
@@ -854,7 +851,7 @@
             "category": "function",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/missing_error_chain_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/missing_error_chain_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.missing_error_chain_checker.register\"",
                 "range": {
                   "end": {
@@ -906,7 +903,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/missing_return_annotation_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/missing_return_annotation_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.missing_return_annotation_checker.MissingReturnAnnotationChecker.open\"",
                 "range": {
                   "end": {
@@ -931,7 +928,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/missing_return_annotation_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/missing_return_annotation_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.missing_return_annotation_checker.MissingReturnAnnotationChecker.visit_functiondef\"",
                 "range": {
                   "end": {
@@ -956,7 +953,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/missing_return_annotation_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/missing_return_annotation_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.missing_return_annotation_checker.MissingReturnAnnotationChecker.visit_asyncfunctiondef\"",
                 "range": {
                   "end": {
@@ -981,7 +978,7 @@
             "category": "function",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/missing_return_annotation_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/missing_return_annotation_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.missing_return_annotation_checker.register\"",
                 "range": {
                   "end": {
@@ -1024,7 +1021,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/no_try_import_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/no_try_import_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.no_try_import_checker.NoTryImportChecker.visit_try\"",
                 "range": {
                   "end": {
@@ -1049,7 +1046,7 @@
             "category": "function",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/no_try_import_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/no_try_import_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.no_try_import_checker.register\"",
                 "range": {
                   "end": {
@@ -1236,7 +1233,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/structlog_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/structlog_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.structlog_checker.StructlogChecker.open\"",
                 "range": {
                   "end": {
@@ -1261,7 +1258,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/structlog_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/structlog_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.structlog_checker.StructlogChecker.visit_module\"",
                 "range": {
                   "end": {
@@ -1286,7 +1283,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/structlog_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/structlog_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.structlog_checker.StructlogChecker.visit_call\"",
                 "range": {
                   "end": {
@@ -1311,7 +1308,7 @@
             "category": "function",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/structlog_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/structlog_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.structlog_checker.register\"",
                 "range": {
                   "end": {
@@ -1372,7 +1369,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/suppression_justification_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/suppression_justification_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.suppression_justification_checker.SuppressionJustificationChecker.open\"",
                 "range": {
                   "end": {
@@ -1415,7 +1412,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/suppression_justification_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/suppression_justification_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.suppression_justification_checker.SuppressionJustificationChecker.visit_functiondef\"",
                 "range": {
                   "end": {
@@ -1440,7 +1437,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/suppression_justification_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/suppression_justification_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.suppression_justification_checker.SuppressionJustificationChecker.visit_asyncfunctiondef\"",
                 "range": {
                   "end": {
@@ -1501,7 +1498,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/tmp_path_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/tmp_path_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.tmp_path_checker.TempFileChecker.open\"",
                 "range": {
                   "end": {
@@ -1526,7 +1523,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/tmp_path_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/tmp_path_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.tmp_path_checker.TempFileChecker.visit_call\"",
                 "range": {
                   "end": {
@@ -1551,7 +1548,7 @@
             "category": "function",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/tmp_path_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/tmp_path_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.tmp_path_checker.register\"",
                 "range": {
                   "end": {
@@ -1594,7 +1591,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/trivial_wrapper_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/trivial_wrapper_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.trivial_wrapper_checker.TrivialWrapperChecker.visit_functiondef\"",
                 "range": {
                   "end": {
@@ -1619,7 +1616,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/trivial_wrapper_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/trivial_wrapper_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.trivial_wrapper_checker.TrivialWrapperChecker.visit_asyncfunctiondef\"",
                 "range": {
                   "end": {
@@ -1644,7 +1641,7 @@
             "category": "function",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/conformance/trivial_wrapper_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/trivial_wrapper_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.conformance.trivial_wrapper_checker.register\"",
                 "range": {
                   "end": {
@@ -1846,7 +1843,7 @@
             "category": "function",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/stub/docstring_checker.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/stub/docstring_checker.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.stub.docstring_checker.register\"",
                 "range": {
                   "end": {
@@ -2468,7 +2465,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/checkers/stub/normalizer.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/stub/normalizer.pyi",
                 "message": "No docstring found for function \"python_setup_lint.checkers.stub.normalizer.AnnotationNormalizer.normalize\"",
                 "range": {
                   "end": {
@@ -2781,7 +2778,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/runner/dispatch.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/runner/dispatch.pyi",
                 "message": "No docstring found for function \"python_setup_lint.runner.dispatch.LintTool.build_command\"",
                 "range": {
                   "end": {
@@ -2806,7 +2803,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/runner/dispatch.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/runner/dispatch.pyi",
                 "message": "No docstring found for function \"python_setup_lint.runner.dispatch.LintTool.statistics_flags\"",
                 "range": {
                   "end": {
@@ -2831,7 +2828,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/runner/dispatch.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/runner/dispatch.pyi",
                 "message": "No docstring found for function \"python_setup_lint.runner.dispatch.LintTool.parse_statistics\"",
                 "range": {
                   "end": {
@@ -3709,7 +3706,7 @@
             "category": "method",
             "diagnostics": [
               {
-                "file": "/home/slava/.omp/wt/orchestrate-goal-execution-4.WS4Verification13-0982d2a/merged/src/python_setup_lint/testing.pyi",
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/testing.pyi",
                 "message": "One or more default values in function \"python_setup_lint.testing.FakeRunCmd.__call__\" is specified as \"...\"",
                 "range": {
                   "end": {

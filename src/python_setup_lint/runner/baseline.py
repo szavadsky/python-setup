@@ -66,10 +66,14 @@ def _normalise_rumdl_timing(text: str) -> str:
     return re.sub(r"\(\d+ms\)", "(XXXms)", text)
 
 def _normalise_pyright_verifytypes_output(text: str) -> str:
-    result = re.sub(r'"time":\s*"?\d+"?', "", text)
-    result = re.sub(r'"timeInSec":\s*[0-9.]+', "", result)
-    result = re.sub(r'"version":\s*"[^"]*"', "", result)
-    return re.sub(r'Completed in \d+\.\d+sec', "", result)
+    try:
+        diag = json.loads(text)
+    except (json.JSONDecodeError, ValueError):  # pylint: disable=W9740  # best-effort verify-types parse fallback; logging would noise unavoidable parse degrade
+        return text
+    if not isinstance(diag, dict):
+        return text
+    _strip_pyright_volatile(diag)
+    return json.dumps(diag, sort_keys=True, indent=2)
 
 
 def _try_rumdl_json(stdout: str | None) -> dict[str, object] | list[dict[str, object]] | None:
