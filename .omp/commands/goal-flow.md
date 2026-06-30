@@ -123,7 +123,7 @@ for pIt in range(start_pIt, N + 1):
     # Orchestrate + follow-up loop (single call site per subagent).
     # extra is set by: skip (glitch recovery), checker feedback (follow-up), or None (fresh).
     for followup_count in range(MAX_FOLLOWUPS + 1):
-        impl_result = call_agent(plan_path, "orchestrate-goal-execution", IMPL_SCHEMA, extra=extra)
+        impl_result = call_agent(plan_path, "orchestrate-goal-execution", IMPL_SCHEMA, extra=(extra or "")+"\n Remember: you are ORCHESTRATOR and need to strongly follow your system prompt. You focus is tasks and their split, not the implementation. `task-pusher` will stritcly follow proper sofware development process to implement")
         # The orchestrator returns the summary markdown in `report`; the eval persists it.
         Path(summary_path).write_text(impl_result.get("report", ""))
         extra = None  # consumed

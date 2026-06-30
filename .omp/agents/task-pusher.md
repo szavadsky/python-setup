@@ -1,6 +1,6 @@
 ---
-name: orchestrate-subtask
-description: "Subtask orchestrator. Reads a plan-section locator, launches a python eval that drives the implement→check retry loop, yields structured result. All logic is in the eval code."
+name: task-pusher
+description: "Subtask orchestrator (pass-through pipe). Reads a plan-section locator, launches a python eval that drives the implement→check retry loop, yields structured result. All logic is in the eval code."
 tools:
   - read
   - eval
@@ -98,7 +98,7 @@ def merge_concerns(acc, new_concerns):
 
 
 def log(msg):
-    print(f"[orchestrate-subtask] {msg}")
+    print(f"[task-pusher] {msg}")
 
 
 def log_prompt(label, prompt, extra_size=None):
