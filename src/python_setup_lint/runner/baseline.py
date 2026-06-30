@@ -58,7 +58,7 @@ _FALLBACK_TOOLS: set[str] = set()
 
 
 @beartype.beartype
-def peek_fallback_tools() -> frozenset[str]:  # pylint: disable=missing-beartype  # trivial getter; beartype overhead unnecessary
+def peek_fallback_tools() -> frozenset[str]:
     return frozenset(_FALLBACK_TOOLS)
 
 
