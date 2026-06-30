@@ -18,7 +18,7 @@ goal-flow.md (command, eval loop)
 │   ├── designer                 (bundled)
 │   └── task                     (bundled, generic)
 ├── orchestrate-goal-execution   [minimum_orchestrator]
-│   ├── orchestrate-subtask      [pass-through: read+eval+yield]  (per subtask)
+│   ├── task-pusher              [pass-through: read+eval+yield]  (per subtask)
 │   │   └── (eval python loop: agent() calls)
 │   │       ├── implement-subtask    [full_developer]
 │   │       │   ├── task             (bundled)
@@ -37,9 +37,9 @@ goal-flow.md (command, eval loop)
     └── oracle                   (bundled)
 ```
 
-## orchestrate-subtask architecture
+## task-pusher architecture
 
-`orchestrate-subtask` is a **pass-through pipe**: it reads a plan locator, then runs a single
+`task-pusher` is a **pass-through pipe**: it reads a plan locator, then runs a single
 `eval` cell. All orchestration logic lives in the eval python code:
 
 1. The eval spawns `implement-subtask` via `agent()` with `schema=IMPL_SCHEMA`.
@@ -58,7 +58,7 @@ Implement and check agents return structured concerns as `[{slug, resolution}]` 
 
 - **implement-subtask**: `planConcerns` (accumulated) + `responseToReviewer` (empty first, response on retry).
 - **check-and-commit-subtask**: `implementationConcerns` (last iteration only) + `extraPlanConcerns` (accumulated) + `planConcernNotes`.
-- **orchestrate-subtask**: `concerns` (accumulated plan concerns + last implementation concerns).
+- **task-pusher**: `concerns` (accumulated plan concerns + last implementation concerns).
 
 ## Tool-assignment principles
 
@@ -96,9 +96,9 @@ tool lists).
 
 | Agent | Role | Spawns |
 |-------|------|--------|
-| `orchestrate-goal-execution` | minimum_orchestrator | orchestrate-subtask, wave-end-checkpoint, fact-finder, oracle |
+| `orchestrate-goal-execution` | minimum_orchestrator | task-pusher, wave-end-checkpoint, fact-finder, oracle |
 | `plan-goal-execution` | full_read_only + plan-write | fact-finder, librarian, oracle, designer, task |
-| `orchestrate-subtask` | pass_through | implement-subtask, check-and-commit-subtask |
+| `task-pusher` | pass_through | implement-subtask, check-and-commit-subtask |
 | `implement-subtask` | full_developer | task, fact-finder, quick_task, librarian |
 | `check-and-commit-subtask` | reviewer_committer | quick_task, librarian |
 | `plan-completeness-checker` | full_read_only + delegation | task, fact-finder, oracle |
@@ -107,7 +107,7 @@ tool lists).
 
 ## Critical files
 
-- `.omp/agents/orchestrate-subtask.md` — pass-through agent: read locator + eval python loop. All logic in eval code.
+- `.omp/agents/task-pusher.md` — pass-through agent: read locator + eval python loop. All logic in eval code.
 - `.omp/agents/orchestrate-goal-execution.md` — frontmatter `tools:` and `spawns:`; prompt body step 3.
 - `.omp/agents/implement-subtask.md` — output: status, summary, planConcerns, responseToReviewer.
 - `.omp/agents/check-and-commit-subtask.md` — output: status, committed, implementationConcerns, extraPlanConcerns, planConcernNotes.
