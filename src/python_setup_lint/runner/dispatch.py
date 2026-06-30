@@ -369,7 +369,7 @@ class _PylintTestsLintTool(LintTool):
         if _path is not None:
             paths = _find_py_files([_path], cwd=config.cwd)
         else:
-            dirs = config.default_py_dirs or []
+            dirs = spec.default_paths or []
             paths = _find_py_files(dirs, cwd=config.cwd)
 
         if paths:

@@ -9,7 +9,7 @@ tools:
   - task
   - job
   - write
-  
+
 spawns:
   - task-pusher
   - wave-end-checkpoint
@@ -63,13 +63,13 @@ Reflect DAG in todo list.
 
 Iterate until DAG done or fundamentally blocked. Do not stop for partial wave failures — keep running independent waves. Accumulate concerns; if blocked or concerns accumulate, consult `oracle` and proceed with follow-up `task-pusher` calls until genuinely blocked.
 
-3.1. **Write task spec files**: for each subtask in the wave, write `{F}/Execute{pIt}/{WaveSlug}{SubtaskSlug}.md` containing the task spec — plan line ranges (`{F}/plan{pIt}.md:<start>-<end>`), any extra context (e.g. symlinks already created), and oracle recommendations if follow-up. This file IS the task spec that downstream agents read.
+3.1. **Write task spec files**: for each subtask in the wave, write `{F}/Execute{pIt}/{WaveSlug}{SubtaskSlug}.md` containing the task spec — plan line ranges (`{F}/plan{pIt}.md:<start>-<end>`) (no need to copy and paste, just say read `{F}/plan{pIt}.md:<start>-<end>, <start>-<end>), any extra context (eg from re-launch prompt or fact-finder) IF NEEDED, and oracle recommendations if follow-up. This file IS the task spec that downstream agents read.
 
 3.2. **Spawn `task-pusher` agents in parallel** via single `task` call with `tasks` array — one entry per subtask. ALWAYS `isolated=True`. Use `agent="task-pusher"`. Provide `context` with plan iteration number and project root. Each spawn:
 
 - `id`: `{AgentSlug}{whatDoing}{itNum}`
 - `role`: `Task implementation orchestrator`
-- `assignment`: ONLY the task spec filename — `{F}/Execute{pIt}/{WaveSlug}{SubtaskSlug}.md`. **Nothing** else. `task-pusher` reads the file and passes it to downstream agents who read it themselves.
+- `assignment`:  `Pass filename {F}/Execute{pIt}/{WaveSlug}{SubtaskSlug}.md`. **Nothing** else.
 - `description`: short label for UI
 
 For follow-up launches after concerns/oracle: update or create new  task spec file, then re-spawn `task-pusher`.
