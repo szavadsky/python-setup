@@ -39,11 +39,10 @@ IMPL_SCHEMA = {
     "type": "object",
     "properties": {
         "status": {"type": "string", "enum": ["implemented", "partial", "failed", "blocked"]},
-        "summary_path": {"type": "string"},
-        "concerns": {"type": "string"},
+        "report": {"type": "string", "metadata": {"description": "Full markdown content of the execution summary; the caller writes this to disk"}},
         "committed": {"type": "boolean"},
     },
-    "required": ["status", "summary_path", "concerns", "committed"],
+    "required": ["status", "report", "committed"],
 }
 CHECK_SCHEMA = {
     "type": "object",
@@ -125,10 +124,12 @@ for pIt in range(start_pIt, N + 1):
     # extra is set by: skip (glitch recovery), checker feedback (follow-up), or None (fresh).
     for followup_count in range(MAX_FOLLOWUPS + 1):
         impl_result = call_agent(plan_path, "orchestrate-goal-execution", IMPL_SCHEMA, extra=extra)
+        # The orchestrator returns the summary markdown in `report`; the eval persists it.
+        Path(summary_path).write_text(impl_result.get("report", ""))
         extra = None  # consumed
 
         if impl_result["status"] in {"failed", "blocked"}:
-            final = f"halted at iteration {pIt}: {impl_result['status']} — {impl_result.get('concerns','')}"
+            final = f"halted at iteration {pIt}: {impl_result['status']}"
             break
 
         check_result = call_agent(plan_path, "plan-completeness-checker", CHECK_SCHEMA)
@@ -144,7 +145,7 @@ for pIt in range(start_pIt, N + 1):
         break
 
     if pIt == N:
-        final = f"max iterations ({N}) reached; last summary: {impl_result['summary_path']}"
+        final = f"max iterations ({N}) reached; last summary: {summary_path}"
         break
 
 print(final)
