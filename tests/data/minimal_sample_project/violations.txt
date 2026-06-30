@@ -1,2 +1,10 @@
-# tmp_path_checker — tempfile.mkdtemp in test file (only fires in test files, not src/)
-# tempfile-mkdtemp-in-test (commented: tests/data/ is excluded from pylint tests; validated by unit test test_tmp_path_checker.py)
+# Rule symbols that fire on this sample (conformance checkers; stub checkers exempt tests/ paths — see unit tests).
+unnamed-tuple-dict-value
+generic-key-dict
+unjustified-suppression
+missing-beartype
+no-try-import
+asyncio-timeout
+tempfile-mkdtemp-in-test
+use-structlog
+use-structured-logging
