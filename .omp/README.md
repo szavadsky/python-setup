@@ -18,15 +18,16 @@ goal-flow.md (command, eval loop)
 │   ├── designer                 (bundled)
 │   └── task                     (bundled, generic)
 ├── orchestrate-goal-execution   [minimum_orchestrator]
-│   ├── orchestrate-subtask      [minimum_orchestrator]  (per subtask)
-│   │   ├── implement-subtask    [full_developer]
-│   │   │   ├── task             (bundled)
-│   │   │   ├── fact-finder       [full_read_only + web_search]
-│   │   │   ├── quick_task        (bundled)
-│   │   │   └── librarian         (bundled)
-│   │   └── check-and-commit-subtask [reviewer_committer]
-│   │       ├── quick_task        (bundled)
-│   │       └── librarian         (bundled)
+│   ├── orchestrate-subtask      [pass-through: read+eval+yield]  (per subtask)
+│   │   └── (eval python loop: agent() calls)
+│   │       ├── implement-subtask    [full_developer]
+│   │       │   ├── task             (bundled)
+│   │       │   ├── fact-finder       [full_read_only + web_search]
+│   │       │   ├── quick_task        (bundled)
+│   │       │   └── librarian         (bundled)
+│   │       └── check-and-commit-subtask [reviewer_committer]
+│   │           ├── quick_task        (bundled)
+│   │           └── librarian         (bundled)
 │   ├── wave-end-checkpoint       [full_developer]  (per wave end)
 │   ├── fact-finder              [full_read_only + web_search]
 │   └── oracle                   (bundled)
@@ -36,13 +37,36 @@ goal-flow.md (command, eval loop)
     └── oracle                   (bundled)
 ```
 
+## orchestrate-subtask architecture
+
+`orchestrate-subtask` is a **pass-through pipe**: it reads a plan locator, then runs a single
+`eval` cell. All orchestration logic lives in the eval python code:
+
+1. The eval spawns `implement-subtask` via `agent()` with `schema=IMPL_SCHEMA`.
+2. The eval spawns `check-and-commit-subtask` via `agent()` with `schema=CHECK_SCHEMA`.
+3. If check returns `partial`, the loop retries (up to 3 iterations):
+   - Iteration 2+: implementer gets reviewer concerns from previous iteration.
+   - Iteration 2+: checker gets implementer's response to previous concerns.
+   - Last iteration: both get "FINAL CALL" instruction.
+4. Concerns accumulate across iterations and are yielded upward via `tool.yield()`.
+
+The agent itself NEVER calls `yield` or `task` directly — the eval handles everything.
+
+## Concerns schema
+
+Implement and check agents return structured concerns as `[{slug, resolution}]` arrays:
+
+- **implement-subtask**: `planConcerns` (accumulated) + `responseToReviewer` (empty first, response on retry).
+- **check-and-commit-subtask**: `implementationConcerns` (last iteration only) + `extraPlanConcerns` (accumulated) + `planConcernNotes`.
+- **orchestrate-subtask**: `concerns` (accumulated plan concerns + last implementation concerns).
+
 ## Tool-assignment principles
 
 1. **Least privilege** — each agent gets only the tools its role requires; no blanket access.
 2. **Read-only agents get bash for measurement only** — investigation agents (fact-finder,
    plan-completeness-checker) have `bash` but prompt instructions enforce non-changing use only.
 3. **Orchestrators get minimal tools** — read + spawn + status write + track. No bash, no edit,
-   no LSP, no debug, no eval. They delegate all project work.
+   no LSP, no debug. They delegate all project work.
 4. **Web search via webmcp** — when an agent needs web search, it uses `mcp__webmcp_scrape_batch`
    and `mcp__webmcp_search_engine_batch`. The built-in `web_search` tool is NEVER used.
 5. **Implementers get full developer toolset** — the doer (implement-subtask, wave-end-checkpoint)
@@ -65,6 +89,7 @@ tool lists).
 | `status_edit` | read, write, yield |
 | `status_report` | write, yield |
 | `minimum_orchestrator` | read, grep, glob, write, job, todo, yield |
+| `pass_through` | read, eval, todo, yield |
 | `reviewer_committer` | read, bash, grep, glob, lsp, ast_grep, inspect_image, todo, yield |
 
 ## Agents → roles
@@ -73,17 +98,20 @@ tool lists).
 |-------|------|--------|
 | `orchestrate-goal-execution` | minimum_orchestrator | orchestrate-subtask, wave-end-checkpoint, fact-finder, oracle |
 | `plan-goal-execution` | full_read_only + plan-write | fact-finder, librarian, oracle, designer, task |
-| `orchestrate-subtask` | minimum_orchestrator | implement-subtask, check-and-commit-subtask |
+| `orchestrate-subtask` | pass_through | implement-subtask, check-and-commit-subtask |
 | `implement-subtask` | full_developer | task, fact-finder, quick_task, librarian |
 | `check-and-commit-subtask` | reviewer_committer | quick_task, librarian |
 | `plan-completeness-checker` | full_read_only + delegation | task, fact-finder, oracle |
 | `fact-finder` | full_read_only + web_search | — |
 | `wave-end-checkpoint` | full_developer (full edit access) | — |
 
-## Critical files & anchors
+## Critical files
 
-- `.omp/agents/orchestrate-goal-execution.md` — frontmatter `tools:` (lines 4–13) and `spawns:` (lines 15–19); prompt body step 3.4 (lines 82–88). Three edits: trim tools, swap spawns, rewrite step 3.4.
-- `.omp/agents/plan-goal-execution.md` — frontmatter between `description` (line 3) and `spawns:` (line 4). Insert `tools:` block. No prompt body change.
-- `.omp/agents/implement-subtask.md` — frontmatter `tools:` list (lines 4–25). Insert `- eval` after `- debug` (line 15).
-- `.omp/agents/wave-end-checkpoint.md` — new file. Full agent definition with frontmatter + prompt body.
-- `.omp/README.md` — new file. TLDR with call tree, principles, role/agent tables.
+- `.omp/agents/orchestrate-subtask.md` — pass-through agent: read locator + eval python loop. All logic in eval code.
+- `.omp/agents/orchestrate-goal-execution.md` — frontmatter `tools:` and `spawns:`; prompt body step 3.
+- `.omp/agents/implement-subtask.md` — output: status, summary, planConcerns, responseToReviewer.
+- `.omp/agents/check-and-commit-subtask.md` — output: status, committed, implementationConcerns, extraPlanConcerns, planConcernNotes.
+- `.omp/agents/plan-goal-execution.md` — planner agent.
+- `.omp/agents/wave-end-checkpoint.md` — wave-end cleanup/commit agent.
+- `.omp/agents/plan-completeness-checker.md` — plan completeness checker.
+- `.omp/commands/goal-flow.md` — eval-driven goal execution loop.

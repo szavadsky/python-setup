@@ -348,6 +348,9 @@ _IS_INIT_EXEMPT_CASES: list[Any] = [  # list[Any] is a test factory return type;
     _p("setup(name='foo')\n", False, id="standalone_expression_not_exempt"),
     _p("x = 1\n", False, id="non_all_assignment_not_exempt"),
     _p("x: int = 1\n", False, id="ann_assign_not_exempt"),
+    _p("__version__: str = _version('x')\n", True, id="version_ann_assign_exempt"),
+    _p("__all__: list[str] = []\n", True, id="all_ann_assign_exempt"),
+    _p("__version__: str = _version('x')\n__all__: list[str] = []\n", True, id="init_metadata_exempt"),
     _p("import os\nif os.name == 'nt':\n    x = 1\n", False, id="if_block_not_exempt"),
 ]
 
