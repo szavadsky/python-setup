@@ -27,9 +27,6 @@
 - Added `pylint-pyi` as a 12th lint tool — a second pylint pass targeting `.pyi` files with `.pyi`-scoped rcfile.
 - Semantic reranker-only — removed the embedder (bge-small-en-v1.5), kept only the cross-encoder reranker (jina-reranker-v2-base-multilingual).
 
-## v0.8.0 (2026-06-27)
-
-- Track B: NLP semantic experiment rework — wired `_semantic.py` into `check_if_meaningful` (was disconnected).
 
 ## v0.7.0 (2026-06-26)
 
