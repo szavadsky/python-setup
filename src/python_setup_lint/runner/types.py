@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,20 +10,6 @@ __all__ = ["LintResult", "RunnerConfig", "ToolSpec", "ViolationCount"]
 
 
 class ToolSpec(NamedTuple):
-    """Specification for a single lint tool.
-
-    Attributes:
-        name: Human-readable label for the tool.
-        command: Base command list (no paths, no flag overrides).
-        supports_fix: Whether the tool accepts ``--fix``.
-        supports_path: Whether the tool accepts a positional path.
-        supports_exclude: Whether the tool accepts ``--exclude`` / ``-e``.
-        default_paths: Paths to use when no ``--path`` is given.
-        fix_flags: Extra CLI flags to append when ``--fix`` is active.
-        exclude_flag: CLI flag name for exclusion (default ``--exclude``).
-        timeout: Maximum runtime in seconds (0 = no limit). Default 120.
-        memory_limit_mb: RLIMIT_AS cap in MB (0 = no limit). Default 2048.
-    """
 
     name: str
     command: list[str]
@@ -65,61 +50,6 @@ class ViolationCount:
 
 @dataclass
 class RunnerConfig:
-    """Project-level configuration for the lint runner.
-
-    Attributes:
-        cwd: Working directory — all path resolution is relative to this.
-        package_name: Package name passed to ``mypy.stubtest`` and
-            ``pyright verifytypes``.  ``None`` skips those tools.
-        default_py_dirs: Default directories for pylint ``_find_py_files``
-            discovery when no ``--path`` is given.
-        tools_override: Optional list of tool names to run.  ``None``
-            runs all 13 default tools.  Tool names map to internal
-            :class:`ToolSpec` entries via ``TOOLS_BY_NAME`` (built-ins) and
-            the live :data:`python_setup_lint.runner.dispatch.LINT_TOOLS`
-            registry (built-ins + extras).  Unknown names raise
-            :class:`python_setup_lint.runner.extra_tools.ExtraToolsConfigError`
-            (T8 fail-fast) rather than silently running a subset — a typo in
-            a tool name is treated as malformed configuration.
-        secrets_baseline: Path (relative to ``cwd``) to the
-            detect-secrets baseline file.
-        config_paths: Optional mapping of tool identifiers to config file
-            paths.  Canonical keys are the built-in :class:`ToolSpec`
-            labels: ``ruff check``, ``mypy``, ``pylint``,
-            ``pyright check``, ``rumdl check``, ``ty check`` (matching the
-            names used in :func:`python_setup_lint.runner.cmd_build._config_flag_for`
-            and the strategy subclasses).  The CLI ``--config TOOL=PATH``
-            flag additionally accepts short aliases (``ruff``, ``pyright``,
-            ``rumdl``, ``ty``, plus the canonical labels) which it normalises
-            to the canonical label — unrecognised keys are rejected with a
-            non-zero ``SystemExit`` and a message naming the offending key
-            (T8 fail-fast).
-
-            * ``ruff check``: ``--config <path>``
-            * ``mypy``: ``--config-file <path>``
-            * ``pylint``: ``--rcfile <path>``
-            * ``pyright check``: ``--project <path>``
-            * ``rumdl check``: ``--config <path>``
-            * ``ty check``: ``--config <path>``
-        ruff_project_overrides: When ``True``, compose a temp
-            ``ruff.toml`` that ``extend``s the shared
-            ``config_paths["ruff check"]`` config + copies the project
-            ``pyproject.toml`` ``[tool.ruff.lint.flake8-tidy-imports].banned-api``
-            and ``[tool.ruff.lint.per-file-ignores]`` stanzas
-            (consultant.mcp's hand-rolled merge, ported verbatim into
-            :func:`python_setup_lint.runner.cmd_build._compose_ruff_config`).
-            The composed path replaces ``config_paths["ruff check"]``
-            before the ruff command is built.  Defaults to ``False`` so
-            python-setup's own run is unchanged.
-        pyright_project_override: When set, takes precedence over
-            ``config_paths["pyright check"]`` — passed to pyright as
-            ``--project <path>``.  Consultant.mcp points this at
-            ``cwd / "pyproject.toml"`` so pyright does cwd-relative venv
-            discovery (the shipped ``pyrightconfig.json`` declares
-            ``venvPath: "."`` resolved relative to the config FILE → wrong
-            venv → runner timeout).  Defaults to ``None`` so python-setup's
-            own run uses the shipped config unchanged.
-    """
 
     cwd: Path
     package_name: str | None = None

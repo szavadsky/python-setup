@@ -1,12 +1,3 @@
-"""Pylint checker: missing return type annotations on _-prefixed functions.
-
-Reports W9741 for module-private functions (``_``-prefixed, not ``__`` dunders)
-that lack a return type annotation.  Public functions are covered by the
-beartype checker; this fills the gap for private helpers.
-
-W-level only — does not affect build exit codes.
-"""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -27,7 +18,6 @@ if TYPE_CHECKING:
 
 
 class MissingReturnAnnotationChecker(SourceRootMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
-    """AST visitor that flags _-prefixed functions missing return annotations."""
 
     name: str = "missing-return-annotation"
 

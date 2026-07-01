@@ -1,8 +1,4 @@
-"""Update workflow for python-setup: config drift check + uv sync/refresh.
-
-Extracted from setup.py to keep that module under 500 lines.
-"""
-
+# Extracted from setup.py to keep this module under 500 lines.
 from __future__ import annotations
 
 import json

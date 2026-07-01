@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import re
@@ -30,15 +29,6 @@ _UNION_RE = re.compile(r"^typing\.Union\[(.+)\]$")
 
 
 class AnnotationNormalizer:
-    """Two-phase annotation normalizer for stub-vs-impl comparison.
-
-    Phase 1: Astroid ``infer()`` — resolved type string (~94% hit rate).
-    Phase 2: AST-string walking + rewrite rules — fallback for Uninferable (~6%).
-
-    Returns:
-        The normalized annotation string, or ``None`` if the annotation cannot be
-        normalized.
-    """
 
     @staticmethod
     @beartype

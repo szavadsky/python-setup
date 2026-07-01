@@ -1,13 +1,3 @@
-"""Path discovery, glob expansion, config-flag mapping, and command construction.
-
-These helpers are pure string/path transforms — no subprocess.  Strategies
-in :mod:`python_setup_lint.runner.dispatch` delegate here for the
-tool-agnostic command shape; tool-specific strategies override
-``build_command`` for the three tools whose command shape cannot be expressed
-declaratively (``mypy.stubtest``, ``pyright verify types``, ``detect-secrets``,
-``pylint``).
-"""
-
 from __future__ import annotations
 
 import tempfile

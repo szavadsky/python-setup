@@ -1,17 +1,3 @@
-"""Pylint checker: prohibit generic-key ``dict[str, X]`` annotations.
-
-Flags ``dict[str, X]`` / ``Dict[str, X]`` annotations where the key
-semantically represents a typed domain value (e.g. a rule-id, enum, or
-other non-string domain concept) and recommends ``LintRuleId``, an enum,
-or a ``Literal`` type instead.
-
-Allowed categories (configurable via ``allow-string-keys-for``):
-- ``filenames`` — dict keyed by file paths.
-- ``identifiers`` — dict keyed by Python identifiers (symbol names).
-- ``paths`` — dict keyed by ``pathlib.Path``-like values.
-- ``display`` — dict keyed by human-readable display strings.
-"""
-
 from __future__ import annotations
 
 from typing import Any
@@ -39,7 +25,6 @@ _DOMAIN_VALUE_TYPES: frozenset[str] = frozenset(
 
 
 class GenericKeyDictChecker(BaseChecker):
-    """AST visitor that flags ``dict[str, X]`` with domain-typed values."""
 
     name: str = "generic-key-dict"
     msgs: dict[str, MessageDefinitionTuple] = _msgs(
