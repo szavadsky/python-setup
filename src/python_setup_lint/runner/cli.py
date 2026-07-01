@@ -89,6 +89,11 @@ def _run_tool_pipeline(
 
         _print_tool_notes(spec, fix=fix, path=path, exclude=exclude)
 
+        timeouts = config.tool_timeouts or {}
+        mem_limits = config.tool_memory_limits or {}
+        effective_timeout = timeouts.get(spec.name, spec.timeout)
+        effective_mem = mem_limits.get(spec.name, spec.memory_limit_mb)
+
         strategy = _strategy_for(spec.name, spec)
         if fix and spec.supports_fix and not statistics:
             file_targets = _autofix_target_paths(spec, config=config, path=path)
@@ -96,7 +101,11 @@ def _run_tool_pipeline(
                 spec,
                 config=config,
                 paths_to_check=file_targets,
-                run_cmd=_run_cmd,
+                run_cmd=__import__("functools").partial(
+                    _run_cmd,
+                    timeout=effective_timeout,
+                    memory_limit_mb=effective_mem,
+                ),
             )
         else:
             cmd = strategy.build_command(
@@ -104,7 +113,8 @@ def _run_tool_pipeline(
             )
             if statistics:
                 cmd.extend(strategy.statistics_flags())
-            result = _run_cmd(cmd, cwd=cwd, label=spec.name)
+            result = _run_cmd(cmd, cwd=cwd, label=spec.name,
+                             timeout=effective_timeout, memory_limit_mb=effective_mem)
         results.append(result)
         if not statistics:
             _print_result(result)

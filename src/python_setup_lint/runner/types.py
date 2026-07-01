@@ -28,6 +28,8 @@ class ToolSpec(NamedTuple):
         default_paths: Paths to use when no ``--path`` is given.
         fix_flags: Extra CLI flags to append when ``--fix`` is active.
         exclude_flag: CLI flag name for exclusion (default ``--exclude``).
+        timeout: Maximum runtime in seconds (0 = no limit). Default 120.
+        memory_limit_mb: RLIMIT_AS cap in MB (0 = no limit). Default 2048.
     """
 
     name: str
@@ -38,6 +40,8 @@ class ToolSpec(NamedTuple):
     default_paths: list[str] = []
     fix_flags: tuple[str, ...] = ("--fix",)
     exclude_flag: str = "--exclude"
+    timeout: int = 120  # seconds; 0 = no limit
+    memory_limit_mb: int = 2048  # RLIMIT_AS cap; 0 = no limit
 
 
 @dataclass
@@ -129,6 +133,8 @@ class RunnerConfig:
     package_name: str | None = None
     default_py_dirs: list[str] | None = None
     tools_override: list[str] | None = None
+    tool_timeouts: dict[str, int] | None = None  # tool name → override seconds
+    tool_memory_limits: dict[str, int] | None = None  # tool name → override MB
     secrets_baseline: str = ".secrets.baseline"
     config_paths: dict[str, Path] | None = None
     ruff_project_overrides: bool = False

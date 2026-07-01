@@ -164,7 +164,14 @@ def _print_statistics_grouped(
 # ── Subprocess runner ──────────────────────────────────────────────
 
 
-def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
+def _run_cmd(
+    cmd: list[str],
+    *,
+    cwd: Path,
+    label: str,
+    timeout: int = 120,
+    memory_limit_mb: int = 2048,
+) -> LintResult:
     start = time.monotonic()
     # Inject .venv/bin into PATH so tools installed in the project venv
     # are found even when the parent shell's PATH doesn't include it.
@@ -175,15 +182,27 @@ def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
             **__import__("os").environ,
             "PATH": f"{venv_bin}:{__import__('os').environ.get('PATH', '')}",
         }
+    # Memory guard: RLIMIT_AS prevents a single tool from OOMing the system.
+    preexec_fn = None
+    if memory_limit_mb > 0:
+        limit_bytes = memory_limit_mb * 1024 * 1024
+        def _set_rlimit() -> None:
+            try:
+                import resource
+                resource.setrlimit(resource.RLIMIT_AS, (limit_bytes, limit_bytes))
+            except (ImportError, OSError):
+                pass  # non-POSIX or rlimit unavailable; rely on timeout alone
+        preexec_fn = _set_rlimit
     try:
         proc = subprocess.run(  # noqa: S603  # cmd is constructed internally from ToolSpec; cwd is lint scope
             cmd,
             cwd=cwd,
             capture_output=True,
             text=True,
-            timeout=600,
+            timeout=timeout if timeout > 0 else None,
             check=False,
             env=env,
+            preexec_fn=preexec_fn,
         )
         elapsed = time.monotonic() - start
         return LintResult(
@@ -202,8 +221,7 @@ def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
             stderr=f"Tool not found: {cmd[0]}",
             elapsed=elapsed,
         )
-
-    except subprocess.TimeoutExpired:  # pylint: disable=W9740  # timeout: tool exceeded 600s limit; return timeout result so runner continues
+    except subprocess.TimeoutExpired:  # pylint: disable=W9740  # timeout: tool exceeded limit; return timeout result so runner continues
         elapsed = time.monotonic() - start
         return LintResult(
             tool_name=label,
