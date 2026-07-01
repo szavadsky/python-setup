@@ -37,96 +37,15 @@
   },
   {
     "diagnostics": {
-      "generalDiagnostics": [
-        {
-          "file": "/home/slava/aiexp/python-setup/.omp/agents/assets/subtask_dev_process.py",
-          "message": "\"TASK_FILE\" is not defined",
-          "range": {
-            "end": {
-              "character": 42,
-              "line": 41
-            },
-            "start": {
-              "character": 33,
-              "line": 41
-            }
-          },
-          "rule": "reportUndefinedVariable",
-          "severity": "error"
-        },
-        {
-          "file": "/home/slava/aiexp/python-setup/.omp/agents/assets/subtask_dev_process.py",
-          "message": "\"TASK_FILE\" is not defined",
-          "range": {
-            "end": {
-              "character": 71,
-              "line": 43
-            },
-            "start": {
-              "character": 62,
-              "line": 43
-            }
-          },
-          "rule": "reportUndefinedVariable",
-          "severity": "error"
-        },
-        {
-          "file": "/home/slava/aiexp/python-setup/.omp/agents/assets/subtask_dev_process.py",
-          "message": "\"agent\" is not defined",
-          "range": {
-            "end": {
-              "character": 27,
-              "line": 101
-            },
-            "start": {
-              "character": 22,
-              "line": 101
-            }
-          },
-          "rule": "reportUndefinedVariable",
-          "severity": "error"
-        },
-        {
-          "file": "/home/slava/aiexp/python-setup/.omp/agents/assets/subtask_dev_process.py",
-          "message": "\"agent\" is not defined",
-          "range": {
-            "end": {
-              "character": 28,
-              "line": 133
-            },
-            "start": {
-              "character": 23,
-              "line": 133
-            }
-          },
-          "rule": "reportUndefinedVariable",
-          "severity": "error"
-        },
-        {
-          "file": "/home/slava/aiexp/python-setup/.omp/agents/assets/subtask_dev_process.py",
-          "message": "\"tool\" is not defined",
-          "range": {
-            "end": {
-              "character": 12,
-              "line": 169
-            },
-            "start": {
-              "character": 8,
-              "line": 169
-            }
-          },
-          "rule": "reportUndefinedVariable",
-          "severity": "error"
-        }
-      ],
+      "generalDiagnostics": [],
       "summary": {
-        "errorCount": 5,
-        "filesAnalyzed": 171,
+        "errorCount": 0,
+        "filesAnalyzed": 159,
         "informationCount": 0,
         "warningCount": 0
       }
     },
-    "exit_code": 1,
+    "exit_code": 0,
     "tool": "pyright check"
   },
   {
