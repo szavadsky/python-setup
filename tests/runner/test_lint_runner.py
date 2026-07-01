@@ -133,50 +133,50 @@ class TestStrategyBuildCommand:
 
     def test_pylint_rcfile_auto_discovery(self) -> None:
         """_resolve_pylintrc discovers config/.pylintrc when no explicit path given."""
-        from python_setup_lint.runner.dispatch import _PylintLintTool
+        from python_setup_lint.runner.cmd_build import _resolve_pylintrc
 
         cwd = Path.cwd()
-        rcfile = _PylintLintTool._resolve_pylintrc({}, cwd)  # type: ignore[attr-defined]  # private method accessed in test; pylint cannot resolve runtime
+        rcfile = _resolve_pylintrc({}, cwd)
         assert rcfile is not None, "Expected auto-discovered rcfile"
         assert rcfile.name == ".pylintrc"
         assert rcfile.is_file()
 
     def test_pylint_rcfile_explicit_override(self, tmp_path: Path) -> None:
         """_resolve_pylintrc returns explicit config_paths entry when provided."""
-        from python_setup_lint.runner.dispatch import _PylintLintTool
+        from python_setup_lint.runner.cmd_build import _resolve_pylintrc
 
         fake_rc = tmp_path / "custom.pylintrc"
         fake_rc.write_text("[MASTER]\n")
-        rcfile = _PylintLintTool._resolve_pylintrc({"pylint": fake_rc}, Path.cwd())  # type: ignore[attr-defined]  # private method accessed in test; pylint cannot resolve runtime
+        rcfile = _resolve_pylintrc({"pylint": fake_rc}, Path.cwd())
         assert rcfile == fake_rc
 
     def test_pylint_rcfile_none_when_missing(self, tmp_path: Path) -> None:
         """_resolve_pylintrc returns None when no rcfile exists."""
-        from python_setup_lint.runner.dispatch import _PylintLintTool
+        from python_setup_lint.runner.cmd_build import _resolve_pylintrc
 
-        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)  # type: ignore[attr-defined]  # private method accessed in test; pylint cannot resolve runtime
+        rcfile = _resolve_pylintrc({}, tmp_path)
         assert rcfile is None
 
     def test_pylint_rcfile_project_root_fallback(self, tmp_path: Path) -> None:
         """_resolve_pylintrc falls back to project-root .pylintrc when config/.pylintrc missing."""
-        from python_setup_lint.runner.dispatch import _PylintLintTool
+        from python_setup_lint.runner.cmd_build import _resolve_pylintrc
 
         # Create only project-root .pylintrc, NOT config/.pylintrc
         (tmp_path / ".pylintrc").write_text("[MASTER]\n")
-        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)  # type: ignore[attr-defined]  # private method accessed in test; pylint cannot resolve runtime
+        rcfile = _resolve_pylintrc({}, tmp_path)
         assert rcfile is not None
         assert rcfile == tmp_path / ".pylintrc"
         assert rcfile.is_file()
 
     def test_pylint_rcfile_prefers_config_over_root(self, tmp_path: Path) -> None:
         """_resolve_pylintrc prefers config/.pylintrc over project-root .pylintrc."""
-        from python_setup_lint.runner.dispatch import _PylintLintTool
+        from python_setup_lint.runner.cmd_build import _resolve_pylintrc
 
         config_dir = tmp_path / "config"
         config_dir.mkdir()
         (config_dir / ".pylintrc").write_text("[MASTER]\nconfig\n")
         (tmp_path / ".pylintrc").write_text("[MASTER]\nroot\n")
-        rcfile = _PylintLintTool._resolve_pylintrc({}, tmp_path)  # type: ignore[attr-defined]  # private method accessed in test; pylint cannot resolve runtime
+        rcfile = _resolve_pylintrc({}, tmp_path)
         assert rcfile == config_dir / ".pylintrc"
         assert rcfile.read_text() == "[MASTER]\nconfig\n"
 

@@ -54,6 +54,10 @@ Custom checkers use `W` (warning) codes in the range `W90xx`–`W97xx`. Actual c
 
 W9704 (unjustified-suppression) checks `Any` in standalone annotated assignments (all files) AND function parameter/return annotations (source-root files only, excluding tests). Each Any-bearing line must carry a trailing `# <reason>` — def-line comments do not propagate to individual param lines.
 
+### LintRuleId
+
+The `generic_key_dict_checker` recommends `LintRuleId`, `enum`, or `Literal` instead of `dict[str, X]` when the key is a typed domain concept (e.g. a rule id). `LintRuleId` is a `NewType("LintRuleId", str)` — a type-safe alias for rule-id strings. Prefer it when the dict key represents a domain value, not a display string. See [CodingRules.md:13](../CodingRules.md) ("Domain-typed values").
+
 ## Registration
 
 The installer automatically discovers all modules in `checkers/` that export a `register` function. No manual plugin configuration is needed — the installer writes the `load-plugins` entry to the consumer's `pyproject.toml`.

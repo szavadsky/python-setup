@@ -39,9 +39,7 @@ The shared `config/mypy.ini` is extended by the consumer's `pyproject.toml`:
 config_file = "python_setup_lint/config/mypy.ini"
 ```
 
-### Pyright
-
-The shared `config/pyrightconfig.json` is composed with project-specific settings at runtime. The runner merges the shared config with any `pyproject.toml` settings.
+The shared `config/pyrightconfig.json` is copied to `cwd/.pyrightconfig-composed.json` at runtime so pyright resolves relative `venvPath`/`exclude` against the project root. Add `.pyrightconfig-composed.json` to your project's `.gitignore`. The runner merges the shared config with any `pyproject.toml` settings.
 
 ### Other tools
 

@@ -202,10 +202,6 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
     return effective
 
 
-
-
-
-
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     try:
         raw = shared_config.read_text(encoding="utf-8")

@@ -262,10 +262,6 @@ class _DetectSecretsLintTool(LintTool):
 
 
 class _PylintLintTool(LintTool):
-    @staticmethod
-    def _resolve_pylintrc(config_paths: dict[str, Path], cwd: Path) -> Path | None:
-        return _resolve_pylintrc(config_paths, cwd)
-
     @beartype
     def build_command(
         self,
@@ -278,9 +274,9 @@ class _PylintLintTool(LintTool):
         spec = self.spec
         cmd = list(spec.command)
         config_paths = config.config_paths or {}
+        rcfile = _resolve_pylintrc(config_paths, config.cwd)
 
         # ── Shared config files (with auto-discovery) ───────────
-        rcfile = self._resolve_pylintrc(config_paths, config.cwd)
         print(f"[pylint] Using rcfile: {rcfile}", file=sys.stderr)
         cmd.extend(_config_flag_for(spec.name, rcfile))
 
