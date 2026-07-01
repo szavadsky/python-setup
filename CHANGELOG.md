@@ -56,5 +56,4 @@
 ## v0.5.0 (2026-06-21)
 
 - `ty check` `--config-file` flag (previous `--config` was rejected by ty>=0.0.49).
-- `RunnerConfig.config_paths` field ships in published stub.
-- NOTE: v0.4.0 tag existed in git but the wheel was never rebuilt from it — v0.5.0 supersedes both v0.3.0's published wheel and the v0.4.0 tag.
+- `RunnerConfig.conf

@@ -138,7 +138,8 @@ def test_bench_runner_overhead_given_tmp_path_then_within_threshold(tmp_path: Pa
             # Measure pylint three ways
             for pylint_label, pylint_cmd_extra in PYLINT_CONFIGS:
                 full_cmd = list(pylint_cmd_extra)
-                paths = _find_py_files(config.default_py_dirs, cwd=cwd)
+                py_dirs = config.default_py_dirs or ["src"]
+                paths = _find_py_files(py_dirs, cwd=cwd)
                 full_cmd.extend(paths)
                 elapsed, rss_delta, exit_code = _measure_tool(
                     full_cmd, cwd=cwd, label=pylint_label
@@ -176,7 +177,7 @@ def test_bench_runner_overhead_given_tmp_path_then_within_threshold(tmp_path: Pa
 
     rss_self_before = _peak_rss_self()
     start = time.monotonic()
-    run_lint(config=overhead_config, no_fail_fast=True)
+    run_lint(config=overhead_config)
     total_wall_before = time.monotonic() - start
     rss_self_after = _peak_rss_self()
 
@@ -250,4 +251,4 @@ def test_bench_runner_overhead_given_tmp_path_then_within_threshold(tmp_path: Pa
     print(
         f"[bench] Runner overhead: {runner_overhead_before:.3f}s ({overhead_pct_before:.1f}%)"
     )
-    print(f"[bench] Per-tool measurements: {len(rows)} rows")  # type: ignore[arg-type]
+    print(f"[bench] Per-tool measurements: {len(rows)} rows")
