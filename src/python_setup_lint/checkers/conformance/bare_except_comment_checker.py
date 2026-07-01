@@ -1,9 +1,3 @@
-"""Pylint checker: require bare except handlers to carry a justification comment.
-
-Every ``except:`` or ``except Exception:`` that does not re-raise must carry
-a comment explaining why the exception is suppressed.
-"""
-
 from __future__ import annotations
 
 import re
@@ -24,7 +18,6 @@ if TYPE_CHECKING:
 
 
 class BareExceptCommentChecker(BaseChecker):
-    """AST visitor that flags bare except handlers without justification."""
 
     name: str = "bare-except-comment"
     msgs = _msgs(

@@ -1,17 +1,3 @@
-"""Statistics aggregation, output formatting, and subprocess execution.
-
-``_aggregate_statistics`` pulls each tool's parser via the strategy
-registry (default-aware) and folds counts across results.  Display helpers
-print either a flat table, a grouped breakdown (by tool/rule/file), or
-machine-readable JSON.  ``_run_cmd`` shells out via
-:func:`subprocess.run`; ``_print_result`` renders one tool's result block.
-
-Tests monkey-patch ``python_setup_lint.runner.output._run_cmd`` to inject
-synthetic results — :func:`python_setup_lint.runner.cli.run_lint` resolves
-the callable through the :mod:`python_setup_lint.runner.output` module at
-call time so the patch is honoured.
-"""
-
 from __future__ import annotations
 
 import subprocess

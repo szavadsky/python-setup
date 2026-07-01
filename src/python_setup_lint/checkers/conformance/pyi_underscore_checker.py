@@ -1,14 +1,3 @@
-"""Pylint checker: no _-prefixed symbols in .pyi files.
-
-Flags functions, classes, and module-level attributes whose names start
-with ``_`` in ``.pyi`` stub files.  Private/internal symbols should not
-appear in type stubs — they are implementation details that clutter the
-public API surface.
-
-Skips symbols inside ``if TYPE_CHECKING:`` blocks (they are conditional
-and not part of the runtime public API).
-"""
-
 from __future__ import annotations
 
 from astroid import nodes
@@ -21,7 +10,6 @@ from python_setup_lint.checkers._base import MessageDef, _msgs
 
 
 class PyiUnderscoreChecker(BaseChecker):
-    """AST visitor that flags _-prefixed symbols in .pyi files."""
 
     name: str = "pyi-underscore"
     msgs: dict[str, MessageDefinitionTuple] = _msgs(

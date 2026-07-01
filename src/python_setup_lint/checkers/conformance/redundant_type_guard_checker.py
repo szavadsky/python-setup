@@ -1,10 +1,3 @@
-"""Pylint checker: flag isinstance guards redundant over type annotations.
-
-If a function parameter is annotated with a type, an ``isinstance`` check
-on that parameter for the same type is redundant — the type checker and
-``@beartype`` already enforce it.
-"""
-
 from __future__ import annotations
 
 from astroid import nodes
@@ -16,7 +9,6 @@ from python_setup_lint.checkers._base import MessageDef, _msgs
 
 
 class RedundantTypeGuardChecker(BaseChecker):
-    """AST visitor that flags isinstance guards redundant over type annotations."""
 
     name: str = "redundant-type-guard"
     msgs = _msgs(

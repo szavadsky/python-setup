@@ -1,10 +1,3 @@
-"""Pylint checker: require error chaining (raise X from Y) inside except handlers.
-
-Bare ``raise SomeException(...)`` inside an ``except`` block loses the original
-traceback.  The checker flags any ``raise`` with an explicit exception that
-lacks a ``from`` clause when it appears inside an ``except`` handler.
-"""
-
 from __future__ import annotations
 
 from astroid import nodes
@@ -16,7 +9,6 @@ from python_setup_lint.checkers._base import MessageDef, _msgs
 
 
 class MissingErrorChainChecker(BaseChecker):
-    """AST visitor that flags bare raises inside except handlers."""
 
     name: str = "missing-error-chain"
     msgs = _msgs(

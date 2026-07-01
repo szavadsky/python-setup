@@ -1,16 +1,15 @@
-"""Semantic justification checker using a cross-encoder reranker (Track B).
-
-Single-stage NLP pipeline for evaluating suppression justification quality:
-
-1. **Cross-encoder reranking** (``jina-reranker-v2-base-multilingual``):
-   Re-score the justification against the rule and code context with a
-   dedicated cross-encoder for higher accuracy.
-
-The model is loaded lazily (inside function calls, never at module level).
-On ``ImportError`` (sentence-transformers not installed) or model download
-failure, ``semantic_check_if_meaningful`` returns ``None``, signalling the
-caller to fall back to the heuristic check.
-"""
+# Semantic justification checker using a cross-encoder reranker (Track B).
+#
+# Single-stage NLP pipeline for evaluating suppression justification quality:
+#
+# 1. Cross-encoder reranking (jina-reranker-v2-base-multilingual):
+#    Re-score the justification against the rule and code context with a
+#    dedicated cross-encoder for higher accuracy.
+#
+# The model is loaded lazily (inside function calls, never at module level).
+# On ImportError (sentence-transformers not installed) or model download
+# failure, ``semantic_check_if_meaningful`` returns None, signalling the
+# caller to fall back to the heuristic check.
 
 from __future__ import annotations
 

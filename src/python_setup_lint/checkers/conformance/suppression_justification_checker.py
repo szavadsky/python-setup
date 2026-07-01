@@ -1,21 +1,3 @@
-"""Pylint checker: require suppression comments to carry technical justification.
-
-Flags any ``# pylint: disable=...``, ``# noqa: <code>``, ``# type: ignore``
-whose line lacks a meaningful technical reason.  The reason may appear as a
-trailing comment on the same line, or as a comment on the preceding line.
-
-Any-annotation enforcement scope:
-- Standalone annotated assignments (``x: Any = ...``, ``y: dict[str, Any] = ...``)
-  via ``visit_annassign`` — fires on ALL files (tests included).
-- Function parameter and return annotations via ``visit_functiondef`` /
-  ``visit_asyncfunctiondef`` — fires ONLY under configured source roots
-  (production code).  Test files are excluded by source-root filtering so
-  that test helpers (``**kwargs: Any``, factory returns) are not flagged.
-  Each Any-bearing param/return line must carry a trailing ``# <reason>``
-  comment on that same line; def-line justification does NOT propagate to
-  individual param lines.
-"""
-
 from __future__ import annotations
 
 import re
@@ -49,7 +31,6 @@ _PAT_PRECEDING_COMMENT = re.compile(r"^\s*#\s+(.+)")
 
 
 class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
-    """AST visitor that flags unjustified suppression comments."""
 
     name: str = "suppression-justification"
     msgs: dict[str, MessageDefinitionTuple] = _msgs(
