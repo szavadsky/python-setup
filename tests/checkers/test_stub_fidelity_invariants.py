@@ -17,13 +17,13 @@ The fixtures cover every emitted message-id family:
 - W97B5 ``impl-missing-annotation`` — stub annotates, impl does not.
 - I97B6 ``annotation-unverifiable`` — annotation cannot be normalized.
 """
-
 from __future__ import annotations
 
 import inspect
 from typing import TYPE_CHECKING, Any, cast
 
 import astroid
+import pytest
 
 from python_setup_lint.checkers.stub.checker import StubChecker
 from python_setup_lint.checkers.stub.fidelity import (
@@ -40,6 +40,8 @@ from python_setup_lint.checkers.stub.fidelity import (
     emit_fidelity_violations,
 )
 from python_setup_lint.testing import _make_tc as _make_tc_factory
+
+pytestmark = pytest.mark.no_external_api
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -90,7 +92,7 @@ class TestSymbolPresenceFiredInvariants:
     kind (variable / callable / class).
     """
 
-    def test_e97b1_for_missing_var(self, tmp_path: Path) -> None:
+    def test_e97b1_given_missing_var_in_stub_then_fires(self, tmp_path: Path) -> None:
         # Stub declares ``y``; impl has only ``x`` → E97B1 for ``y``.
         msgs = _run(tmp_path, "x: int = 1\n", "x: int\ny: str\n")
         ids = _msg_ids(msgs)
@@ -100,17 +102,17 @@ class TestSymbolPresenceFiredInvariants:
         assert ("y", "mod_a") in args
         assert ("x", "mod_a") not in args  # impl present → no fire
 
-    def test_e97b1_for_missing_callable(self, tmp_path: Path) -> None:
+    def test_e97b1_given_missing_callable_in_stub_then_fires(self, tmp_path: Path) -> None:
         msgs = _run(tmp_path, "x: int = 1\n", "x: int\ndef foo() -> None: ...\n")
         args = _args_of(msgs, "stub-symbol-missing")
         assert ("foo", "mod_a") in args
 
-    def test_e97b1_for_missing_class(self, tmp_path: Path) -> None:
+    def test_e97b1_given_missing_class_in_stub_then_fires(self, tmp_path: Path) -> None:
         msgs = _run(tmp_path, "x: int = 1\n", "x: int\nclass Foo: ...\n")
         args = _args_of(msgs, "stub-symbol-missing")
         assert ("Foo", "mod_a") in args
 
-    def test_e97b1_silent_when_all_present(self, tmp_path: Path) -> None:
+    def test_e97b1_given_all_symbols_present_then_silent(self, tmp_path: Path) -> None:
         # Matching impl/stub surfaces → no E97B1.
         msgs = _run(
             tmp_path,
@@ -126,22 +128,22 @@ class TestKindMismatchInvariants:
     Locks the args tuple order (symbol, module, stub_kind, impl_kind).
     """
 
-    def test_stub_class_impl_var(self, tmp_path: Path) -> None:
+    def test_e97b2_given_stub_class_impl_var_then_fires(self, tmp_path: Path) -> None:
         msgs = _run(tmp_path, "Foo: int = 1\n", "class Foo: ...\n")
         args = _args_of(msgs, "symbol-kind-mismatch")
         assert ("Foo", "mod_a", "class", "variable") in args
 
-    def test_stub_func_impl_var(self, tmp_path: Path) -> None:
+    def test_e97b2_given_stub_func_impl_var_then_fires(self, tmp_path: Path) -> None:
         msgs = _run(tmp_path, "foo: int = 1\n", "def foo() -> None: ...\n")
         args = _args_of(msgs, "symbol-kind-mismatch")
         assert ("foo", "mod_a", "callable", "variable") in args
 
-    def test_stub_class_impl_func(self, tmp_path: Path) -> None:
+    def test_e97b2_given_stub_class_impl_func_then_fires(self, tmp_path: Path) -> None:
         msgs = _run(tmp_path, "def Foo() -> None: ...\n", "class Foo: ...\n")
         args = _args_of(msgs, "symbol-kind-mismatch")
         assert ("Foo", "mod_a", "class", "callable") in args
 
-    def test_stub_var_impl_class(self, tmp_path: Path) -> None:
+    def test_e97b2_given_stub_var_impl_class_then_fires(self, tmp_path: Path) -> None:
         msgs = _run(tmp_path, "class Foo: ...\n", "Foo: int\n")
         args = _args_of(msgs, "symbol-kind-mismatch")
         assert ("Foo", "mod_a", "variable", "class") in args
@@ -150,7 +152,7 @@ class TestKindMismatchInvariants:
 class TestSignatureMismatchInvariants:
     """E97B3 (signature-mismatch) fired behaviour for callable param shape."""
 
-    def test_param_count_mismatch_fires(self, tmp_path: Path) -> None:
+    def test_e97b3_given_param_count_mismatch_then_fires(self, tmp_path: Path) -> None:
         msgs = _run(
             tmp_path,
             "def foo(a: int) -> None: ...\n",
@@ -163,7 +165,7 @@ class TestSignatureMismatchInvariants:
         assert args[0][1] == "mod_a"
         assert "param_count" in args[0][2]
 
-    def test_param_name_mismatch_fires(self, tmp_path: Path) -> None:
+    def test_e97b3_given_param_name_mismatch_then_fires(self, tmp_path: Path) -> None:
         msgs = _run(
             tmp_path,
             "def foo(a: int) -> None: ...\n",
@@ -173,7 +175,7 @@ class TestSignatureMismatchInvariants:
         assert len(args) == 1
         assert "param_name" in args[0][2]
 
-    def test_matching_signature_silent(self, tmp_path: Path) -> None:
+    def test_e97b3_given_matching_signature_then_silent(self, tmp_path: Path) -> None:
         msgs = _run(
             tmp_path,
             "def foo(a: int, b: str = 'x') -> None: ...\n",
@@ -186,13 +188,13 @@ class TestSignatureMismatchInvariants:
 class TestAnnotationMismatchInvariants:
     """E97B4 (annotation-mismatch) for variable + return + class attribute."""
 
-    def test_var_annotation_mismatch(self, tmp_path: Path) -> None:
+    def test_e97b4_given_var_annotation_mismatch_then_fires(self, tmp_path: Path) -> None:
         msgs = _run(tmp_path, "x: str = 'h'\n", "x: int\n")
         args = _args_of(msgs, "annotation-mismatch")
         # args: (symbol, module, stub_norm, impl_norm).
         assert ("x", "mod_a", "int", "str") in args
 
-    def test_return_annotation_mismatch(self, tmp_path: Path) -> None:
+    def test_e97b4_given_return_annotation_mismatch_then_fires(self, tmp_path: Path) -> None:
         msgs = _run(
             tmp_path,
             "def foo() -> str: ...\n",
@@ -201,7 +203,7 @@ class TestAnnotationMismatchInvariants:
         args = _args_of(msgs, "annotation-mismatch")
         assert ("foo", "mod_a", "int", "str") in args
 
-    def test_param_annotation_mismatch(self, tmp_path: Path) -> None:
+    def test_e97b4_given_param_annotation_mismatch_then_fires(self, tmp_path: Path) -> None:
         msgs = _run(
             tmp_path,
             "def foo(a: str) -> None: ...\n",
@@ -217,12 +219,12 @@ class TestImplMissingAnnotationInvariants:
     Default ``impl_missing_annotation`` policy = ``warn`` → W97B5 fires.
     """
 
-    def test_var_missing_impl_annotation(self, tmp_path: Path) -> None:
+    def test_w97b5_given_var_missing_impl_annotation_then_fires(self, tmp_path: Path) -> None:
         msgs = _run(tmp_path, "x = 1\n", "x: int\n")
         args = _args_of(msgs, "impl-missing-annotation")
         assert ("x", "mod_a") in args
 
-    def test_class_attr_missing_impl_annotation(self, tmp_path: Path) -> None:
+    def test_w97b5_given_class_attr_missing_impl_annotation_then_fires(self, tmp_path: Path) -> None:
         py = "class Foo:\n    x = 1\n"
         pyi = "class Foo:\n    x: int\n"
         msgs = _run(tmp_path, py, pyi)
@@ -233,7 +235,7 @@ class TestImplMissingAnnotationInvariants:
 class TestClassComparisonInvariants:
     """E97B4 for class bases — emitted via ``_compare_class_bases``."""
 
-    def test_base_class_mismatch(self, tmp_path: Path) -> None:
+    def test_e97b4_given_base_class_mismatch_then_fires(self, tmp_path: Path) -> None:
         py = "class Foo:\n    x: int = 1\n"
         pyi = "class Foo(BaseModel):\n    x: int\n"
         msgs = _run(tmp_path, py, pyi)
@@ -252,17 +254,17 @@ class TestClassVarSkipInvariants:
     Locks ``_is_classvar`` AST detection AND the dispatcher-level skip.
     """
 
-    def test_is_classvar_true(self) -> None:
+    def test_is_classvar_given_classvar_annotation_then_true(self) -> None:
         node = astroid.extract_node("ClassVar[int]")
         assert isinstance(node, astroid.NodeNG)
         assert _is_classvar(cast("astroid.NodeNG", node)) is True
 
-    def test_is_classvar_false(self) -> None:
+    def test_is_classvar_given_regular_annotation_then_false(self) -> None:
         node = astroid.extract_node("int")
         assert isinstance(node, astroid.NodeNG)
         assert _is_classvar(cast("astroid.NodeNG", node)) is False
 
-    def test_module_var_classvar_skipped(self, tmp_path: Path) -> None:
+    def test_e97b4_given_module_var_classvar_then_skipped(self, tmp_path: Path) -> None:
         # Stub has ``x: ClassVar[int]`` → no W97B5 even when impl has no ann.
         msgs = _run(
             tmp_path,
@@ -306,7 +308,7 @@ class TestPublicSymbolSurface:
         ):
             assert hasattr(mod, name), f"stub_fidelity missing {name}"
 
-    def test_param_descriptor_fields(self) -> None:
+    def test_param_descriptor_given_fields_then_annotation_normalized(self) -> None:
         p = ParamDescriptor(
             name="x",
             kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
@@ -326,16 +328,16 @@ class TestComparePureHelpersDirect:
     strings — split must preserve the return contracts.
     """
 
-    def test_descriptors_identical(self) -> None:
+    def test_compare_callable_descriptors_given_identical_then_empty(self) -> None:
         a = [ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, None)]
         b = [ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, None)]
         assert _compare_callable_descriptors(a, b) is None
 
-    def test_descriptors_count_mismatch(self) -> None:
+    def test_compare_callable_descriptors_given_count_mismatch_then_diffs(self) -> None:
         a = [ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, None)]
         assert "param_count" in _compare_callable_descriptors(a, [])  # type: ignore[operator]  # result is Any from test fixture; in-check works at runtime
 
-    def test_annotations_match_returns_empty(self) -> None:
+    def test_compare_callable_annotations_given_matching_then_empty(self) -> None:
         a = [
             ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, "int")
         ]
@@ -344,25 +346,25 @@ class TestComparePureHelpersDirect:
         ]
         assert _compare_callable_annotations(a, b) == []
 
-    def test_annotations_skips_unilateral(self) -> None:
+    def test_compare_callable_annotations_given_unilateral_then_skips(self) -> None:
         a = [ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, None)]
         b = [
             ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, "int")
         ]
         assert _compare_callable_annotations(a, b) == []
 
-    def test_return_annotations_normalizes_both(self) -> None:
+    def test_compare_return_annotations_given_both_present_then_normalizes(self) -> None:
         stub = astroid.parse("def f() -> int: ...\n").body[0].returns
         impl = astroid.parse("def f() -> int: ...\n").body[0].returns
         stub_norm, impl_norm = _compare_return_annotations(stub, impl)
         assert stub_norm == "int"
         assert impl_norm == "int"
 
-    def test_return_annotations_none_pair(self) -> None:
+    def test_compare_return_annotations_given_none_pair_then_returns_none(self) -> None:
         s, i = _compare_return_annotations(None, None)
         assert s is None and i is None
 
-    def test_extract_param_descriptor_round_trip(self) -> None:
+    def test_extract_param_descriptors_given_round_trip_then_round_trips(self) -> None:
         f = astroid.parse("def foo(a: int, *, b: str = 'x') -> None: ...\n").body[0]
         descs = _extract_param_descriptors(f.args)
         names = [d.name for d in descs]
@@ -371,15 +373,15 @@ class TestComparePureHelpersDirect:
         assert kinds[0] == inspect.Parameter.POSITIONAL_OR_KEYWORD
         assert kinds[1] == inspect.Parameter.KEYWORD_ONLY
 
-    def test_normalize_bases_attribute_strips_prefix(self) -> None:
+    def test_normalize_bases_given_attribute_then_strips_prefix(self) -> None:
         mod = astroid.parse("class Foo(pydantic.BaseModel): ...\n")
         assert _normalize_bases(mod.body[0].bases) == ["BaseModel"]
 
-    def test_normalize_bases_builtins_object(self) -> None:
+    def test_normalize_bases_given_builtins_object_then_strips(self) -> None:
         mod = astroid.parse("class Foo(object): ...\n")
         assert _normalize_bases(mod.body[0].bases) == ["builtins.object"]
 
-    def test_is_public_method_rules(self) -> None:
+    def test_is_public_method_given_various_names_then_expected_bool(self) -> None:
         assert _is_public_method("foo") is True
         assert _is_public_method("_helper") is False
         assert _is_public_method("__str__") is False
@@ -390,7 +392,7 @@ class TestComparePureHelpersDirect:
 class TestCtxConstruction:
     """Context dataclasses build cleanly with the documented fields."""
 
-    def test_class_ctx(self) -> None:
+    def test_class_comparison_ctx_given_fields_then_constructs(self) -> None:
         stub = astroid.parse("class A: ...\n")
         impl = astroid.parse("class A: ...\n")
         stub_class = cast("astroid.ClassDef", stub.body[0])
@@ -404,7 +406,7 @@ class TestCtxConstruction:
             impl_class=impl_class,
         )
 
-    def test_callable_ctx(self) -> None:
+    def test_callable_comparison_ctx_given_fields_then_constructs(self) -> None:
         stub = astroid.parse("def f() -> None: ...\n")
         stub_func = cast("astroid.FunctionDef", stub.body[0])
         ctx = CallableComparisonCtx(
@@ -424,7 +426,7 @@ class TestEmitFidelityViolationsOrchestrator:
     the documented order: stub-symbol check, then variable, then callable.
     """
 
-    def test_empty_checker_no_error(self) -> None:
+    def test_emit_fidelity_violations_given_empty_checker_then_no_error(self) -> None:
         # No stub_index entries → no dispatch.  Defensive guard against
         # any future refactor that would iterate outside stub_index.
         tc = _make_tc()

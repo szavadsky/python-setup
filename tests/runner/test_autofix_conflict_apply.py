@@ -1,5 +1,5 @@
+# pylint: disable=duplicate-code  # shared test helper pattern with test_extra_tools
 """T4 — conflict-tolerant autofix: ``_apply_autofix_conflict_aware`` branch tests."""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -21,6 +21,8 @@ from tests.runner._autofix_helpers import (
 )
 from tests.runner._factories import tmp_config
 
+pytestmark = pytest.mark.no_external_api
+
 
 class TestApplyAutofixConflictAware:
     """Each conflict branch from the envelope — one parametrised row."""
@@ -28,7 +30,7 @@ class TestApplyAutofixConflictAware:
     def _make_spec(self) -> ToolSpec:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
         return next(t for t in LINT_TOOLS if t.name == "ruff check")
 
-    def test_no_conflict_baseline_applies_fix(
+    def test_apply_autofix_conflict_aware_given_no_conflict_then_applies_fix(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -76,7 +78,7 @@ class TestApplyAutofixConflictAware:
         assert "autofix skipped" not in captured.err
         assert "autofix reverted" not in captured.err
 
-    def test_staged_only_applies_fix(
+    def test_apply_autofix_conflict_aware_given_staged_only_then_applies_fix(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -98,7 +100,7 @@ class TestApplyAutofixConflictAware:
         assert "autofix skipped" not in captured.err
         assert "autofix reverted" not in captured.err
 
-    def test_unstaged_only_applies_fix(
+    def test_apply_autofix_conflict_aware_given_unstaged_only_then_applies_fix(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -119,7 +121,7 @@ class TestApplyAutofixConflictAware:
         assert "autofix skipped" not in captured.err
         assert "autofix reverted" not in captured.err
 
-    def test_staged_and_unstaged_same_file_skipped(
+    def test_apply_autofix_conflict_aware_given_staged_and_unstaged_same_file_then_skipped(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -147,7 +149,7 @@ class TestApplyAutofixConflictAware:
         # No revert line: the file was never snapshotted (it's conflict-skipped).
         assert "autofix reverted" not in captured.err
 
-    def test_e999_introduced_reverts_from_in_memory_snapshot(
+    def test_apply_autofix_conflict_aware_given_e999_introduced_then_reverts(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -212,7 +214,7 @@ class TestApplyAutofixConflictAware:
             f"got {target.read_text()!r}, want {original!r}"
         )
 
-    def test_canary_no_e999_no_revert(
+    def test_apply_autofix_conflict_aware_given_canary_no_e999_then_no_revert(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -260,7 +262,7 @@ class TestApplyAutofixConflictAware:
         # entered — the file is left at the post-fix state).
         assert target.read_text() == post_fix
 
-    def test_e999_no_revert_when_fix_does_not_modify_file(
+    def test_apply_autofix_conflict_aware_given_fix_does_not_modify_then_no_revert(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -295,7 +297,7 @@ class TestApplyAutofixConflictAware:
         assert "autofix reverted src/main.py: E999 after fix" in captured.err
         assert target.read_text() == original
 
-    def test_untracked_file_reverts_via_memory_only(
+    def test_apply_autofix_conflict_aware_given_untracked_file_then_reverts_via_memory(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],

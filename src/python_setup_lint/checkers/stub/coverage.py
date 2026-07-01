@@ -1,7 +1,3 @@
-"""Phase 1 enforcement — module coverage (every .py has a .pyi).
-
-Extracted from stub_checker.py.  Mechanical cut-paste, no logic change.
-"""
 
 from __future__ import annotations
 
@@ -23,7 +19,6 @@ log = structlog.get_logger(__name__)
 
 @dataclass
 class _CoveragePatterns:
-    """Configuration patterns for stub coverage filtering."""
 
     source_roots: list[Path] = field(default_factory=list)
     test_patterns: list[str] = field(default_factory=list)
@@ -33,11 +28,6 @@ class _CoveragePatterns:
 
 @dataclass
 class _CoverageState:
-    """Phase 1 and shared state aggregated for StubChecker.
-
-    Stores coverage tracking state, import-usages, and configuration
-    values read from pylint TOML.  Defaults match pylint TOML defaults.
-    """
 
     module_index: dict[str, tuple[Path, nodes.Module]] = field(default_factory=dict)
     stub_missing: set[str] = field(default_factory=set)

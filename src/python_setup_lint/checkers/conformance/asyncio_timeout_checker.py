@@ -1,14 +1,3 @@
-"""Pylint checker: require asyncio.timeout() / anyio.fail_after() wrapping.
-
-Reports W9703 for ``await`` calls on ``httpx.AsyncClient.*`` (or other
-registered external async-call functions) that are NOT enclosed in an
-``async with asyncio.timeout(...):`` or ``async with anyio.fail_after(...):``
-block.
-
-Per CodingRules External Call Requirements:
-    "Timeout via asyncio.timeout(). Separate connect/read. Configurable,
-     documented in .pyi. Neither None nor 0 in production."
-"""
 
 from __future__ import annotations
 
@@ -42,7 +31,6 @@ _KNOWN_TIMEOUT_FUNCS: frozenset[str] = frozenset(
 
 
 class AsyncTimeoutChecker(BaseChecker):
-    """AST visitor that flags await calls missing enclosing timeout context."""
 
     name: str = "asyncio-timeout"
     msgs = _msgs(

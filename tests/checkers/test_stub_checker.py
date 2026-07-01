@@ -7,7 +7,6 @@ proven invariants per ``/memories/repo/T1-pyi-exemptions.md``).
 
 Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 """
-
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -68,6 +67,8 @@ from tests.checkers._factories import (  # pylint: disable=wrong-import-position
     walk_stub_close_release,
     walk_stub_resolution_layout,
 )
+
+pytestmark = pytest.mark.no_external_api
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -131,7 +132,7 @@ def test_default_test_patterns() -> None:
     assert "test_*.py" in patterns
 
 
-def test_defaults_opt_out_empty_and_custom_source_root() -> None:
+def test_checker_given_opt_out_and_custom_source_root_then_uses_custom() -> None:
     """Combined: default opt_out is empty; custom_source_root is honoured."""
     tc = _make_tc()
     tc.checker.open()
@@ -157,7 +158,7 @@ def test_defaults_opt_out_empty_and_custom_source_root() -> None:
     ),
     _STUB_FILE_CLASSIFICATION_CASES,
 )
-def test_file_classification_and_optout(
+def test_checker_given_file_classification_then_opt_out_respected(
     file_path: str,
     source_roots: list[str],
     test_patterns: list[str] | None,
@@ -175,7 +176,7 @@ def test_file_classification_and_optout(
     assert len(e97a0) == expected_e97a0_count
 
 
-def test_production_file_under_src(tmp_path: Path) -> None:
+def test_checker_given_production_file_under_src_then_flagged(tmp_path: Path) -> None:
     src = tmp_path / "src"
     src.mkdir()
     (src / "some_module.py").write_text("x = 1\n")
@@ -194,7 +195,7 @@ def test_production_file_under_src(tmp_path: Path) -> None:
     ("layout_kind", "code", "module_name", "expected_e97a0_count"),
     _STUB_RESOLUTION_CASES,
 )
-def test_stub_resolution_layout(
+def test_checker_given_stub_resolution_layout_then_resolves_correctly(
     tmp_path: Path,
     layout_kind: str,
     code: str,
@@ -258,7 +259,7 @@ def test_open_initialises_all_state() -> None:
     ("layout_kind", "code", "expected_log_event"),
     _PYI_EXEMPT_LOG_LAYOUT_CASES,
 )
-def test_pyi_exemption_logs_record(
+def test_checker_given_pyi_exemption_then_logs_record(
     tmp_path: Path,
     layout_kind: str,
     code: str,
@@ -315,7 +316,7 @@ def test_in_type_checking_block_negative(code: str, accessor: Callable[[astroid.
 
 
 @pytest.mark.parametrize(("code", "expected"), _IS_TYPE_CHECKING_GUARD_CASES)
-def test_is_type_checking_guard(code: str, expected: bool) -> None:
+def test_is_type_checking_guard_given_guard_code_then_expected_bool(code: str, expected: bool) -> None:
     node = astroid.parse(code).body[0].value
     assert _is_type_checking_guard(node) is expected
 
@@ -327,7 +328,7 @@ def test_is_type_checking_guard(code: str, expected: bool) -> None:
     ("modname", "level", "name", "is_package", "expected"),
     _RESOLVE_RELATIVE_CASES,
 )
-def test_resolve_relative(
+def test_resolve_relative_given_import_path_then_resolves_correctly(
     modname: str,
     level: int,
     name: str | None,
@@ -389,7 +390,7 @@ def test_emit_import_contract_violations(  # pylint: disable=too-many-positional
 
 
 @pytest.mark.parametrize(("star_policy", "expected_e97a3_count"), _STAR_POLICY_CASES)
-def test_star_import_policy(star_policy: str, expected_e97a3_count: int) -> None:
+def test_star_import_policy_given_policy_then_expected_count(star_policy: str, expected_e97a3_count: int) -> None:
     from tests.checkers._factories import (
         _build_star_import_policy_state,
         _star_usage_factory,
@@ -406,13 +407,13 @@ def test_star_import_policy(star_policy: str, expected_e97a3_count: int) -> None
 
 
 @pytest.mark.parametrize(("expr_src", "expected_bool"), _VARIABLE_FIDELITY_CASES)
-def test_is_classvar(expr_src: str, expected_bool: bool) -> None:
+def test_is_classvar_given_expression_then_expected_bool(expr_src: str, expected_bool: bool) -> None:
     node = astroid.extract_node(expr_src)
     assert isinstance(node, astroid.NodeNG)
     assert _is_classvar(cast("astroid.NodeNG", node)) is expected_bool
 
 
-def test_annotation_normalizer_normalize() -> None:
+def test_annotation_normalizer_given_annotation_then_normalizes() -> None:
     module = astroid.parse("x: str | None", module_name="test")
     ann = module.body[0].annotation
     assert AnnotationNormalizer.normalize(ann) == "str | None"
@@ -421,7 +422,7 @@ def test_annotation_normalizer_normalize() -> None:
 # ── TestEndToEnd ──────────────────────────────────────────────────
 
 
-def test_complete_pipeline(tmp_path: Path) -> None:
+def test_checker_given_complete_pipeline_then_runs_without_error(tmp_path: Path) -> None:
     src = tmp_path / "src"
     src.mkdir()
     (src / "__init__.py").write_text("")

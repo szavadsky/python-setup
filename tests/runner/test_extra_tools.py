@@ -1,10 +1,10 @@
+# pylint: disable=duplicate-code  # shared test helper pattern with test_autofix_conflict_apply
 """Surface-unit tests for T11 v1 extra-tools: parse + validation (R4) +
 merge contract + GenericLintTool.build_command. Pure unit tests on
 synthetic ``tmp_path`` TOML — NO subprocess, NO real shell-out.
 
 Reason strings LOCKED per DESIGN-8 D6 — production code is source-of-truth.
 """
-
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -178,7 +178,7 @@ def test_load_extras_array_shape_raises(tmp_path: Path, body: str, reason: str) 
 # ── ExtraToolsConfigError public attribute contract ────────────────
 
 
-def test_extra_tools_config_error_attributes_and_chain() -> None:
+def test_extra_tools_config_error_given_attributes_then_chains() -> None:
     """Constructor stores ``location``+``reason``, formats ``str(err)``, preserves cause via ``raise from``."""
     err = ExtraToolsConfigError(location="x", reason="y")
     assert err.location == "x" and err.reason == "y"
@@ -216,25 +216,25 @@ class TestExtraToolsMerge:
     def _isolate(self, isolated_runner_registries: None) -> None:
         pass
 
-    def test_grows_lint_tools_by_n(self) -> None:
+    def test_extra_tools_merge_given_extra_tools_then_grows_lint_tools(self) -> None:
         baseline_len = len(LINT_TOOLS)
         _register_extra_tools([_X1, _X2])
         assert len(LINT_TOOLS) == baseline_len + 2
 
-    def test_idempotent_on_same_names(self) -> None:
+    def test_extra_tools_merge_given_same_names_then_idempotent(self) -> None:
         baseline_len = len(LINT_TOOLS)
         _register_extra_tools([_X1])
         _register_extra_tools([_X1])  # idempotent re-call
         assert len(LINT_TOOLS) == baseline_len + 1
         assert STRATEGIES["x1"] is not None
 
-    def test_tools_by_name_includes_extras_and_builtins(self) -> None:
+    def test_extra_tools_merge_given_tools_by_name_then_includes_extras(self) -> None:
         _register_extra_tools([_X1, _X2])
         names = {t.name for t in LINT_TOOLS}
         assert {"x1", "x2"} <= names
         assert set(TOOLS_BY_NAME) <= names  # all 11 built-ins remain post-merge
 
-    def test_rejects_builtin_name_collision(self) -> None:
+    def test_extra_tools_merge_given_builtin_name_collision_then_rejects(self) -> None:
         collision = _ExtraToolRegistration(
             spec=ToolSpec(name="ruff check", command=["ruff", "check"]),
             statistics_flag=None,
@@ -246,7 +246,7 @@ class TestExtraToolsMerge:
         assert exc_info.value.reason == "duplicate vs built-in: ruff check"
         assert exc_info.value.location == "<runtime>"
 
-    def test_no_op_on_empty_list(self) -> None:
+    def test_extra_tools_merge_given_empty_list_then_no_op(self) -> None:
         baseline_len = len(LINT_TOOLS)
         _register_extra_tools([])
         assert len(LINT_TOOLS) == baseline_len
@@ -288,7 +288,7 @@ def _ctx(cwd: Path, *, config_paths: dict[str, Path] | None = None) -> RunnerCon
 class TestExtraBuildCommand:
     """``GenericLintTool.build_command`` synthesis from declarative fields."""
 
-    def test_build_command_with_config_flag(self, tmp_path: Path) -> None:
+    def test_extra_build_command_given_config_flag_then_appends(self, tmp_path: Path) -> None:
         _register_extra("extra1", config_flag=["--config"], default_paths=["src/"])
         cfg = tmp_path / "cfg.toml"
         cfg.write_text("x = 1\n")
@@ -298,7 +298,7 @@ class TestExtraBuildCommand:
         assert cmd[:3] == ["mytool", "--config", str(cfg)]
         assert cmd[3:] == ["src/"]
 
-    def test_build_command_appends_fix_flag(self, tmp_path: Path) -> None:
+    def test_extra_build_command_given_fix_then_appends_flag(self, tmp_path: Path) -> None:
         _register_extra("extra1", supports_fix=True)
         ctx = _ctx(tmp_path)
         assert STRATEGIES["extra1"].build_command(config=ctx, _fix=True) == [
@@ -309,13 +309,13 @@ class TestExtraBuildCommand:
             "mytool"
         ]  # fix=False: no flag
 
-    def test_build_command_appends_exclude_flag(self, tmp_path: Path) -> None:
+    def test_extra_build_command_given_exclude_then_appends_flag(self, tmp_path: Path) -> None:
         _register_extra("extra1", supports_exclude=True, supports_path=False)
         assert STRATEGIES["extra1"].build_command(
             config=_ctx(tmp_path), _exclude="bad.py"
         ) == ["mytool", "--exclude", "bad.py"]
 
-    def test_build_command_expands_glob_in_default_paths(self, tmp_path: Path) -> None:
+    def test_extra_build_command_given_glob_then_expands(self, tmp_path: Path) -> None:
         (tmp_path / "data").mkdir()
         for n in ("file1.txt", "file2.txt"):
             (tmp_path / "data" / n).write_text("a\n")
@@ -343,7 +343,7 @@ class TestExtraBuildCommand:
         assert "--config" not in cmd
         assert cmd == expected
 
-    def test_parse_strategy_none_produces_empty_parse_statistics(self) -> None:
+    def test_extra_build_command_given_none_parse_strategy_then_empty_statistics(self) -> None:
         """GenericLintTool with no parser → ``parse_statistics`` returns ``[]``."""
         _register_extra("extra1")
         assert STRATEGIES["extra1"].parse_statistics("noise\nwarn!\n", "") == []

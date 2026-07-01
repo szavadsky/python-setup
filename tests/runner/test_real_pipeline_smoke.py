@@ -2,7 +2,6 @@
 
 Exercises the full lint pipeline end-to-end on a minimal synthetic project.
 """
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -10,6 +9,8 @@ from pathlib import Path
 import pytest
 
 from python_setup_lint.runner import TOOLS, RunnerConfig, run_lint
+
+pytestmark = pytest.mark.with_real_api
 
 
 def test_consolidated_real_pipeline_smoke(

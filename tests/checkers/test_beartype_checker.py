@@ -4,7 +4,6 @@ Uses synthetic code strings parsed via astroid, walked over
 ``BeartypeCoverageChecker``.  Fixture src / file-path rows live in
 ``tests/checkers/_factories.py`` (free LOC, not counted against the gate).
 """
-
 from __future__ import annotations
 
 from typing import Any
@@ -20,6 +19,8 @@ from tests.checkers._factories import (
     _BEARTYPE_SKIP_CASES,
     _BEARTYPE_SOURCE_ROOT_CASES,
 )
+
+pytestmark = pytest.mark.no_external_api
 
 
 def _make_tc() -> CheckerTestCase:  # pylint: disable=W9728  # test helper: type-specific alias for _make_tc_factory, avoids repeated imports
@@ -38,7 +39,7 @@ def _walk_and_release(code: str, *, file_path: str = "src/test_mod.py") -> list[
 @pytest.mark.parametrize(
     ("code", "expected_count", "expected_first_arg"), _BEARTYPE_MISS_CASES
 )
-def test_detects_missing_beartype(
+def test_checker_given_public_function_without_beartype_then_emits_missing(
     code: str,
     expected_count: int,
     expected_first_arg: str | None,
@@ -59,7 +60,7 @@ def test_detects_missing_beartype(
 
 
 @pytest.mark.parametrize(("code", "expected_missing_count"), _BEARTYPE_SKIP_CASES)
-def test_skips(code: str, expected_missing_count: int) -> None:
+def test_checker_given_private_or_decorated_function_then_skips(code: str, expected_missing_count: int) -> None:
     """Rows that should NOT trigger missing-beartype (or only the public one).
 
     ``expected_missing_count=0`` rows are pure-skip cases
@@ -89,14 +90,12 @@ def test_skips(code: str, expected_missing_count: int) -> None:
         ),
     ],
 )
-def test_decorated_skipped(decorator_expr: str) -> None:
-    """Decorated functions (beartype / no_type_check) are NOT flagged."""
+def test_checker_given_beartype_or_no_type_check_decorator_then_not_flagged(decorator_expr: str) -> None:
     msgs = _walk_and_release(f"{decorator_expr}def foo(): pass\n")
     assert len([m for m in msgs if m.msg_id == "missing-beartype"]) == 0
 
 
-def test_mixed_decorated_and_undecorated() -> None:
-    """Only the undecorated public fn is flagged in a mixed module."""
+def test_checker_given_mixed_module_then_flags_only_undecorated() -> None:
     msgs = _walk_and_release(
         "from beartype import beartype\n@beartype\ndef foo(): pass\ndef bar(): pass\n"
     )
@@ -108,8 +107,7 @@ def test_mixed_decorated_and_undecorated() -> None:
 @pytest.mark.parametrize(
     ("code", "file_path", "expected_count"), _BEARTYPE_SOURCE_ROOT_CASES
 )
-def test_source_root_filtering(code: str, file_path: str, expected_count: int) -> None:
-    """File under ``src/`` is checked; file under ``tests/`` is skipped."""
+def test_checker_given_file_under_src_or_tests_then_filters_by_source_root(code: str, file_path: str, expected_count: int) -> None:
     msgs = _walk_and_release(code, file_path=file_path)
     missing = [m for m in msgs if m.msg_id == "missing-beartype"]
     assert len(missing) == expected_count

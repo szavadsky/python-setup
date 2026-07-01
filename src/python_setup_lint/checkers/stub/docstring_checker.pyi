@@ -21,6 +21,9 @@ class StubDocstringChecker(BaseChecker):
     def visit_module(self, node: nodes.Module) -> None:
         """Decide whether this module should be processed; set up state."""
 
+    def visit_classdef(self, node: nodes.ClassDef) -> None:
+        """Emit W9700 if class has a docstring in an enabled module."""
+
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Emit W9700 if function/method has a docstring in an enabled module."""
 

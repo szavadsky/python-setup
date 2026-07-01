@@ -1,26 +1,3 @@
-"""Callable fidelity comparison (Invariant 3 — the E97B3 family).
-
-Extracts :class:`ParamDescriptor` lists from Astroid argument nodes,
-compares the signature shape (count / name / kind / default presence),
-compares parameter and return annotations, and emits E97B3
-(``signature-mismatch``), E97B4 (``annotation-mismatch``), and I97B6
-(``annotation-unverifiable``) via the checker.
-
-Functions:
-
-- :func:`_extract_param_descriptors` — Astroid ``Arguments`` →
-  :class:`ParamDescriptor` list, all 5 parameter kinds, optional
-  ``self``/``cls`` strip.
-- :func:`_compare_callable_descriptors` — count/name/kind/default compare.
-- :func:`_compare_callable_annotations` — returns mismatches triples.
-- :func:`_compare_return_annotations` — normalizes both sides.
-- :func:`_emit_callable_fidelity_issues` — emits E97B3/E97B4/I97B6 for one pair.
-- :func:`_emit_callable_fidelity` — dispatches all stub callables for a module.
-
-Topologically downstream of ``_ast_helpers``; not depended on by
-``kind``.  ``annotation._compare_class_methods`` calls into this module
-to delegate public-method fidelity.
-"""
 
 from __future__ import annotations
 

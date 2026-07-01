@@ -1,7 +1,3 @@
-"""Pre-commit hook template and AGENTS.md snippet for python-setup install.
-
-Extracted from setup.py for module-size compliance (G5 §2).
-"""
 
 from __future__ import annotations
 

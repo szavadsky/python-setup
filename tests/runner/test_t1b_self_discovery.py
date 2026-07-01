@@ -3,7 +3,6 @@
 Covers ``_default_config_paths`` and ``_infer_package_name`` as pure
 functions, plus the yamllint ``_config_flag_for`` entry.
 """
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -33,7 +32,7 @@ class TestDefaultConfigPaths:
             (config_dir / fname).write_text("")
         return init
 
-    def test_returns_shipped_configs(
+    def test_default_config_paths_given_shipped_configs_then_returns_all(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         """When config dir has all shipped files, returns all labels."""
@@ -68,7 +67,7 @@ class TestDefaultConfigPaths:
         for label, path in result.items():
             assert path.is_file(), f"Config {label} -> {path} does not exist"
 
-    def test_yamllint_config_present(
+    def test_default_config_paths_given_yamllint_config_then_present(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         """yamllint shipped config is discovered."""
@@ -80,7 +79,7 @@ class TestDefaultConfigPaths:
         assert "yamllint" in result
         assert result["yamllint"].name == ".yamllint"
 
-    def test_returns_empty_when_package_not_installed(
+    def test_default_config_paths_given_package_not_installed_then_empty(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         """When ``python_setup_lint.__file__`` is ``None``, returns empty dict."""
@@ -90,7 +89,7 @@ class TestDefaultConfigPaths:
         result = _default_config_paths(tmp_path)
         assert result == {}
 
-    def test_returns_empty_when_config_dir_missing(
+    def test_default_config_paths_given_config_dir_missing_then_empty(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         """When the config dir does not exist, returns empty dict."""
@@ -108,7 +107,7 @@ class TestDefaultConfigPaths:
 class TestInferPackageName:
     """``_infer_package_name(cwd)`` reads pyproject.toml hatch packages."""
 
-    def test_infers_from_hatch_packages(self, tmp_path: Path) -> None:
+    def test_infer_package_name_given_hatch_packages_then_infers(self, tmp_path: Path) -> None:
         """Strips ``src/`` prefix from hatch packages[0]."""
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text("""\
@@ -117,7 +116,7 @@ packages = ["src/python_setup_lint"]
 """)
         assert _infer_package_name(tmp_path) == "python_setup_lint"
 
-    def test_no_src_prefix(self, tmp_path: Path) -> None:
+    def test_infer_package_name_given_no_src_prefix_then_infers(self, tmp_path: Path) -> None:
         """Returns raw package name when no ``src/`` prefix."""
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text("""\
@@ -126,17 +125,17 @@ packages = ["my_package"]
 """)
         assert _infer_package_name(tmp_path) == "my_package"
 
-    def test_no_pyproject(self, tmp_path: Path) -> None:
+    def test_infer_package_name_given_no_pyproject_then_none(self, tmp_path: Path) -> None:
         """Returns ``None`` when pyproject.toml is missing."""
         assert _infer_package_name(tmp_path) is None
 
-    def test_no_hatch_table(self, tmp_path: Path) -> None:
+    def test_infer_package_name_given_no_hatch_table_then_none(self, tmp_path: Path) -> None:
         """Returns ``None`` when hatch table is absent."""
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text("[project]\nname = 'foo'\n")
         assert _infer_package_name(tmp_path) is None
 
-    def test_empty_packages(self, tmp_path: Path) -> None:
+    def test_infer_package_name_given_empty_packages_then_none(self, tmp_path: Path) -> None:
         """Returns ``None`` when packages list is empty."""
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text("""\
@@ -145,7 +144,7 @@ packages = []
 """)
         assert _infer_package_name(tmp_path) is None
 
-    def test_malformed_toml(self, tmp_path: Path) -> None:
+    def test_infer_package_name_given_malformed_toml_then_none(self, tmp_path: Path) -> None:
         """Returns ``None`` on unparseable pyproject.toml."""
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text("[[[invalid toml")
@@ -155,17 +154,17 @@ packages = []
 class TestYamllintConfigFlag:
     """``_config_flag_for`` returns yamllint ``--config-file``."""
 
-    def test_yamllint_flag(self) -> None:
+    def test_config_flag_for_given_yamllint_then_returns_flag(self) -> None:
         """yamllint entry produces ``--config-file <path>``."""
         path = Path("/some/config/.yamllint")
         result = _config_flag_for("yamllint", path)
         assert result == ["--config-file", str(path)]
 
-    def test_yamllint_none(self) -> None:
+    def test_config_flag_for_given_yamllint_none_then_none(self) -> None:
         """Returns empty list when config_path is None."""
         assert _config_flag_for("yamllint", None) == []
 
-    def test_other_tool_unaffected(self) -> None:
+    def test_config_flag_for_given_other_tool_then_unaffected(self) -> None:
         """Adding yamllint does not break existing entries."""
         path = Path("/cfg/ruff.toml")
         assert _config_flag_for("ruff check", path) == ["--config", str(path)]

@@ -3,7 +3,6 @@
 Two-phase normalization: infer() → AST-string walking fallback.
 Exercises Phase 1 (inference), Phase 2 (AST walking), and rewrite rules.
 """
-
 from __future__ import annotations
 
 from typing import Any
@@ -19,11 +18,13 @@ from tests.checkers._factories import (
     _SPLIT_OUTER_COMMAS_CASES,
 )
 
+pytestmark = pytest.mark.no_external_api
+
 # ── infer() phase ──────────────────────────────────────────────────
 
 
 @pytest.mark.parametrize(("code", "expected"), _NORMALIZER_INFER_CASES)
-def test_normalize_infer(code: str, expected: str | None) -> None:
+def test_normalize_infer_given_code_then_expected_result(code: str, expected: str | None) -> None:
     """Phase-1 ``AnnotationNormalizer.normalize`` returns the expected string.
 
     For the uninferable forward-ref row ``expected is None`` selects the
@@ -51,7 +52,7 @@ def _ann_from_code(code: str) -> Any:
 
 
 @pytest.mark.parametrize(("code", "expected", "assert_mode"), _AST_STRING_CASES)
-def test_ast_string(code: str, expected: list[str] | None, assert_mode: str) -> None:
+def test_ast_string_given_code_then_expected_strings(code: str, expected: list[str] | None, assert_mode: str) -> None:
     """Phase-2 ``AnnotationNormalizer._ast_string`` walks and stringifies the node.
 
     Three modes (per row):

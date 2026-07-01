@@ -188,9 +188,9 @@ def _run_cmd(
         limit_bytes = memory_limit_mb * 1024 * 1024
         def _set_rlimit() -> None:
             try:
-                import resource
+                import resource  # pylint: disable=import-outside-toplevel  # only imported when memory limit is active
                 resource.setrlimit(resource.RLIMIT_AS, (limit_bytes, limit_bytes))
-            except (ImportError, OSError):
+            except (ImportError, OSError):  # pylint: disable=W9001,W9740  # non-POSIX or rlimit unavailable; rely on timeout alone
                 pass  # non-POSIX or rlimit unavailable; rely on timeout alone
         preexec_fn = _set_rlimit
     try:

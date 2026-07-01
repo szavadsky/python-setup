@@ -1,8 +1,3 @@
-"""Per-tool violation-record parsers (T2 baseline diff).
-
-Each parser converts a tool's stdout into sorted ``list[Record]`` for the
-drift-resistant baseline comparison.
-"""
 
 from __future__ import annotations
 

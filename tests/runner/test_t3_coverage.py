@@ -49,19 +49,19 @@ class TestParserCompleteness:
         "detect-secrets",
     }
 
-    def test_all_tools_have_parser(self) -> None:
+    def test_parser_completeness_given_all_tools_then_have_parser(self) -> None:
         """Every TOOLS entry has a statistics parser registered."""
         tool_names = {t.name for t in TOOLS}
         missing = tool_names - self.EXPECTED_PARSER_TOOLS
         assert not missing, f"TOOLS missing statistics parsers: {missing}"
 
-    def test_all_parsers_correspond_to_tools(self) -> None:
+    def test_parser_completeness_given_all_parsers_then_correspond_to_tools(self) -> None:
         """Every registered parser tool name exists in TOOLS."""
         tool_names = {t.name for t in TOOLS}
         extra = self.EXPECTED_PARSER_TOOLS - tool_names
         assert not extra, f"Parsers exist for unknown tools: {extra}"
 
-    def test_statistics_flags_align_with_parsers(self) -> None:
+    def test_parser_completeness_given_statistics_flags_then_align_with_parsers(self) -> None:
         """Tools with a statistics parser also have non-empty flags."""
         has_flags = set()
         for spec in TOOLS:
@@ -87,7 +87,7 @@ class TestParserEdgeCases:
     """Boundary / malformed-input tests for parsers."""
 
     # ── mypy stderr ─────────────────────────────────────────────
-    def test_mypy_stderr_error_code_not_at_end(self) -> None:
+    def test_parser_edge_given_mypy_stderr_error_code_not_at_end_then_parses(self) -> None:
         """Error code in brackets mid-line (not at end) is NOT extracted.
 
         The parser uses $ anchor to match codes at line-end only.
@@ -96,33 +96,33 @@ class TestParserEdgeCases:
         result = _parse_mypy_stderr("", err)
         assert result == [], f"Expected no match for mid-line code, got {result}"
 
-    def test_mypy_stderr_no_brackets(self) -> None:
+    def test_parser_edge_given_mypy_stderr_no_brackets_then_parses(self) -> None:
         """Line without error code brackets is ignored."""
         err = "file.py:1: error: Some message without code\n"
         assert _parse_mypy_stderr("", err) == []
 
-    def test_mypy_stderr_brackets_no_content(self) -> None:
+    def test_parser_edge_given_mypy_stderr_brackets_no_content_then_parses(self) -> None:
         """Line with empty brackets is ignored."""
         err = "file.py:1: error: message []\n"
         assert _parse_mypy_stderr("", err) == []
 
     # ── ty concise ──────────────────────────────────────────────
-    def test_ty_concise_no_stdout(self) -> None:
+    def test_parser_edge_given_ty_concise_no_stdout_then_empty(self) -> None:
         """Empty stdout returns empty."""
         assert _parse_ty_concise("", "") == []
 
-    def test_ty_concise_whitespace_only(self) -> None:
+    def test_parser_edge_given_ty_concise_whitespace_only_then_empty(self) -> None:
         """Whitespace-only stdout returns empty."""
         assert _parse_ty_concise("   \n  \n", "") == []
 
-    def test_ty_concise_no_error_code(self) -> None:
+    def test_parser_edge_given_ty_concise_no_error_code_then_parses(self) -> None:
         """Line without recognizable error code is ignored."""
         out = "just a line without colons\n"
         result = _parse_ty_concise(out, "")
         assert result == []
 
     # ── yamllint parsable ───────────────────────────────────────
-    def test_yamllint_parsable_extra_colons(self) -> None:
+    def test_parser_edge_given_yamllint_parsable_extra_colons_then_parses(self) -> None:
         """Colons in the message part must not confuse rule-id extraction."""
         # Format: file:line:col:rule_id:message:with:colons
         # rule_id is parts[3]
@@ -132,19 +132,19 @@ class TestParserEdgeCases:
             f"Expected trailing-spaces, got {result}"
         )
 
-    def test_yamllint_parsable_no_colons(self) -> None:
+    def test_parser_edge_given_yamllint_parsable_no_colons_then_empty(self) -> None:
         """Line without colons is ignored."""
         out = "just a message\n"
         assert _parse_yamllint_parsable(out, "") == []
 
-    def test_yamllint_parsable_empty_rule_id(self) -> None:
+    def test_parser_edge_given_yamllint_parsable_empty_rule_id_then_parses(self) -> None:
         """Rule ID after colon may be empty; should be skipped."""
         out = "f.yaml:1:1::message\n"  # empty rule_id
         result = _parse_yamllint_parsable(out, "")
         assert len(result) == 0, f"Expected no match for empty rule_id, got {result}"
 
     # ── detect-secrets ──────────────────────────────────────────
-    def test_detect_secrets_missing_type(self) -> None:
+    def test_parser_edge_given_detect_secrets_missing_type_then_skips(self) -> None:
         """Secret entry without 'type' key should be counted as 'unknown'."""
         out = json.dumps(
             {
@@ -157,7 +157,7 @@ class TestParserEdgeCases:
         assert ("SecretA", 1) in result
         assert ("unknown", 1) in result, f"Expected unknown, got {result}"
 
-    def test_detect_secrets_non_dict_secret(self) -> None:
+    def test_parser_edge_given_detect_secrets_non_dict_secret_then_skips(self) -> None:
         """Secret entry that is not a dict should be skipped."""
         out = json.dumps(
             {
@@ -171,12 +171,12 @@ class TestParserEdgeCases:
         # Second entry is a string, skipped
         assert len(result) == 1
 
-    def test_detect_secrets_non_list_results(self) -> None:
+    def test_parser_edge_given_detect_secrets_non_list_results_then_skips(self) -> None:
         """'results' value that is not a dict should be empty."""
         out = json.dumps({"results": "not_a_dict"})
         assert _parse_detect_secrets_json(out, "") == []
 
-    def test_detect_secrets_non_string_type(self) -> None:
+    def test_parser_edge_given_detect_secrets_non_string_type_then_skips(self) -> None:
         """Secret with non-string 'type' is skipped (isinstance check)."""
         out = json.dumps(
             {
@@ -189,11 +189,11 @@ class TestParserEdgeCases:
         assert result == [], f"Expected empty for non-string type, got {result}"
 
     # ── tach json ───────────────────────────────────────────────
-    def test_tach_json_non_dict_data(self) -> None:
+    def test_parser_edge_given_tach_json_non_dict_data_then_empty(self) -> None:
         """Loaded JSON that is not a dict returns empty."""
         assert _parse_tach_json("[]", "") == []
 
-    def test_tach_json_errors_not_list(self) -> None:
+    def test_parser_edge_given_tach_json_errors_not_list_then_empty(self) -> None:
         """'errors' key that is not a list returns empty."""
         out = json.dumps({"errors": "not_a_list"})
         assert _parse_tach_json(out, "") == []
@@ -205,7 +205,7 @@ class TestParserEdgeCases:
 class TestAggregateStatisticsEdgeCases:
     """Tautology-resistant aggregation tests."""
 
-    def test_duplicate_tool_in_results(self) -> None:
+    def test_aggregate_statistics_given_duplicate_tool_then_aggregates(self) -> None:
         """Same tool appearing twice in results with different violations.
 
         Each LintResult is a separate run; same tool can produce different
@@ -219,7 +219,7 @@ class TestAggregateStatisticsEdgeCases:
         assert ViolationCount("ruff check", "F401", 3)
         assert ViolationCount("ruff check", "E501", 2)
 
-    def test_all_parsers_reachable(self) -> None:
+    def test_aggregate_statistics_given_all_parsers_then_reachable(self) -> None:
         """Every tool with a parser successfully processes empty output."""
         for tool_name in (
             "ruff check",
@@ -240,14 +240,14 @@ class TestAggregateStatisticsEdgeCases:
                 f"{tool_name} should produce empty counts from empty output"
             )
 
-    def test_aggregate_with_large_counts(self) -> None:
+    def test_aggregate_statistics_given_large_counts_then_aggregates(self) -> None:
         """Large counts are preserved accurately."""
         stdout = "Count\tCode\n-----\t----\n9999\tF401\n"
         r = LintResult("ruff check", 0, stdout, "", 0.0)
         _ = _aggregate_statistics([r])
         assert ViolationCount("ruff check", "F401", 9999)
 
-    def test_aggregate_sorts_properly(self) -> None:
+    def test_aggregate_statistics_given_counts_then_sorts(self) -> None:
         """Sorting by count desc, then tool, then rule."""
         results = [
             LintResult(
@@ -269,7 +269,7 @@ class TestAggregateStatisticsEdgeCases:
 class TestStatisticsObservability:
     """Verify statistics output is structurally inspectable."""
 
-    def test_statistics_json_structure(
+    def test_statistics_observability_given_json_then_structure(
         self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """--statistics --format json produces parseable structured array."""
@@ -301,7 +301,7 @@ class TestStatisticsObservability:
         assert "count" in entry, "Each entry must have 'count'"
         assert isinstance(entry["count"], int), "count must be an integer"
 
-    def test_statistics_table_not_empty(
+    def test_statistics_observability_given_table_then_not_empty(
         self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """--statistics (table) output always includes the statistics header."""
@@ -325,7 +325,7 @@ class TestStatisticsObservability:
             f"Statistics table should include 'VIOLATION STATISTICS' header. Output length: {len(out)} chars."
         )
 
-    def test_statistics_json_empty_violations(
+    def test_statistics_observability_given_empty_violations_then_empty(
         self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """When no violations exist, JSON output is an empty array."""
@@ -350,7 +350,7 @@ class TestStatisticsObservability:
 class TestPrintStatisticsTableEdgeCases:
     """Edge-case output for _print_statistics_table."""
 
-    def test_mixed_tool_names_formatting(
+    def test_print_statistics_table_given_mixed_tool_names_then_formats(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Long tool names are displayed (column format is minimum width, not max)."""
@@ -363,7 +363,7 @@ class TestPrintStatisticsTableEdgeCases:
         assert "a" * 20 in captured.out
         assert "X1" in captured.out
 
-    def test_zero_count_rule(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_print_statistics_table_given_zero_count_rule_then_shows(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Zero counts are displayed (may indicate a parser found nothing)."""
         counts = [ViolationCount(tool="test", rule="Z001", count=0)]
         _print_statistics_table(counts)
@@ -372,7 +372,7 @@ class TestPrintStatisticsTableEdgeCases:
         assert "0" in captured.out
         assert "Z001" in captured.out
 
-    def test_print_with_no_violations_message(
+    def test_print_statistics_table_given_no_violations_then_message(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Empty list prints 'No violations found' message."""

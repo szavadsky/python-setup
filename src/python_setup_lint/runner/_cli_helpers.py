@@ -1,7 +1,3 @@
-"""CLI helper functions for the lint pipeline.
-
-Extracted from cli.py to keep module under 500 lines.
-"""
 
 from __future__ import annotations
 

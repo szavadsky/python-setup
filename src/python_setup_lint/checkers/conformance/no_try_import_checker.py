@@ -39,7 +39,6 @@ def _all_imports_optional(stmts: list[nodes.NodeNG]) -> bool:
 
 
 class NoTryImportChecker(BaseChecker):
-    """AST visitor that flags try blocks containing imports caught by ImportError / ModuleNotFoundError."""
 
     name: str = "no-try-import"
     msgs = _msgs(

@@ -5,7 +5,6 @@ pylint runs for signature mismatch detection.
 
 Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 """
-
 from __future__ import annotations
 
 import inspect
@@ -34,6 +33,8 @@ from tests.checkers._factories import (
     _EXTRACT_STRIP_SELF_CASES,
     _run_pylint,
 )
+
+pytestmark = pytest.mark.no_external_api
 
 if TYPE_CHECKING:
     pass
@@ -83,7 +84,7 @@ def _returns_from_src(return_src: str | None) -> Any:
 # ── ParamDescriptor fields ────────────────────────────────────────
 
 
-def test_param_descriptor_fields() -> None:
+def test_param_descriptor_given_fields_then_constructs_correctly() -> None:
     p = ParamDescriptor(
         name="x",
         kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
@@ -96,7 +97,7 @@ def test_param_descriptor_fields() -> None:
     assert p.annotation_normalized == "int"
 
 
-def test_param_descriptor_no_annotation() -> None:
+def test_param_descriptor_given_no_annotation_then_annotation_is_none() -> None:
     p = ParamDescriptor(
         name="y",
         kind=inspect.Parameter.KEYWORD_ONLY,
@@ -112,7 +113,7 @@ def test_param_descriptor_no_annotation() -> None:
 @pytest.mark.parametrize(
     ("func_src", "expected_names", "expected_kinds"), _EXTRACT_PARAM_CASES
 )
-def test_extract_param_descriptors(
+def test_extract_param_descriptors_given_callable_then_returns_descriptors(
     func_src: str,
     expected_names: list[str],
     expected_kinds: list[Any],
@@ -127,7 +128,7 @@ def test_extract_param_descriptors(
     ("func_src", "expected_per_param_defaults"),
     _EXTRACT_DEFAULT_CASES,
 )
-def test_extract_default_presence_detected(
+def test_extract_param_descriptors_given_default_param_then_detects_default_presence(
     func_src: str,
     expected_per_param_defaults: list[bool],
 ) -> None:
@@ -139,7 +140,7 @@ def test_extract_default_presence_detected(
     ("func_src", "strip_self", "expected_names"),
     _EXTRACT_STRIP_SELF_CASES,
 )
-def test_extract_strip_self(
+def test_extract_param_descriptors_given_method_then_strips_self(
     func_src: str,
     strip_self: bool,
     expected_names: list[str],
@@ -152,7 +153,7 @@ def test_extract_strip_self(
     ("func_src", "needle_in_first", "_needle_in_second"),
     _EXTRACT_ANNOTATION_CASES,
 )
-def test_extract_annotations(
+def test_extract_annotations_given_callable_then_returns_annotations(
     func_src: str,
     needle_in_first: str | None,
     _needle_in_second: str | None,
@@ -209,7 +210,7 @@ def test_compare_callable_annotations(
         assert result[0][0] == expected_first_arg_name
 
 
-def test_compare_callable_annotations_empty() -> None:
+def test_compare_callable_annotations_given_empty_annotations_then_returns_empty() -> None:
     assert _compare_callable_annotations([], []) == []
 
 
@@ -220,7 +221,7 @@ def test_compare_callable_annotations_empty() -> None:
     ("stub_src", "impl_src", "assert_mode", "expected_eq"),
     _COMPARE_RETURN_CASES,
 )
-def test_compare_return_annotations(
+def test_compare_return_annotations_given_return_types_then_returns_diffs(
     stub_src: str | None,
     impl_src: str | None,
     assert_mode: str,
@@ -249,7 +250,7 @@ def test_compare_return_annotations(
 # ── CallableComparisonCtx fields ───────────────────────────────────
 
 
-def test_callable_comparison_ctx_fields() -> None:
+def test_callable_comparison_ctx_given_fields_then_constructs_correctly() -> None:
     stub_mod = astroid.parse("def foo(x: int) -> None: ...\n", module_name="test")
     impl_mod = astroid.parse("def foo(x: int) -> None: ...\n", module_name="test")
     stub_func = cast("astroid.FunctionDef", stub_mod.body[0])
@@ -271,7 +272,7 @@ def test_callable_comparison_ctx_fields() -> None:
     ("mod_py", "mod_pyi", "enable", "expected_code"),
     _CALLABLE_FIDELITY_INTEGRATION_CASES,
 )
-def test_integration_callable(
+def test_integration_callable_given_stub_and_impl_then_compares(
     tmp_path: Path,
     mod_py: str,
     mod_pyi: str,

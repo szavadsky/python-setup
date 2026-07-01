@@ -1,20 +1,3 @@
-"""Lint pipeline orchestration + CLI entry point.
-
-``run_lint`` iterates the live tool registry, resolves a strategy per tool,
-builds the command, runs it via :func:`python_setup_lint.runner.output._run_cmd`,
-and aggregates results into either per-tool output, a statistics table/grouping,
-or a baseline diff.  ``main`` is the console-script entry point used by
-``uv run lint`` and the ``python_setup_lint.runner:main`` entry in
-``pyproject.toml``.
-
-Monkeypatch contract: tests inject synthetic results by patching
-``python_setup_lint.runner._run_cmd`` (string form or via
-``monkeypatch.setattr(_runner_module, "_run_cmd", fake)``).  Both patterns
-target the package-level re-export of :func:`output._run_cmd` in
-:mod:`python_setup_lint.runner`'s ``__init__``; ``run_lint`` resolves the
-callable through the package namespace at call time so the patch is honoured
-without a test-fixture rewrite.
-"""
 
 from __future__ import annotations
 
@@ -28,6 +11,7 @@ from pathlib import Path
 import structlog
 from beartype import beartype
 
+from . import output as _output
 from ._autofix import (
     _AUTOFIX_ENV_VAR,
     _apply_autofix_conflict_aware,
@@ -132,14 +116,7 @@ def _emit_statistics(
     group: str,
     sort_by_rule: bool,
 ) -> None:
-    from .output import (
-        _aggregate_statistics,
-        _print_statistics_grouped,
-        _print_statistics_table,
-        _sort_counts,
-    )
-
-    vcounts = _aggregate_statistics(results)
+    vcounts = _output._aggregate_statistics(results)
     if statistics_format == "json":
         print(
             json.dumps(
@@ -148,11 +125,11 @@ def _emit_statistics(
             )
         )
     elif group != "none":
-        _print_statistics_grouped(vcounts, group=group, sort_by_rule=sort_by_rule)
+        _output._print_statistics_grouped(vcounts, group=group, sort_by_rule=sort_by_rule)
     else:
         if sort_by_rule:
-            vcounts = _sort_counts(vcounts, sort_by_rule=True)
-        _print_statistics_table(vcounts)
+            vcounts = _output._sort_counts(vcounts, sort_by_rule=True)
+        _output._print_statistics_table(vcounts)
 
 
 @beartype

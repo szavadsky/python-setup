@@ -19,7 +19,6 @@ Coverage mapping (envelope ``T11.envelope.md``):
   embed the failing returncode + captured stdout/stderr so a CI failure
   reconstructs what ``pre-commit validate-config`` reported.
 """
-
 from __future__ import annotations
 
 import textwrap
@@ -33,6 +32,8 @@ from python_setup_lint.testing import (
     assert_precommit_hooks_shape,
 )
 from python_setup_lint.testing import test_checked_main as _test_checked_main
+
+pytestmark = pytest.mark.no_external_api
 
 # ── Helpers ───────────────────────────────────────────────────────
 
@@ -71,7 +72,7 @@ repos:
 class TestTestCheckedMainArgv:
     """``test_checked_main`` builds the consumer-agnostic typeguard argv."""
 
-    def test_assembles_typeguard_plugin_argv(
+    def test_checked_main_given_typeguard_then_assembles_argv(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         captured: dict[str, Any] = {}  # dict[str, Any] is a test helper; dict shape varies by test case
@@ -108,7 +109,7 @@ class TestTestCheckedMainArgv:
             _test_checked_main()
         assert captured["args"][-2:] == ["tests/integration", "-x"]
 
-    def test_no_hardcoded_package_name(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_checked_main_given_argv_then_no_hardcoded_package_name(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """The built argv must not embed any consumer-specific package name.
 
         Asserts at runtime on the args passed to ``pytest.main`` (not on the
@@ -138,21 +139,21 @@ class TestTestCheckedMainArgv:
 class TestAssertPrecommitConfigValid:
     """``assert_precommit_config_valid`` validates YAML + shape + validate-config."""
 
-    def test_missing_file_raises(self, tmp_path: Path) -> None:
+    def test_assert_precommit_config_valid_given_missing_file_then_raises(self, tmp_path: Path) -> None:
         with pytest.raises(AssertionError, match="Missing pre-commit config"):
             assert_precommit_config_valid(tmp_path)
 
-    def test_malformed_non_mapping_raises(self, tmp_path: Path) -> None:
+    def test_assert_precommit_config_valid_given_malformed_then_raises(self, tmp_path: Path) -> None:
         _write_precommit(tmp_path, repos_yaml="- just\n- a\n- list\n")
         with pytest.raises(AssertionError, match="YAML mapping"):
             assert_precommit_config_valid(tmp_path)
 
-    def test_missing_repos_key_raises(self, tmp_path: Path) -> None:
+    def test_assert_precommit_config_valid_given_missing_repos_then_raises(self, tmp_path: Path) -> None:
         _write_precommit(tmp_path, repos_yaml="foo: bar\n")
         with pytest.raises(AssertionError, match="'repos' key"):
             assert_precommit_config_valid(tmp_path)
 
-    def test_valid_yaml_shape_loaded(
+    def test_assert_precommit_config_valid_given_valid_yaml_then_loaded(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # The YAML/shape check passes even before ``validate-config``; we
@@ -172,7 +173,7 @@ class TestAssertPrecommitConfigValid:
         # Should not raise.
         assert_precommit_config_valid(tmp_path)
 
-    def test_validate_config_failure_message_is_observable(
+    def test_assert_precommit_config_valid_given_validate_config_failure_then_observable(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Observability: a ``validate-config`` failure surfaces rc + captured output.
@@ -206,12 +207,12 @@ class TestAssertPrecommitConfigValid:
 class TestAssertPrecommitHooksShape:
     """``assert_precommit_hooks_shape`` enforces the shared-template contract."""
 
-    def test_valid_config_passes(self, tmp_path: Path) -> None:
+    def test_assert_precommit_hooks_shape_given_valid_config_then_passes(self, tmp_path: Path) -> None:
         _write_precommit(tmp_path, repos_yaml=_VALID_CONFIG)
         # Should not raise.
         assert_precommit_hooks_shape(tmp_path)
 
-    def test_missing_lint_hook_raises(self, tmp_path: Path) -> None:
+    def test_assert_precommit_hooks_shape_given_missing_lint_hook_then_raises(self, tmp_path: Path) -> None:
         _write_precommit(
             tmp_path,
             repos_yaml="""\
@@ -229,7 +230,7 @@ repos:
         with pytest.raises(AssertionError, match="'lint' local hook"):
             assert_precommit_hooks_shape(tmp_path)
 
-    def test_lint_not_system_language_raises(self, tmp_path: Path) -> None:
+    def test_assert_precommit_hooks_shape_given_lint_not_system_language_then_raises(self, tmp_path: Path) -> None:
         _write_precommit(
             tmp_path,
             repos_yaml="""\
@@ -247,7 +248,7 @@ repos:
             assert_precommit_hooks_shape(tmp_path)
 
 
-    def test_wrong_baseline_filename_raises(self, tmp_path: Path) -> None:
+    def test_assert_precommit_hooks_shape_given_wrong_baseline_filename_then_raises(self, tmp_path: Path) -> None:
         _write_precommit(
             tmp_path,
             repos_yaml="""\
@@ -266,7 +267,7 @@ repos:
         with pytest.raises(AssertionError, match=r"--baseline lint\.baseline"):
             assert_precommit_hooks_shape(tmp_path)
 
-    def test_explicit_baseline_filename_matches(self, tmp_path: Path) -> None:
+    def test_assert_precommit_hooks_shape_given_explicit_baseline_filename_then_matches(self, tmp_path: Path) -> None:
         _write_precommit(
             tmp_path,
             repos_yaml="""\
@@ -291,7 +292,7 @@ repos:
         # Consumer opts into the legacy name; should not raise.
         assert_precommit_hooks_shape(tmp_path, baseline_filename=".lint.baseline")
 
-    def test_ruff_hook_without_fix_raises(self, tmp_path: Path) -> None:
+    def test_assert_precommit_hooks_shape_given_ruff_hook_without_fix_then_raises(self, tmp_path: Path) -> None:
         _write_precommit(
             tmp_path,
             repos_yaml="""\
@@ -314,7 +315,7 @@ repos:
         with pytest.raises(AssertionError, match="--fix"):
             assert_precommit_hooks_shape(tmp_path)
 
-    def test_fast_hook_off_pre_commit_stage_raises(self, tmp_path: Path) -> None:
+    def test_assert_precommit_hooks_shape_given_fast_hook_off_stage_then_raises(self, tmp_path: Path) -> None:
         _write_precommit(
             tmp_path,
             repos_yaml="""\
@@ -339,7 +340,7 @@ repos:
         with pytest.raises(AssertionError, match="pre-commit stage"):
             assert_precommit_hooks_shape(tmp_path)
 
-    def test_empty_stages_accepted_for_fast_hook(self, tmp_path: Path) -> None:
+    def test_assert_precommit_hooks_shape_given_empty_stages_for_fast_hook_then_accepted(self, tmp_path: Path) -> None:
         # A fast hook with no explicit ``stages`` (runs on the default
         # pre-commit stage) must be accepted, matching the G0 contract.
         _write_precommit(
@@ -377,7 +378,7 @@ class TestHealthChecksAgainstInstalledTemplate:
     invokes the real ``pre-commit validate-config`` subprocess.
     """
 
-    def test_validators_accept_installed_config(self, configured_project: Path) -> None:
+    def test_health_checks_given_installed_template_then_validators_accept(self, configured_project: Path) -> None:
         assert (configured_project / ".pre-commit-config.yaml").exists()
         # Should not raise: real validate-config subprocess + shape checks.
         assert_precommit_config_valid(configured_project)

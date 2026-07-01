@@ -1,8 +1,3 @@
-"""Pylint checker: ban tempfile.mkdtemp/mkstemp/NamedTemporaryFile in tests.
-
-Test files should use pytest's built-in ``tmp_path`` fixture instead of
-manual ``tempfile`` calls that leak directories.
-"""
 
 from __future__ import annotations
 
@@ -19,7 +14,6 @@ from python_setup_lint.checkers._base import (
 
 
 class TempFileChecker(BaseChecker):
-    """AST visitor that flags tempfile leakage in test files."""
 
     name: str = "tempfile-mkdtemp-in-test"
     msgs = _msgs(

@@ -1,9 +1,3 @@
-"""Pylint checker: docstring-in-.pyi verification.
-
-CodingRules.md rule: ".pyi only: all usage docstrings". Implementation .py
-files should NOT have usage docstrings (params, raises, edge cases) —
-those belong in .pyi. Implementation comments (why, tricks) stay in .py.
-"""
 
 from __future__ import annotations
 
@@ -123,7 +117,18 @@ class StubDocstringChecker(BaseChecker):
         if not _has_companion_stub(py_path, self.linter):
             return
 
+        # __init__.py is exempt from .pyi rules (CodingRules: "No .pyi for __init__.py")
+        if py_path.name == "__init__.py":
+            return
+
         self._enabled_for_module = True
+        self._emit_if_docstring(node)
+
+    @beartype
+    def visit_classdef(self, node: nodes.ClassDef) -> None:
+        if not self._enabled_for_module:
+            return
+        self._emit_if_docstring(node)
 
     @beartype
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
@@ -136,6 +141,15 @@ class StubDocstringChecker(BaseChecker):
         if not self._enabled_for_module:
             return
         self._check_function(node)
+
+    def _emit_if_docstring(self, node: nodes.Module | nodes.ClassDef) -> None:
+        # Emit docstring-in-impl if the module/class has a usage docstring
+        if node.doc_node is not None:
+            self.add_message(
+                "docstring-in-impl",
+                node=node,
+                args=(self._current_module_name or "", getattr(node, "name", "")),
+            )
 
     def _check_function(
         self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef

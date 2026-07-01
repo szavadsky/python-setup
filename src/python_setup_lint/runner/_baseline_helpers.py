@@ -1,4 +1,3 @@
-"""Helper functions for baseline comparison (extracted to reduce module size)."""
 
 from __future__ import annotations
 

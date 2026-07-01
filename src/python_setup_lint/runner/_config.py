@@ -1,9 +1,3 @@
-"""T1b — self-discovery helpers + CLI config-key aliases.
-
-Pure helpers that resolve shipped config paths and infer package_name
-from pyproject.toml.  Both are callable from tests without invoking
-``main`` or ``run_lint``.
-"""
 
 from __future__ import annotations
 

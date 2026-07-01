@@ -57,7 +57,7 @@ MAX_FOLLOWUPS = 2
 
 def call_agent(plan_path, agent_name, schema, extra=None, retries=2):
     """Call a subagent with structured output; retry on glitch (exception or bad output)."""
-    prompt = plan_path + ("\n\n" + extra if extra else "")
+    prompt = "Exactly follow your system prompt re: " + plan_path + ("\n\n" + extra if extra else "")
     for attempt in range(1, retries + 2):
         try:
             log(f"call_agent: {agent_name} attempt {attempt}/{retries + 1}")

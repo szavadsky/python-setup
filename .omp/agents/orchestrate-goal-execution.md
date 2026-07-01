@@ -65,6 +65,8 @@ Reflect DAG in todo list.
 
 Iterate until DAG done or fundamentally blocked. Do not stop for partial wave failures — keep running independent waves. Accumulate concerns; if blocked or concerns accumulate, consult `oracle` and proceed with follow-up `subtask-dev-process` calls until genuinely blocked.
 
+3.0 Pre-requsite git must be in clear state, everthing committed BEFORE launching ANY dev wave. Check git status. If not clear - protect you sanity, launch task agent to ensure it clear (let him look at plan and commit what is needed discard garbage).
+
 3.1. **Write task spec files**: for each subtask in the wave, write `{F}/Execute{pIt}/{WaveSlug}{SubtaskSlug}.md` containing the task spec — plan line ranges (`{F}/plan{pIt}.md:<start>-<end>`) (no need to copy and paste, just say read `{F}/plan{pIt}.md:<start>-<end>, <start>-<end>), any extra context (eg from re-launch prompt or fact-finder) IF NEEDED, and oracle recommendations if follow-up. This file IS the task spec that downstream agents read.
 
 3.2. **Spawn agents in parallel** via single `task` call with `tasks` array — one entry per subtask. Route by classification:
@@ -100,6 +102,8 @@ Do not reinterpret the plan. Add extra context to task spec files only if execut
 - `blocked`/`failed` or accumulated concerns → consult `oracle` via `task` with `agent="oracle"`, `context` with iteration info, `assignment` bundling all failure modes and concerns.
 
 4. After DAG initially done, reason over remaining concerns. Go back to step 3. If non-trivial concerns remain, consult `oracle`.
+
+5. Post exit. Before yield, make sure git is in clear state.
 
 ## 4. Summary report
 
