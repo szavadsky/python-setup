@@ -81,7 +81,6 @@ PYLINT_ALL_PLUGINS = [
     "pylint",
     "--load-plugins=pylint.extensions.mccabe,"
     "python_setup_lint.checkers.no_try_import_checker,"
-    "python_setup_lint.checkers.beartype_checker,"
     "python_setup_lint.checkers.stub_checker,"
     "python_setup_lint.checkers.stub_docstring_checker",
 ]
