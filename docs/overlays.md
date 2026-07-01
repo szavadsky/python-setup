@@ -35,6 +35,18 @@ config_file = "python_setup_lint/config/mypy.ini"
 
 The shared `config/pyrightconfig.json` is copied to `cwd/.pyrightconfig-composed.json` at runtime so pyright resolves relative `venvPath`/`exclude` against the project root. Add `.pyrightconfig-composed.json` to your project's `.gitignore`. The runner merges the shared config with any `pyproject.toml` settings.
 
+### Tool timeouts and memory limits
+
+Each tool has a default timeout (120 seconds) and memory limit (2048 MB). These can be overridden per tool via ``tool_timeouts`` and ``tool_memory_limits`` in ``pyproject.toml``:
+
+```toml
+[tool.python-setup-lint]
+tool_timeouts = { "pyright check" = 300, "mypy" = 180 }
+tool_memory_limits = { "pyright check" = 4096 }
+```
+
+The overlay value wins over the :class:`ToolSpec` default. A value of ``0`` disables the limit entirely (use with caution).
+
 ### Other tools
 
 Rumdl, ty, yamllint, and tach all follow the same pattern: shared config in ``python-setup/config/``, consumer overrides via ``extend`` or ``--config`` flags. (detect-secrets uses its own baseline file, not a shared config.)

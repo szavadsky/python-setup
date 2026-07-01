@@ -65,10 +65,20 @@ def _print_statistics_grouped(
     * ``"file"`` — same layout as ``"tool"`` (no per-file data in statistics).
     """
 
-def _run_cmd(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
+def _run_cmd(
+    cmd: list[str],
+    *,
+    cwd: Path,
+    label: str,
+    timeout: int = 120,
+    memory_limit_mb: int = 2048,
+) -> LintResult:
     """Run a single command via :func:`subprocess.run` and return its result.
 
-    600-second timeout; ``check=False`` so a non-zero exit is returned in
+    *timeout* (default 120s) is passed to ``subprocess.run(timeout=...)``;
+    0 disables the timeout.  *memory_limit_mb* (default 2048) sets
+    ``RLIMIT_AS`` in a ``preexec_fn``; 0 disables the memory limit.
+    ``check=False`` so a non-zero exit is returned in
     :attr:`LintResult.exit_code` rather than raised.  Tests inject
     synthetic results by monkey-patching ``python_setup_lint.runner._run_cmd``
     (re-exported from this module via the runner package ``__init__``);

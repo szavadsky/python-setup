@@ -104,7 +104,8 @@ class FakeRunCmd:
     calls: list[_FakeRunCmdRecord] = field(default_factory=list)
 
     def __call__(
-        self, cmd: list[str], *, cwd: Path = Path(), label: str = ""  # noqa: ARG002  # fake matches _run_cmd signature; cwd unused in fake
+        self, cmd: list[str], *, cwd: Path = Path(), label: str = "",
+        timeout: int = 120, memory_limit_mb: int = 2048,  # noqa: ARG002  # fake matches _run_cmd signature; unused in fake
     ) -> LintResult:
         self.calls.append(_FakeRunCmdRecord(cmd=cmd, label=label))
         if isinstance(self.results, dict):

@@ -494,3 +494,22 @@ class TestRunCmd:
         assert r.exit_code == 127
         assert r.stderr == "Tool not found: nonexistent_cmd_xyz789"
         assert r.elapsed >= 0
+
+    def test_run_cmd_timeout_returns_124(self) -> None:
+        """A command that exceeds the timeout returns exit code 124."""
+        r = _run_cmd(["sleep", "5"], cwd=Path.cwd(), label="sleeper", timeout=1)
+        assert r.exit_code == 124
+        assert "timed out" in r.stderr
+        assert r.elapsed >= 0
+
+    @pytest.mark.slow
+    def test_run_cmd_memory_limit_kills_oom(self) -> None:
+        """A command that exceeds RLIMIT_AS returns non-zero exit code."""
+        r = _run_cmd(
+            ["python", "-c", "x = [0] * (512 * 1024 * 1024)"],
+            cwd=Path.cwd(),
+            label="oom",
+            memory_limit_mb=64,
+        )
+        assert r.exit_code != 0
+        assert r.elapsed >= 0
