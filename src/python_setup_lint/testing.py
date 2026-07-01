@@ -198,3 +198,30 @@ def assert_precommit_hooks_shape(
         return None
 
     lint_hook = _find_hook("lint")
+    assert lint_hook is not None, "Missing 'lint' local hook in .pre-commit-config.yaml"
+    assert lint_hook.get("language") == "system", (
+        "'lint' hook must use language: system"
+    )
+    lint_entry = lint_hook.get("entry", "")
+    assert isinstance(lint_entry, str)
+    assert f"--baseline {baseline_filename}" in lint_entry, (
+        f"'lint' entry must contain --baseline {baseline_filename}, got: {lint_entry!r}"
+    )
+
+    ruff_hook = _find_hook("ruff") or _find_hook("ruff-check")
+    assert ruff_hook is not None, "Missing ruff fix hook (id 'ruff' or 'ruff-check')"
+    ruff_args = ruff_hook.get("args", [])
+    assert isinstance(ruff_args, list)
+    assert "--fix" in ruff_args, (
+        f"ruff fix hook must carry --fix, got args: {ruff_args!r}"
+    )
+
+    for fast_id in ("ruff-format", "ruff", "ruff-check"):
+        fast_hook = _find_hook(fast_id)
+        if fast_hook is None:
+            continue
+        stages = fast_hook.get("stages", [])
+        assert isinstance(stages, list)
+        assert "pre-commit" in stages or stages == [], (
+            f"fast hook '{fast_id}' must run on the pre-commit stage, got stages: {stages!r}"
+        )
