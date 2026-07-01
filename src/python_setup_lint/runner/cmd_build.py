@@ -201,27 +201,46 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
     effective.write_text("\n".join(lines), encoding="utf-8")
     return effective
 
-
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     try:
         raw = shared_config.read_text(encoding="utf-8")
     except OSError:  # pylint: disable=W9740  # best-effort config read fallback; logging would noise unavoidable IO degrade
         return shared_config
     try:
-        json.loads(raw)
+        data = json.loads(raw)
     except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable IO degrade
         return shared_config
 
-    # Pyright resolves venvPath AND exclude entries relative to the config
-    # FILE's directory, not cwd, and silently rejects absolute paths.  When
-    # the shipped config already lives in cwd, it is correct as-is.  When it
-    # lives outside cwd (e.g. config/pyrightconfig.json), copy it unchanged
-    # into cwd so relative paths resolve correctly — no rewriting needed.
+    # Fast path: when the shipped config already lives in cwd, relative
+    # paths resolve correctly as-is — no tmp file needed.
     if shared_config.resolve().parent == cwd.resolve():
         return shared_config
 
-    composed = cwd / ".pyrightconfig-composed.json"
-    composed.write_text(raw, encoding="utf-8")
+    # Pyright resolves venvPath, extraPaths, and exclude entries relative
+    # to the config FILE's directory.  Since the composed config now lives
+    # in tmp, rewrite relative path fields to absolute against cwd.
+    if "venvPath" in data and isinstance(data["venvPath"], str):
+        data["venvPath"] = str(cwd.resolve())
+
+    if "extraPaths" in data and isinstance(data["extraPaths"], list):
+        data["extraPaths"] = [
+            str((cwd / p).resolve()) if isinstance(p, str) else p
+            for p in data["extraPaths"]
+        ]
+
+    if "exclude" in data and isinstance(data["exclude"], list):
+        data["exclude"] = [
+            str((cwd / entry).resolve())
+            if isinstance(entry, str) and not entry.startswith("**/")
+            else entry
+            for entry in data["exclude"]
+        ]
+
+    out_dir = Path(
+        tempfile.mkdtemp(prefix=f"python_setup_lint_pyright_{cwd.name}_")
+    )
+    composed = out_dir / "pyrightconfig.json"
+    composed.write_text(json.dumps(data, indent=4), encoding="utf-8")
     return composed
 
 

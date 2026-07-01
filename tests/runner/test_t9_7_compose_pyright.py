@@ -2,20 +2,18 @@
 
 Coverage mapping (envelope ``T9.7.envelope.md``):
 
-* **surface-unit** — ``_compose_pyright_config`` copies the shipped config
-  unchanged to ``cwd/.pyrightconfig-composed.json`` so pyright resolves
-  relative ``venvPath``/``exclude`` against cwd; no-rewrite fast path returns
-  the shared path unchanged when the config already lives in cwd (no file
-  written); idempotent overwrite (same path, same content); composed file is
-  valid JSON.
+* **surface-unit** — ``_compose_pyright_config`` writes a rewritten copy to a
+  temp directory (not worktree) so pyright resolves relative paths correctly;
+  no-rewrite fast path returns the shared path unchanged when the config already
+  lives in cwd (no file written); composed file is valid JSON.
 * **private-complex-unit** — the helper's "passthrough on JSON-decode failure /
   passthrough on unreadable file / passthrough on non-dict JSON" branches.
 * **downstream-integration** — ``run_lint`` with no consumer opt-in
-  (``pyright_project_override is None``) composes the pyright config at
-  ``cwd/.pyrightconfig-composed.json`` and dispatches the composed path via
-  ``--project`` (verified via a fake ``_run_cmd`` capturing the constructed
-  command); consumer opt-in (``pyright_project_override`` set) still takes
-  precedence over the new default compose path (T5 regression-preserving).
+  (``pyright_project_override is None``) composes the pyright config in a temp
+  directory and dispatches the composed path via ``--project`` (verified via a
+  fake ``_run_cmd`` capturing the constructed command); consumer opt-in
+  (``pyright_project_override`` set) still takes precedence over the new default
+  compose path (T5 regression-preserving).
 * **regress-pass-preserved** — ``tests/runner/test_t1b_self_discovery.py::
   TestDefaultConfigPaths`` unaffected (the compose helper doesn't touch config
   discovery); ruff-compose wire + ruff/pyright override fields still work.
@@ -27,6 +25,7 @@ Coverage mapping (envelope ``T9.7.envelope.md``):
 from __future__ import annotations
 
 import json
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -113,43 +112,76 @@ class TestComposePyrightConfigNoRewrite:
         _compose_pyright_config(tmp_path, shared)
         assert not (tmp_path / ".pyrightconfig-composed.json").exists()
 
-
 class TestComposePyrightConfigRewrites:
-    """Config outside cwd gets copied unchanged to ``cwd/.pyrightconfig-composed.json``."""
+    """Config outside cwd gets rewritten with absolute paths to a temp directory."""
 
-    def test_copies_config_to_cwd_unchanged(self, tmp_path: Path) -> None:
-        """Config outside cwd ⇒ copied verbatim to ``cwd/.pyrightconfig-composed.json``."""
+    def _assert_in_tempdir(self, path: Path) -> None:
+        """Assert *path* is under ``tempfile.gettempdir()``."""
+        assert str(path).startswith(tempfile.gettempdir()), f"{path} not in tempdir"
+
+    def _assert_no_composed_in_cwd(self, cwd: Path) -> None:
+        """Assert no config file leaked into worktree."""
+        assert not (cwd / ".pyrightconfig-composed.json").exists()
+
+    def test_writes_to_tempdir(self, tmp_path: Path) -> None:
+        """Config outside cwd => written to temp dir, not worktree."""
         shared = _write_shipped_config(tmp_path / "shared", body=_SHIPPED_BODY)
         cwd = tmp_path / "project"
         cwd.mkdir()
         composed = _compose_pyright_config(cwd, shared)
-        assert composed == cwd / ".pyrightconfig-composed.json"
+        self._assert_in_tempdir(composed)
+        self._assert_no_composed_in_cwd(cwd)
         assert composed.is_file()
-        # Content is verbatim — no rewriting.
-        assert composed.read_text() == shared.read_text()
-        # venvPath stays relative (no rewriting).
-        data = json.loads(composed.read_text())
-        assert data["venvPath"] == "."
 
-    def test_preserves_relative_excludes_verbatim(self, tmp_path: Path) -> None:
-        """Relative ``exclude`` entries are preserved verbatim (not rewritten to absolute)."""
+    def test_venvPath_rewritten_to_absolute(self, tmp_path: Path) -> None:
+        """Relative ``venvPath`` is rewritten to absolute against cwd."""
         shared = _write_shipped_config(tmp_path / "shared", body=_SHIPPED_BODY)
         cwd = tmp_path / "project"
         cwd.mkdir()
         composed = _compose_pyright_config(cwd, shared)
         data = json.loads(composed.read_text())
-        expected = [
-            ".venv",
+        assert data["venvPath"] == str(cwd.resolve())
+
+    def test_extraPaths_rewritten_to_absolute(self, tmp_path: Path) -> None:
+        """Relative ``extraPaths`` entries are rewritten to absolute."""
+        shared = _write_shipped_config(
+            tmp_path / "shared",
+            body=(
+                '{\n'
+                '    "venvPath": ".",\n'
+                '    "extraPaths": ["src", ".", "tests"],\n'
+                '    "exclude": ["**/__pycache__"]\n'
+                '}\n'
+            ),
+        )
+        cwd = tmp_path / "project"
+        cwd.mkdir()
+        composed = _compose_pyright_config(cwd, shared)
+        data = json.loads(composed.read_text())
+        assert data["extraPaths"] == [
+            str((cwd / "src").resolve()),
+            str(cwd.resolve()),
+            str((cwd / "tests").resolve()),
+        ]
+
+    def test_glob_exclude_entries_left_as_is(self, tmp_path: Path) -> None:
+        """Glob ``exclude`` entries (starting with ``**/``) are left verbatim."""
+        shared = _write_shipped_config(tmp_path / "shared", body=_SHIPPED_BODY)
+        cwd = tmp_path / "project"
+        cwd.mkdir()
+        composed = _compose_pyright_config(cwd, shared)
+        data = json.loads(composed.read_text())
+        assert data["exclude"] == [
+            str((cwd / ".venv").resolve()),
             "**/__pycache__",
             "**/node_modules",
             "**/.*",
-            "build/",
-            "tests/data/",
+            str((cwd / "build/").resolve()),
+            str((cwd / "tests/data/").resolve()),
         ]
-        assert data["exclude"] == expected
 
-    def test_leaves_absolute_exclude_entries_verbatim(self, tmp_path: Path) -> None:
-        """Mixed absolute/relative excludes ⇒ all preserved verbatim in the copy."""
+    def test_absolute_exclude_entries_preserved(self, tmp_path: Path) -> None:
+        """Already-absolute exclude entries are left as-is."""
         shared = tmp_path / "shared_pyrightconfig.json"
         abs_other = "/other/path/.venv"
         shared.write_text(
@@ -159,46 +191,36 @@ class TestComposePyrightConfigRewrites:
         cwd.mkdir()
         composed = _compose_pyright_config(cwd, shared)
         data = json.loads(composed.read_text())
-        # Both entries preserved verbatim — no rewriting.
-        assert data["exclude"] == [abs_other, ".venv"]
-        assert composed == cwd / ".pyrightconfig-composed.json"
+        assert data["exclude"] == [abs_other, str((cwd / ".venv").resolve())]
+        self._assert_in_tempdir(composed)
+        self._assert_no_composed_in_cwd(cwd)
 
     def test_skips_non_string_exclude_entries(self, tmp_path: Path) -> None:
-        """Non-string exclude entries (e.g. numeric ``42``, ``null``) pass through verbatim."""
+        """Non-string exclude entries pass through verbatim, strings rewritten."""
         shared = tmp_path / "shared_pyrightconfig.json"
         shared.write_text(json.dumps({"venvPath": ".", "exclude": [42, None, ".venv"]}))
         cwd = tmp_path / "project"
         cwd.mkdir()
         composed = _compose_pyright_config(cwd, shared)
         data = json.loads(composed.read_text())
-        # All entries preserved verbatim — no rewriting.
-        assert data["exclude"] == [42, None, ".venv"]
-        assert composed == cwd / ".pyrightconfig-composed.json"
+        assert data["exclude"] == [42, None, str((cwd / ".venv").resolve())]
+        self._assert_in_tempdir(composed)
 
-    def test_composed_file_at_cwd_path(self, tmp_path: Path) -> None:
-        """Composed file lands at ``cwd/.pyrightconfig-composed.json``."""
+    def test_composed_file_not_in_cwd_path(self, tmp_path: Path) -> None:
+        """Composed file lands in tempdir, not ``cwd/.pyrightconfig-composed.json``."""
         cwd = tmp_path / "t97_unique_cwd_xyz"
         cwd.mkdir(parents=True, exist_ok=True)
         shared = cwd / "shared_pyrightconfig.json"
         shared.write_text(json.dumps({"venvPath": ".", "exclude": [".venv"]}))
-        # shared is inside cwd → fast path returns shared unchanged.
+        # shared is inside cwd -> fast path returns shared unchanged.
         # To trigger a copy, place shared outside cwd.
         shared_outside = tmp_path / "outside" / "pyrightconfig.json"
         shared_outside.parent.mkdir(parents=True, exist_ok=True)
         shared_outside.write_text(json.dumps({"venvPath": ".", "exclude": [".venv"]}))
         composed = _compose_pyright_config(cwd, shared_outside)
-        assert composed == cwd / ".pyrightconfig-composed.json"
+        self._assert_in_tempdir(composed)
+        self._assert_no_composed_in_cwd(cwd)
         assert composed.is_file()
-
-    def test_idempotent_overwrite(self, tmp_path: Path) -> None:
-        """Each invocation produces the same path and same content (idempotent)."""
-        shared = _write_shipped_config(tmp_path / "shared", body=_SHIPPED_BODY)
-        cwd = tmp_path / "project"
-        cwd.mkdir()
-        first = _compose_pyright_config(cwd, shared)
-        second = _compose_pyright_config(cwd, shared)
-        assert first == second  # same path (idempotent)
-        assert first.read_text() == second.read_text()
 
     def test_output_is_valid_json(self, tmp_path: Path) -> None:
         """The composed file is JSON-parseable (pyright requires JSON)."""
@@ -214,7 +236,7 @@ class TestComposePyrightConfigRewrites:
 
 
 class TestRunLintConsumesPyrightDefaultCompose:
-    """``run_lint`` with ``pyright_project_override is None`` composes a cwd-rooted config.
+    """``run_lint`` with ``pyright_project_override is None`` composes a tempdir config.
 
     Symmetric with the existing ruff compose block; replaces
     ``config.config_paths["pyright check"]`` with the composed path before
@@ -240,8 +262,11 @@ class TestRunLintConsumesPyrightDefaultCompose:
         fake = fake_run_cmd_factory({})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config)
-        assert config.config_paths["pyright check"] != shipped_before  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
-        assert str(config.config_paths["pyright check"]).endswith(".pyrightconfig-composed.json")  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
+        composed = config.config_paths["pyright check"]  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
+        assert composed != shipped_before
+        assert str(composed).startswith(tempfile.gettempdir())
+        assert str(composed).endswith("/pyrightconfig.json")
+        assert not (tmp_path / ".pyrightconfig-composed.json").exists()
 
     def test_pyright_command_uses_composed_project(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -257,8 +282,10 @@ class TestRunLintConsumesPyrightDefaultCompose:
         )
         proj_idx = pyright_rec.cmd.index("--project")
         composed_path = pyright_rec.cmd[proj_idx + 1]
-        assert composed_path.endswith(".pyrightconfig-composed.json")
+        assert composed_path.startswith(tempfile.gettempdir())
+        assert composed_path.endswith("/pyrightconfig.json")
         assert Path(composed_path).is_file()
+        assert not (tmp_path / ".pyrightconfig-composed.json").exists()
 
     def test_no_compose_when_pyright_project_override_set(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -282,7 +309,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
     def test_no_compose_when_no_pyright_config_entry(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """No ``pyright check`` entry in ``config_paths`` ⇒ no compose, no KeyError."""
+        """No ``pyright check`` entry in ``config_paths`` => no compose, no KeyError."""
         config = RunnerConfig(
             cwd=tmp_path,
             tools_override=["pyright check"],
@@ -323,4 +350,6 @@ class TestRunLintConsumesPyrightDefaultCompose:
         run_lint(config=config)
         # Both composed paths land.
         assert "python_setup_lint_ruff_" in str(config.config_paths["ruff check"])  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
-        assert str(config.config_paths["pyright check"]).endswith(".pyrightconfig-composed.json")  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
+        composed_pyright = config.config_paths["pyright check"]  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
+        assert str(composed_pyright).startswith(tempfile.gettempdir())
+        assert str(composed_pyright).endswith("/pyrightconfig.json")
