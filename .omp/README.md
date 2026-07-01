@@ -23,10 +23,10 @@ goal-flow.md (command, eval loop)
 │   │       ├── implement-subtask    [full_developer]
 │   │       │   ├── task             (bundled)
 │   │       │   ├── fact-finder       [full_read_only + web_search]
-│   │       │   ├── quick_task        (bundled)
+│   │       │   ├── sonic        (bundled)
 │   │       │   └── librarian         (bundled)
 │   │       └── check-and-commit-subtask [reviewer_committer]
-│   │           ├── quick_task        (bundled)
+│   │           ├── sonic        (bundled)
 │   │           └── librarian         (bundled)
 │   ├── wave-end-checkpoint       [full_developer]  (per wave end)
 │   ├── fact-finder              [full_read_only + web_search]
@@ -99,8 +99,8 @@ tool lists).
 | `orchestrate-goal-execution` | minimum_orchestrator | task-pusher, wave-end-checkpoint, fact-finder, oracle |
 | `plan-goal-execution` | full_read_only + plan-write | fact-finder, librarian, oracle, designer, task |
 | `task-pusher` | pass_through | implement-subtask, check-and-commit-subtask |
-| `implement-subtask` | full_developer | task, fact-finder, quick_task, librarian |
-| `check-and-commit-subtask` | reviewer_committer | quick_task, librarian |
+| `implement-subtask` | full_developer | task, fact-finder, sonic, librarian |
+| `check-and-commit-subtask` | reviewer_committer | sonic, librarian |
 | `plan-completeness-checker` | full_read_only + delegation | task, fact-finder, oracle |
 | `fact-finder` | full_read_only + web_search | — |
 | `wave-end-checkpoint` | full_developer (full edit access) | — |

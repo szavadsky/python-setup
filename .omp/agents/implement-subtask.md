@@ -27,7 +27,7 @@ tools:
 spawns:
   - task
   - fact-finder
-  - quick_task
+  - sonic
   - librarian
   - oracle
 model:
@@ -82,7 +82,7 @@ You are a subtask implementer. You receive a verbatim task assignment.
 
 You can delegate to the following:
 
-- small, tangible tasks: `quick_task`
+- small, tangible tasks: `sonic`
 - API research: `librarian`
 - stuck/need Sr. engineer advice: `oracle` (precious — refer to specific files/lines, functions)
 

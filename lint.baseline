@@ -3824,18 +3824,17 @@
     "tool": "pyright verify types"
   },
   {
-    "exit_code": 2,
-    "output": "{\n    \"messages\": [\n        {\n            \"type\": \"error\",\n            \"symbol\": \"missing-module-stub\",\n            \"message\": \"Production module 'python_setup_lint' has no companion .pyi stub\",\n            \"messageId\": \"E97A0\",\n            \"confidence\": \"UNDEFINED\",\n            \"module\": \"python_setup_lint\",\n            \"obj\": \"\",\n            \"line\": 1,\n            \"column\": 0,\n            \"endLine\": null,\n            \"endColumn\": null,\n            \"path\": \"src/python_setup_lint/__init__.py\",\n            \"absolutePath\": \"/home/slava/aiexp/python-setup/src/python_setup_lint/__init__.py\"\n        },\n        {\n            \"type\": \"error\",\n            \"symbol\": \"missing-module-stub-for-import\",\n            \"message\": \"Project-local module 'python_setup_lint' imported by 'python_setup_lint.runner._config' has no .pyi stub\",\n            \"messageId\": \"E97A2\",\n            \"confidence\": \"UNDEFINED\",\n            \"module\": \"python_setup_lint.runner._config\",\n            \"obj\": \"\",\n            \"line\": 1,\n            \"column\": 0,\n            \"endLine\": null,\n            \"endColumn\": null,\n            \"path\": \"src/python_setup_lint/runner/_config.py\",\n            \"absolutePath\": \"/home/slava/aiexp/python-setup/src/python_setup_lint/runner/_config.py\"\n        },\n        {\n            \"type\": \"error\",\n            \"symbol\": \"missing-module-stub-for-import\",\n            \"message\": \"Project-local module 'python_setup_lint' imported by 'python_setup_lint.setup' has no .pyi stub\",\n            \"messageId\": \"E97A2\",\n            \"confidence\": \"UNDEFINED\",\n            \"module\": \"python_setup_lint.setup\",\n            \"obj\": \"\",\n            \"line\": 1,\n            \"column\": 0,\n            \"endLine\": null,\n            \"endColumn\": null,\n            \"path\": \"src/python_setup_lint/setup.py\",\n            \"absolutePath\": \"/home/slava/aiexp/python-setup/src/python_setup_lint/setup.py\"\n        }\n    ],\n    \"statistics\": {\n        \"messageTypeCount\": {\n            \"fatal\": 0,\n            \"error\": 3,\n            \"warning\": 0,\n            \"refactor\": 0,\n            \"convention\": 0,\n            \"info\": 0\n        },\n        \"modulesLinted\": 57,\n        \"score\": 9.964846496367471\n    }\n}\n",
+    "exit_code": 0,
     "tool": "pylint"
   },
   {
     "exit_code": 0,
-    "output": "\n-------------------------------------------------------------------\nYour code has been rated at 10.00/10 (previous run: 9.96/10, +0.04)\n\n",
+    "output": "",
     "tool": "pylint-pyi"
   },
   {
     "exit_code": 0,
-    "output": "{\n    \"messages\": [],\n    \"statistics\": {\n        \"messageTypeCount\": {\n            \"fatal\": 0,\n            \"error\": 0,\n            \"warning\": 0,\n            \"refactor\": 0,\n            \"convention\": 0,\n            \"info\": 0\n        },\n        \"modulesLinted\": 57,\n        \"score\": 10.0\n    }\n}\n",
+    "output": "            \"convention\": 0,\n            \"error\": 0,\n            \"fatal\": 0,\n            \"info\": 0\n            \"refactor\": 0,\n            \"warning\": 0,\n        \"messageTypeCount\": {\n        \"score\": 10.0\n        },\n    \"messages\": [],\n    \"statistics\": {\n    }\n{\n}",
     "tool": "pylint tests"
   },
   {

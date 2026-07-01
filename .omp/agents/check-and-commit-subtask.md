@@ -14,7 +14,7 @@ tools:
   - job
   - irc
 spawns:
-  - quick_task
+  - sonic
   - task
   - librarian
 model:
