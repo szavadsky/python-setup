@@ -15,7 +15,7 @@ spawns:
   - wave-end-checkpoint
   - fact-finder
   - oracle
-  - quick_task
+  - sonic
 model:
   - pi/task
 thinkingLevel: high
@@ -72,7 +72,7 @@ Iterate until DAG done or fundamentally blocked. Do not stop for partial wave fa
 |---|---|---|---|---|
 | `dev` | `subtask-dev-process` | True | Task implementation orchestrator | Pass filename `{F}/Execute{pIt}/{WaveSlug}{SubtaskSlug}.md`. Nothing else. |
 | `verify` | `fact-finder` | False | Verifier | Verify: read `{F}/plan{pIt}.md:<ranges>`, report status + findings. |
-| `housekeeping` | `quick_task` | False | Housekeeper | Read `{F}/Execute{pIt}/{WaveSlug}{SubtaskSlug}.md`, apply the trivial edit described. |
+| `housekeeping` | `sonic` | False | Housekeeper | Read `{F}/Execute{pIt}/{WaveSlug}{SubtaskSlug}.md`, apply the trivial edit described. |
 
 Provide `context` with plan iteration number and project root. Each spawn:
 
