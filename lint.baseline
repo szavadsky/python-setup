@@ -174,8 +174,7 @@
     "tool": "ty check"
   },
   {
-    "exit_code": 1,
-    "output": "python_setup_lint.checkers.asyncio_timeout_checker failed to import. Maybe install the runtime package or alter PYTHONPATH? ModuleNotFoundError: No module named 'python_setup_lint.checkers.asyncio_timeout_checker'\n",
+    "exit_code": 0,
     "tool": "mypy.stubtest"
   },
   {
@@ -4411,20 +4410,6 @@
         "line": 1,
         "msg": "Implementation file 'python_setup_lint.checkers._semantic' has usage docstring for 'python_setup_lint.checkers._semantic'; move to .pyi",
         "rule": "docstring-in-impl"
-      },
-      {
-        "col": 4,
-        "file": "src/python_setup_lint/checkers/asyncio_timeout_checker.pyi",
-        "line": 9,
-        "msg": "Public function 'visit_await' in 'python_setup_lint.checkers.asyncio_timeout_checker' is missing @beartype decorator",
-        "rule": "missing-beartype"
-      },
-      {
-        "col": 0,
-        "file": "src/python_setup_lint/checkers/asyncio_timeout_checker.pyi",
-        "line": 11,
-        "msg": "Public function 'register' in 'python_setup_lint.checkers.asyncio_timeout_checker' is missing @beartype decorator",
-        "rule": "missing-beartype"
       },
       {
         "col": 0,
