@@ -75,10 +75,8 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
 def _abs_rel_path(value: object, abs_cwd: Path) -> str | None:
     """Convert a relative path to absolute, or return None if invalid/absolute."""
 
-def _resolve_exclude_paths(
-    exclude_entries: object, abs_cwd: Path
-) -> tuple[list[str], bool]:
-    """Resolve exclude paths relative to abs_cwd. Returns (resolved, changed)."""
+def _resolve_exclude_paths(exclude_entries: object, _abs_cwd: Path) -> tuple[list[str], bool]:
+    """Keep exclude patterns as-is — composed config lives in cwd, so relative globs resolve correctly."""
 
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     """Build an effective pyright config with ``venvPath``/``exclude`` rooted at *cwd*.

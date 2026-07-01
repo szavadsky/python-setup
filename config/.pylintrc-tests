@@ -13,7 +13,7 @@
 #
 # Reviewed by oracle: option C (hybrid rcfile) per plan7 WS-1.
 max-module-lines=500
-ignore-paths=tests/data/,\.venv,__pycache__,node_modules,build/,.tmp*/  # tests/data/ is planted-violation sample, excluded
+ignore-paths=tests/data/,\.venv,__pycache__,node_modules,build/,.tmp*,.omp  # tests/data/ is planted-violation sample, excluded; .omp is agentic orchestration, not product
 ignore-patterns=.*\.pyi$
 source-roots=src
 load-plugins=python_setup_lint.checkers.conformance.suppression_justification_checker,python_setup_lint.checkers.conformance.tmp_path_checker,python_setup_lint.checkers.conformance.no_try_import_checker,python_setup_lint.checkers.conformance.missing_error_chain_checker,python_setup_lint.checkers.conformance.bare_except_comment_checker,python_setup_lint.checkers.conformance.silent_except_checker,python_setup_lint.checkers.conformance.trivial_wrapper_checker,python_setup_lint.checkers.conformance.redundant_type_guard_checker,python_setup_lint.checkers.conformance.unnamed_tuple_dict_checker,python_setup_lint.checkers.conformance.generic_key_dict_checker,python_setup_lint.checkers.conformance.missing_return_annotation_checker,python_setup_lint.checkers.conformance.pyi_underscore_checker

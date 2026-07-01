@@ -5,6 +5,7 @@ Passes TASK_FILE to downstream agents (implement-subtask, check-and-commit-subta
 they read it themselves. Runs the implement->check retry loop, yields structured result.
 All orchestration logic lives here; the agent is a pass-through pipe.
 """
+
 MAX_ITERATIONS = 3
 
 CONCERN_ITEM = {
@@ -61,7 +62,7 @@ def log(msg):
 def log_prompt(label, prompt):
     """Log prompt: label, first 50 chars (verbatim), total size."""
     preview = prompt[:50].replace("\n", "\\n")
-    log(f"{label} prompt [{len(prompt)} chars]: \"{preview}{'...' if len(prompt) > 50 else ''}\"")
+    log(f'{label} prompt [{len(prompt)} chars]: "{preview}{"..." if len(prompt) > 50 else ""}"')
 
 
 def log_response(label, result):
@@ -89,7 +90,11 @@ for iteration in range(1, MAX_ITERATIONS + 1):
     # --- implement-subtask ---
     impl_prompt = ""
     if iteration > 1:
-        impl_prompt += "\n\nReviewer raised concerns on previous iteration:\n" + concerns_text(prev_impl_concerns) + "\nAddress these. Your task was\n -----\n"
+        impl_prompt += (
+            "\n\nReviewer raised concerns on previous iteration:\n"
+            + concerns_text(prev_impl_concerns)
+            + "\nAddress these. Your task was\n -----\n"
+        )
     impl_prompt += TASK_PROMPT
     log_prompt(f"iter {iteration} implement-subtask", impl_prompt)
 
@@ -111,7 +116,9 @@ for iteration in range(1, MAX_ITERATIONS + 1):
 
     impl_plan_concerns = impl_result.get("planConcerns", [])
     if impl_plan_concerns:
-        check_prompt += "\n\nImplementer had the following plan concerns. Check adversarially:\n" + concerns_text(impl_plan_concerns)
+        check_prompt += "\n\nImplementer had the following plan concerns. Check adversarially:\n" + concerns_text(
+            impl_plan_concerns
+        )
 
     if iteration > 1:
         response = impl_result.get("responseToReviewer", "")
@@ -127,7 +134,13 @@ for iteration in range(1, MAX_ITERATIONS + 1):
         check_result = agent(check_prompt, agent="check-and-commit-subtask", schema=CHECK_SCHEMA)
     except Exception as e:
         log(f"check-and-commit-subtask failed: {e}")
-        check_result = {"status": "failed", "committed": False, "implementationConcerns": [], "extraPlanConcerns": [], "planConcernNotes": ""}
+        check_result = {
+            "status": "failed",
+            "committed": False,
+            "implementationConcerns": [],
+            "extraPlanConcerns": [],
+            "planConcernNotes": "",
+        }
 
     log_response(f"iter {iteration} check-and-commit", check_result)
     merge_concerns(all_plan_concerns, check_result.get("extraPlanConcerns", []))

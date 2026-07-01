@@ -163,18 +163,13 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
         raw_banned_api = lint_cfg.get("flake8-tidy-imports", {}).get("banned-api", {})
         if isinstance(raw_banned_api, dict):
             project_banned_api = {
-                key: {"msg": str(value.get("msg", ""))}
-                if isinstance(value, dict)
-                else {"msg": str(value)}
+                key: {"msg": str(value.get("msg", ""))} if isinstance(value, dict) else {"msg": str(value)}
                 for key, value in raw_banned_api.items()
             }
         raw_per_file = lint_cfg.get("per-file-ignores", {})
         if isinstance(raw_per_file, dict):
             project_per_file = {
-                key: [str(v) for v in value]
-                if isinstance(value, list)
-                else [str(value)]
-                for key, value in raw_per_file.items()
+                key: [str(v) for v in value] if isinstance(value, list) else [str(value)] for key, value in raw_per_file.items()
             }
 
     # No-override fast path — return shared config unchanged.
@@ -217,22 +212,12 @@ def _abs_rel_path(value: object, abs_cwd: Path) -> str | None:
     return str(abs_cwd / p)
 
 
-def _resolve_exclude_paths(
-    exclude_entries: object, abs_cwd: Path
-) -> tuple[list[str], bool]:
-    # Resolve exclude paths relative to *abs_cwd*. Returns (resolved, changed).
+def _resolve_exclude_paths(exclude_entries: object, _abs_cwd: Path) -> tuple[list[str], bool]:
+    # Keep exclude patterns as-is — composed config lives in cwd, so relative
+    # globs resolve correctly.  No absolute conversion needed.
     if not isinstance(exclude_entries, list):
         return [], False
-    new_excludes: list[str] = []
-    changed = False
-    for entry in exclude_entries:
-        rewritten = _abs_rel_path(entry, abs_cwd)
-        if rewritten is not None:
-            new_excludes.append(rewritten)
-            changed = True
-        else:
-            new_excludes.append(entry if isinstance(entry, str) else entry)  # type: ignore[arg-type]  # entry is object; list expects str  # ty:ignore[invalid-argument-type]
-    return new_excludes, changed
+    return [str(e) for e in exclude_entries], False
 
 
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
@@ -242,7 +227,7 @@ def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
         return shared_config
     try:
         data = json.loads(raw)
-    except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
+    except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable IO degrade
         return shared_config
     if not isinstance(data, dict):
         return shared_config
@@ -263,13 +248,8 @@ def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     if not changed:
         return shared_config
 
-    out_dir = Path(
-        tempfile.mkdtemp(prefix=f"python_setup_lint_pyright_{abs_cwd.name}_")
-    )
-    composed = out_dir / "pyrightconfig.json"
-    composed.write_text(
-        json.dumps(data, indent=4, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    composed = abs_cwd / ".pyrightconfig-composed.json"
+    composed.write_text(json.dumps(data, indent=4, ensure_ascii=False) + "\n", encoding="utf-8")
     return composed
 
 
@@ -320,11 +300,7 @@ def _build_command(
     config_flag_override: list[str] | None = None,
 ) -> list[str]:
     cmd = list(spec.command)
-    cmd.extend(
-        _build_config_flags(spec, config, config_flag_override=config_flag_override)
-    )
+    cmd.extend(_build_config_flags(spec, config, config_flag_override=config_flag_override))
     cmd.extend(_build_fix_flags(spec, fix=fix))
-    cmd.extend(
-        _build_path_and_exclude_args(spec, config=config, path=path, exclude=exclude)
-    )
+    cmd.extend(_build_path_and_exclude_args(spec, config=config, path=path, exclude=exclude))
     return cmd
