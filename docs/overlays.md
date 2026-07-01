@@ -49,7 +49,7 @@ The overlay value wins over the :class:`ToolSpec` default. A value of ``0`` disa
 
 ### Other tools
 
-Rumdl, ty, yamllint, and tach all follow the same pattern: shared config in ``python-setup/config/``, consumer overrides via ``extend`` or ``--config`` flags. (detect-secrets uses its own baseline file, not a shared config.)
+Rumdl, ty, yamllint, and tach all follow the same pattern: shared config in ``config/``, consumer overrides via ``extend`` or ``--config`` flags. (detect-secrets uses its own baseline file, not a shared config.)
 
 ## Custom checkers
 
