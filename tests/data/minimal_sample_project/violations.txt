@@ -8,3 +8,7 @@ asyncio-timeout
 tempfile-mkdtemp-in-test
 use-structlog
 use-structured-logging
+# Rumdl (markdown linting) — planted markdown violations
+MD022
+MD009
+MD012
