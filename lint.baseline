@@ -5,18 +5,160 @@
     "tool": "tach check"
   },
   {
-    "exit_code": 0,
-    "output": "All checks passed!\n",
+    "exit_code": 1,
+    "output": "RUF100 [*] Unused `noqa` directive (non-enabled: `TC002`)\n --> src/python_setup_lint/checkers/_checker_base.py:7:28\n  |\n5 | from pathlib import Path\n6 |\n7 | from astroid import nodes  # noqa: TC002\n  |                            ^^^^^^^^^^^^^\n  |\nhelp: Remove unused `noqa` directive\n\nRUF100 [*] Unused `noqa` directive (non-enabled: `TC002`)\n  --> src/python_setup_lint/checkers/beartype_checker.py:10:35\n   |\n 8 | from beartype import beartype\n 9 | from pylint.checkers import BaseChecker\n10 | from pylint.lint import PyLinter  # noqa: TC002\n   |                                   ^^^^^^^^^^^^^\n11 |\n12 | log = structlog.get_logger(__name__)\n   |\nhelp: Remove unused `noqa` directive\n\nFound 2 errors.\n[*] 2 fixable with the `--fix` option.\n",
     "tool": "ruff check"
   },
   {
     "exit_code": 0,
-    "output": "",
+    "output": "\nSuccess: No issues found in 19 files (XXXms)\n",
     "tool": "rumdl check"
   },
   {
-    "exit_code": 0,
-    "output": "Success: no issues found in 112 source files\n",
+    "exit_code": 1,
+    "records": [
+      {
+        "col": null,
+        "file": "tests/runner/test_bench_runner_overhead.py",
+        "line": 141,
+        "msg": "Argument 1 to \"_find_py_files\" has incompatible type \"list[str] | None\"; expected \"Sequence[str]\"",
+        "rule": "arg-type"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_bench_runner_overhead.py",
+        "line": 179,
+        "msg": "Unexpected keyword argument \"no_fail_fast\" for \"run_lint\"",
+        "rule": "call-arg"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_bench_runner_overhead.py",
+        "line": 253,
+        "msg": "Unused \"type: ignore\" comment",
+        "rule": "unused-ignore"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_parsers_hypothesis.py",
+        "line": 29,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_detect_secrets_json\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_parsers_hypothesis.py",
+        "line": 29,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_mypy_stderr\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_parsers_hypothesis.py",
+        "line": 29,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_pylint_json2\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_parsers_hypothesis.py",
+        "line": 29,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_pyright_outputjson\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_parsers_hypothesis.py",
+        "line": 29,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_pyright_verify_types\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_parsers_hypothesis.py",
+        "line": 29,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_ruff_statistics\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_parsers_hypothesis.py",
+        "line": 29,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_rumdl_statistics\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_parsers_hypothesis.py",
+        "line": 29,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_stubtest_stderr\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_parsers_hypothesis.py",
+        "line": 29,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_tach_json\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_parsers_hypothesis.py",
+        "line": 29,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_ty_concise\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_parsers_hypothesis.py",
+        "line": 29,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_yamllint_parsable\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_t3_coverage.py",
+        "line": 16,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_detect_secrets_json\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_t3_coverage.py",
+        "line": 16,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_mypy_stderr\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_t3_coverage.py",
+        "line": 16,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_tach_json\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_t3_coverage.py",
+        "line": 16,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_ty_concise\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_t3_coverage.py",
+        "line": 16,
+        "msg": "Module \"python_setup_lint.runner.parsers\" has no attribute \"_parse_yamllint_parsable\"",
+        "rule": "attr-defined"
+      },
+      {
+        "col": null,
+        "file": "tests/runner/test_t9_7_compose_pyright_live.py",
+        "line": 47,
+        "msg": "Missing type arguments for generic type \"dict\"",
+        "rule": "type-arg"
+      }
+    ],
+    "schema": "v2",
     "tool": "mypy"
   },
   {
@@ -26,26 +168,60 @@
     "tool": "yamllint"
   },
   {
-    "exit_code": 0,
-    "output": "All checks passed!\n",
+    "exit_code": -6,
+    "records": [],
+    "schema": "v2",
     "tool": "ty check"
   },
   {
-    "exit_code": 0,
-    "output": "",
+    "exit_code": 1,
+    "output": "python_setup_lint.checkers.asyncio_timeout_checker failed to import. Maybe install the runtime package or alter PYTHONPATH? ModuleNotFoundError: No module named 'python_setup_lint.checkers.asyncio_timeout_checker'\n",
     "tool": "mypy.stubtest"
   },
   {
     "diagnostics": {
-      "generalDiagnostics": [],
+      "generalDiagnostics": [
+        {
+          "file": "/home/slava/aiexp/python-setup/tests/runner/test_bench_runner_overhead.py",
+          "message": "Argument of type \"list[str] | None\" cannot be assigned to parameter \"dirs\" of type \"Sequence[str]\" in function \"_find_py_files\"\n\u00a0\u00a0Type \"list[str] | None\" is not assignable to type \"Sequence[str]\"\n\u00a0\u00a0\u00a0\u00a0\"None\" is not assignable to \"Sequence[str]\"",
+          "range": {
+            "end": {
+              "character": 61,
+              "line": 140
+            },
+            "start": {
+              "character": 39,
+              "line": 140
+            }
+          },
+          "rule": "reportArgumentType",
+          "severity": "error"
+        },
+        {
+          "file": "/home/slava/aiexp/python-setup/tests/runner/test_bench_runner_overhead.py",
+          "message": "No parameter named \"no_fail_fast\"",
+          "range": {
+            "end": {
+              "character": 49,
+              "line": 178
+            },
+            "start": {
+              "character": 37,
+              "line": 178
+            }
+          },
+          "rule": "reportCallIssue",
+          "severity": "error"
+        }
+      ],
       "summary": {
-        "errorCount": 0,
-        "filesAnalyzed": 159,
+        "errorCount": 2,
+        "filesAnalyzed": 164,
         "informationCount": 0,
         "warningCount": 0
       }
     },
-    "exit_code": 0,
+    "exit_code": 1,
     "tool": "pyright check"
   },
   {
@@ -53,21 +229,21 @@
       "generalDiagnostics": [],
       "summary": {
         "errorCount": 0,
-        "filesAnalyzed": 42,
+        "filesAnalyzed": 44,
         "informationCount": 0,
         "warningCount": 0
       },
       "typeCompleteness": {
-        "completenessScore": 1,
+        "completenessScore": 0.9862068965517241,
         "exportedSymbolCounts": {
-          "withAmbiguousType": 0,
-          "withKnownType": 271,
+          "withAmbiguousType": 4,
+          "withKnownType": 286,
           "withUnknownType": 0
         },
         "ignoreUnknownTypesFromImports": true,
-        "missingClassDocStringCount": 3,
+        "missingClassDocStringCount": 5,
         "missingDefaultParamCount": 1,
-        "missingFunctionDocStringCount": 35,
+        "missingFunctionDocStringCount": 41,
         "moduleName": "python_setup_lint",
         "modules": [
           {
@@ -78,6 +254,12 @@
           },
           {
             "name": "python_setup_lint.checkers"
+          },
+          {
+            "name": "python_setup_lint.checkers.asyncio_timeout_checker"
+          },
+          {
+            "name": "python_setup_lint.checkers.beartype_checker"
           },
           {
             "name": "python_setup_lint.checkers.conformance"
@@ -267,6 +449,24 @@
             "isExported": true,
             "isTypeAmbiguous": false,
             "isTypeKnown": true,
+            "name": "python_setup_lint.runner.types.RunnerConfig.tool_timeouts",
+            "referenceCount": 1
+          },
+          {
+            "category": "variable",
+            "diagnostics": [],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.runner.types.RunnerConfig.tool_memory_limits",
+            "referenceCount": 1
+          },
+          {
+            "category": "variable",
+            "diagnostics": [],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
             "name": "python_setup_lint.runner.types.RunnerConfig.secrets_baseline",
             "referenceCount": 1
           },
@@ -367,6 +567,288 @@
             "isTypeAmbiguous": false,
             "isTypeKnown": true,
             "name": "python_setup_lint.runner.types.RunnerConfig.__dataclass_fields__",
+            "referenceCount": 1
+          },
+          {
+            "category": "class",
+            "diagnostics": [
+              {
+                "file": "",
+                "message": "No docstring found for class \"python_setup_lint.checkers.asyncio_timeout_checker.AsyncTimeoutChecker\"",
+                "severity": "warning"
+              }
+            ],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.checkers.asyncio_timeout_checker.AsyncTimeoutChecker",
+            "referenceCount": 1
+          },
+          {
+            "category": "variable",
+            "diagnostics": [],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.checkers.asyncio_timeout_checker.AsyncTimeoutChecker.name",
+            "referenceCount": 1
+          },
+          {
+            "category": "method",
+            "diagnostics": [
+              {
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/asyncio_timeout_checker.pyi",
+                "message": "No docstring found for function \"python_setup_lint.checkers.asyncio_timeout_checker.AsyncTimeoutChecker.visit_await\"",
+                "range": {
+                  "end": {
+                    "character": 19,
+                    "line": 8
+                  },
+                  "start": {
+                    "character": 8,
+                    "line": 8
+                  }
+                },
+                "severity": "warning"
+              }
+            ],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.checkers.asyncio_timeout_checker.AsyncTimeoutChecker.visit_await",
+            "referenceCount": 1
+          },
+          {
+            "category": "function",
+            "diagnostics": [
+              {
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/asyncio_timeout_checker.pyi",
+                "message": "No docstring found for function \"python_setup_lint.checkers.asyncio_timeout_checker.register\"",
+                "range": {
+                  "end": {
+                    "character": 12,
+                    "line": 10
+                  },
+                  "start": {
+                    "character": 4,
+                    "line": 10
+                  }
+                },
+                "severity": "warning"
+              }
+            ],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.checkers.asyncio_timeout_checker.register",
+            "referenceCount": 1
+          },
+          {
+            "category": "variable",
+            "diagnostics": [
+              {
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/beartype_checker.py",
+                "message": "Type is missing type annotation and could be inferred differently by type checkers\n\u00a0\u00a0Inferred type is \"Any\"",
+                "range": {
+                  "end": {
+                    "character": 3,
+                    "line": 11
+                  },
+                  "start": {
+                    "character": 0,
+                    "line": 11
+                  }
+                },
+                "severity": "error"
+              }
+            ],
+            "isExported": true,
+            "isTypeAmbiguous": true,
+            "isTypeKnown": false,
+            "name": "python_setup_lint.checkers.beartype_checker.log",
+            "referenceCount": 1
+          },
+          {
+            "category": "class",
+            "diagnostics": [
+              {
+                "file": "",
+                "message": "No docstring found for class \"python_setup_lint.checkers.beartype_checker.BeartypeCoverageChecker\"",
+                "severity": "warning"
+              }
+            ],
+            "isExported": true,
+            "isTypeAmbiguous": true,
+            "isTypeKnown": false,
+            "name": "python_setup_lint.checkers.beartype_checker.BeartypeCoverageChecker",
+            "referenceCount": 1
+          },
+          {
+            "category": "variable",
+            "diagnostics": [],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.checkers.beartype_checker.BeartypeCoverageChecker.name",
+            "referenceCount": 1
+          },
+          {
+            "category": "variable",
+            "diagnostics": [
+              {
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/beartype_checker.py",
+                "message": "Ambiguous base class override\n\u00a0\u00a0Type inferred in child class is \"dict[str, MessageDefinitionTuple]\"\n\u00a0\u00a0Inferred child class type is missing type annotation and could be inferred differently by type checkers",
+                "range": {
+                  "end": {
+                    "character": 8,
+                    "line": 17
+                  },
+                  "start": {
+                    "character": 4,
+                    "line": 17
+                  }
+                },
+                "severity": "error"
+              }
+            ],
+            "isExported": true,
+            "isTypeAmbiguous": true,
+            "isTypeKnown": false,
+            "name": "python_setup_lint.checkers.beartype_checker.BeartypeCoverageChecker.msgs",
+            "referenceCount": 1
+          },
+          {
+            "category": "type alias",
+            "diagnostics": [
+              {
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/beartype_checker.py",
+                "message": "Ambiguous base class override\n\u00a0\u00a0Type inferred in child class is \"tuple[tuple[Literal['source-roots'], dict[str, str | bool | int | Pattern[str] | Iterable[str | int | Pattern[str]] | type[_CallbackAction] | ((Any) -> Any) | ((Any, Any, Any, Any) -> Any) | None]]]\"\n\u00a0\u00a0Inferred child class type is missing type annotation and could be inferred differently by type checkers",
+                "range": {
+                  "end": {
+                    "character": 11,
+                    "line": 24
+                  },
+                  "start": {
+                    "character": 4,
+                    "line": 24
+                  }
+                },
+                "severity": "error"
+              }
+            ],
+            "isExported": true,
+            "isTypeAmbiguous": true,
+            "isTypeKnown": false,
+            "name": "python_setup_lint.checkers.beartype_checker.BeartypeCoverageChecker.options",
+            "referenceCount": 1
+          },
+          {
+            "category": "method",
+            "diagnostics": [],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.checkers.beartype_checker.BeartypeCoverageChecker.__init__",
+            "referenceCount": 1
+          },
+          {
+            "category": "method",
+            "diagnostics": [
+              {
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/beartype_checker.py",
+                "message": "No docstring found for function \"python_setup_lint.checkers.beartype_checker.BeartypeCoverageChecker.open\"",
+                "range": {
+                  "end": {
+                    "character": 12,
+                    "line": 41
+                  },
+                  "start": {
+                    "character": 8,
+                    "line": 41
+                  }
+                },
+                "severity": "warning"
+              }
+            ],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.checkers.beartype_checker.BeartypeCoverageChecker.open",
+            "referenceCount": 1
+          },
+          {
+            "category": "method",
+            "diagnostics": [
+              {
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/beartype_checker.py",
+                "message": "No docstring found for function \"python_setup_lint.checkers.beartype_checker.BeartypeCoverageChecker.visit_functiondef\"",
+                "range": {
+                  "end": {
+                    "character": 25,
+                    "line": 51
+                  },
+                  "start": {
+                    "character": 8,
+                    "line": 51
+                  }
+                },
+                "severity": "warning"
+              }
+            ],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.checkers.beartype_checker.BeartypeCoverageChecker.visit_functiondef",
+            "referenceCount": 1
+          },
+          {
+            "category": "method",
+            "diagnostics": [
+              {
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/beartype_checker.py",
+                "message": "No docstring found for function \"python_setup_lint.checkers.beartype_checker.BeartypeCoverageChecker.visit_asyncfunctiondef\"",
+                "range": {
+                  "end": {
+                    "character": 30,
+                    "line": 54
+                  },
+                  "start": {
+                    "character": 8,
+                    "line": 54
+                  }
+                },
+                "severity": "warning"
+              }
+            ],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.checkers.beartype_checker.BeartypeCoverageChecker.visit_asyncfunctiondef",
+            "referenceCount": 1
+          },
+          {
+            "category": "function",
+            "diagnostics": [
+              {
+                "file": "/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/beartype_checker.py",
+                "message": "No docstring found for function \"python_setup_lint.checkers.beartype_checker.register\"",
+                "range": {
+                  "end": {
+                    "character": 12,
+                    "line": 121
+                  },
+                  "start": {
+                    "character": 4,
+                    "line": 121
+                  }
+                },
+                "severity": "warning"
+              }
+            ],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.checkers.beartype_checker.register",
             "referenceCount": 1
           },
           {
@@ -1818,6 +2300,15 @@
             "isExported": true,
             "isTypeAmbiguous": false,
             "isTypeKnown": true,
+            "name": "python_setup_lint.checkers.stub.docstring_checker.StubDocstringChecker.visit_classdef",
+            "referenceCount": 1
+          },
+          {
+            "category": "method",
+            "diagnostics": [],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
             "name": "python_setup_lint.checkers.stub.docstring_checker.StubDocstringChecker.visit_functiondef",
             "referenceCount": 1
           },
@@ -1839,11 +2330,11 @@
                 "range": {
                   "end": {
                     "character": 12,
-                    "line": 30
+                    "line": 33
                   },
                   "start": {
                     "character": 4,
-                    "line": 30
+                    "line": 33
                   }
                 },
                 "severity": "warning"
@@ -2679,6 +3170,24 @@
             "isTypeAmbiguous": false,
             "isTypeKnown": true,
             "name": "python_setup_lint.runner.types.ToolSpec.exclude_flag",
+            "referenceCount": 1
+          },
+          {
+            "category": "variable",
+            "diagnostics": [],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.runner.types.ToolSpec.timeout",
+            "referenceCount": 1
+          },
+          {
+            "category": "variable",
+            "diagnostics": [],
+            "isExported": true,
+            "isTypeAmbiguous": false,
+            "isTypeKnown": true,
+            "name": "python_setup_lint.runner.types.ToolSpec.memory_limit_mb",
             "referenceCount": 1
           },
           {
@@ -3820,22 +4329,355 @@
         ]
       }
     },
-    "exit_code": 0,
+    "exit_code": 1,
     "tool": "pyright verify types"
   },
   {
-    "exit_code": 0,
-    "output": "{\n    \"messages\": [],\n    \"statistics\": {\n        \"messageTypeCount\": {\n            \"fatal\": 0,\n            \"error\": 0,\n            \"warning\": 0,\n            \"refactor\": 0,\n            \"convention\": 0,\n            \"info\": 0\n        },\n        \"modulesLinted\": 57,\n        \"score\": 10.0\n    }\n}\n",
+    "exit_code": 14,
+    "records": [
+      {
+        "col": null,
+        "file": null,
+        "line": null,
+        "msg": "Similar lines (R0801)",
+        "rule": "R0801:python_setup_lint.checkers._base:102-146<->python_setup_lint.checkers.beartype_checker:25-61"
+      },
+      {
+        "col": null,
+        "file": null,
+        "line": null,
+        "msg": "Similar lines (R0801)",
+        "rule": "R0801:python_setup_lint.checkers._base:58-87<->python_setup_lint.checkers._checker_base:10-39"
+      },
+      {
+        "col": null,
+        "file": null,
+        "line": null,
+        "msg": "Similar lines (R0801)",
+        "rule": "R0801:python_setup_lint.checkers.beartype_checker:63-96<->python_setup_lint.checkers.conformance.beartype_checker:46-79"
+      }
+    ],
+    "schema": "v2",
     "tool": "pylint"
   },
   {
-    "exit_code": 0,
-    "output": "\n--------------------------------------------------------------------\nYour code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)\n\n",
+    "exit_code": 4,
+    "records": [
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/__main__.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.__main__' has usage docstring for 'python_setup_lint.__main__'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/_setup_update.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint._setup_update' has usage docstring for 'python_setup_lint._setup_update'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/_base.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers._base' has usage docstring for 'python_setup_lint.checkers._base'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/_base.py",
+        "line": 36,
+        "msg": "Implementation file 'python_setup_lint.checkers._base' has usage docstring for 'MessageDef'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/_base.py",
+        "line": 92,
+        "msg": "Implementation file 'python_setup_lint.checkers._base' has usage docstring for 'SourceRootMixin'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/_checker_base.py",
+        "line": 7,
+        "msg": "Suppression comment without technical justification: from astroid import nodes  # noqa: TC002",
+        "rule": "unjustified-suppression"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/_semantic.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers._semantic' has usage docstring for 'python_setup_lint.checkers._semantic'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 4,
+        "file": "src/python_setup_lint/checkers/asyncio_timeout_checker.pyi",
+        "line": 9,
+        "msg": "Public function 'visit_await' in 'python_setup_lint.checkers.asyncio_timeout_checker' is missing @beartype decorator",
+        "rule": "missing-beartype"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/asyncio_timeout_checker.pyi",
+        "line": 11,
+        "msg": "Public function 'register' in 'python_setup_lint.checkers.asyncio_timeout_checker' is missing @beartype decorator",
+        "rule": "missing-beartype"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/bare_except_comment_checker.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.bare_except_comment_checker' has usage docstring for 'python_setup_lint.checkers.conformance.bare_except_comment_checker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/bare_except_comment_checker.py",
+        "line": 26,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.bare_except_comment_checker' has usage docstring for 'BareExceptCommentChecker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/beartype_checker.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.beartype_checker' has usage docstring for 'python_setup_lint.checkers.conformance.beartype_checker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/beartype_checker.py",
+        "line": 29,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.beartype_checker' has usage docstring for 'BeartypeCoverageChecker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/generic_key_dict_checker.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.generic_key_dict_checker' has usage docstring for 'python_setup_lint.checkers.conformance.generic_key_dict_checker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/generic_key_dict_checker.py",
+        "line": 41,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.generic_key_dict_checker' has usage docstring for 'GenericKeyDictChecker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/missing_error_chain_checker.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.missing_error_chain_checker' has usage docstring for 'python_setup_lint.checkers.conformance.missing_error_chain_checker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/missing_error_chain_checker.py",
+        "line": 18,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.missing_error_chain_checker' has usage docstring for 'MissingErrorChainChecker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/missing_return_annotation_checker.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.missing_return_annotation_checker' has usage docstring for 'python_setup_lint.checkers.conformance.missing_return_annotation_checker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/missing_return_annotation_checker.py",
+        "line": 29,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.missing_return_annotation_checker' has usage docstring for 'MissingReturnAnnotationChecker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/no_try_import_checker.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.no_try_import_checker' has usage docstring for 'python_setup_lint.checkers.conformance.no_try_import_checker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/pyi_underscore_checker.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.pyi_underscore_checker' has usage docstring for 'python_setup_lint.checkers.conformance.pyi_underscore_checker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/pyi_underscore_checker.py",
+        "line": 23,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.pyi_underscore_checker' has usage docstring for 'PyiUnderscoreChecker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/redundant_type_guard_checker.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.redundant_type_guard_checker' has usage docstring for 'python_setup_lint.checkers.conformance.redundant_type_guard_checker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/redundant_type_guard_checker.py",
+        "line": 18,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.redundant_type_guard_checker' has usage docstring for 'RedundantTypeGuardChecker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/silent_except_checker.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.silent_except_checker' has usage docstring for 'python_setup_lint.checkers.conformance.silent_except_checker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/silent_except_checker.py",
+        "line": 22,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.silent_except_checker' has usage docstring for 'SilentExceptChecker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/suppression_justification_checker.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.suppression_justification_checker' has usage docstring for 'python_setup_lint.checkers.conformance.suppression_justification_checker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/suppression_justification_checker.py",
+        "line": 51,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.suppression_justification_checker' has usage docstring for 'SuppressionJustificationChecker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/trivial_wrapper_checker.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.trivial_wrapper_checker' has usage docstring for 'python_setup_lint.checkers.conformance.trivial_wrapper_checker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/trivial_wrapper_checker.py",
+        "line": 18,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.trivial_wrapper_checker' has usage docstring for 'TrivialWrapperChecker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/unnamed_tuple_dict_checker.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.unnamed_tuple_dict_checker' has usage docstring for 'python_setup_lint.checkers.conformance.unnamed_tuple_dict_checker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/unnamed_tuple_dict_checker.py",
+        "line": 23,
+        "msg": "Implementation file 'python_setup_lint.checkers.conformance.unnamed_tuple_dict_checker' has usage docstring for 'UnnamedTupleDictChecker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/stub/docstring_checker.py",
+        "line": 50,
+        "msg": "Implementation file 'python_setup_lint.checkers.stub.docstring_checker' has usage docstring for 'StubDocstringChecker'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/stub/fidelity/orchestrator.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.checkers.stub.fidelity.orchestrator' has usage docstring for 'python_setup_lint.checkers.stub.fidelity.orchestrator'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/stub/normalizer.py",
+        "line": 32,
+        "msg": "Implementation file 'python_setup_lint.checkers.stub.normalizer' has usage docstring for 'AnnotationNormalizer'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/runner/baseline.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.runner.baseline' has usage docstring for 'python_setup_lint.runner.baseline'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/runner/cmd_build.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.runner.cmd_build' has usage docstring for 'python_setup_lint.runner.cmd_build'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/runner/dispatch.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.runner.dispatch' has usage docstring for 'python_setup_lint.runner.dispatch'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/runner/output.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.runner.output' has usage docstring for 'python_setup_lint.runner.output'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/runner/types.py",
+        "line": 13,
+        "msg": "Implementation file 'python_setup_lint.runner.types' has usage docstring for 'ToolSpec'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/runner/types.py",
+        "line": 67,
+        "msg": "Implementation file 'python_setup_lint.runner.types' has usage docstring for 'RunnerConfig'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/testing.py",
+        "line": 1,
+        "msg": "Implementation file 'python_setup_lint.testing' has usage docstring for 'python_setup_lint.testing'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/testing.py",
+        "line": 77,
+        "msg": "Implementation file 'python_setup_lint.testing' has usage docstring for '_FakeRunCmdRecord'; move to .pyi",
+        "rule": "docstring-in-impl"
+      },
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/testing.py",
+        "line": 90,
+        "msg": "Implementation file 'python_setup_lint.testing' has usage docstring for 'FakeRunCmd'; move to .pyi",
+        "rule": "docstring-in-impl"
+      }
+    ],
+    "schema": "v2",
     "tool": "pylint-pyi"
   },
   {
-    "exit_code": 0,
-    "output": "{\n    \"messages\": [],\n    \"statistics\": {\n        \"messageTypeCount\": {\n            \"fatal\": 0,\n            \"error\": 0,\n            \"warning\": 0,\n            \"refactor\": 0,\n            \"convention\": 0,\n            \"info\": 0\n        },\n        \"modulesLinted\": 61,\n        \"score\": 10.0\n    }\n}\n",
+    "exit_code": 4,
+    "output": "{\n    \"messages\": [\n        {\n            \"type\": \"warning\",\n            \"symbol\": \"unjustified-suppression\",\n            \"message\": \"Suppression comment without technical justification: print(f\\\"[bench] Per-tool measurements: {len(rows)} rows\\\")  # type: ignore[arg-type]\",\n            \"messageId\": \"W9704\",\n            \"confidence\": \"UNDEFINED\",\n            \"module\": \"tests.runner.test_bench_runner_overhead\",\n            \"obj\": \"\",\n            \"line\": 253,\n            \"column\": 0,\n            \"endLine\": null,\n            \"endColumn\": null,\n            \"path\": \"tests/runner/test_bench_runner_overhead.py\",\n            \"absolutePath\": \"/home/slava/aiexp/python-setup/tests/runner/test_bench_runner_overhead.py\"\n        },\n        {\n            \"type\": \"warning\",\n            \"symbol\": \"unjustified-suppression\",\n            \"message\": \"Suppression comment without technical justification: list[dict[str, Any]]\",\n            \"messageId\": \"W9704\",\n            \"confidence\": \"UNDEFINED\",\n            \"module\": \"tests.runner.test_bench_runner_overhead\",\n            \"obj\": \"test_bench_runner_overhead_given_tmp_path_then_within_threshold\",\n            \"line\": 127,\n            \"column\": 10,\n            \"endLine\": 127,\n            \"endColumn\": 30,\n            \"path\": \"tests/runner/test_bench_runner_overhead.py\",\n            \"absolutePath\": \"/home/slava/aiexp/python-setup/tests/runner/test_bench_runner_overhead.py\"\n        },\n        {\n            \"type\": \"warning\",\n            \"symbol\": \"unjustified-suppression\",\n            \"message\": \"Suppression comment without technical justification: # pylint: disable=too-many-lines\",\n            \"messageId\": \"W9704\",\n            \"confidence\": \"UNDEFINED\",\n            \"module\": \"tests.runner.test_lint_runner_integration\",\n            \"obj\": \"\",\n            \"line\": 1,\n            \"column\": 0,\n            \"endLine\": null,\n            \"endColumn\": null,\n            \"path\": \"tests/runner/test_lint_runner_integration.py\",\n            \"absolutePath\": \"/home/slava/aiexp/python-setup/tests/runner/test_lint_runner_integration.py\"\n        }\n    ],\n    \"statistics\": {\n        \"messageTypeCount\": {\n            \"fatal\": 0,\n            \"error\": 0,\n            \"warning\": 3,\n            \"refactor\": 0,\n            \"convention\": 0,\n            \"info\": 0\n        },\n        \"modulesLinted\": 62,\n        \"score\": 9.994453688297282\n    }\n}\n",
     "tool": "pylint tests"
   },
   {
