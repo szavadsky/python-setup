@@ -4,7 +4,6 @@ Verifies the AST checker detects (and does not detect) the correct
 try/except+import patterns. All fixture src strings live in
 ``tests/checkers/_factories.py`` (free LOC, not counted against the gate).
 """
-
 from __future__ import annotations
 
 from typing import Any
@@ -20,12 +19,14 @@ from tests.checkers._factories import (
     _NO_TRY_DO_NOT_DETECT_CASES,
 )
 
+pytestmark = pytest.mark.no_external_api
+
 
 @pytest.mark.parametrize(
     ("code", "expected_count", "expected_args"),
     _NO_TRY_DETECT_CASES,
 )
-def test_detects_no_try_import(
+def test_checker_given_try_except_import_pattern_then_flags_violation(
     code: str,
     expected_count: int,
     expected_args: tuple[Any, ...],

@@ -3,7 +3,6 @@
 Per-tool / per-flag rows are parametrised via shared tables in
 ``tests/runner/_factories.py`` (T12 consolidation).
 """
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -37,6 +36,8 @@ from tests.runner._factories_extras import (
 )
 from tests.runner._factories_tables import BUILD_COMMAND_CASES
 
+pytestmark = pytest.mark.no_external_api
+
 _CONFIG = RunnerConfig(cwd=Path.cwd())
 
 
@@ -46,7 +47,7 @@ _CONFIG = RunnerConfig(cwd=Path.cwd())
 class TestToolSpec:
     """The static 13-tool table invariant."""
 
-    def test_known_tools_present(self) -> None:
+    def test_tool_spec_given_known_tools_then_present(self) -> None:
         assert {t.name for t in TOOLS} == {
             "tach check",
             "ruff check",
@@ -63,7 +64,7 @@ class TestToolSpec:
             "detect-secrets",
         }
 
-    def test_autofix_and_no_duplicate_names(self) -> None:
+    def test_tool_spec_given_tools_then_autofix_and_no_duplicates(self) -> None:
         assert {t.name for t in TOOLS if t.supports_fix} == {
             "ruff check",
             "rumdl check",
@@ -72,7 +73,7 @@ class TestToolSpec:
         assert all(t.name for t in TOOLS)
         assert len({t.name for t in TOOLS}) == len(TOOLS) == 13
 
-    def test_yamllint_default_paths_is_dot(self) -> None:
+    def test_tool_spec_given_yamllint_then_default_paths_is_dot(self) -> None:
         """yamllint default_paths changed from config/*.yaml to . (T5 fix)."""
         yamllint_spec = TOOLS_BY_NAME["yamllint"]
         assert yamllint_spec.default_paths == ["."], (
@@ -93,7 +94,7 @@ class TestToolSpec:
 class TestRegisterLintToolIdentity:
     """``register_lint_tool`` is the same function from both import paths."""
 
-    def test_extra_tools_imports_dispatch_register(self) -> None:
+    def test_register_lint_tool_given_extra_tools_import_then_dispatches_register(self) -> None:
         """extra_tools.register_lint_tool is dispatch.register_lint_tool (re-export)."""
         from python_setup_lint.runner.dispatch import register_lint_tool as dispatch_reg
         from python_setup_lint.runner.extra_tools import register_lint_tool as extra_reg
@@ -103,7 +104,7 @@ class TestRegisterLintToolIdentity:
             "as dispatch.register_lint_tool"
         )
 
-    def test_runner_init_exports_dispatch_register(self) -> None:
+    def test_register_lint_tool_given_runner_init_then_exports_register(self) -> None:
         """``python_setup_lint.runner.register_lint_tool`` is dispatch.register_lint_tool."""
         from python_setup_lint.runner.dispatch import register_lint_tool as dispatch_reg
 
@@ -138,7 +139,7 @@ class TestStrategyBuildCommand:
         py_files = [a for a in cmd[1:] if a.endswith(".py")]
         assert len(py_files) > 0 and all(a.endswith(".py") for a in py_files)
 
-    def test_pylint_rcfile_auto_discovery(self) -> None:
+    def test_strategy_build_command_given_pylint_then_auto_discovers_rcfile(self) -> None:
         """_resolve_pylintrc discovers config/.pylintrc when no explicit path given."""
         from python_setup_lint.runner.cmd_build import _resolve_pylintrc
 
@@ -148,7 +149,7 @@ class TestStrategyBuildCommand:
         assert rcfile.name == ".pylintrc"
         assert rcfile.is_file()
 
-    def test_pylint_rcfile_explicit_override(self, tmp_path: Path) -> None:
+    def test_strategy_build_command_given_pylint_rcfile_override_then_uses_override(self, tmp_path: Path) -> None:
         """_resolve_pylintrc returns explicit config_paths entry when provided."""
         from python_setup_lint.runner.cmd_build import _resolve_pylintrc
 
@@ -157,14 +158,14 @@ class TestStrategyBuildCommand:
         rcfile = _resolve_pylintrc({"pylint": fake_rc}, Path.cwd())
         assert rcfile == fake_rc
 
-    def test_pylint_rcfile_none_when_missing(self, tmp_path: Path) -> None:
+    def test_strategy_build_command_given_pylint_missing_rcfile_then_none(self, tmp_path: Path) -> None:
         """_resolve_pylintrc returns None when no rcfile exists."""
         from python_setup_lint.runner.cmd_build import _resolve_pylintrc
 
         rcfile = _resolve_pylintrc({}, tmp_path)
         assert rcfile is None
 
-    def test_pylint_rcfile_project_root_fallback(self, tmp_path: Path) -> None:
+    def test_strategy_build_command_given_pylint_then_project_root_fallback(self, tmp_path: Path) -> None:
         """_resolve_pylintrc falls back to project-root .pylintrc when config/.pylintrc missing."""
         from python_setup_lint.runner.cmd_build import _resolve_pylintrc
 
@@ -175,7 +176,7 @@ class TestStrategyBuildCommand:
         assert rcfile == tmp_path / ".pylintrc"
         assert rcfile.is_file()
 
-    def test_pylint_rcfile_prefers_config_over_root(self, tmp_path: Path) -> None:
+    def test_strategy_build_command_given_pylint_then_prefers_config_over_root(self, tmp_path: Path) -> None:
         """_resolve_pylintrc prefers config/.pylintrc over project-root .pylintrc."""
         from python_setup_lint.runner.cmd_build import _resolve_pylintrc
 
@@ -187,7 +188,7 @@ class TestStrategyBuildCommand:
         assert rcfile == config_dir / ".pylintrc"
         assert rcfile.read_text() == "[MASTER]\nconfig\n"
 
-    def test_pylint_build_command_injects_rcfile(self) -> None:
+    def test_strategy_build_command_given_pylint_then_injects_rcfile(self) -> None:
         """build_command includes --rcfile when auto-discovered."""
         from python_setup_lint.runner.dispatch import _PylintLintTool
 
@@ -200,7 +201,7 @@ class TestStrategyBuildCommand:
         rcfile_path = Path(cmd[rcfile_idx + 1])
         assert rcfile_path.name == ".pylintrc"
 
-    def test_yamllint_strategy_expands_glob(self) -> None:
+    def test_strategy_build_command_given_yamllint_then_expands_glob(self) -> None:
         cmd = _build_command(
             ToolSpec(
                 "yamllint",
@@ -228,7 +229,7 @@ class TestStrategyBuildCommand:
         for tok in expected_tokens:
             assert tok in cmd, f"expected {tok!r} in {cmd!r}"
 
-    def test_detect_secrets_strategy_bash_pipeline(self) -> None:
+    def test_strategy_build_command_given_detect_secrets_then_bash_pipeline(self) -> None:
         cmd = STRATEGIES["detect-secrets"].build_command(
             config=RunnerConfig(cwd=Path.cwd())
         )
@@ -242,7 +243,7 @@ class TestStrategyBuildCommand:
 class TestPathHelpers:
     """``_find_py_files`` and ``_expand_globs`` edge cases."""
 
-    def test_find_py_files_in_dir(self) -> None:
+    def test_path_helpers_given_dir_then_finds_py_files(self) -> None:
         files = _find_py_files(["src/python_setup_lint"], cwd=Path.cwd())
         assert (
             files
@@ -250,7 +251,7 @@ class TestPathHelpers:
             and all(not Path(f).is_absolute() for f in files)
         )
 
-    def test_find_py_files_sorted_and_dedupe(self) -> None:
+    def test_path_helpers_given_py_files_then_sorted_and_deduped(self) -> None:
         files = _find_py_files(
             ["src/python_setup_lint", "src/python_setup_lint"], cwd=Path.cwd()
         )
@@ -262,7 +263,7 @@ class TestPathHelpers:
     ) -> None:
         assert _find_py_files(paths, cwd=Path.cwd()) == expected
 
-    def test_find_py_files_ignores_non_py(self) -> None:
+    def test_path_helpers_given_non_py_files_then_ignores(self) -> None:
         # ``src/python_setup_lint`` has both .py and .pyi — only .py kept.
         assert all(
             f.endswith(".py")
@@ -273,7 +274,7 @@ class TestPathHelpers:
     def test_expand_globs(self, paths: list[str], check) -> None:  # type: ignore[no-untyped-def]  # test function; signature varies by parametrize
         assert check(_expand_globs(paths, cwd=Path.cwd()))
 
-    def test_expand_globs_yamllint_config_glob(self, tmp_path: Path) -> None:
+    def test_path_helpers_given_yamllint_config_glob_then_expands(self, tmp_path: Path) -> None:
         """yamllint ``config/*.yaml`` glob resolves to actual files under cwd/config/."""
         config_dir = tmp_path / "config"
         config_dir.mkdir()
@@ -284,7 +285,7 @@ class TestPathHelpers:
         assert "config/test.yaml" in result
         assert "config/other.yaml" in result
 
-    def test_expand_globs_no_match_returns_empty(self, tmp_path: Path) -> None:
+    def test_path_helpers_given_no_match_then_returns_empty(self, tmp_path: Path) -> None:
         """Glob with no matching files returns empty list (no crash)."""
         result = _expand_globs(["config/*.yaml"], cwd=tmp_path)
         assert result == []
@@ -296,7 +297,7 @@ class TestPathHelpers:
 class TestDetectSecretsBootstrap:
     """``_DetectSecretsLintTool`` bootstraps baseline when missing."""
 
-    def test_bootstrap_when_baseline_missing(self, tmp_path: Path) -> None:
+    def test_detect_secrets_bootstrap_given_baseline_missing_then_bootstraps(self, tmp_path: Path) -> None:
         """When ``.secrets.baseline`` does not exist, build_command returns a bootstrap scan command."""
         from python_setup_lint.runner.dispatch import _DetectSecretsLintTool
 
@@ -308,7 +309,7 @@ class TestDetectSecretsBootstrap:
         assert "detect-secrets scan" in cmd[2]
         assert ".secrets.baseline" in cmd[2]
 
-    def test_standard_pipeline_when_baseline_exists(self, tmp_path: Path) -> None:
+    def test_detect_secrets_bootstrap_given_baseline_exists_then_standard_pipeline(self, tmp_path: Path) -> None:
         """When ``.secrets.baseline`` exists, build_command returns the standard git-ls-files pipeline."""
         from python_setup_lint.runner.dispatch import _DetectSecretsLintTool
 
@@ -322,7 +323,7 @@ class TestDetectSecretsBootstrap:
         assert "detect-secrets-hook" in cmd[2]
         assert "--baseline" in cmd[2]
 
-    def test_bootstrap_with_custom_baseline_path(self, tmp_path: Path) -> None:
+    def test_detect_secrets_bootstrap_given_custom_baseline_path_then_uses_custom(self, tmp_path: Path) -> None:
         """Custom ``secrets_baseline`` path is respected in bootstrap command."""
         from python_setup_lint.runner.dispatch import _DetectSecretsLintTool
 
@@ -339,13 +340,13 @@ class TestDetectSecretsBootstrap:
 class TestTachConfig:
     """``tach.toml`` exists in the project root."""
 
-    def test_tach_toml_exists(self) -> None:
+    def test_tach_config_given_tach_toml_exists_then_returns_path(self) -> None:
         """tach.toml is present in the python-setup project root."""
         project_root = Path(__file__).resolve().parent.parent.parent
         tach_toml = project_root / "tach.toml"
         assert tach_toml.is_file(), f"Expected {tach_toml} to exist"
 
-    def test_tach_toml_has_source_roots(self) -> None:
+    def test_tach_config_given_tach_toml_then_has_source_roots(self) -> None:
         """tach.toml declares source_roots so tach check can run."""
         import tomllib
 
@@ -362,7 +363,7 @@ class TestTachConfig:
 class TestPylintrcNoMaxComplexity:
     """``config/.pylintrc`` has no ``max-complexity`` (T1 fix)."""
 
-    def test_pylintrc_no_max_complexity(self) -> None:
+    def test_pylintrc_given_no_max_complexity_then_emits_warning(self) -> None:
         """The shipped .pylintrc does not contain max-complexity (removed in T1)."""
         project_root = Path(__file__).resolve().parent.parent.parent
         pylintrc = project_root / "config" / ".pylintrc"
@@ -379,7 +380,7 @@ class TestPylintrcNoMaxComplexity:
 class TestObservabilitySkipLines:
     """Stderr skip lines for tools that legitimately cannot run."""
 
-    def test_package_name_none_emits_stderr_skip(
+    def test_observability_given_package_name_none_then_emits_stderr_skip(
         self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """``package_name=None`` prints SKIPPED lines to stderr for stubtest+verifytypes."""
@@ -393,7 +394,7 @@ class TestObservabilitySkipLines:
         assert "[mypy.stubtest]" in captured.err
         assert "[pyright verify types]" in captured.err
 
-    def test_fix_na_emits_stderr(
+    def test_observability_given_fix_na_then_emits_stderr(
         self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """``--fix`` on a tool that does not support autofix prints N/A to stderr."""
@@ -405,7 +406,7 @@ class TestObservabilitySkipLines:
         captured = capsys.readouterr()
         assert "--fix: N/A" in captured.err
 
-    def test_path_na_emits_stderr(
+    def test_observability_given_path_na_then_emits_stderr(
         self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """``--path`` on a tool that does not support path scoping prints N/A to stderr."""
@@ -417,7 +418,7 @@ class TestObservabilitySkipLines:
         captured = capsys.readouterr()
         assert "--path: N/A" in captured.err
 
-    def test_exclude_na_emits_stderr(
+    def test_observability_given_exclude_na_then_emits_stderr(
         self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """``--exclude`` on a tool that does not support exclude prints N/A to stderr."""
@@ -453,7 +454,7 @@ class TestPrintResult:
         for tok in want_tokens:
             assert tok in out, f"expected {tok!r} in output: {out!r}"
 
-    def test_print_stderr_before_stdout(
+    def test_print_result_given_stderr_and_stdout_then_stderr_before_stdout(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """stderr line always renders before stdout line in ``_print_result`` output."""

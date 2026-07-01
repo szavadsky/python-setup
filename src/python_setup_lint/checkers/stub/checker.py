@@ -1,8 +1,3 @@
-"""Enforce stub coverage (Invariant 1), import contract (Invariant 2), and
-stub-impl fidelity (Invariant 3): every production .py needs a .pyi stub;
-project-local imports must reference declared stub symbols; .pyi annotations
-and signatures must match .py counterparts after normalization.
-"""
 
 from __future__ import annotations
 
@@ -42,10 +37,6 @@ log = structlog.get_logger(__name__)
 
 
 class StubChecker(BaseChecker):
-    """Enforce Invariant 1 (coverage), 2 (import contract), 3 (fidelity).
-
-    Configuration via TOML under ``[tool.pylint.stub-checker]``.
-    """
 
     name = "stub-checker"
     msgs = _msgs(

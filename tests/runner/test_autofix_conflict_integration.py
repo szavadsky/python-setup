@@ -1,5 +1,5 @@
+# pylint: disable=duplicate-code  # shared test helper pattern with test_extra_tools
 """T4 — conflict-tolerant autofix: integration tests for ``--fix`` route."""
-
 from __future__ import annotations
 
 import textwrap
@@ -42,7 +42,7 @@ class TestRunLintFixDownstream:
     """
 
     @pytest.mark.slow
-    def test_run_lint_fix_does_not_crash(
+    def test_run_lint_fix_given_downstream_then_does_not_crash(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
@@ -114,7 +114,7 @@ class TestRunLintFixDownstream:
 class TestPrecommitTemplateHasFix:
     """T4 verification gate: rendered template's lint hook entry has ``--fix``."""
 
-    def test_precommit_template_lint_entry_has_fix(self) -> None:
+    def test_precommit_template_given_lint_entry_then_has_fix(self) -> None:
         """The ``lint`` local hook entry contains ``--fix``."""
         from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
 
@@ -123,7 +123,7 @@ class TestPrecommitTemplateHasFix:
             "expected 'python-setup lint --fix' in template"
         )
 
-    def test_precommit_template_no_timeout(self) -> None:
+    def test_precommit_template_given_lint_entry_then_no_timeout(self) -> None:
         """Template never carries the ``timeout`` key — avoiding the schema warning (D5)."""
         from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
 
@@ -131,14 +131,14 @@ class TestPrecommitTemplateHasFix:
             "timeout key present in template — pre-commit would warn"
         )
 
-    def test_precommit_template_no_pre_push(self) -> None:
+    def test_precommit_template_given_lint_entry_then_no_pre_push(self) -> None:
         """The hook stage name ``pre-push`` is NOT in the template — fast hooks
         are tied to ``git commit`` only."""
         from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
 
         assert "pre-push" not in _PRECOMMIT_TEMPLATE, "pre-push present in template"
 
-    def test_precommit_template_still_has_ruff_hooks(self) -> None:
+    def test_precommit_template_given_template_then_still_has_ruff_hooks(self) -> None:
         """ruff-format + ruff-check fast hooks retained for compatibility."""
         from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
 
@@ -146,7 +146,7 @@ class TestPrecommitTemplateHasFix:
         assert "ruff-check" in _PRECOMMIT_TEMPLATE
         assert "args: [--fix, --exit-non-zero-on-fix]" in _PRECOMMIT_TEMPLATE
 
-    def test_agents_snippet_documents_autofix_and_opt_out(self) -> None:
+    def test_precommit_template_given_agents_snippet_then_documents_autofix(self) -> None:
         """The AGENTS snippet mentions the autofix route + env-var opt-out."""
         from python_setup_lint._setup_precommit import (
             _AGENTS_SENTINEL,
@@ -163,7 +163,7 @@ class TestPrecommitTemplateHasFix:
         assert "staged" in rendered.lower()
         assert "E999" in rendered
 
-    def test_install_artifact_lint_hook_has_fix(self, tmp_path: Path) -> None:
+    def test_precommit_template_given_install_artifact_then_lint_hook_has_fix(self, tmp_path: Path) -> None:
         """End-to-end install writes a `.pre-commit-config.yaml` whose lint entry has --fix."""
         from python_setup_lint.setup import install
 
@@ -191,7 +191,7 @@ class TestPrecommitTemplateHasFix:
 class TestRunLintFixDispatch:
     """``run_lint(fix=True)`` routes supports_fix tools through the conflict-aware helper."""
 
-    def test_fix_route_uses_conflict_helper(
+    def test_run_lint_fix_dispatch_given_fix_route_then_uses_conflict_helper(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
@@ -227,7 +227,7 @@ class TestRunLintFixDispatch:
             f"canary label never appeared in fix=True labels: {labels!r}"
         )
 
-    def test_fix_route_with_path_triggers_canary_for_each_supports_fix(
+    def test_run_lint_fix_dispatch_given_path_then_triggers_canary(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
@@ -254,7 +254,7 @@ class TestRunLintFixDispatch:
             f"canary call count mismatch with --path: {labels!r}"
         )
 
-    def test_no_fix_does_not_invoke_canary(
+    def test_run_lint_fix_dispatch_given_no_fix_then_no_canary(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
@@ -300,7 +300,7 @@ class TestAutofixRealGitIntegration:
 
     # ── Case 1: staged+unstaged same file → skipped ──────────────
 
-    def test_staged_and_unstaged_same_file_skipped_real_git(
+    def test_autofix_real_git_given_staged_and_unstaged_same_file_then_skipped(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -348,7 +348,7 @@ class TestAutofixRealGitIntegration:
 
     # ── Case 2: staged-only file gets fixed ──────────────────────
 
-    def test_staged_only_file_fixed_real_git(
+    def test_autofix_real_git_given_staged_only_then_fixed(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -383,7 +383,7 @@ class TestAutofixRealGitIntegration:
 
     # ── Case 3: E999-canary revert with real git repo ─────────────
 
-    def test_e999_canary_revert_real_git(
+    def test_autofix_real_git_given_e999_canary_then_reverts(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],

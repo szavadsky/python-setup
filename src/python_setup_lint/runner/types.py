@@ -1,9 +1,3 @@
-"""Core data types for the lint pipeline.
-
-Pure data containers — no subprocess, no disk, no dispatch logic.  Kept in
-a dedicated module so the rest of the pipeline can depend on a stable
-contract without pulling in ``argparse`` / ``subprocess`` transitively.
-"""
 
 from __future__ import annotations
 
@@ -46,7 +40,6 @@ class ToolSpec(NamedTuple):
 
 @dataclass
 class LintResult:
-    """Result of running a single lint tool."""
 
     tool_name: str
     exit_code: int
@@ -57,7 +50,6 @@ class LintResult:
 
 @dataclass
 class ViolationCount:
-    """Aggregated violation count for a single rule in a single tool."""
 
     tool: str
     rule: str

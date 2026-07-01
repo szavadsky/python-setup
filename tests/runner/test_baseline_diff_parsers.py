@@ -1,5 +1,4 @@
 """Parser and capture unit tests for baseline diff."""
-
 from __future__ import annotations
 
 import json
@@ -25,6 +24,8 @@ from python_setup_lint.runner.parsers import (  # type: ignore[attr-defined]  # 
     _parse_yamllint_records,
 )
 from python_setup_lint.testing import make_lint_result
+
+pytestmark = pytest.mark.no_external_api
 
 
 def _sorted(records: list[Record]) -> list[Record]:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
@@ -193,7 +194,7 @@ class TestRecordParsers:
             ),
         ],
     )
-    def test_parser(self, tool: Any, output_lines: Any, expected: Any, request: Any) -> None:
+    def test_record_parsers_given_tool_output_then_parses_records(self, tool: Any, output_lines: Any, expected: Any, request: Any) -> None:
         if expected is None:
             recs = tool(output_lines)
             rules = [r.rule for r in recs]
@@ -264,7 +265,7 @@ class TestCaptureSchemaV2:
             ),
         ],
     )
-    def test_capture(self, tool_name: str, stdout: str, check: Any) -> None:
+    def test_capture_schema_v2_given_tool_output_then_captures(self, tool_name: str, stdout: str, check: Any) -> None:
         cap = _capture_baseline([make_lint_result(tool_name=tool_name, stdout=stdout)])
         assert check(cap)
 
@@ -328,11 +329,11 @@ class TestCaptureOneEdgeCases:
             ),
         ],
     )
-    def test_capture_one(self, tool_name: str, stdout: str, check: Any) -> None:
+    def test_capture_one_given_edge_cases_then_expected_violations(self, tool_name: str, stdout: str, check: Any) -> None:
         cap = _capture_baseline([make_lint_result(tool_name=tool_name, stdout=stdout)])
         assert check(cap)
 
-    def test_pyright_verifytypes_baseline_diff_stable(self, tmp_path: Path) -> None:
+    def test_capture_one_given_pyright_verifytypes_then_baseline_diff_stable(self, tmp_path: Path) -> None:
         baseline_path = tmp_path / "baseline.json"
         saved = [{
             "tool": "pyright verify types", "exit_code": 0,
@@ -380,7 +381,7 @@ class TestCompareSortedEdgeCases:
             ),
         ],
     )
-    def test_compare_sorted_edge(
+    def test_compare_sorted_given_edge_cases_then_expected_additions_and_removals(
         self, current: list[Record], saved: list[Record],
         exp_additions: int, exp_removals: int,
     ) -> None:
@@ -454,7 +455,7 @@ class TestParserEdgeCases:
             ),
         ],
     )
-    def test_parser_edge(self, tool: Any, stdout: str, expected: Any, request: Any) -> None:
+    def test_parser_given_edge_cases_then_expected_records(self, tool: Any, stdout: str, expected: Any, request: Any) -> None:
         recs = tool(stdout)
         if expected is None:
             if "r0801_inline_spans" in request.node.callspec.id:

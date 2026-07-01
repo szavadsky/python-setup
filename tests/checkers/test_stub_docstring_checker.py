@@ -3,7 +3,6 @@
 Tests docstring detection logic and full pipeline with stub_checker.
 Fixture src rows live in ``tests/checkers/_factories.py`` (free LOC).
 """
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -20,6 +19,8 @@ from tests.checkers._factories import (
     _DOCSTRING_NO_COMPANION_CASES,
     walk_both_release_for_pyi,
 )
+
+pytestmark = pytest.mark.no_external_api
 
 
 def _make_tc() -> Any:  # pylint: disable=W9728  # test helper: type-specific alias for _make_tc_factory, avoids repeated imports
@@ -43,7 +44,7 @@ def _doc_msg_count(msgs: list[Any]) -> int:  # pylint: disable=W9728  # test hel
 
 
 @pytest.mark.parametrize(("code", "expected_count"), _DOCSTRING_NO_COMPANION_CASES)
-def test_no_companion_stub_no_message(code: str, expected_count: int) -> None:
+def test_checker_given_no_companion_stub_then_no_message(code: str, expected_count: int) -> None:
     """When no companion .pyi exists, ``docstring-in-impl`` MUST NOT fire."""
     msgs = _walk_and_release(code)
     assert _doc_msg_count(msgs) == expected_count
@@ -65,7 +66,7 @@ def test_does_not_detect(code: str) -> None:
 @pytest.mark.parametrize(
     ("code", "expected_count", "expected_args1"), _DOCSTRING_DETECT_CASES
 )
-def test_detects_docstring_in_impl(
+def test_checker_given_docstring_in_impl_not_stub_then_flagged(
     tmp_path: Path,
     code: str,
     expected_count: int,

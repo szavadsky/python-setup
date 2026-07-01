@@ -3,7 +3,6 @@
 Verifies the AST checker detects (and does not detect) the correct
 asyncio.timeout() / anyio.fail_after() wrapping patterns.
 """
-
 from __future__ import annotations
 
 from typing import Any
@@ -78,7 +77,7 @@ _DO_NOT_DETECT_CASES: list[Any] = [  # pylint: disable=unjustified-suppression  
 
 
 @pytest.mark.parametrize(("code", "expected_first_arg"), _DETECT_CASES)
-def test_detects_missing_timeout(code: str, expected_first_arg: str) -> None:
+def test_checker_given_await_without_timeout_then_flags_missing(code: str, expected_first_arg: str) -> None:
     """Checker must flag await calls missing enclosing timeout."""
     msgs = _walk_and_release(code, AsyncTimeoutChecker)
     assert len(msgs) >= 1, f"Expected ≥1 message, got 0 for:\n{code}"
@@ -98,7 +97,7 @@ def test_does_not_detect(code: str) -> None:
     )
 
 
-def test_multiple_awaits_one_missing() -> None:
+def test_checker_given_mixed_timeout_and_bare_await_then_flags_only_bare() -> None:
     """Only the await outside the timeout is flagged."""
     code = (
         "async def f():\n"
@@ -113,7 +112,7 @@ def test_multiple_awaits_one_missing() -> None:
     assert msgs[0].args[0] == "c2.get"
 
 
-def test_nested_async_functions() -> None:
+def test_checker_given_timeout_in_outer_function_then_flags_inner_await() -> None:
     """Timeout in outer function does NOT protect await in inner function."""
     code = (
         "async def inner():\n"

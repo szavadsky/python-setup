@@ -1,5 +1,4 @@
 """Edge-case and integration tests for baseline diff."""
-
 from __future__ import annotations
 
 import json
@@ -23,7 +22,7 @@ from tests.runner._factories import diff_baseline_with
 
 
 class TestMixedSchemaLoad:
-    def test_legacy_pylint_output_upgraded_to_records_on_diff(self, tmp_path: Path) -> None:
+    def test_mixed_schema_given_legacy_pylint_output_then_upgraded_to_records(self, tmp_path: Path) -> None:
         saved = [
             {
                 "tool": "pylint", "exit_code": 0,
@@ -39,14 +38,14 @@ class TestMixedSchemaLoad:
             {"file": "src/a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
         ]
 
-    def test_legacy_unknown_tool_keeps_rstrip_set_path(self, tmp_path: Path) -> None:
+    def test_mixed_schema_given_legacy_unknown_tool_then_keeps_rstrip_set_path(self, tmp_path: Path) -> None:
         saved = [{"tool": "strange-tool", "exit_code": 0, "output": "line A\nline B\n"}]
         current = [make_lint_result(tool_name="strange-tool", stdout="line A\n")]
         violations, reloaded = diff_baseline_with(tmp_path, saved, current)
         assert violations == []
         assert reloaded[0]["output"] == "line A"
 
-    def test_full_pre_t2_baseline_loads_all_tools(self, tmp_path: Path) -> None:
+    def test_mixed_schema_given_full_pre_t2_baseline_then_loads_all_tools(self, tmp_path: Path) -> None:
         legacy_tools = [
             "tach check", "ruff check", "rumdl check", "mypy", "yamllint",
             "ty check", "pyright verify types", "pylint", "detect-secrets",
@@ -168,7 +167,7 @@ class TestDiffBaselineErrors:
             ),
         ],
     )
-    def test_error_paths(
+    def test_diff_baseline_given_error_paths_then_expected_violations(
         self, tmp_path: Path, saved: Any, current: list[Any], check: Any,
     ) -> None:
         baseline_path = tmp_path / "baseline.json"
@@ -186,7 +185,7 @@ class TestDiffBaselineErrors:
 
 
 class TestPeekFallbackTools:
-    def test_snapshot_is_frozen_copy_not_live_reference(self, tmp_path: Path) -> None:
+    def test_peek_fallback_tools_given_snapshot_then_frozen_copy(self, tmp_path: Path) -> None:
         diff_baseline_with(
             tmp_path,
             [{"tool": "strange-tool", "exit_code": 0, "output": "line A\n"}],
@@ -208,7 +207,7 @@ class TestPeekFallbackTools:
 
 
 class TestFallbackTracking:
-    def test_legacy_output_falls_back_when_parser_empty(self, tmp_path: Path) -> None:
+    def test_fallback_tracking_given_legacy_output_then_falls_back(self, tmp_path: Path) -> None:
         saved_output = "************* Module banner only\n"
         saved = [{"tool": "pylint", "exit_code": 0, "output": saved_output}]
         current = [make_lint_result(tool_name="pylint", stdout=saved_output)]
@@ -216,7 +215,7 @@ class TestFallbackTracking:
         assert "pylint" in peek_fallback_tools()
         assert violations == []
 
-    def test_parser_known_tool_with_traceback_lands_in_fallback(self, tmp_path: Path) -> None:
+    def test_fallback_tracking_given_known_tool_with_traceback_then_lands_in_fallback(self, tmp_path: Path) -> None:
         traceback = (
             "Traceback (most recent call last):\n"
             '  File "ruff_runner.py", line 12, in <module>\n'
@@ -235,7 +234,7 @@ class TestFallbackTracking:
 
 
 class TestLegacyRstripSet:
-    def test_legacy_addition_flagged(self, tmp_path: Path) -> None:
+    def test_legacy_rstrip_set_given_addition_then_flagged(self, tmp_path: Path) -> None:
         saved = [{"tool": "strange-tool", "exit_code": 0, "output": "line A\n"}]
         current = [make_lint_result(tool_name="strange-tool", stdout="line A\nline B\n")]
         violations, reloaded = diff_baseline_with(tmp_path, saved, current)
@@ -243,7 +242,7 @@ class TestLegacyRstripSet:
         assert "strange-tool" in peek_fallback_tools()
         assert reloaded[0]["output"] == "line A\n"
 
-    def test_legacy_addition_count_change_flagged(self, tmp_path: Path) -> None:
+    def test_legacy_rstrip_set_given_count_change_then_flagged(self, tmp_path: Path) -> None:
         saved = [{"tool": "strange-tool", "exit_code": 0, "output": "line A\nline A\n"}]
         current = [make_lint_result(tool_name="strange-tool", stdout="line A\nline A\nline B\n")]
         violations, _ = diff_baseline_with(tmp_path, saved, current)
@@ -251,7 +250,7 @@ class TestLegacyRstripSet:
 
 
 class TestExitCodeBothNonzero:
-    def test_both_nonzero_diff_exit_codes_still_diff_content(self, tmp_path: Path) -> None:
+    def test_exit_code_both_nonzero_given_diff_exit_codes_then_still_diffs(self, tmp_path: Path) -> None:
         saved = [{"tool": "mypy", "exit_code": 1, "schema": "v2", "records": [{"file": "a.py", "line": 1, "col": None, "rule": "code", "msg": "m"}]}]
         current = [make_lint_result(tool_name="mypy", exit_code=2, stdout="a.py:1: error: m [code]\nb.py:2: error: n [other]\n")]
         violations, reloaded = diff_baseline_with(tmp_path, saved, current)
@@ -259,7 +258,7 @@ class TestExitCodeBothNonzero:
         assert not any("Exit code changed" in v for v in violations)
         assert reloaded[0]["exit_code"] == 1
 
-    def test_both_nonzero_identical_content_no_diff(self, tmp_path: Path) -> None:
+    def test_exit_code_both_nonzero_given_identical_content_then_no_diff(self, tmp_path: Path) -> None:
         saved = [{"tool": "mypy", "exit_code": 1, "schema": "v2", "records": [{"file": "a.py", "line": 1, "col": None, "rule": "code", "msg": "m"}]}]
         current = [make_lint_result(tool_name="mypy", exit_code=2, stdout="a.py:1: error: m [code]\n")]
         violations, reloaded = diff_baseline_with(tmp_path, saved, current)
@@ -268,7 +267,7 @@ class TestExitCodeBothNonzero:
 
 
 class TestMultiSavedToolDedup:
-    def test_duplicate_saved_tool_entries_all_removed_on_tool_absence(self, tmp_path: Path) -> None:
+    def test_multi_saved_tool_dedup_given_duplicate_entries_then_removed_on_absence(self, tmp_path: Path) -> None:
         saved = [
             {"tool": "pylint", "exit_code": 0, "schema": "v2", "records": []},
             {"tool": "pylint", "exit_code": 1, "schema": "v2", "records": [{"file": "a.py", "line": 1, "col": None, "rule": "code", "msg": "m"}]},
@@ -286,7 +285,7 @@ class TestMultiSavedToolDedup:
 
 
 class TestMixedShapeLegacyOutput:
-    def test_legacy_pylint_with_unparseable_lines_upgrades_partial(self, tmp_path: Path) -> None:
+    def test_mixed_shape_legacy_given_unparseable_lines_then_upgrades_partial(self, tmp_path: Path) -> None:
         saved_output = "Similar lines in 2 files\nsrc/a.py:1:1: W0611: x (unused-import)\n"
         saved = [{"tool": "pylint", "exit_code": 0, "output": saved_output}]
         current = [make_lint_result(tool_name="pylint", stdout=saved_output)]
@@ -297,7 +296,7 @@ class TestMixedShapeLegacyOutput:
         assert "schema" not in reloaded[0]
         assert reloaded[0]["output"] == saved_output
 
-    def test_legacy_pylint_partial_parse_addition_flagged(self, tmp_path: Path) -> None:
+    def test_mixed_shape_legacy_given_partial_parse_then_addition_flagged(self, tmp_path: Path) -> None:
         saved_output = "Similar lines in 2 files\nsrc/a.py:1:1: W0611: x (unused-import)\n"
         current_output = saved_output + "src/c.py:5:1: C0114: new (missing-module-docstring)\n"
         saved = [{"tool": "pylint", "exit_code": 0, "output": saved_output}]
@@ -306,7 +305,7 @@ class TestMixedShapeLegacyOutput:
         assert any("Output changed" in v for v in violations)
         assert "pylint" in peek_fallback_tools()
 
-    def test_legacy_pylint_only_unparseable_falls_back(self, tmp_path: Path) -> None:
+    def test_mixed_shape_legacy_given_only_unparseable_then_falls_back(self, tmp_path: Path) -> None:
         saved_output = "************* Module banner only\n"
         saved = [{"tool": "pylint", "exit_code": 0, "output": saved_output}]
         current = [make_lint_result(tool_name="pylint", stdout=saved_output)]
@@ -318,7 +317,7 @@ class TestMixedShapeLegacyOutput:
 
 
 class TestCaptureBaselineOnDisk:
-    def test_records_emitted_in_sorted_order(self) -> None:
+    def test_capture_baseline_given_records_then_emitted_in_sorted_order(self) -> None:
         stdout = (
             "src/z.py:9:1: E501 zeta\n"
             "src/a.py:1:3: E501 alpha\n"
@@ -340,7 +339,7 @@ class TestCaptureBaselineOnDisk:
         assert records[0]["col"] is None
         assert records[1]["col"] == 3
 
-    def test_records_sorted_round_trip_through_diff(self, tmp_path: Path) -> None:
+    def test_capture_baseline_given_sorted_records_then_round_trips_through_diff(self, tmp_path: Path) -> None:
         stdout = "src/z.py:9:1: E501 zeta\nsrc/a.py:1:3: E501 alpha\nsrc/b.py:5:2: E501 beta\n"
         cap = _capture_baseline([make_lint_result(tool_name="ruff check", stdout=stdout)])
         saved = cap

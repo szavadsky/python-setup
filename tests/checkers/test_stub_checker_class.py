@@ -6,7 +6,6 @@ impl), and E97B2 (kind mismatch).
 
 Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 """
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -32,6 +31,8 @@ from tests.checkers._factories import (
     walk_stub_checker_with_pair,
 )
 
+pytestmark = pytest.mark.no_external_api
+
 PROJECT_SRC = Path(__file__).resolve().parents[3] / "src"
 
 
@@ -43,7 +44,7 @@ def _make_tc() -> Any:  # pylint: disable=trivial-wrapper  # test helper; readab
 
 
 @pytest.mark.parametrize(("class_src", "expected_substrings"), _NORMALIZE_BASES_CASES)
-def test_normalize_bases(class_src: str, expected_substrings: list[str]) -> None:
+def test_normalize_bases_given_class_src_then_returns_expected_substrings(class_src: str, expected_substrings: list[str]) -> None:
     """``_normalize_bases`` returns the expected base-class name(s).
 
     Each row asserts all expected substrings are present in the result.
@@ -54,7 +55,7 @@ def test_normalize_bases(class_src: str, expected_substrings: list[str]) -> None
         assert s in result, f"missing {s!r} in {result!r}"
 
 
-def test_normalize_bases_empty() -> None:
+def test_normalize_bases_given_no_bases_then_returns_empty() -> None:
     assert _normalize_bases([]) == []
 
 
@@ -62,14 +63,14 @@ def test_normalize_bases_empty() -> None:
 
 
 @pytest.mark.parametrize(("name", "expected"), _IS_PUBLIC_METHOD_CASES)
-def test_is_public_method(name: str, expected: bool) -> None:
+def test_is_public_method_given_method_name_then_expected_bool(name: str, expected: bool) -> None:
     assert _is_public_method(name) is expected
 
 
 # ── ClassComparisonCtx fields ─────────────────────────────────────
 
 
-def test_class_comparison_ctx_fields() -> None:
+def test_class_comparison_ctx_given_fields_then_constructs_correctly() -> None:
     stub_mod = astroid.parse("class Foo: ...\n", module_name="test")
     impl_mod = astroid.parse("class Foo: ...\n", module_name="test")
     stub_class = cast("astroid.ClassDef", stub_mod.body[0])
@@ -121,7 +122,7 @@ def test_stub_symbol_missing(  # pylint: disable=too-many-positional-arguments  
 
 
 @pytest.mark.parametrize(("py_code", "pyi_code", "msg_id"), _KIND_MISMATCH_CASES)
-def test_symbol_kind_mismatch(
+def test_checker_given_symbol_kind_mismatch_then_emits_e97b2(
     tmp_path: Path,
     py_code: str,
     pyi_code: str,
@@ -140,7 +141,7 @@ def test_symbol_kind_mismatch(
     ("mod_py", "mod_pyi", "enable", "expected_code"),
     _CLASS_FIDELITY_INTEGRATION_CASES,
 )
-def test_integration_class_fidelity(
+def test_checker_given_class_fidelity_scenario_then_emits_correct_messages(
     tmp_path: Path,
     mod_py: str,
     mod_pyi: str,

@@ -1,5 +1,4 @@
 """Unit tests for ``python_setup_lint.setup``."""
-
 from __future__ import annotations
 
 import inspect
@@ -148,7 +147,7 @@ class TestAtomicWrite:
             assert p.read_text() == content
         assert not list(d.glob("*.tmp"))
 
-    def test_mid_write_failure(
+    def test_atomic_write_given_mid_write_failure_then_no_file_left(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         import os
@@ -171,7 +170,7 @@ class TestComputeChecksums:
             (d / f).write_text(f"c-{f}")
         assert len(_compute_checksums(d, files)) == expected_count
 
-    def test_diff_hash(self, tmp_path: Path) -> None:
+    def test_compute_checksums_given_changed_file_then_diff_hash(self, tmp_path: Path) -> None:
         p = tmp_path / "a.txt"
         p.write_text("v1")
         h1 = _compute_checksums(tmp_path, ["a.txt"])["a.txt"]
@@ -180,7 +179,7 @@ class TestComputeChecksums:
 
 
 class TestDiscoverCheckers:
-    def test_finds_register_modules(self) -> None:
+    def test_discover_checkers_given_register_modules_then_finds(self) -> None:
         m = _discover_checkers()
         for n in (
             "conformance.beartype_checker",
@@ -198,26 +197,26 @@ class TestDiscoverCheckers:
         ):
             assert f"python_setup_lint.checkers.{n}" not in m
 
-    def test_sorted(self) -> None:
+    def test_discover_checkers_given_results_then_sorted(self) -> None:
         assert _discover_checkers() == sorted(_discover_checkers())
 
 
 class TestPyprojectTomlHelpers:
-    def test_read_missing(self, tmp_path: Path) -> None:
+    def test_pyproject_toml_helpers_given_missing_then_returns_empty(self, tmp_path: Path) -> None:
         assert _read_pyproject_toml(tmp_path) is None
 
-    def test_read_and_get(self, empty_project: Path) -> None:
+    def test_pyproject_toml_helpers_given_present_then_reads(self, empty_project: Path) -> None:
         d = _read_pyproject_toml(empty_project)
         assert d and d["project"]["name"] == "test-project"  # type: ignore[index]  # _read_pyproject_toml returns dict[str, object] | None; dict key access on object is valid at runtime
         assert "ruff>=0.5" in _get_dev_deps(d)
 
-    def test_get_dev_deps_missing(self) -> None:
+    def test_pyproject_toml_helpers_given_missing_dev_deps_then_empty(self) -> None:
         assert _get_dev_deps({"project": {"name": "x"}}) == []
 
-    def test_get_pylint_empty(self) -> None:
+    def test_pyproject_toml_helpers_given_empty_pylint_then_empty(self) -> None:
         assert _get_pylint_load_plugins({"project": {"name": "x"}}) == []
 
-    def test_get_pylint_present(self) -> None:
+    def test_pyproject_toml_helpers_given_present_pylint_then_returns(self) -> None:
         assert _get_pylint_load_plugins(
             {"tool": {"pylint": {"main": {"load-plugins": ["a.b"]}}}}
         ) == ["a.b"]
@@ -227,7 +226,7 @@ class TestPyprojectTomlHelpers:
         _set_pylint_load_plugins(d, ["p.q"])
         assert _get_pylint_load_plugins(d) == ["p.q"]
 
-    def test_write_read_roundtrip(self, empty_project: Path) -> None:
+    def test_pyproject_toml_helpers_given_write_read_then_roundtrips(self, empty_project: Path) -> None:
         d = _read_pyproject_toml(empty_project)
         _set_pylint_load_plugins(d, ["a.b"])  # type: ignore[arg-type]  # d is dict[str, object] | None at runtime; _set_pylint_load_plugins expects dict[str, object]
         _write_pyproject_toml(empty_project, d)  # type: ignore[arg-type]  # d is dict[str, object] | None at runtime; _write_pyproject_toml expects dict[str, object]
@@ -247,13 +246,13 @@ class TestSetupState:
 
 
 class TestUpdate:
-    def test_runs_sync_and_refresh(self, configured_project: Path) -> None:
+    def test_update_given_configured_project_then_runs_sync(self, configured_project: Path) -> None:
         with _UvCallRecorder() as r:
             assert update(configured_project) == 0
         assert any(c == ["sync"] for c in r.calls)
         assert any(c == ["add", "python-setup", "--refresh-package", "python-setup"] for c in r.calls)
 
-    def test_no_drift_and_missing_state(
+    def test_update_given_no_drift_then_missing_state(
         self, configured_project: Path, empty_project: Path
     ) -> None:
         with _UvCallRecorder():
@@ -262,7 +261,7 @@ class TestUpdate:
 
 
 class TestMainCLI:
-    def test_install(self, empty_project: Path) -> None:
+    def test_main_cli_given_install_then_installs(self, empty_project: Path) -> None:
         assert (
             main(
                 [
@@ -277,7 +276,7 @@ class TestMainCLI:
         )
         assert (empty_project / ".pre-commit-config.yaml").exists()
 
-    def test_install_default_cwd(self, tmp_path: Path) -> None:
+    def test_main_cli_given_install_default_cwd_then_installs(self, tmp_path: Path) -> None:
         (tmp_path / "pyproject.toml").write_text(
             textwrap.dedent("""\
             [project]
@@ -301,12 +300,12 @@ class TestMainCLI:
             == 0
         )
 
-    def test_update(self, configured_project: Path) -> None:
+    def test_main_cli_given_update_then_updates(self, configured_project: Path) -> None:
         with _UvCallRecorder():
             assert main(["update", "--path", str(configured_project)]) == 0
 
     @pytest.mark.parametrize("args", [[], ["unknown"]])
-    def test_bad_subcommand(self, args: list[str]) -> None:
+    def test_main_cli_given_bad_subcommand_then_raises(self, args: list[str]) -> None:
         with pytest.raises(SystemExit):
             main(args)
 
@@ -321,7 +320,7 @@ class TestTemplates:
 
 
 class TestRunUv:
-    def test_uv_not_found(self, tmp_path: Path) -> None:
+    def test_run_uv_given_uv_not_found_then_raises(self, tmp_path: Path) -> None:
         import python_setup_lint.setup as _m
 
         orig = _m.subprocess.run  # type: ignore[attr-defined]  # dynamic import hides type; subprocess.run accessed via module reference
@@ -338,24 +337,24 @@ class TestRunUv:
 
 
 class TestGetPackageDir:
-    def test_returns_project_root(self) -> None:
+    def test_get_package_dir_given_package_then_returns_project_root(self) -> None:
         p = _get_package_dir()
         assert (p / "pyproject.toml").exists()
         assert (p / "src" / "python_setup_lint").is_dir()
 
 
 class TestModuleSizeGates:
-    def test_setup_py_loc(self) -> None:
+    def test_module_size_gates_given_setup_py_then_loc_above_threshold(self) -> None:
         import python_setup_lint.setup as m
 
         assert len(inspect.getsource(m).splitlines()) <= 530
 
-    def test_setup_precommit_loc(self) -> None:
+    def test_module_size_gates_given_setup_precommit_then_loc_above_threshold(self) -> None:
         import python_setup_lint._setup_precommit as m
 
         assert len(inspect.getsource(m).splitlines()) <= 200
 
-    def test_pyi_declares_all(self) -> None:
+    def test_module_size_gates_given_pyi_then_declares_all(self) -> None:
         import python_setup_lint.setup as m
 
         pyi = Path(m.__file__).with_suffix(".pyi").read_text()
@@ -373,7 +372,7 @@ class TestTomlHelperTypeSafety:
         }
         assert fns[fn_name](data) == expected
 
-    def test_set_non_dict(self) -> None:
+    def test_toml_helper_type_safety_given_set_non_dict_then_handles(self) -> None:
         for d in (
             {"tool": "nd"},
             {"tool": {"pylint": "nd"}},
@@ -393,7 +392,7 @@ class TestSetPylintLoadPluginsMerge:
 
 
 class TestConfigDrift:
-    def test_update_detects_drift(self, configured_project: Path) -> None:
+    def test_config_drift_given_update_then_detects_drift(self, configured_project: Path) -> None:
         """Verify that update detects config drift by checking state."""
         from python_setup_lint.setup import _read_pyproject_toml, _save_state
 

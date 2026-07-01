@@ -21,7 +21,6 @@ Coverage mapping (envelope ``T9.7.envelope.md``):
 * **observability** — the live smoke records ``summary`` + ``.venv`` diagnostic
   count + the raw constructed command in the per-test artifact dir.
 """
-
 from __future__ import annotations
 
 import json
@@ -33,6 +32,8 @@ import python_setup_lint.runner.output as _output_module
 from python_setup_lint.runner import RunnerConfig, run_lint
 from python_setup_lint.runner.cmd_build import _compose_pyright_config
 from python_setup_lint.testing import fake_run_cmd_factory
+
+pytestmark = pytest.mark.no_external_api
 
 # ── _compose_pyright_config surface-unit ─────────────────────────
 
@@ -85,7 +86,7 @@ class TestComposePyrightConfigNoRewrite:
         # shared is in tmp_path (cwd) → fast path.
         assert _compose_pyright_config(tmp_path, shared) == shared
 
-    def test_returns_shared_unreadable_file_does_not_raise(
+    def test_compose_pyright_config_given_unreadable_file_then_returns_shared(
         self, tmp_path: Path
     ) -> None:
         """Missing or unreadable shipped config ⇒ shared returned unchanged."""
@@ -94,7 +95,7 @@ class TestComposePyrightConfigNoRewrite:
         # config downstream, preserving the prior tool-dispatch behaviour.
         assert _compose_pyright_config(tmp_path, shared) == shared
 
-    def test_returns_shared_when_not_a_json_mapping(self, tmp_path: Path) -> None:
+    def test_compose_pyright_config_given_non_json_mapping_then_returns_shared(self, tmp_path: Path) -> None:
         """A pyright ``--project`` pointed at a non-JSON config (e.g. a
         ``pyproject.toml`` override target) is passed through verbatim."""
         shared = tmp_path / "pyproject.toml"
@@ -190,7 +191,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
             config_paths={"pyright check": shipped},
         )
 
-    def test_pyright_config_replaced_with_composed(
+    def test_run_lint_pyright_compose_given_default_then_config_replaced(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """After ``run_lint``, ``config.config_paths["pyright check"]`` ≠ shipped."""
@@ -204,7 +205,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         assert composed == tmp_path / ".pyrightconfig-composed.json"
         assert (tmp_path / ".pyrightconfig-composed.json").exists()
 
-    def test_pyright_command_uses_composed_project(
+    def test_run_lint_pyright_compose_given_default_then_command_uses_composed(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The pyright ``--project`` flag points at the composed path."""
@@ -222,7 +223,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         assert Path(composed_path).is_file()
         assert (tmp_path / ".pyrightconfig-composed.json").exists()
 
-    def test_no_compose_when_pyright_project_override_set(
+    def test_run_lint_pyright_compose_given_override_set_then_no_compose(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Consumer opt-in (``pyright_project_override``) wins over the default compose."""
@@ -241,7 +242,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         proj_idx = pyright_rec.cmd.index("--project")
         assert pyright_rec.cmd[proj_idx + 1] == str(override)
 
-    def test_no_compose_when_no_pyright_config_entry(
+    def test_run_lint_pyright_compose_given_no_config_entry_then_no_compose(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """No ``pyright check`` entry in ``config_paths`` => no compose, no KeyError."""
@@ -257,7 +258,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         assert "pyright check" not in config.config_paths  # type: ignore[operator]  # config_paths is dict[str, Path]; 'in' check is valid at runtime
         assert not (tmp_path / ".pyrightconfig-composed.json").exists()
 
-    def test_preserves_ruff_compose_wire(
+    def test_run_lint_pyright_compose_given_ruff_wire_then_preserves(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """T5 ruff-overrides wire + the new pyright wire can both fire in a single run."""

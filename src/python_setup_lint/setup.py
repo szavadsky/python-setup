@@ -1,9 +1,3 @@
-"""Idempotent setup CLI for python-setup consumers.
-
-Provides ``python-setup install`` and ``python-setup update`` commands.
-Every install step checks current state before writing — running twice
-is a no-op.
-"""
 
 
 from __future__ import annotations
@@ -56,7 +50,6 @@ _BUNDLED_CONFIGS: tuple[str, ...] = (
 
 @dataclass
 class SetupState:
-    """Tracks what was done for idempotency reporting."""
 
     dep_added: bool = False
     dep_skipped: bool = False

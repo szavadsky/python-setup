@@ -1,5 +1,4 @@
 """T2 — drift-resistant baseline diff tests."""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,6 +13,8 @@ from python_setup_lint.runner.baseline import (
 )
 from python_setup_lint.testing import make_lint_result
 from tests.runner._factories import diff_baseline_with
+
+pytestmark = pytest.mark.no_external_api
 
 
 def _sorted(records: list[Record]) -> list[Record]:  # pylint: disable=trivial-wrapper  # thin sorted wrapper; readability alias for sort key
@@ -103,7 +104,7 @@ class TestCompareSorted:
             ),
         ],
     )
-    def test_compare_sorted(
+    def test_compare_sorted_given_current_and_saved_then_expected_additions_and_removals(
         self,
         current: list[Record],
         saved: list[Record],
@@ -114,7 +115,7 @@ class TestCompareSorted:
         assert len(added) == exp_additions
         assert len(removed) == exp_removals
 
-    def test_none_position_records_sort_below_real(self) -> None:
+    def test_compare_sorted_given_none_position_records_then_sort_below_real(self) -> None:
         recs = _sorted(
             [
                 Record("z.py", 9, 9, "Z", "m"),
@@ -228,7 +229,7 @@ class TestDriftResistantDiff:
             ),
         ],
     )
-    def test_diff_baseline(
+    def test_diff_baseline_given_drift_resistant_then_expected_violations(
         self, tmp_path: Path, saved: list[dict[str, Any]], current_stdout: str,
         expect_violation: bool, check_reloaded: Any,
     ) -> None:

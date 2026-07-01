@@ -200,10 +200,11 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
     effective.write_text("\n".join(lines), encoding="utf-8")
     return effective
 
+
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     try:
         raw = shared_config.read_text(encoding="utf-8")
-    except OSError:  # best-effort config read fallback
+    except OSError:  # pylint: disable=W9740  # best-effort config read fallback
         return shared_config
     # Fast path: shipped config already in cwd → relative paths resolve correctly.
     if shared_config.resolve().parent == cwd.resolve():
@@ -215,7 +216,7 @@ def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     composed = cwd / ".pyrightconfig-composed.json"
     try:
         composed.write_text(raw, encoding="utf-8")
-    except OSError:  # read-only cwd or permission error; fall back to shared config
+    except OSError:  # pylint: disable=W9740  # read-only cwd or permission error; fall back to shared config
         return shared_config
     return composed
 
@@ -227,47 +228,21 @@ def _build_fix_flags(spec: ToolSpec, *, fix: bool) -> list[str]:
     return []
 
 
-def _build_path_and_exclude_args(
-    spec: ToolSpec,
-    *,
-    config: RunnerConfig,
-    path: str | None = None,
-    exclude: str | None = None,
-) -> list[str]:
-    # Resolve path scoping and exclude flags for *spec*.
-    result: list[str] = []
-
-    # ── Path scoping ───────────────────────────────────────────
-    paths: list[str] = []
-    if path is not None and spec.supports_path:
-        paths = [path]
-    elif spec.default_paths:
-        paths = list(spec.default_paths)
-
-    # Expand globs (e.g. config/*.yaml)
-    paths = _expand_globs(paths, cwd=config.cwd)
-
-    if paths:
-        result.extend(paths)
-
-    # ── Exclude flags (data-driven via ToolSpec.exclude_flag) ─
-    if exclude is not None and spec.supports_exclude:
-        result.extend([spec.exclude_flag, exclude])
-
-    return result
-
-
 def _build_command(
     spec: ToolSpec,
     *,
     config: RunnerConfig,
-    fix: bool = False,
     path: str | None = None,
+    fix: bool = False,
     exclude: str | None = None,
     config_flag_override: list[str] | None = None,
 ) -> list[str]:
-    cmd = list(spec.command)
+    cmd: list[str] = list(spec.command)
     cmd.extend(_build_config_flags(spec, config, config_flag_override=config_flag_override))
-    cmd.extend(_build_fix_flags(spec, fix=fix))
-    cmd.extend(_build_path_and_exclude_args(spec, config=config, path=path, exclude=exclude))
+    if spec.supports_fix:
+        cmd.extend(_build_fix_flags(spec, fix=fix))
+    if spec.supports_exclude and exclude:
+        cmd.extend([spec.exclude_flag, exclude])
+    if spec.supports_path and path:
+        cmd.append(path)
     return cmd

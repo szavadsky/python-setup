@@ -1,8 +1,8 @@
+# pylint: disable=too-many-positional-arguments  # parametrized tests with 6 args; pylint default is 5
 """Unit tests for statistics/grouping/sort/fail-fast in ``python_setup_lint.runner``.
 
 Split from ``test_lint_runner.py`` to stay under the 500-line pylint C0302 limit.
 """
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -42,6 +42,8 @@ from tests.runner._factories_tables import (
     STATISTICS_FLAG_CASES,
 )
 
+pytestmark = pytest.mark.no_external_api
+
 _CONFIG = RunnerConfig(cwd=Path.cwd())
 
 
@@ -51,7 +53,7 @@ def test_build_statistics_flags(tool_name: str, expected: list[str]) -> None:
     assert _build_statistics_flags(spec) == expected, f"{tool_name}: got {_build_statistics_flags(spec)!r}"
 
 
-def test_statistics_flag_appended_to_build_command_and_empty_for_no_stat_tools() -> None:
+def test_statistics_flag_given_build_command_then_appended() -> None:
     cmd = _build_command(ToolSpec("ruff check", ["ruff", "check"]), config=_CONFIG)
     cmd.extend(_build_statistics_flags(ToolSpec("ruff check", ["ruff", "check"])))
     assert "--statistics" in cmd
@@ -66,11 +68,11 @@ def test_statistics_parser(tool_name: str, stdout: str, stderr: str, expected: l
     assert dict(result) == dict(expected), f"{tool_name} parser returned {dict(result)!r}, expected {dict(expected)!r}"
 
 
-def test_statistics_parsers_cover_all_tools() -> None:
+def test_statistics_parsers_given_all_tools_then_covered() -> None:
     assert {t.name for t in TOOLS} <= set(_STATISTICS_PARSERS)
 
 
-def test_parse_strategies_includes_all_keys() -> None:
+def test_parse_strategies_given_stats_then_includes_all_keys() -> None:
     assert {"regex_count", "raw_lines", "none"} <= set(PARSE_STRATEGIES)
     assert {
         "ruff_statistics", "rumdl_statistics", "pylint_json2", "pyright_outputjson",
@@ -93,18 +95,18 @@ class TestSortCounts:
             assert result[0].rule == "A001" and result[0].tool == "tool_a" and result[0].count == 10
             assert result[2].rule == "Z001"
 
-    def test_empty_list(self) -> None:
+    def test_sort_counts_given_empty_list_then_returns_empty(self) -> None:
         assert _sort_counts([]) == []
 
 
 @pytest.mark.parametrize("args", MAIN_GROUP_SORT_CASES)
-def test_main_group_and_sort_by_rule_accepted(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, args: list[str]) -> None:
+def test_main_group_and_sort_given_rule_accepted_then_works(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, args: list[str]) -> None:
     install_fake_runner(monkeypatch)
     rc = main(args, config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"))
     assert isinstance(rc, int)
 
 
-def test_run_lint_group_sort_by_rule_forwarded(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_run_lint_group_sort_given_rule_then_forwarded(monkeypatch: pytest.MonkeyPatch) -> None:
     install_fake_runner(monkeypatch)
     rc = run_lint(config=RunnerConfig(cwd=Path("/tmp"), package_name="python_setup_lint"), statistics=True, group="tool", sort_by_rule=True)
     assert isinstance(rc, int)
@@ -124,7 +126,7 @@ class TestGroupedOutput:
         for token in tokens:
             assert token in out
 
-    def test_group_rule_with_sort_by_rule_orders_sections(self, capsys: pytest.CaptureFixture[str]) -> None:
+    def test_grouped_output_given_sort_by_rule_then_orders_sections(self, capsys: pytest.CaptureFixture[str]) -> None:
         _print_statistics_grouped(GROUPED_SORT_BY_RULE_COUNTS, group="rule", sort_by_rule=True)
         out = capsys.readouterr().out
         assert out.index("[A001]") < out.index("[Z001]")
@@ -146,7 +148,7 @@ class TestT8FailFastConfig:
         else:
             assert reason_want in err.reason, f"reason: got {err.reason!r}, want substring {reason_want!r}"
 
-    def test_unknown_config_tool_id(self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None) -> None:
+    def test_t8_fail_fast_given_unknown_tool_id_then_raises(self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None) -> None:
         install_fake_runner(monkeypatch)
         with pytest.raises(SystemExit) as exc_info:
             main(["--config", "bogus=/some/path.toml"], config=lint_config(tmp_path))
@@ -156,7 +158,7 @@ class TestT8FailFastConfig:
         assert "bogus" not in _SUPPORTED_CONFIG_KEYS
         assert {"ruff", "mypy", "pylint", "pyright", "rumdl", "ty"} <= _SUPPORTED_CONFIG_KEYS
 
-    def test_bad_tools_list(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None) -> None:
+    def test_t8_fail_fast_given_bad_tools_list_then_raises(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None) -> None:
         install_fake_runner(monkeypatch)
         config = RunnerConfig(cwd=tmp_path, tools_override=["ruff check", "bogus-tool-name"])
         with pytest.raises(ExtraToolsConfigError) as exc_info:
@@ -165,7 +167,7 @@ class TestT8FailFastConfig:
         assert "ruff check" in exc_info.value.reason
         assert exc_info.value.location == "<RunnerConfig.tools_override>"
 
-    def test_clean_pyproject_extras_merge_runs_clean(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None) -> None:
+    def test_t8_fail_fast_given_clean_pyproject_then_runs_clean(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None) -> None:
         write_pyproject(tmp_path, CLEAN_EXTRAS_PYPROJECT_BODY)
         (tmp_path / "src").mkdir(exist_ok=True)
         (tmp_path / "src" / "__init__.py").write_text("", encoding="utf-8")
@@ -209,7 +211,7 @@ class TestRegisterLintTool:
         assert any(t.name == "t4-extra-test-tool" for t in LINT_TOOLS)
         assert isinstance(STRATEGIES.get("t4-extra-test-tool"), GenericLintTool)
 
-    def test_register_idempotent_same_name(
+    def test_register_lint_tool_given_same_name_then_idempotent(
         self, isolated_runner_registries: None
     ) -> None:
         register_lint_tool(ToolSpec("t4-idempotent-tool", ["t4ida"]))
@@ -222,7 +224,7 @@ class TestRegisterLintTool:
             t for t in LINT_TOOLS if t.name == "t4-idempotent-tool"
         ).command == ["t4idb"]
 
-    def test_register_does_not_replace_builtin_strategy(
+    def test_register_lint_tool_given_builtin_then_does_not_replace(
         self, isolated_runner_registries: None
     ) -> None:
         original_strategy = STRATEGIES["ruff check"]
@@ -339,7 +341,8 @@ class TestStrategyForFallback:
         assert "t4-no-cache-fallback" not in STRATEGIES
 
 
-def test_invalid_group_value_rejected() -> None:
+
+def test_invalid_group_value_given_invalid_then_rejected() -> None:
     """argparse rejects ``--group bogus`` with a non-zero exit code."""
     with pytest.raises(SystemExit) as exc_info:
         main(["--statistics", "--group", "bogus"])

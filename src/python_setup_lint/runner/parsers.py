@@ -1,15 +1,3 @@
-"""Statistics output parsers + dispatch tables.
-
-A parser turns ``(stdout, stderr)`` from a tool's statistics-mode invocation
-into ``list[(rule, count)]``.  The module-level
-:data:`_STATISTICS_PARSERS` maps each built-in tool's :class:`~python_setup_lint.runner.types.ToolSpec`
-name to its parser; :data:`_BUILTIN_PARSE_STRATEGY_TO_PARSER` maps the closed
-``parse_strategy`` enum to the same callables for the extra-tools loader.
-
-T2 adds the :class:`Record` violation-record dataclass plus per-tool
-``_parse_<tool>_records`` line->record parsers feeding the drift-resistant
-baseline (:mod:`python_setup_lint.runner.baseline`).
-"""
 
 from __future__ import annotations
 

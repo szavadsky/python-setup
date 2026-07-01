@@ -7,7 +7,6 @@ Exercises the private helpers directly (private-complex-unit category):
 
 Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 """
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -44,6 +43,8 @@ from tests.checkers._factories import (
     materialize_resolve_stub_layout,
 )
 
+pytestmark = pytest.mark.no_external_api
+
 if TYPE_CHECKING:
     pass
 
@@ -56,7 +57,7 @@ def _parse(code: str, module_name: str = "") -> astroid.Module:  # pylint: disab
 
 
 @pytest.mark.parametrize(("path", "patterns", "expected"), _MATCHES_PATH_CASES)
-def test_matches_path(path: str, patterns: list[str], expected: bool) -> None:
+def test_matches_path_given_path_and_patterns_then_expected_bool(path: str, patterns: list[str], expected: bool) -> None:
     assert _matches_path(path, patterns) is expected
 
 
@@ -72,7 +73,7 @@ def test_is_test_file(path: str, test_patterns: list[str], expected: bool) -> No
 @pytest.mark.parametrize(
     ("path", "test_patterns", "expected"), _IS_TEST_FILE_CUSTOM_CASES
 )
-def test_is_test_file_custom(
+def test_is_test_file_given_custom_patterns_then_expected_bool(
     path: str,
     test_patterns: list[str],
     expected: bool,
@@ -95,7 +96,7 @@ def test_is_opted_out(path: str, opt_out_patterns: list[str], expected: bool) ->
 
 
 @pytest.mark.parametrize(("code", "expected"), _IS_INIT_EXEMPT_CASES)
-def test_is_init_exempt(code: str, expected: bool) -> None:
+def test_is_init_exempt_given_code_then_expected_bool(code: str, expected: bool) -> None:
     assert _is_init_exempt(_parse(code)) is expected
 
 
@@ -103,7 +104,7 @@ def test_is_init_exempt(code: str, expected: bool) -> None:
 
 
 @pytest.mark.parametrize(("code", "expected"), _IS_TRIVIAL_TEST_DATA_CASES)
-def test_is_trivial_test_data(code: str, expected: bool) -> None:
+def test_is_trivial_test_data_given_code_then_expected_bool(code: str, expected: bool) -> None:
     assert _is_trivial_test_data(_parse(code)) is expected
 
 
@@ -111,7 +112,7 @@ def test_is_trivial_test_data(code: str, expected: bool) -> None:
 
 
 @pytest.mark.parametrize(("code", "expected"), _HAS_MAIN_BLOCK_CASES)
-def test_has_main_block(code: str, expected: bool) -> None:
+def test_has_main_block_given_code_then_expected_bool(code: str, expected: bool) -> None:
     assert _has_main_block(_parse(code)) is expected
 
 
@@ -121,7 +122,7 @@ def test_has_main_block(code: str, expected: bool) -> None:
 @pytest.mark.parametrize(
     ("path", "source_roots", "expected"), _IS_UNDER_SOURCE_ROOT_CASES
 )
-def test_is_under_source_root(
+def test_is_under_source_root_given_path_and_roots_then_expected_bool(
     path: str,
     source_roots: list[str],
     expected: bool,
@@ -134,7 +135,7 @@ def test_is_under_source_root(
 
 
 @pytest.mark.parametrize(("layout_kind", "expected_kind"), _RESOLVE_STUB_CASES)
-def test_resolve_stub(
+def test_resolve_stub_given_module_path_then_resolves_correctly(
     tmp_path: Path,
     layout_kind: str,
     expected_kind: str,
@@ -158,7 +159,7 @@ def test_resolve_stub(
 # ── _index_stub_declarations ──────────────────────────────────────
 
 
-def test_index_stub_declarations(tmp_path: Path) -> None:
+def test_index_stub_declarations_given_tmp_path_then_indexes_declarations(tmp_path: Path) -> None:
     """Symbol/class/func declarations are all indexed from a .pyi file."""
     stub_path = tmp_path / "mod.pyi"
     stub_path.write_text("\nx: int\ndef foo(): ...\nclass Bar: ...\n")
@@ -179,7 +180,7 @@ def test_index_stub_declarations(tmp_path: Path) -> None:
     ("setup_kind", "stub_missing_module", "expected_msg_count"),
     _EMIT_COVERAGE_CASES,
 )
-def test_emit_coverage_violations(
+def test_emit_coverage_violations_given_checker_then_emits_messages(
     tmp_path: Path,
     setup_kind: str,
     stub_missing_module: str,

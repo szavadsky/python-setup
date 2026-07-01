@@ -1,21 +1,3 @@
-"""T4 — conflict-tolerant autofix helpers.
-
-Autofix is courtesy, never blocks:
-* ``--fix`` runs autofix across all ``supports_fix=True`` tools, then runs the
-  per-file E999-canary (``ruff check --no-fix``); a parseability break introduced
-  by a prior tool's fix triggers an in-memory byte-snapshot revert with a stderr
-  log line.
-* Files with BOTH staged AND unstaged changes skip autofix entirely (stderr
-  log line each) — applying an autofix to such a file would conflict with the
-  staged blob (pre-commit owns staging, the runner never ``git add``s).
-* ``PYTHON_SETUP_LINT_NO_AUTOFIX=1`` env-var forces ``fix=False`` internally so
-  callers can opt out of autofix without arg plumbing.
-
-All helpers take explicit ``Path`` arguments (no module-level globals) so
-tests can drive each branch with synthetic ``tmp_path`` git state + a
-monkey-patched ``_run_cmd``.  The runners NEVER ``git add`` — pre-commit
-owns staging.
-"""
 
 from __future__ import annotations
 

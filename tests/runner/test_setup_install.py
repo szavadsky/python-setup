@@ -1,5 +1,4 @@
 """Install-related tests for ``python_setup_lint.setup``."""
-
 from __future__ import annotations
 
 import json
@@ -270,7 +269,7 @@ class TestInstall:
     """Fresh install tests."""
 
     @pytest.mark.parametrize("check_fn", INSTALL_ARTIFACT_CASES)
-    def test_artifacts(self, empty_project: Path, check_fn: object) -> None:
+    def test_install_given_fresh_project_then_creates_artifacts(self, empty_project: Path, check_fn: object) -> None:
         assert install(empty_project, dev_path="/home/slava/aiexp/python-setup") == 0
         check_fn(empty_project)  # type: ignore[operator]  # parametrized callable; type varies by fixture
 
@@ -285,19 +284,19 @@ class TestInstallEdgeCases:
         )
         assert _get_dev_deps(_read_pyproject_toml(configured_project)) == deps_before  # type: ignore[arg-type]  # _read_pyproject_toml returns dict|None; fixture ensures valid project
 
-    def test_second_install_agets_no_dup(self, configured_project: Path) -> None:
+    def test_install_given_second_install_then_no_dup(self, configured_project: Path) -> None:
         assert (configured_project / "AGENTS.md").read_text().count(
             _AGENTS_SENTINEL
         ) == 1
 
-    def test_existing_precommit_skips(self, empty_project: Path) -> None:
+    def test_install_given_existing_precommit_then_skips(self, empty_project: Path) -> None:
         p = empty_project / ".pre-commit-config.yaml"
         p.write_text("# e")
         m = p.stat().st_mtime
         assert install(empty_project, dev_path="/home/slava/aiexp/python-setup") == 0
         assert p.stat().st_mtime == m and p.read_text() == "# e"
 
-    def test_missing_pyproject_returns_error(self, tmp_path: Path) -> None:
+    def test_install_given_missing_pyproject_then_returns_error(self, tmp_path: Path) -> None:
         assert install(tmp_path, dev_path="/home/slava/aiexp/python-setup") == 1
 
 
@@ -324,7 +323,7 @@ class TestDownstreamIntegration:
     """End-to-end install-then-lint integration test."""
 
     @pytest.mark.slow
-    def test_install_then_lint(self) -> None:
+    def test_downstream_integration_given_install_then_lint(self) -> None:
         import shutil
         import subprocess
 

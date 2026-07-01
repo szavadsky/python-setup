@@ -1,10 +1,10 @@
+# pylint: disable=too-many-positional-arguments  # parametrized test with 8 args; pylint default is 5
 """Downstream-integration + observability + perf-benchmark tests for T11 v1
 extra-tools. End-to-end fake-subprocess pipeline, statistics output surfaces,
 and startup-overhead benchmark.
 
 Reason strings LOCKED per DESIGN-8 D6 — production code is source-of-truth.
 """
-
 from __future__ import annotations
 
 import json
@@ -113,7 +113,7 @@ def _time_run_lint(cwd: Path, *, n: int = 50, clear_cache_each: bool = False) ->
 
 
 @pytest.mark.slow
-def test_run_lint_with_extras_startup_overhead_within_10_percent(
+def test_run_lint_extra_given_startup_then_overhead_within_10_percent(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -179,7 +179,7 @@ class TestExtraStatisticsObservability:
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
 
     @pytest.mark.parametrize("fmt", ["json", "table"])
-    def test_extra_rule_counts_surface_in_statistics_output(
+    def test_extra_statistics_given_extra_rule_counts_then_surface_in_output(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],

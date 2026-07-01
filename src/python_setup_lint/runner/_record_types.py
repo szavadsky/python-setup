@@ -1,9 +1,3 @@
-"""Shared types for the runner module.
-
-Contains :class:`Record` and related helpers used by both
-:mod:`python_setup_lint.runner.parsers` and
-:mod:`python_setup_lint.runner._record_parsers`.
-"""
 
 from __future__ import annotations
 

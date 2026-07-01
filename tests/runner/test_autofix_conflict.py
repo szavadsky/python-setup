@@ -71,12 +71,12 @@ from tests.runner._factories import (
 class TestGitChangedFiles:
     """``_git_changed_files`` snapshots git diff cleanly, tolerates non-git."""
 
-    def test_non_git_cwd_returns_empty(self, tmp_path: Path) -> None:
+    def test_git_changed_files_given_non_git_cwd_then_returns_empty(self, tmp_path: Path) -> None:
         """No git repo initialised → empty set on both staged branches."""
         assert _git_changed_files(tmp_path, staged=True) == set()
         assert _git_changed_files(tmp_path, staged=False) == set()
 
-    def test_staged_and_unstaged_separate(self, tmp_path: Path) -> None:
+    def test_git_changed_files_given_staged_and_unstaged_then_separates(self, tmp_path: Path) -> None:
         """A file in the staged set is absent from the unstaged set (and vice versa).
 
         Both files must be tracked by git for the diff to report them — newly
@@ -96,7 +96,7 @@ class TestGitChangedFiles:
         assert "unstaged.py" in _git_changed_files(tmp_path, staged=False)
         assert "staged.py" not in _git_changed_files(tmp_path, staged=False)
 
-    def test_staged_and_unstaged_overlap_intersected_by_helper(
+    def test_git_changed_files_given_overlapping_staged_and_unstaged_then_intersects(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -122,7 +122,7 @@ class TestGitChangedFiles:
 class TestRuffParseabilityErrors:
     """E999-canary returns the set of paths that emitted E999 in stdout."""
 
-    def test_empty_paths_short_circuits(self, tmp_path: Path) -> None:
+    def test_ruff_parseability_errors_given_empty_paths_then_short_circuits(self, tmp_path: Path) -> None:
         """No files → no ruff invocation (empty result, no fake calls recorded)."""
         run_called: list[tuple[list[str], str]] = []
 
@@ -167,7 +167,7 @@ class TestRuffParseabilityErrors:
         result = _ruff_parseability_errors(tmp_path, ["src/a.py", "src/b.py"], fake_run)
         assert result == expected_files
 
-    def test_run_cmd_filenotfound_swallowed(self, tmp_path: Path) -> None:
+    def test_ruff_parseability_errors_given_file_not_found_then_swallowed(self, tmp_path: Path) -> None:
         """``FileNotFoundError`` from run_cmd becomes an empty set (no propagation)."""
 
         def fake_run(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
@@ -182,7 +182,7 @@ class TestRuffParseabilityErrors:
 class TestAutofixTargetPaths:
     """``_autofix_target_paths`` mirrors ``_build_command``'s path slot."""
 
-    def test_explicit_path_overrides_default(self, tmp_path: Path) -> None:
+    def test_autofix_target_paths_given_explicit_path_then_overrides_default(self, tmp_path: Path) -> None:
         """When ``--path`` is given and the spec supports_path, that path is it."""
         _write_file(tmp_path, "src/main.py", "x = 1\n")
         spec = ToolSpec(
@@ -195,7 +195,7 @@ class TestAutofixTargetPaths:
             spec, config=tmp_config(tmp_path), path="src/main.py"
         ) == ["src/main.py"]
 
-    def test_default_paths_used_when_no_path(self, tmp_path: Path) -> None:
+    def test_autofix_target_paths_given_no_path_then_uses_default(self, tmp_path: Path) -> None:
         """No ``--path`` → ``spec.default_paths`` is the seed."""
         _write_file(tmp_path, "src/a.py", "x = 1\n")
         _write_file(tmp_path, "src/b.py", "y = 2\n")
@@ -205,12 +205,12 @@ class TestAutofixTargetPaths:
         result = _autofix_target_paths(spec, config=tmp_config(tmp_path), path=None)
         assert set(result) >= {"src/a.py", "src/b.py"}
 
-    def test_no_default_no_path_returns_empty(self, tmp_path: Path) -> None:
+    def test_autofix_target_paths_given_no_default_and_no_path_then_empty(self, tmp_path: Path) -> None:
         """``rumdl check`` shape (no default_paths, supports_path=True) → empty list."""
         spec = ToolSpec("rumdl check", ["rumdl", "check"], supports_path=True)
         assert _autofix_target_paths(spec, config=tmp_config(tmp_path), path=None) == []
 
-    def test_glob_expansion_runs(self, tmp_path: Path) -> None:
+    def test_autofix_target_paths_given_glob_then_expands(self, tmp_path: Path) -> None:
         """``config/*.py`` glob expands to all matching python files."""
         _write_file(tmp_path, "config/a.py", "")
         _write_file(tmp_path, "config/b.py", "")
@@ -228,7 +228,7 @@ class TestAutofixTargetPaths:
 class TestEnvVarAutofixOptOut:
     """``PYTHON_SETUP_LINT_NO_AUTOFIX=1`` flips ``fix=False`` before the loop."""
 
-    def test_env_var_disables_fix_flags_through_run_lint(
+    def test_env_var_opt_out_given_python_setup_lint_no_autofix_then_disables_fix(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -260,7 +260,7 @@ class TestEnvVarAutofixOptOut:
                     f"--fix leaked to {record.label}: {record.cmd!r}"
                 )
 
-    def test_no_env_var_keeps_fix_flags(
+    def test_env_var_opt_out_given_no_env_var_then_keeps_fix(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -284,7 +284,7 @@ class TestEnvVarAutofixOptOut:
             # the autofix helper entirely (the loop falls back to the
             # plain ``_build_command(fix=False)`` path).
 
-    def test_env_var_zero_or_other_value_does_not_opt_out(
+    def test_env_var_opt_out_given_env_var_zero_or_other_then_no_opt_out(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
@@ -306,7 +306,7 @@ class TestEnvVarAutofixOptOut:
 class TestAutofixObservability:
     """Skip + revert messages log to stderr; no sensitive data leaked."""
 
-    def test_skip_line_format(
+    def test_autofix_observability_given_skip_then_stderr_format(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Stderr skip line: ``[<tool>] autofix skipped for <file>: staged+unstaged conflict``."""
@@ -331,7 +331,7 @@ class TestAutofixObservability:
             in captured.err
         )
 
-    def test_revert_line_format(
+    def test_autofix_observability_given_revert_then_stderr_format(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Stderr revert line: ``[<tool>] autofix reverted <file>: E999 after fix``."""
@@ -375,7 +375,7 @@ class TestCanaryLabelObservability:
     would never surface, so the revert path would silently never run.
     """
 
-    def test_canary_label_is_distinct_from_ruff_check(
+    def test_canary_label_given_observability_then_distinct_from_ruff_check(
         self,
         tmp_path: Path,
     ) -> None:
@@ -416,7 +416,7 @@ class TestWindowsPathSafety:
     without silently breaking the revert path.
     """
 
-    def test_e999_parses_drive_letter_path_robustly(self, tmp_path: Path) -> None:
+    def test_ruff_parseability_errors_given_drive_letter_path_then_parses_robustly(self, tmp_path: Path) -> None:
         """Windows ``C:\\foo\\bar.py:5:1: E999 SyntaxError`` parses as the full path."""
         stdout = "C:\\foo\\bar.py:5:1: E999 SyntaxError\n"
 
@@ -429,7 +429,7 @@ class TestWindowsPathSafety:
             f"Windows E999 path not parsed whole: got {result!r}"
         )
 
-    def test_e999_drive_letter_does_not_emit_garbage_short_path(
+    def test_ruff_parseability_errors_given_drive_letter_then_no_garbage(
         self, tmp_path: Path
     ) -> None:
         """The drive-letter colon must NOT yield ``C`` as a separate path entry."""
@@ -446,7 +446,7 @@ class TestWindowsPathSafety:
         assert "D" not in result, f"garbage short-path 'D' landed in result: {result!r}"
         assert result == {"D:\\repo\\src\\mod.py"}
 
-    def test_e999_drive_letter_with_message_parses_cleanly(
+    def test_ruff_parseability_errors_given_drive_letter_with_message_then_parses_cleanly(
         self, tmp_path: Path
     ) -> None:
         """Drive-letter path with a multi-word message still parses whole."""
@@ -460,7 +460,7 @@ class TestWindowsPathSafety:
         )
         assert result == {"C:\\dev\\proj\\pkg\\a.py"}
 
-    def test_e999_posix_path_still_parses_unchanged(self, tmp_path: Path) -> None:
+    def test_ruff_parseability_errors_given_posix_path_then_parses_unchanged(self, tmp_path: Path) -> None:
         """Regression guard: POSIX paths parse the same as before the regex."""
         stdout = "src/a.py:1:1: E999 SyntaxError\n"
 

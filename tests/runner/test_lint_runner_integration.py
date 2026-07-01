@@ -1,8 +1,9 @@
+# pylint: disable=too-many-lines
 """Unit tests for baseline/diff/overwrite/print/orchestration/CLI/integration in ``python_setup_lint.runner``.
 
-Split from ``test_lint_runner.py`` to stay under the 500-line pylint C0302 limit.
+Splitting would lose context.
 """
-
+# pylint: disable=too-many-positional-arguments  # parametrized test with 6 args; pylint default is 5
 from __future__ import annotations
 
 import json
@@ -51,7 +52,7 @@ from tests.runner._factories_tables import MAIN_ARGPARSE_CASES
 class TestCaptureBaseline:
     """``_capture_baseline`` snapshot serialisation."""
 
-    def test_capture_basic(self) -> None:
+    def test_capture_baseline_given_tool_output_then_captures(self) -> None:
         baseline = _capture_baseline(
             [
                 make_lint_result(
@@ -195,7 +196,7 @@ class TestDiffBaselineEdgeCases:
             violations, reloaded = diff_baseline_with(tmp_path, [], [])
             assert violations == [] and reloaded == []
 
-    def test_diff_unwritable_baseline_returns_violation(self, tmp_path: Path) -> None:
+    def test_diff_baseline_given_unwritable_then_returns_violation(self, tmp_path: Path) -> None:
         """D5: unwritable baseline + shrinkage triggers write → graceful violation, not crash."""
         baseline_path = tmp_path / "readonly.json"
         baseline_path.write_text(
@@ -223,13 +224,12 @@ class TestDiffBaselineEdgeCases:
         finally:
             baseline_path.chmod(0o644)
 
-    def test_peek_fallback_tools_snapshot(self) -> None:
+    def test_diff_baseline_given_peek_fallback_tools_then_snapshot(self) -> None:
         """peek_fallback_tools returns a frozen snapshot of the per-run fallback set."""
         from python_setup_lint.runner.baseline import (  # type: ignore[attr-defined]  # private module; pylint can't resolve runtime attributes
             _FALLBACK_TOOLS,
             peek_fallback_tools,
         )
-
         snapshot = peek_fallback_tools()
         assert isinstance(snapshot, frozenset)
         _FALLBACK_TOOLS.add("test_tool")
@@ -238,13 +238,12 @@ class TestDiffBaselineEdgeCases:
         # New snapshot reflects the mutation
         assert "test_tool" in peek_fallback_tools()
 
-    def test_peek_fallback_tools_cleared_per_diff(self, tmp_path: Path) -> None:
+    def test_diff_baseline_given_peek_fallback_tools_then_cleared_per_diff(self, tmp_path: Path) -> None:
         """_diff_baseline clears _FALLBACK_TOOLS at the start of each call."""
         from python_setup_lint.runner.baseline import (  # type: ignore[attr-defined]  # private module; pylint can't resolve runtime attributes
             _FALLBACK_TOOLS,
             peek_fallback_tools,
         )
-
         _FALLBACK_TOOLS.add("stale_tool")
         baseline_path = tmp_path / "empty_baseline.json"
         baseline_path.write_text("[]")
@@ -261,7 +260,7 @@ class TestDiffBaselineEdgeCases:
 class TestOverwriteBaseline:
     """``--overwrite-baseline`` rewrites an existing baseline file (with fakes)."""
 
-    def test_overwrite_via_main_and_run_lint(
+    def test_overwrite_baseline_given_main_and_run_lint_then_overwrites(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -296,7 +295,7 @@ class TestOverwriteBaseline:
             baseline_file.read_text()
         )
 
-    def test_no_overwrite_without_flag(
+    def test_overwrite_baseline_given_no_flag_then_no_overwrite(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Without ``--overwrite-baseline``, an existing baseline is diffed, not rewritten."""
@@ -343,7 +342,7 @@ class TestRunLintOrchestration:
         assert {c.label for c in fake.calls} == {t.name for t in LINT_TOOLS}
         assert len(json.loads(baseline_file.read_text())) == len(LINT_TOOLS)
 
-    def test_tools_override_limits_tools(
+    def test_run_lint_orchestration_given_tools_override_then_limits_tools(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         install_fake_runner(monkeypatch)
@@ -382,7 +381,7 @@ class TestRunLintOrchestration:
 
 
 @pytest.mark.parametrize("args", MAIN_ARGPARSE_CASES)
-def test_main_argparse_accepts_flag(
+def test_main_argparse_given_flag_then_accepts(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     args: list[str],
@@ -443,7 +442,7 @@ class TestRunLintIntegration:
             e["tool"] == "ruff check" for e in json.loads(baseline_file.read_text())
         )
 
-    def test_baseline_create_and_diff_paths(
+    def test_run_lint_integration_given_baseline_then_create_and_diff_paths(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Baseline create → diff round-trip: entries have tool/exit_code; second run matches → exit 0."""
@@ -460,7 +459,7 @@ class TestRunLintIntegration:
             run_lint(config=tmp_config(tmp_path), baseline=str(baseline_file)) == 0
         )  # re-diff matches
 
-    def test_baseline_exits_nonzero_on_new_violation(self, tmp_path: Path) -> None:
+    def test_run_lint_integration_given_new_violation_then_exits_nonzero(self, tmp_path: Path) -> None:
         """Stored baseline with no issues + current new ruff issue → ``_diff_baseline`` returns truthy."""
         baseline_file = tmp_path / "test_baseline_new_violation.json"
         baseline_file.write_text(

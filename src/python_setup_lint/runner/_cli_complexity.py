@@ -1,9 +1,3 @@
-"""Helper functions extracted from cli.py to reduce file size and complexity.
-
-These functions handle config overrides, tool selection, config argument parsing,
-config status display, and runner config construction — all used by the CLI
-entry point in :mod:`python_setup_lint.runner.cli`.
-"""
 
 from __future__ import annotations
 

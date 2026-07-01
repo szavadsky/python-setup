@@ -1,22 +1,3 @@
-"""Variable + class annotation fidelity (Invariant 3 — the E97B4/W97B5/I97B6 family).
-
-Compares module-level variable annotations between stub and impl,
-compares class base lists / public methods / class-level attributes,
-and emits the corresponding message ids.
-
-Functions:
-- :func:`_normalize_bases` — normalise base-class AST nodes to a sorted, comparable list.
-- :func:`_is_public_method` — public-method predicate used by ``_compare_class_methods``.
-- :func:`_is_classvar` — detects ``ClassVar[...]`` AST pattern.
-- :func:`_compare_class_bases` — emits E97B4 when normalised base lists differ.
-- :func:`_compare_class_methods` — delegates public methods to ``signature._emit_callable_fidelity_issues``.
-- :func:`_compare_class_attrs` — emits W97B5/E97B4/I97B6 per class-level attribute.
-- :func:`_emit_variable_fidelity` — dispatches variable annotation comparison per module.
-
-Topologically downstream of ``_ast_helpers`` and ``signature``
-(``_compare_class_methods`` delegates callable compare into
-``signature._emit_callable_fidelity_issues``).
-"""
 
 from __future__ import annotations
 

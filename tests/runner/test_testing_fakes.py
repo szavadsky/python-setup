@@ -5,7 +5,6 @@ behaviour: dict dispatch, list dispatch, unknown-label fallback, cmd capture,
 and a smoke integration test that exercises ``run_lint(...)`` with the fake
 installed (no real subprocess spawned).
 """
-
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -29,12 +28,14 @@ from tests.runner._factories_extras import (
     RUN_LINT_FAKE_INVARIANT_CASES,
 )
 
+pytestmark = pytest.mark.no_external_api
+
 # ── make_lint_result ────────────────────────────────────────────────
 # Factory defaults sanity + full-override round-trip; the factory is thin
 # enough that exhaustive per-field echo would be tautology (per T12 QA).
 
 
-def test_make_lint_result_defaults_and_override_apply() -> None:
+def test_make_lint_result_given_defaults_and_overrides_then_applies() -> None:
     r_default = make_lint_result()
     assert isinstance(r_default, LintResult)
     assert (
@@ -78,7 +79,7 @@ def test_dispatch_returns_expected_result(
         assert out.tool_name == exp_name
 
 
-def test_list_dispatch_extra_calls_return_zero_exit_empty() -> None:
+def test_fake_run_cmd_given_list_dispatch_extra_calls_then_zero_exit() -> None:
     """List mode — calls beyond the list return a zero-exit result with the call's label."""
     fake = fake_run_cmd_factory([make_lint_result(tool_name="tool_a", exit_code=1)])
     assert fake(["tool_a"], label="tool_a").exit_code == 1
@@ -102,7 +103,7 @@ def test_calls_captured_in_order(
         assert record.label == want["label"]
 
 
-def test_dict_empty_dict_multiple_labels_zero_exit() -> None:
+def test_fake_run_cmd_given_empty_dict_then_multiple_labels_zero_exit() -> None:
     """Empty dict — multiple different labels all get a zero-exit empty result."""
     fake = fake_run_cmd_factory({})
     r1 = fake(["ruff", "check", "."], label="ruff check")
@@ -176,7 +177,7 @@ def test_run_lint_with_fake_dispatch_invariants(
     assert predicate(fake), f"Invariant failed; calls={[c.label for c in fake.calls]}"
 
 
-def test_run_lint_with_fake_returns_zero(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_run_lint_with_fake_given_zero_results_then_returns_zero(monkeypatch: pytest.MonkeyPatch) -> None:
     """When the fake returns zero-exit empty results for every tool, ``run_lint`` exits 0."""
     fake = fake_run_cmd_factory(canned_results_all_tools())
     monkeypatch.setattr(_output_module, "_run_cmd", fake)
@@ -187,7 +188,7 @@ def test_run_lint_with_fake_returns_zero(monkeypatch: pytest.MonkeyPatch) -> Non
     )
 
 
-def test_fake_no_subprocess_spawned(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_fake_run_cmd_given_installed_then_no_subprocess_spawned(monkeypatch: pytest.MonkeyPatch) -> None:
     """No ``subprocess.run`` call for any lint tool reaches the real OS with the fake installed."""
     import subprocess
 

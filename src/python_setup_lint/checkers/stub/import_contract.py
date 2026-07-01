@@ -1,10 +1,3 @@
-"""Phase 2 enforcement — import contract (Invariant 2).
-
-Every project-local import in non-test code refers to a symbol/module
-declared in the target's .pyi.
-
-Extracted from stub_checker.py. No logic change.
-"""
 
 from __future__ import annotations
 
@@ -24,7 +17,6 @@ log = structlog.get_logger(__name__)
 
 @dataclass
 class ImportUsage:
-    """A single import statement fact recorded during traversal."""
 
     importer_module: str
     lineno: int

@@ -14,7 +14,6 @@ Coverage mapping (envelope ``T5.envelope.md``):
   pyright override overwrites ``config_paths["pyright check"]`` (verified
   via the dispatched command captured by a fake ``_run_cmd``).
 """
-
 from __future__ import annotations
 
 import time
@@ -27,18 +26,20 @@ from python_setup_lint.runner import RunnerConfig, run_lint
 from python_setup_lint.runner.cmd_build import _compose_ruff_config, _load_pyproject_toml
 from python_setup_lint.testing import fake_run_cmd_factory
 
+pytestmark = pytest.mark.no_external_api
+
 # ── RunnerConfig default-off + explicit-on ──────────────────────
 
 
 class TestRunnerConfigOverrideFields:
     """``RunnerConfig`` declares the two T5 override fields, both default off."""
 
-    def test_defaults_off(self, tmp_path: Path) -> None:
+    def test_runner_config_override_given_defaults_then_off(self, tmp_path: Path) -> None:
         cfg = RunnerConfig(cwd=tmp_path)
         assert cfg.ruff_project_overrides is False
         assert cfg.pyright_project_override is None
 
-    def test_explicit_on(self, tmp_path: Path) -> None:
+    def test_runner_config_override_given_explicit_then_on(self, tmp_path: Path) -> None:
         pyright_proj = tmp_path / "pyproject.toml"
         pyright_proj.write_text("[project]\nname = 'x'\n")
         cfg = RunnerConfig(
@@ -49,7 +50,7 @@ class TestRunnerConfigOverrideFields:
         assert cfg.ruff_project_overrides is True
         assert cfg.pyright_project_override == pyright_proj
 
-    def test_pyright_override_accepts_none_explicit(self, tmp_path: Path) -> None:
+    def test_runner_config_override_given_pyright_override_none_then_accepts(self, tmp_path: Path) -> None:
         cfg = RunnerConfig(cwd=tmp_path, pyright_project_override=None)
         assert cfg.pyright_project_override is None
 
@@ -88,14 +89,14 @@ def _write_pyproject_with_overrides(
 class TestComposeRuffConfigNoOverride:
     """No-override fast path returns the shared path unchanged (no temp file)."""
 
-    def test_returns_shared_when_no_ruff_table(self, tmp_path: Path) -> None:
+    def test_compose_ruff_config_given_no_ruff_table_then_returns_shared(self, tmp_path: Path) -> None:
         shared = tmp_path / "shared_ruff.toml"
         shared.write_text("line-length = 130\n")
         pp = tmp_path / "pyproject.toml"
         pp.write_text("[project]\nname = 'no-ruff'\n")
         assert _compose_ruff_config(tmp_path, shared) == shared
 
-    def test_returns_shared_when_ruff_table_has_no_overrides(
+    def test_compose_ruff_config_given_ruff_table_no_overrides_then_returns_shared(
         self, tmp_path: Path
     ) -> None:
         """Empty ``banned-api`` + empty ``per-file-ignores`` ⇒ no-override."""
@@ -104,13 +105,13 @@ class TestComposeRuffConfigNoOverride:
         _write_pyproject_with_overrides(tmp_path, banned_api={}, per_file_ignores={})
         assert _compose_ruff_config(tmp_path, shared) == shared
 
-    def test_returns_shared_when_pyproject_missing(self, tmp_path: Path) -> None:
+    def test_compose_ruff_config_given_pyproject_missing_then_returns_shared(self, tmp_path: Path) -> None:
         shared = tmp_path / "shared_ruff.toml"
         shared.write_text("line-length = 130\n")
         # No pyproject.toml at cwd at all.
         assert _compose_ruff_config(tmp_path, shared) == shared
 
-    def test_no_temp_file_written_on_fast_path(self, tmp_path: Path) -> None:
+    def test_compose_ruff_config_given_fast_path_then_no_temp_file(self, tmp_path: Path) -> None:
         """The ``python_setup_lint_ruff_<cwd>`` temp dir must NOT be created."""
         shared = tmp_path / "shared_ruff.toml"
         shared.write_text("line-length = 130\n")
@@ -128,7 +129,7 @@ def _temp_root() -> Path:
 class TestComposeRuffConfigWithOverrides:
     """With overrides, the composed temp ``ruff.toml`` carries extend + stanzas."""
 
-    def test_composes_banned_api(self, tmp_path: Path) -> None:
+    def test_compose_ruff_config_given_banned_api_then_composes(self, tmp_path: Path) -> None:
         shared = tmp_path / "shared_ruff.toml"
         shared.write_text("line-length = 130\n")
         _write_pyproject_with_overrides(
@@ -150,7 +151,7 @@ class TestComposeRuffConfigWithOverrides:
         # per-file-ignores section absent when only banned-api provided.
         assert "[lint.per-file-ignores]" not in text
 
-    def test_composes_per_file_ignores(self, tmp_path: Path) -> None:
+    def test_compose_ruff_config_given_per_file_ignores_then_composes(self, tmp_path: Path) -> None:
         shared = tmp_path / "shared_ruff.toml"
         shared.write_text("line-length = 130\n")
         _write_pyproject_with_overrides(
@@ -173,7 +174,7 @@ class TestComposeRuffConfigWithOverrides:
         # banned-api section absent when only per-file-ignores provided.
         assert "[lint.flake8-tidy-imports]" not in text
 
-    def test_composes_both_stanzas(self, tmp_path: Path) -> None:
+    def test_compose_ruff_config_given_both_stanzas_then_composes(self, tmp_path: Path) -> None:
         shared = tmp_path / "shared_ruff.toml"
         shared.write_text("line-length = 130\n")
         _write_pyproject_with_overrides(
@@ -189,7 +190,7 @@ class TestComposeRuffConfigWithOverrides:
         assert "[lint.per-file-ignores]" in text
         assert "\"src/x.py\" = ['F401']" in text
 
-    def test_temp_file_in_dedicated_dir(self, tmp_path: Path) -> None:
+    def test_compose_ruff_config_given_overrides_then_temp_file_in_dedicated_dir(self, tmp_path: Path) -> None:
         """Temp file lands under ``python_setup_lint_ruff_<cwd_name>/ruff.toml``."""
         cwd = _temp_root() / "t5_unique_cwd_xyz"
         cwd.mkdir(parents=True, exist_ok=True)
@@ -205,7 +206,7 @@ class TestComposeRuffConfigWithOverrides:
 
             shutil.rmtree(cwd, ignore_errors=True)
 
-    def test_idempotent_overwrite(self, tmp_path: Path) -> None:
+    def test_compose_ruff_config_given_idempotent_then_overwrites(self, tmp_path: Path) -> None:
         shared = tmp_path / "shared_ruff.toml"
         shared.write_text("line-length = 130\n")
         _write_pyproject_with_overrides(tmp_path, banned_api={"a.b": "x"})
@@ -221,7 +222,7 @@ class TestComposeRuffConfigWithOverrides:
 class TestLoadPyprojectCache:
     """mtime-keyed cache + malformed-pyproject fail-fast (private-complex-unit)."""
 
-    def test_cache_hit_avoids_restat_after_second_call(
+    def test_load_pyproject_cache_given_cache_hit_then_avoids_restat(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Use a fresh cache so prior tests don't pollute.
@@ -233,7 +234,7 @@ class TestLoadPyprojectCache:
         assert first is second  # cached — same dict instance
         assert first.get("project", {}).get("name") == "x"  # type: ignore[attr-defined]  # object-typed variable from release_messages()
 
-    def test_cache_miss_on_mtime_change(
+    def test_load_pyproject_cache_given_mtime_change_then_cache_miss(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr("python_setup_lint.runner.cmd_build._PYPROJECT_CACHE", {})
@@ -248,12 +249,12 @@ class TestLoadPyprojectCache:
         assert first is not second
         assert second.get("project", {}).get("name") == "y"  # type: ignore[attr-defined]  # object-typed variable from release_messages()
 
-    def test_missing_pyproject_returns_empty(self, tmp_path: Path) -> None:
+    def test_load_pyproject_cache_given_missing_pyproject_then_empty(self, tmp_path: Path) -> None:
         """Missing file → empty dict (caller treats as no-override)."""
         missing = tmp_path / "does_not_exist.toml"
         assert _load_pyproject_toml(missing) == {}
 
-    def test_malformed_pyproject_raises_systemexit(self, tmp_path: Path) -> None:
+    def test_load_pyproject_cache_given_malformed_pyproject_then_raises(self, tmp_path: Path) -> None:
         """Unparseable TOML → SystemExit (T8 fail-fast on malformed config)."""
         pp = tmp_path / "pyproject.toml"
         pp.write_text("[[[invalid toml")
@@ -297,7 +298,7 @@ class TestRunLintConsumesOverrides:
             },
         )
 
-    def test_ruff_config_replaced_with_composed(
+    def test_run_lint_consumes_overrides_given_ruff_then_config_replaced(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """After ``run_lint``, ``config.config_paths["ruff check"]`` ≠ shared."""
@@ -309,7 +310,7 @@ class TestRunLintConsumesOverrides:
         assert config.config_paths["ruff check"] != shared_before  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
         assert "python_setup_lint_ruff_" in str(config.config_paths["ruff check"])  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
 
-    def test_pyright_config_replaced_with_override(
+    def test_run_lint_consumes_overrides_given_pyright_then_config_replaced(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         config = self._config_with_overrides(tmp_path)
@@ -318,7 +319,7 @@ class TestRunLintConsumesOverrides:
         run_lint(config=config)
         assert config.config_paths["pyright check"] == tmp_path / "pyproject.toml"  # type: ignore[index]  # config_paths is dict[str, Path]; index access is valid at runtime
 
-    def test_ruff_command_uses_composed_path(
+    def test_run_lint_consumes_overrides_given_ruff_then_command_uses_composed_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The ruff ``--config`` flag points at the composed path."""
@@ -333,7 +334,7 @@ class TestRunLintConsumesOverrides:
         cfg_idx = ruff_rec.cmd.index("--config")
         assert "python_setup_lint_ruff_" in ruff_rec.cmd[cfg_idx + 1]
 
-    def test_pyright_command_uses_override_project(
+    def test_run_lint_consumes_overrides_given_pyright_then_command_uses_override(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The pyright ``--project`` flag points at the override path."""
@@ -351,7 +352,7 @@ class TestRunLintConsumesOverrides:
         check_idx = pyright_rec.cmd.index("--project")
         assert pyright_rec.cmd[check_idx + 1] == str(tmp_path / "pyproject.toml")
 
-    def test_no_override_when_fields_off(
+    def test_run_lint_consumes_overrides_given_fields_off_then_no_override(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """With defaults off, ``config_paths`` stays untouched (regress-preserved)."""

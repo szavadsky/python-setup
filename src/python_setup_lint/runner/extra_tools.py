@@ -1,18 +1,3 @@
-"""Declarative extra-tools loader (T11 v1) + T8 fail-fast machinery.
-
-Loads ``[[tool.python-setup-lint.extra-tools]]`` entries from
-``pyproject.toml`` and registers each as a live lint tool via
-:func:`python_setup_lint.runner.dispatch.register_lint_tool`.  Purely
-declarative: a consumer project adds a new lint step with NO Python code.
-
-Per :data:`python_setup_lint.runner.parsers.PARSE_STRATEGIES`, the parser
-for an extra is either a built-in (one of the 11 verbatim names) or one of
-the two generic parsers (``regex_count`` / ``raw_lines``).
-
-T8 fail-fast: malformed pyproject, unreadable ``pyproject.toml``, and
-unknown tool names in :attr:`~python_setup_lint.runner.types.RunnerConfig.tools_override`
-all raise :class:`ExtraToolsConfigError` — no silent fallback.
-"""
 
 from __future__ import annotations
 
