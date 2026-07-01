@@ -1,65 +1,68 @@
 # python-setup
 
-Shared linting, formatting, and dev-tooling infrastructure for Python projects.
+Shared Python project setup — lint runner, config, checkers, and CI integration.
 
-## What it is
-
-`python-setup` is a reusable Python package that encapsulates linting conventions, custom checkers, and setup scripts used across multiple projects. It keeps tooling DRY — one source of truth for rules, checkers, and config.
-
-## Install
+## Quick start
 
 ```bash
-# From a local checkout
-uv add /path/to/python-setup
-
-# Or from the published git repository
-uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.15.0"
-```
-
-After adding the dependency, run the setup command:
-
-```bash
+uv add python-setup
 uv run python-setup install
-```
-
-This is idempotent — running it twice is a no-op.
-
-## Usage
-
-```bash
-# Run the full lint pipeline (all 13 tools with baseline diffing)
 uv run lint
-
-# Install python-setup tooling into a target project
-uv run python-setup install
-
-# Run pytest with typeguard enabled (consumer-agnostic health check)
-uv run python-setup-test-checked
 ```
 
-Both commands return exit code 0 on success, non-zero on failure.
+## What is python-setup?
+
+A reusable Python project template that ships:
+
+- **13 lint tools** — ruff, mypy, pylint, pyright, rumdl, ty, yamllint, tach, detect-secrets, vulture, pyupgrade, yesqa, and a custom semantic-justification checker.
+- **Shared config** — tool configs live in `python-setup/config/` and are inherited by consumer projects.
+- **Custom pylint checkers** — automatically registered; no manual plugin loading.
+- **Baseline diffing** — `lint.baseline` freezes pre-existing violations; CI only flags new ones.
+- **Pre-commit hooks** — auto-fix on commit + full lint pipeline on the same `git commit` stage.
+- **Config drift detection** — `python-setup update` warns when shared configs have changed upstream.
+
+## Installation
+
+### Prerequisites
+
+- Python 3.13+
+- `uv` (package manager)
+
+### Install
+
+```bash
+uv add python-setup
+uv run python-setup install
+```
+
+The installer copies shared configs to `python-setup/config/` and sets up the `lint` command.
+
+### Update
+
+```bash
+uv add "python-setup @ latest"
+uv run python-setup update
+```
+
+The `update` command checksums all shipped configs and warns if any have drifted from the installed version.
 
 ## Using python-setup in another project
 
-### 1. Add the dependency
+### 1. Add dependency
 
 ```bash
-uv add --dev "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.15.0"
+uv add python-setup
 ```
 
-### 2. Run the installer
+### 2. Run installer
 
 ```bash
 uv run python-setup install
 ```
 
-The installer adds the dependency, registers pylint plugins, writes pre-commit config, copies `CodingRules.md`, and appends setup instructions to `AGENTS.md`.
+### 3. Configure tools
 
-### 3. Install pre-commit hooks
-
-```bash
-uv run pre-commit install
-```
+Override any shared config via `pyproject.toml` `[tool.*]` sections. See [docs/overlays.md](docs/overlays.md) for per-tool overlay reference.
 
 ### 4. Run lint
 
@@ -71,7 +74,7 @@ Runs all 13 lint tools sequentially with baseline diffing and statistics aggrega
 
 ### What you get
 
-- **Config files** in `python-setup/config/` (ruff, mypy, pylint, pyright, rumdl, ty) — inherited via `extend` in your `pyproject.toml`.
+- **Config files** in `python-setup/config/` (ruff, mypy, pylint, pyright, rumdl, ty, yamllint, tach) — inherited via `extend` in your `pyproject.toml`.
 - **Custom pylint checkers** — automatically registered by the installer.
 - **Extra lint tools** — declare project-specific tools via `[[tool.python-setup-lint.extra-tools]]` in your `pyproject.toml` (see [docs/custom-checks.md](docs/custom-checks.md)).
 - **Pre-commit hooks** — fast auto-fix on commit AND the full lint pipeline on the same `git commit` stage.
@@ -81,7 +84,7 @@ Runs all 13 lint tools sequentially with baseline diffing and statistics aggrega
 
 When lint rules or checkers change in `python-setup`:
 
-1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.15.0"`
+1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.16.0"`
 2. Re-run the installer: `uv run python-setup install`
 3. Commit the updated config in the consuming project.
 

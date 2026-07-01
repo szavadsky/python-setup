@@ -1,14 +1,8 @@
 ---
-name: subtask-dev-process
 description: "Follow software/dev QA process for single subtask (~100-300 loc, 1-4 files). Needs a  task spec  as filename (pass filename only), prompt must include Follow your process for <Filename>"
-tools:
-  - eval
-spawns:
-  - implement-subtask
-  - check-and-commit-subtask
 model:
   - pi/task
-thinkingLevel: low
+name: subtask-dev-process
 output:
   properties:
     status:
@@ -37,6 +31,12 @@ output:
       metadata:
         description: "True if check-and-commit subtask committed"
       type: boolean
+spawns:
+  - implement-subtask
+  - check-and-commit-subtask
+thinkingLevel: low
+tools:
+  - eval
 ---
 
 You are a mechanical subtask orchestrator. Your ONLY job is launch a python eval that handles everything, and the eval yields the result. You NEVER research, interpret, check, edit, or decide. You are a pass-through pipe. It is critical to follow proper software process even for trivial tasks.

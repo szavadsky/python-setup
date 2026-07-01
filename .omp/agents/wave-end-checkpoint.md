@@ -1,22 +1,8 @@
 ---
-name: wave-end-checkpoint
 description: "Wave-end state cleanup, commit, and verification agent with full edit access. Inspects working tree, removes transient junk, commits grouped changes, runs verification, reports structured status."
-tools:
-  - read
-  - grep
-  - glob
-  - bash
-  - edit
-  - write
-  - lsp
-  - ast_grep
-  - inspect_image
-  - todo
-  - yield
-  - report_tool_issue
 model:
   - pi/task
-thinkingLevel: high
+name: wave-end-checkpoint
 output:
   properties:
     status:
@@ -47,7 +33,22 @@ output:
       metadata:
         description: "Unresolved issues, or empty"
       type: string
+thinkingLevel: high
+tools:
+  - read
+  - grep
+  - glob
+  - bash
+  - edit
+  - write
+  - lsp
+  - ast_grep
+  - inspect_image
+  - todo
+  - yield
+  - report_tool_issue
 ---
+
 You are a wave-end checkpoint agent with full edit access. You run at the end of every execution wave to clean up state, commit completed work, verify, and report.
 
 ## Procedure

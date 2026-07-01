@@ -204,11 +204,11 @@ class TestRunLintFixDispatch:
         the plain path runs (no canary call).  This asserts the difference.
 
         The canary fires for tools whose target files are enumerable from
-        ``spec.default_paths`` + ``--path``.  Only ruff has ``default_paths``
-        set (``["src/", "tests/"]``); rumdl/ty without a ``--path`` fall into
-        the "no enumerable targets" branch (canary short-circuits).  The test
-        creates files under ruff's default dirs + a separate path-only fixture
-        to exercise both branches.
+        ``spec.default_paths`` + ``--path``.  Only ruff and rumdl have
+        ``default_paths`` set (ruff: ``["src/", "tests/"]``, rumdl: ``["."]``);
+        ty without a ``--path`` falls into the "no enumerable targets" branch
+        (canary short-circuits).  The test creates files under ruff's default
+        dirs + a separate path-only fixture to exercise both branches.
         """
         monkeypatch.delenv(_AUTOFIX_ENV_VAR, raising=False)
         canned = _make_canned_fix_results()

@@ -1,25 +1,8 @@
 ---
-name: check-and-commit-subtask
 description: "Independent checker+committer. Reviews diff, re-runs lint/test unfiltered, commits if correct. Decides commit."
-tools:
-  - read
-  - grep
-  - glob
-  - bash
-  - lsp
-  - ast_grep
-  - yield
-  - inspect_image
-  - todo
-  - job
-  - irc
-spawns:
-  - sonic
-  - task
-  - librarian
 model:
   - pi/task
-thinkingLevel: high
+name: check-and-commit-subtask
 output:
   properties:
     status:
@@ -66,6 +49,23 @@ output:
       metadata:
         description: "Notes on the implementer's plan concerns — whether you agree, disagree, or have additions."
       type: string
+spawns:
+  - sonic
+  - task
+  - librarian
+thinkingLevel: high
+tools:
+  - read
+  - grep
+  - glob
+  - bash
+  - lsp
+  - ast_grep
+  - yield
+  - inspect_image
+  - todo
+  - job
+  - irc
 ---
 
 You are an independent checker and committer. You receive the implementer's result and the original task text.

@@ -1,28 +1,8 @@
 ---
-name: plan-completeness-checker
 description: "Checks whether the plan is fully implemented in the repo with good quality, following all repo standards. Traces plan requirements to code, delegates investigation, consults oracle on uncertainties. Returns telegraphic concerns."
-tools:
-  - read
-  - grep
-  - glob
-  - bash
-  - lsp
-  - ast_grep
-  - task
-  - irc
-  - yield
-  - inspect_image
-  - checkpoint
-  - rewind
-  - job
-  - todo
-spawns:
-  - task
-  - fact-finder
-  - oracle
 model:
   - pi/task
-thinkingLevel: high
+name: plan-completeness-checker
 output:
   properties:
     status:
@@ -39,6 +19,26 @@ output:
       metadata:
         description: "Brief summary of what was checked and the result"
       type: string
+spawns:
+  - task
+  - fact-finder
+  - oracle
+thinkingLevel: high
+tools:
+  - read
+  - grep
+  - glob
+  - bash
+  - lsp
+  - ast_grep
+  - task
+  - irc
+  - yield
+  - inspect_image
+  - checkpoint
+  - rewind
+  - job
+  - todo
 ---
 
 You are a plan completeness checker. You receive a plan file path. You check whether the plan was fully implemented in the repo with good quality, following ALL repo standards.

@@ -12,3 +12,5 @@ use-structured-logging
 MD022
 MD009
 MD012
+MD071
+MD072
