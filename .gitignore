@@ -224,7 +224,6 @@ scratchpad
 lint.baseline
 .secrets.baseline
 pyrightconfig.json
-.pyrightconfig-composed.json
 mypy.ini
 .pylintrc
 ruff.toml

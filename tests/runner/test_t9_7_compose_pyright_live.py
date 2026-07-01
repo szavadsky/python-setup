@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -131,10 +132,12 @@ class TestLiveSmokePyrightConfigCollapse:
             "(live repro skipped — the AFTER gate proves the collapse).\n"
             "see T9.7-pow.md for the historical before/after pair.\n"
         )
-
         # AFTER: compose + run live.
         composed = _compose_pyright_config(_PS_ROOT, shipped)
-        assert composed == _PS_ROOT / ".pyrightconfig-composed.json", "compose should place config at cwd"
+        assert str(composed).startswith(tempfile.gettempdir()), (
+            f"composed should be in tempdir, got {composed}"
+        )
+        assert not (_PS_ROOT / ".pyrightconfig-composed.json").exists()
         after = self._run(composed, _PS_ROOT, artifact=artifact, label="AFTER")
         try:
             assert after["summary"].get("errorCount", -1) == 0, after["summary"]
@@ -150,7 +153,10 @@ class TestLiveSmokePyrightConfigCollapse:
         artifact.mkdir()
         shipped = _PS_ROOT / "config" / "pyrightconfig.json"
         composed = _compose_pyright_config(_PS_ROOT, shipped)
-        assert composed == _PS_ROOT / ".pyrightconfig-composed.json", "compose should place config at cwd"
+        assert str(composed).startswith(tempfile.gettempdir()), (
+            f"composed should be in tempdir, got {composed}"
+        )
+        assert not (_PS_ROOT / ".pyrightconfig-composed.json").exists()
         # Re-run via the runner-built command shape too — verifies the
         # dispatched shape reproduces the helper collapse.
         from python_setup_lint.runner._config import _default_config_paths
