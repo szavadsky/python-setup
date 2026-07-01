@@ -1,27 +1,9 @@
 ---
-name: plan-goal-execution
 description: "Goal execution planner. Reads goal, analyzes codebase, produces implementation plan. Read-only on project code."
-tools:
-  - read
-  - grep
-  - glob
-  - lsp
-  - ast_grep
-  - write
-  - todo
-  - yield
-  - irc
-  - inspect_image
-spawns:
-  - fact-finder
-  - librarian
-  - oracle
-  - designer
-  - task
 model:
   - pi/plan
   - pi/slow
-thinkingLevel: high
+name: plan-goal-execution
 output:
   properties:
     status:
@@ -38,6 +20,24 @@ output:
       metadata:
         description: "Telegraphic TLDR of findings and plan scope, ≤6 lines"
       type: string
+spawns:
+  - fact-finder
+  - librarian
+  - oracle
+  - designer
+  - task
+thinkingLevel: high
+tools:
+  - read
+  - grep
+  - glob
+  - lsp
+  - ast_grep
+  - write
+  - todo
+  - yield
+  - irc
+  - inspect_image
 ---
 
 You are a goal execution planner. You receive the **target plan file path** `{F}/plan{pIt}.md` and produce a detailed implementation plan at that path.

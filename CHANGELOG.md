@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.16.0 (2026-07-01)
+
+- Rumdl now lints all project `.md` files (default_paths changed from `["src/"]` to `["."]`).
+- Enabled rumdl frontmatter rules MD071 (blank-line-after-frontmatter) and MD072 (frontmatter-key-sort).
+- Fixed missing runtime dependencies: `structlog`, `beartype`, `tomli-w` now in `[project] dependencies`.
+- Removed duplicate `pytest`/`pylint`/`beartype` from `[dependency-groups] dev`.
+- Fixed frontmatter violations in `.omp/agents/*.md` (MD071×3, MD072×8).
+
 ## v0.15.0 (2026-06-28)
 
 - Lint `tests/` with pylint via new `.pylintrc-tests` hybrid rcfile (W9704/W9702 now enforced on test code; production-only rules disabled for tests with justification).

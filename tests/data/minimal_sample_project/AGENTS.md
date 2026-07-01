@@ -1,3 +1,7 @@
+---
+zoo: 1
+apple: 2
+---
 # AGENTS.md
 
 Placeholder for integration test sample project.

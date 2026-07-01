@@ -79,6 +79,13 @@ class TestToolSpec:
             f"Expected ['.'], got {yamllint_spec.default_paths!r}"
         )
 
+    def test_rumdl_default_paths_is_dot(self) -> None:
+        """rumdl default_paths is '.' — lints all project .md files including root."""
+        rumdl_spec = TOOLS_BY_NAME["rumdl check"]
+        assert rumdl_spec.default_paths == ["."], (
+            f"rumdl default_paths drifted: {rumdl_spec.default_paths!r}"
+        )
+
 
 # ── register_lint_tool identity ────────────────────────────────────
 

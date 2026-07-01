@@ -103,7 +103,7 @@ class TestMinimalSampleProject:
         _init_git(project)
 
         config = _make_config(project)
-        rc = run_lint(config=config)
+        rc = run_lint(config=config, path=".")
         assert isinstance(rc, int), f"Expected int exit code, got {type(rc)}: {rc}"
 
         captured = capsys.readouterr()

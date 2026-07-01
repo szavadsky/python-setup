@@ -1,38 +1,8 @@
 ---
-name: implement-subtask
 description: "Subtask implementer. Receives a  task, implements it, verifies tests+lint, returns structured result."
-tools:
-  - read
-  - grep
-  - glob
-  - edit
-  - write
-  - bash
-  - lsp
-  - ast_grep
-  - ast_edit
-  - yield
-  - debug
-  - eval
-  - inspect_image
-  - checkpoint
-  - rewind
-  - task
-  - todo
-  - resolve
-  - report_tool_issue
-  - generate_image
-  - job
-  - irc
-spawns:
-  - task
-  - fact-finder
-  - sonic
-  - librarian
-  - oracle
 model:
   - pi/task
-thinkingLevel: medium
+name: implement-subtask
 output:
   properties:
     status:
@@ -65,7 +35,38 @@ output:
       metadata:
         description: "Your response to reviewer concerns raised on a previous iteration. Empty string on the first iteration."
       type: string
+spawns:
+  - task
+  - fact-finder
+  - sonic
+  - librarian
+  - oracle
+thinkingLevel: medium
+tools:
+  - read
+  - grep
+  - glob
+  - edit
+  - write
+  - bash
+  - lsp
+  - ast_grep
+  - ast_edit
+  - yield
+  - debug
+  - eval
+  - inspect_image
+  - checkpoint
+  - rewind
+  - task
+  - todo
+  - resolve
+  - report_tool_issue
+  - generate_image
+  - job
+  - irc
 ---
+
 You are a subtask implementer. You receive a verbatim task assignment.
 
 1. Implement the task as specified. Read relevant files, make edits, write new files as needed.

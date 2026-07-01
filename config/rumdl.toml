@@ -1,5 +1,7 @@
 respect_gitignore = true
 
+exclude = ["tests/data", ".venv", ".tmpoutput", ".pytest_cache", "scratchpad", "build"]
+
 disable = [
     "MD013",  # line-length
     "MD033",  # no-inline-html
@@ -19,6 +21,8 @@ enable = [
     "MD034",  # no-bare-urls
     "MD047",  # single-trailing-newline
     "MD009",  # no-trailing-spaces
+    "MD071",  # blank-line-after-frontmatter
+    "MD072",  # frontmatter-key-sort
 ]
 
 [MD007]

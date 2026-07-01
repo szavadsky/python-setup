@@ -78,7 +78,7 @@ class Thing:
 
 - `{projectRoot}/README.md` — entry point. What, install, configure. Link to `docs/`.
 - `docs/` — tutorials, config reference, troubleshooting.
-- `docs/CHANGELOG.md` — user-visible changes only. No internal refactors.
+- `CHANGELOG.md` (root) — user-visible changes only. No internal refactors.
 
 ### Contributor / Agent
 

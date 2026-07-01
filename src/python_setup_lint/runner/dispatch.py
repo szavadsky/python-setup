@@ -70,7 +70,7 @@ TOOLS: list[ToolSpec] = [
         supports_path=True,
         supports_exclude=True,
         fix_flags=("--fix",),
-        default_paths=["src/"],
+        default_paths=["."],
     ),
     ToolSpec(
         "mypy",

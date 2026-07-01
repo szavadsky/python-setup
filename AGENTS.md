@@ -1,30 +1,26 @@
-# Agent Index
+# AGENTS.md — python-setup agent context
 
-## Project
-
-`python-setup` is a reusable Python package that encapsulates shared linting, formatting, and dev-tooling infrastructure for Python projects. It provides a unified lint pipeline (13 tools), custom pylint checkers, baseline-diffing for drift-resistant CI, and an idempotent installer that configures pre-commit hooks, pylint plugins, and config files in consumer projects.
-
-Consumed as a git dependency (e.g., `consultant-mcp`), **not** published to PyPI.
+This file is the entry point for all AI agents working on python-setup. Read this first, then follow links for details.
 
 ## Quick Commands
 
 | Command | What it does |
 |---------|-------------|
-| `uv run lint` | Full lint pipeline (all 13 tools) |
-| `uv run pytest` | Run test suite |
-| `uv run python-setup install` | Install into consumer project |
-| `uv run python-setup update` | Update consumer project |
-| `uv run python-setup-test-checked` | Run pytest with typeguard |
+| `uv run lint` | Full 13-tool lint pipeline (baseline diffing, ~107s) |
+| `uv run pytest -q` | Unit tests (1263 pass, 4 skip, ~58s) |
+| `uv run pytest tests/integration.py -v` | Integration tests (6 pass, ~26s) |
+| `uv run lint --rebaseline` | Regenerate `lint.baseline` after intentional rule changes |
+| `uv run python-setup install` | Install configs in consumer project |
+| `uv run python-setup update` | Update configs + drift detection |
 
 ## Key Files
 
 | Path | Purpose |
 |------|---------|
 | `pyproject.toml` | Package metadata, deps, scripts, pytest config |
-| `config/` | Shipped tool configs (ruff, pylint, mypy, pyright, rumdl, ty, yamllint) |
+| `config/` | Shipped tool configs (ruff, pylint, mypy, pyright, rumdl, ty, yamllint, tach) |
 | `CodingRules.md` | Python coding conventions (shipped to consumers) |
 | `lint.baseline` | Frozen baseline of pre-existing violations |
-| `tach.toml` | Module dependency boundaries |
 | `src/python_setup_lint/runner/cli.py` | Main entry point (`main`, `run_lint`) |
 | `src/python_setup_lint/runner/dispatch.py` | Tool strategy registry (13 built-in tools) |
 | `src/python_setup_lint/checkers/_base.py` | Shared checker utilities |
@@ -37,16 +33,68 @@ Consumed as a git dependency (e.g., `consultant-mcp`), **not** published to PyPI
 
 See `docs/custom-checks.md` (checker writing, message defs, rule IDs, registration, testing, helpers, semantic pipeline) and `docs/overlays.md` (config overlay mechanism per tool).
 
-## Code Conventions
+### Runner pipeline
 
-See `CodingRules.md` — typing, module layout, .pyi rules, docstrings, error handling, async patterns, complexity rules, logging.
+```
+pyproject.toml → ToolSpec[] → dispatch.run() → per-tool subprocess → results → baseline diff → report
+```
 
-## Runtime / Tooling
+Each tool is a `ToolSpec` with name, command, args, config path, and parse strategy. The runner:
 
-Python 3.14+, `uv` package manager, Hatchling build. Type checkers: mypy (strict), pyright (verifytypes), ty. Linters: ruff, pylint (custom plugins), rumdl, yamllint, detect-secrets, tach. Formatter: ruff format. Test: pytest 9.1+ with pytest-asyncio. Runtime type checking: beartype. Pre-commit: ruff-format, ruff-check, full lint pipeline.
+1. Loads `pyproject.toml` for extra tools and config overrides
+2. Builds the tool list (13 built-in + any extras)
+3. Runs each tool sequentially (some tools share resources)
+4. Parses output per-tool (regex, JSON, lines)
+5. Filters against `lint.baseline` (only new violations fail)
+6. Aggregates statistics (files, violations, time per tool)
 
-## Testing & QA
+### Config overlay flow
 
-Integration test (`tests/integration.py`) is the fit-for-purpose gate — runs all 13 tools on planted-violation sample project, NOT marked slow. Verifies: all planted violations detected, brush-off "pre-existing" → W9704, carry-from external library → passes, install→lint E2E, pre-commit dry-run. Key regression catcher.
+```
+config/<tool>.<ext>  ← shared (shipped)
+       ↓
+consumer pyproject.toml  ← overrides (extend / --config)
+       ↓
+runner composes final config at runtime
+```
 
-See `tests/` for full test suite structure, `pyproject.toml` for pytest config.
+### Semantic justification pipeline
+
+```
+suppressed violation → _semantic.py → LLM reranker → justification stored → validated on re-lint
+```
+
+The semantic checker (`W9704`) detects `Any` in function signatures and uses an optional LLM reranker to generate meaningful justifications. The reranker is lazy-loaded and configurable via `PYTHON_SETUP_LINT_RERANKER_MODEL`.
+
+## Testing Strategy
+
+| Layer | Command | Scope |
+|-------|---------|-------|
+| Unit | `uv run pytest -q` | Individual checkers, runner logic, config parsing |
+| Integration | `uv run pytest tests/integration.py -v` | End-to-end: install, lint, update on a sample project |
+| Lint | `uv run lint` | Self-lint: all 13 tools on python-setup itself |
+
+## Common Patterns
+
+### Adding a new lint tool
+
+1. Add config file to `config/`
+2. Add `ToolSpec` to `dispatch.py`
+3. Add config to `_BUNDLED_CONFIGS` in `setup.py` (if shipped to consumers)
+4. Add test coverage in `tests/runner/`
+5. Update `lint.baseline` via `--rebaseline`
+
+### Modifying a checker
+
+1. Edit the checker in `src/python_setup_lint/checkers/`
+2. Update tests in `tests/checkers/`
+3. Run `uv run pytest tests/checkers/ -q` to verify
+4. Run `uv run lint` to self-lint
+
+## See Also
+
+- `CONTRIBUTING.md` — dev workflow, PR expectations
+- `CodingRules.md` — Python coding conventions
+- `docs/custom-checks.md` — checker writing guide
+- `docs/overlays.md` — config overlay reference
+- `docs/semantic-justification.md` — semantic justification system

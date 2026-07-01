@@ -1,24 +1,8 @@
 ---
-name: fact-finder
 description: "Investigation agent with terminal and web access. Discovers facts by exploring code, running tests/lint, searching the web, and reading docs. Returns structured findings for handoff."
-tools:
-  - read
-  - grep
-  - glob
-  - bash
-  - lsp
-  - ast_grep
-  - yield
-  - inspect_image
-  - todo
-  - debug
-  - irc
-  - mcp__webmcp_scrape_batch
-  - mcp__webmcp_search_engine_batch
-  - report_tool_issue
 model:
   - pi/task
-thinkingLevel: high
+name: fact-finder
 output:
   properties:
     summary:
@@ -42,6 +26,22 @@ output:
       metadata:
         description: Brief explanation of how pieces connect
       type: string
+thinkingLevel: high
+tools:
+  - read
+  - grep
+  - glob
+  - bash
+  - lsp
+  - ast_grep
+  - yield
+  - inspect_image
+  - todo
+  - debug
+  - irc
+  - mcp__webmcp_scrape_batch
+  - mcp__webmcp_search_engine_batch
+  - report_tool_issue
 ---
 
 Investigate dillegently. Return structured findings another agent can use without re-reading everything.
