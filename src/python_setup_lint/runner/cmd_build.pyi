@@ -72,26 +72,12 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
     Ported from consultant.mcp ``_ruff_config_with_project_overrides``.
     """
 
-def _abs_rel_path(value: object, abs_cwd: Path) -> str | None:
-    """Convert a relative path to absolute, or return None if invalid/absolute."""
-
-def _resolve_exclude_paths(exclude_entries: object, _abs_cwd: Path) -> tuple[list[str], bool]:
-    """Keep exclude patterns as-is — composed config lives in cwd, so relative globs resolve correctly."""
 
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
-    """Build an effective pyright config with ``venvPath``/``exclude`` rooted at *cwd*.
-
-    ``pyright --project <shared>`` resolves ``venvPath``/``exclude`` against
-    the config FILE dir, not ``cwd`` — when the shipped config lives outside
-    the project cwd (python-setup ships at ``config/pyrightconfig.json``),
-    ``venvPath: "."`` resolves to the config dir → wrong venv → ``.venv``
-    tree walked (~17k noise diagnostics).  This helper copies the shipped
-    config to ``tempfile.gettempdir() / "python_setup_lint_pyright_{cwd_name}"
-    / "pyrightconfig.json"``, rewriting ``venvPath`` + every relative
-    ``exclude`` entry to absolute ``cwd``-rooted paths, then returns the tmp
-    path.  No-op fast path: returns *shared_config* unchanged when no
-    rewriting is needed (already-absolute, absent keys, or unreadable
-    config).  The shipped config is never mutated.
+    """Copy the shipped config unchanged to ``cwd/.pyrightconfig-composed.json``
+    so pyright resolves relative ``venvPath``/``exclude`` against cwd.
+    No-rewrite fast path: returns *shared_config* unchanged when the config
+    already lives in cwd.  No path rewriting — pyright rejects absolute excludes.
     """
 
 def _build_fix_flags(spec: ToolSpec, *, fix: bool) -> list[str]:

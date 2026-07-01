@@ -202,22 +202,8 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
     return effective
 
 
-def _abs_rel_path(value: object, abs_cwd: Path) -> str | None:
-    # Convert a relative path to absolute, or return None if invalid/absolute.
-    if not isinstance(value, str) or not value:
-        return None
-    p = Path(value)
-    if p.is_absolute():
-        return None
-    return str(abs_cwd / p)
 
 
-def _resolve_exclude_paths(exclude_entries: object, _abs_cwd: Path) -> tuple[list[str], bool]:
-    # Keep exclude patterns as-is — composed config lives in cwd, so relative
-    # globs resolve correctly.  No absolute conversion needed.
-    if not isinstance(exclude_entries, list):
-        return [], False
-    return [str(e) for e in exclude_entries], False
 
 
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
@@ -226,30 +212,20 @@ def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     except OSError:  # pylint: disable=W9740  # best-effort config read fallback; logging would noise unavoidable IO degrade
         return shared_config
     try:
-        data = json.loads(raw)
+        json.loads(raw)
     except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable IO degrade
         return shared_config
-    if not isinstance(data, dict):
+
+    # Pyright resolves venvPath AND exclude entries relative to the config
+    # FILE's directory, not cwd, and silently rejects absolute paths.  When
+    # the shipped config already lives in cwd, it is correct as-is.  When it
+    # lives outside cwd (e.g. config/pyrightconfig.json), copy it unchanged
+    # into cwd so relative paths resolve correctly — no rewriting needed.
+    if shared_config.resolve().parent == cwd.resolve():
         return shared_config
 
-    abs_cwd = cwd.resolve()
-    changed = False
-    venv_path = data.get("venvPath")
-    new_venv_path = _abs_rel_path(venv_path, abs_cwd)
-    if new_venv_path is not None:
-        data["venvPath"] = new_venv_path
-        changed = True
-
-    new_excludes, exc_changed = _resolve_exclude_paths(data.get("exclude"), abs_cwd)
-    if exc_changed:
-        data["exclude"] = new_excludes
-        changed = True
-
-    if not changed:
-        return shared_config
-
-    composed = abs_cwd / ".pyrightconfig-composed.json"
-    composed.write_text(json.dumps(data, indent=4, ensure_ascii=False) + "\n", encoding="utf-8")
+    composed = cwd / ".pyrightconfig-composed.json"
+    composed.write_text(raw, encoding="utf-8")
     return composed
 
 
