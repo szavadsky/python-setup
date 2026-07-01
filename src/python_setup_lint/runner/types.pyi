@@ -20,6 +20,8 @@ class ToolSpec(NamedTuple):
         default_paths: Paths to use when no ``--path`` is given.
         fix_flags: CLI flag(s) to append when ``--fix`` is active.
         exclude_flag: CLI flag name for exclusion.
+        timeout: Maximum runtime in seconds (0 = no limit). Default 120.
+        memory_limit_mb: RLIMIT_AS cap in MB (0 = no limit). Default 2048.
     """
 
     name: str
@@ -30,6 +32,9 @@ class ToolSpec(NamedTuple):
     default_paths: list[str] = []
     fix_flags: tuple[str, ...] = ("--fix",)
     exclude_flag: str = "--exclude"
+    timeout: int = 120
+    memory_limit_mb: int = 2048
+
 
 @dataclass
 class LintResult:
@@ -79,6 +84,12 @@ class RunnerConfig:
             runs all 13 default tools.  Unknown names raise
             :class:`python_setup_lint.runner.extra_tools.ExtraToolsConfigError`
             (T8 fail-fast) rather than silently running a subset.
+        tool_timeouts: Per-tool timeout overrides (seconds). Tool name → int.
+            ``None`` means no per-tool override — each tool uses its own
+            :class:`ToolSpec.timeout`.
+        tool_memory_limits: Per-tool memory-limit overrides (MB).
+            Tool name → int.  ``None`` means no per-tool override — each
+            tool uses its own :class:`ToolSpec.memory_limit_mb`.
         secrets_baseline: Path (relative to ``cwd``) to the
             detect-secrets baseline file.
         config_paths: Optional mapping of tool identifiers to config file
@@ -112,6 +123,8 @@ class RunnerConfig:
     package_name: str | None = None
     default_py_dirs: list[str] | None = None
     tools_override: list[str] | None = None
+    tool_timeouts: dict[str, int] | None = None
+    tool_memory_limits: dict[str, int] | None = None
     secrets_baseline: str = ".secrets.baseline"
     config_paths: dict[str, Path] | None = None
     ruff_project_overrides: bool = False
