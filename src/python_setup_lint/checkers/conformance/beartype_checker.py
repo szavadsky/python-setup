@@ -1,9 +1,3 @@
-"""Pylint checker: @beartype coverage inventory.
-
-Reports W9701 for public functions/methods missing @beartype decorator.
-Informational (W-level) only — does not block builds.
-"""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -27,7 +21,6 @@ log = structlog.get_logger(__name__)
 
 
 class BeartypeCoverageChecker(SourceRootMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
-    """AST visitor that inventories @beartype coverage on public functions."""
 
     name: str = "beartype-coverage"
     msgs = _msgs(

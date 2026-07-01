@@ -1,20 +1,3 @@
-"""Strategy registry and per-tool command-construction strategies.
-
-A :class:`LintTool` strategy wraps per-tool command construction, statistics
-flags, and statistics parsing.  Built-in tools reuse the module-level
-helpers in :mod:`python_setup_lint.runner.cmd_build` (command shape) and
-:mod:`python_setup_lint.runner.parsers` (statistics) via the default
-:class:`LintTool` methods; six built-ins override ``build_command`` for
-tool-specific shapes that cannot be expressed via :class:`~python_setup_lint.runner.types.ToolSpec`
-declarative fields alone.  Extras registered via :func:`register_lint_tool`
-land on :class:`GenericLintTool`, which composes the same generic flag logic
-via the spec's ``supports_*`` booleans.
-
-The dispatch is DEFAULT-aware: ``STRATEGIES.get(name)`` returns ``None`` for
-unknown names, and :func:`_strategy_for` synthesises a
-:class:`GenericLintTool` on lookup so extras never ``KeyError``.
-"""
-
 from __future__ import annotations
 
 import sys

@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -48,20 +47,6 @@ def _has_companion_stub(py_path: Path, linter: PyLinter) -> bool:
 
 
 class StubDocstringChecker(BaseChecker):
-    """AST visitor that flags usage docstrings in .py files with companion .pyi.
-
-    Only processes modules that passed stub_checker's exemption logic
-    (conftest, trivial test data, init-exempt, main-only, test patterns,
-    opt-out patterns).
-
-    Uses visitor-method pattern (visit_functiondef, visit_asyncfunctiondef)
-    so methods inside classes are also checked. ClassDef is NOT visited —
-    class-level docstrings are legitimate in .py per CodingRules.md.
-
-    Also enforces:
-    - Generic-return-requires-Returns: functions with non-None concrete return
-      type annotations must have a ``Returns:`` clause in their docstring.
-    """
 
     name: str = "stub-docstring-checker"
     _enabled_for_module: bool

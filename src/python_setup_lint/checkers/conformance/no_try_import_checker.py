@@ -1,13 +1,3 @@
-"""Pylint checker: ban try/except ImportError patterns.
-
-Imports must be unconditional — missing dependencies should fail fast at
-startup rather than silently degrade at runtime.
-
-Optional-dependency exception: imports from modules declared in
-``[project.optional-dependencies]`` (e.g. ``sentence_transformers``)
-may use ``try/except ImportError`` for lazy loading.
-"""
-
 from __future__ import annotations
 
 from astroid import nodes

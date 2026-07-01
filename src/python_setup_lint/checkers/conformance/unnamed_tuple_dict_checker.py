@@ -1,14 +1,3 @@
-"""Pylint checker: prohibit unnamed-tuple dict values.
-
-Flags ``dict`` literals whose values are bare ``tuple``/``Tuple[...]``
-literals with >1 unnamed positional fields, suggesting they should use
-a ``NamedTuple`` or dataclass instead.
-
-Heuristic: triggers when a dict value is a ``tuple`` literal of length >= 2
-with all-str/elem-typed members AND the dict is annotated
-``dict[str, tuple[...]]`` or assigned to a ``ClassVar[dict[str, ...]]``.
-"""
-
 from __future__ import annotations
 
 from astroid import nodes
@@ -21,7 +10,6 @@ from python_setup_lint.checkers._base import MessageDef, _msgs
 
 
 class UnnamedTupleDictChecker(BaseChecker):
-    """AST visitor that flags dict values that should be NamedTuples."""
 
     name: str = "unnamed-tuple-dict"
     msgs: dict[str, MessageDefinitionTuple] = _msgs(
