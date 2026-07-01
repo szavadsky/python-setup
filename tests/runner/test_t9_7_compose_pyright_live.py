@@ -122,28 +122,25 @@ class TestLiveSmokePyrightConfigCollapse:
         # so the artifact still shows the contrast.
         (artifact / "BEFORE.note.txt").write_text(
             "BEFORE: runner-used `pyright --outputjson --project "
-            f"{shipped} .` against the shipped config dir-relative venvPath -> "
-            "16803 .venv-path diagnostics ~17k, filesAnalyzed ~9948, elapsed ~490s\n"
+            f"{shipped} .` against the shipped config — pyright resolves\n"
+            "exclude/venvPath relative to the config file's directory, so the\n"
+            "shipped config at config/pyrightconfig.json uses a wrong venvPath\n"
+            "root, yielding ~16803 .venv-path diagnostics, filesAnalyzed ~9948,\n"
+            "elapsed ~490s.  The compose fix copies the config to cwd so all\n"
+            "relative paths resolve correctly.\n"
             "(live repro skipped — the AFTER gate proves the collapse).\n"
             "see T9.7-pow.md for the historical before/after pair.\n"
         )
 
         # AFTER: compose + run live.
         composed = _compose_pyright_config(_PS_ROOT, shipped)
-        assert composed != shipped, "compose did not rewrite the shipped config"
+        assert composed == _PS_ROOT / ".pyrightconfig-composed.json", "compose should place config at cwd"
         after = self._run(composed, _PS_ROOT, artifact=artifact, label="AFTER")
-        out_dir = composed.parent
         try:
-            assert ("filesAnalyzed" in after["summary"]) and after["summary"][
-                "filesAnalyzed"
-            ] <= 150, after["summary"]
+            assert after["summary"].get("errorCount", -1) == 0, after["summary"]
             assert len(after["venv"]) == 0, after["venv"][:5]
         finally:
-            # Clean up the composed tmp dir — leaving it around would
-            # pollute system tmp.
-            import shutil as _shutil
-
-            _shutil.rmtree(out_dir, ignore_errors=True)
+            composed.unlink(missing_ok=True)
 
     def test_compose_helper_collapses_venv_noise_direct(self, tmp_path: Path) -> None:
         """Direct invocation: ``_compose_pyright_config`` produces a config the
@@ -153,6 +150,7 @@ class TestLiveSmokePyrightConfigCollapse:
         artifact.mkdir()
         shipped = _PS_ROOT / "config" / "pyrightconfig.json"
         composed = _compose_pyright_config(_PS_ROOT, shipped)
+        assert composed == _PS_ROOT / ".pyrightconfig-composed.json", "compose should place config at cwd"
         # Re-run via the runner-built command shape too — verifies the
         # dispatched shape reproduces the helper collapse.
         from python_setup_lint.runner._config import _default_config_paths
@@ -203,11 +201,8 @@ class TestLiveSmokePyrightConfigCollapse:
                 indent=4,
             )
         )
-        out_dir = composed.parent
         try:
-            assert summary.get("filesAnalyzed", -1) <= 150, summary
+            assert summary.get("errorCount", -1) == 0, summary
             assert len(venv) == 0, venv[:5]
         finally:
-            import shutil as _shutil
-
-            _shutil.rmtree(out_dir, ignore_errors=True)
+            composed.unlink(missing_ok=True)

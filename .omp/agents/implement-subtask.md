@@ -32,7 +32,7 @@ spawns:
   - oracle
 model:
   - pi/task
-thinkingLevel: high
+thinkingLevel: medium
 output:
   properties:
     status:
