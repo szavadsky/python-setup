@@ -10,7 +10,7 @@
 - Types from defining module; define only at origin. Untyped only at untyped third-party boundaries.
 - Types > names > docstrings.
 - Use: `Literal`, `Enum`, `TypedDict`, `Protocol`, `NewType`, `TypeVar`, `TypeAlias`, `Final`, `Annotated` + `annotated-types` predicates (`Gt`, `Lt`, `MinLen`…), `Unpack`, `assert_never`, `Self` (fluent APIs, classmethod constructors), `ParamSpec`, `Concatenate` (preserve call signatures in decorators), `TYPE_CHECKING` guard for import-cycle-breaking imports.
-  - Generic-key dict annotations: `dict[str, X]` allowed when key is filename, identifier, path, or display string. Domain-typed values (e.g. `dict[str, MessageDef]`) should use `LintRuleId`, enum, or `Literal` type instead.
+  - Generic-key dict annotations: `dict[str, X]` allowed when key is filename, identifier, path, or display string. Domain-typed values (e.g. `dict[str, MessageDef]`) should use a {NamedTypeTellingWhatIts}, enum, or `Literal` type instead.
   - Unnamed-tuple dict values: `dict[str, tuple[str, ...]]` values should use `NamedTuple`, dataclass, or `Protocol` with named fields instead of bare tuple literals.
   - Suppression comments (`# pylint: disable=...`, `# noqa`, `# type: ignore`) must carry trailing technical justification comment explaining why suppressed.
 - Runtime enforcement: `@beartype` on all first-party public functions/methods. Validates `Annotated` predicates at call boundary. No manual `if` guards for type contracts.
