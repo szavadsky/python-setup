@@ -1,4 +1,3 @@
-"""Package entry point: delegate to runner CLI."""
 from python_setup_lint.runner.cli import main
 
 if __name__ == "__main__":

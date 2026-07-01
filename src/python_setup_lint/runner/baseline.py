@@ -1,4 +1,4 @@
-"""Drift-resistant baseline capture + diff with silent shrinkage (T2)."""
+# Drift-resistant baseline capture + diff with silent shrinkage (T2).
 # consolidated import with pylint disable for mypy re-export
 from __future__ import annotations
 

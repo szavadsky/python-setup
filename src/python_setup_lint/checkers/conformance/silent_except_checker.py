@@ -1,10 +1,3 @@
-"""Pylint checker: flag except handlers that neither log nor re-raise.
-
-Caught errors must be logged or re-raised (CodingRules: fail-fast, no swallowed
-exceptions).  Every ``except`` clause whose body contains no logging call and
-no ``raise`` statement is flagged.
-"""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -20,7 +13,6 @@ if TYPE_CHECKING:
 
 
 class SilentExceptChecker(BaseChecker):
-    """AST visitor that flags except handlers that neither log nor re-raise."""
 
     name: str = "silent-except"
     msgs = _msgs(

@@ -1,10 +1,3 @@
-"""Pylint checker: flag trivial wrapper functions.
-
-Wrappers that simply delegate to another function with a matching signature
-are unnecessary indirection — justified only if removing them forces callers
-to understand an internal dependency's interface. Otherwise inline.
-"""
-
 from __future__ import annotations
 
 from astroid import nodes
@@ -16,7 +9,6 @@ from python_setup_lint.checkers._base import MessageDef, _msgs
 
 
 class TrivialWrapperChecker(BaseChecker):
-    """AST visitor that flags trivial wrapper functions."""
 
     name: str = "trivial-wrapper"
     msgs = _msgs(

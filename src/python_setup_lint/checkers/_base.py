@@ -1,12 +1,3 @@
-"""Shared utilities for pylint checkers.
-
-Consolidates duplicate code across checker modules:
-- ``MessageDef`` — named representation for checker message definitions.
-- ``_matches_path`` — glob/directory path matching (was in stub_coverage.py and tmp_path_checker.py).
-- ``_is_under_source_root`` — source-root containment check (was in beartype_checker.py and stub_coverage.py).
-- ``_get_file_path`` — resolve a node's file path (was in beartype_checker.py).
-"""
-
 from __future__ import annotations
 
 import fnmatch
@@ -34,11 +25,6 @@ if TYPE_CHECKING:
 
 
 class MessageDef(NamedTuple):
-    """Named representation for a pylint checker message definition.
-
-    Replaces bare ``(message, symbol, description)`` tuples in checker
-    ``msgs`` dicts with a typed, self-documenting record.
-    """
 
     message: str
     symbol: str
@@ -90,12 +76,6 @@ def _get_file_path(node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> Path | N
 
 
 class SourceRootMixin:
-    """Mixin for checkers that filter by source root directories.
-
-    Provides shared ``options`` (``source-roots``), ``__init__``, ``open``,
-    ``visit_functiondef``, and ``visit_asyncfunctiondef`` boilerplate that
-    is structurally identical across multiple checkers by pylint API design.
-    """
 
     _source_roots: list[Path] = []
 
