@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -44,7 +45,7 @@ class TestLiveSmokePyrightConfigCollapse:
         *,
         artifact: Path,
         label: str,
-    ) -> dict:
+    ) -> dict[str, Any]:  # parsed pyright --outputjson; Any is the accurate contract
         """Run pyright and stash the parsed ``--outputjson`` + the constructed cmd."""
         cmd = [
             str(cwd / ".venv/bin/pyright"),
