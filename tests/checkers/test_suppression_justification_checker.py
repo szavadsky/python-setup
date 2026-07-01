@@ -137,6 +137,30 @@ class TestDataStrings:
         msgs = _walk_and_release(code, SuppressionJustificationChecker)
         assert "unjustified-suppression" not in _msg_ids(msgs)
 
+    def test_fstring_not_flagged(self) -> None:
+        """Checker must NOT flag # type: ignore inside f-strings."""  # pylint: disable=unjustified-suppression  # docstring contains suppression pattern; test verifies it's not flagged
+        code = 'x = f"# type: ignore {val}"\n'
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert "unjustified-suppression" not in _msg_ids(msgs)
+
+    def test_fstring_noqa_not_flagged(self) -> None:
+        """Checker must NOT flag # noqa inside f-strings."""  # pylint: disable=unjustified-suppression  # docstring contains suppression pattern; test verifies it's not flagged
+        code = 'x = f"# noqa: E501 {val}"\n'
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert "unjustified-suppression" not in _msg_ids(msgs)
+
+    def test_multiline_string_not_flagged(self) -> None:
+        """Checker must NOT flag # type: ignore inside triple-quoted strings."""  # pylint: disable=unjustified-suppression  # docstring contains suppression pattern; test verifies it's not flagged
+        code = 'x = """\n# type: ignore\n"""\n'
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert "unjustified-suppression" not in _msg_ids(msgs)
+
+    def test_fstring_multiline_not_flagged(self) -> None:
+        """Checker must NOT flag # type: ignore inside multiline f-strings."""  # pylint: disable=unjustified-suppression  # docstring contains suppression pattern; test verifies it's not flagged
+        code = 'x = f"""\n# type: ignore {val}\n"""\n'
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert "unjustified-suppression" not in _msg_ids(msgs)
+
 
 
 class TestFunctionParamReturnAny:

@@ -241,23 +241,24 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
         """
         spans: dict[int, list[tuple[int, int]]] = {}
         try:
-            for const_node in node.nodes_of_class(nodes.Const):  # type: ignore[union-attr]  # node is ModuleNode at runtime; nodes_of_class is available
-                if not isinstance(const_node.value, str):
-                    continue
-                start_line = const_node.fromlineno
-                end_line = const_node.end_lineno
-                start_col = const_node.col_offset
-                end_col = const_node.end_col_offset
-                if start_line is None or end_line is None or start_col is None or end_col is None:
-                    continue
-                if start_line == end_line:
-                    spans.setdefault(start_line, []).append((start_col, end_col))
-                else:
-                    # Multi-line string: first line from start_col to end, last line from 0 to end_col
-                    spans.setdefault(start_line, []).append((start_col, 10**9))
-                    for mid in range(start_line + 1, end_line):
-                        spans.setdefault(mid, []).append((0, 10**9))
-                    spans.setdefault(end_line, []).append((0, end_col))
+            for cls in (nodes.Const, nodes.JoinedStr):
+                for const_node in node.nodes_of_class(cls):  # type: ignore[union-attr]  # node is ModuleNode at runtime; nodes_of_class is available
+                    if isinstance(const_node, nodes.Const) and not isinstance(const_node.value, str):
+                        continue
+                    start_line = const_node.fromlineno
+                    end_line = const_node.end_lineno
+                    start_col = const_node.col_offset
+                    end_col = const_node.end_col_offset
+                    if start_line is None or end_line is None or start_col is None or end_col is None:
+                        continue
+                    if start_line == end_line:
+                        spans.setdefault(start_line, []).append((start_col, end_col))
+                    else:
+                        # Multi-line string: first line from start_col to end, last line from 0 to end_col
+                        spans.setdefault(start_line, []).append((start_col, 10**9))
+                        for mid in range(start_line + 1, end_line):
+                            spans.setdefault(mid, []).append((0, 10**9))
+                        spans.setdefault(end_line, []).append((0, end_col))
         except AttributeError:  # pylint: disable=W9740  # node may not have nodes_of_class (e.g. non-Module node); fall back to empty spans  # best-effort fallback; logging would noise unavoidable attribute degrade
             pass
         return spans
