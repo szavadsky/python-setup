@@ -1,4 +1,4 @@
-"""Task-pusher orchestration logic. Exec'd by the task-pusher agent's eval cell.
+"""subtask-dev-process orchestration logic. Exec'd by the subtask-dev-process agent's eval cell.
 
 Expects TASK_FILE (str, set by caller): path to the task spec file.
 Passes TASK_FILE to downstream agents (implement-subtask, check-and-commit-subtask);
@@ -56,7 +56,7 @@ def merge_concerns(acc, new_concerns):
 
 
 def log(msg):
-    print(f"[task-pusher] {msg}")
+    print(f"[subtask-dev-process] {msg}")
 
 
 def log_prompt(label, prompt):
