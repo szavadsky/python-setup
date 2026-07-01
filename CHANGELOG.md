@@ -8,10 +8,10 @@
 - Removed duplicate `pytest`/`pylint`/`beartype` from `[dependency-groups] dev`.
 - Fixed frontmatter violations in `.omp/agents/*.md` (MD071×3, MD072×8).
 
-
 ## v0.14.0 (2026-06-28)
 
 - No material changes — version skipped during development cycle.
+
 ## v0.15.0 (2026-06-28)
 
 - Lint `tests/` with pylint via new `.pylintrc-tests` hybrid rcfile (W9704/W9702 now enforced on test code; production-only rules disabled for tests with justification).
@@ -34,10 +34,10 @@
 
 - Runner robustness: `_run_cmd` now catches FileNotFoundError (returns rc=127 instead of crashing).
 
-
 ## v0.8.0 (2026-06-26)
 
 - No material changes — version skipped during development cycle.
+
 ## v0.9.0 (2026-06-27)
 
     - Added `pylint-pyi` as a 12th lint tool — a second pylint pass targeting `.pyi` files with `.pyi`-scoped rcfile.
