@@ -56,7 +56,7 @@ W9704 (unjustified-suppression) checks `Any` in standalone annotated assignments
 
 ### LintRuleId
 
-The `generic_key_dict_checker` recommends `LintRuleId`, `enum`, or `Literal` instead of `dict[str, X]` when the key is a typed domain concept (e.g. a rule id). `LintRuleId` is a `NewType("LintRuleId", str)` — a type-safe alias for rule-id strings. Prefer it when the dict key represents a domain value, not a display string. See [CodingRules.md:13](../CodingRules.md) ("Domain-typed values").
+The `generic_key_dict_checker` recommends `LintRuleId`, `enum`, or `Literal` instead of `dict[str, X]` when the key is a typed domain concept (e.g. a rule id). `LintRuleId` would be a `NewType("LintRuleId", str)` — a type-safe alias for rule-id strings. Define it in your project when the dict key represents a domain value, not a display string. See [CodingRules.md:13](../CodingRules.md) ("Domain-typed values").
 
 ## Registration
 
