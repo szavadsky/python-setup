@@ -47,6 +47,8 @@ _BUNDLED_CONFIGS: tuple[str, ...] = (
     "pyrightconfig.json",
     "rumdl.toml",
     "ty.toml",
+    ".yamllint",
+    "tach.toml",
 )
 
 # ── Data structures ─────────────────────────────────────────────────
