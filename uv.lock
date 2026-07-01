@@ -970,8 +970,11 @@ version = "0.15.0"
 source = { editable = "." }
 dependencies = [
     { name = "astroid" },
+    { name = "beartype" },
     { name = "pylint" },
     { name = "pytest" },
+    { name = "structlog" },
+    { name = "tomli-w" },
 ]
 
 [package.optional-dependencies]
@@ -981,18 +984,14 @@ semantic = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "beartype" },
     { name = "detect-secrets" },
     { name = "mypy" },
     { name = "pandas-stubs" },
     { name = "pre-commit" },
-    { name = "pylint" },
     { name = "pyright" },
-    { name = "pytest" },
     { name = "ruff" },
     { name = "rumdl" },
     { name = "tach" },
-    { name = "tomli-w" },
     { name = "ty" },
     { name = "typeguard" },
     { name = "types-defusedxml" },
@@ -1014,26 +1013,25 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "astroid", specifier = ">=4.0.4" },
+    { name = "beartype", specifier = ">=0.22.9" },
     { name = "pylint", specifier = ">=4.0.6" },
     { name = "pytest", specifier = ">=9.1.0" },
     { name = "sentence-transformers", marker = "extra == 'semantic'", specifier = ">=3.0.0" },
+    { name = "structlog", specifier = ">=26.1.0" },
+    { name = "tomli-w", specifier = ">=1.0" },
 ]
 provides-extras = ["semantic"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "beartype", specifier = ">=0.22.9" },
     { name = "detect-secrets", specifier = ">=1.5.0" },
     { name = "mypy", specifier = ">=1.10" },
     { name = "pandas-stubs", specifier = ">=3.0.3.260530" },
     { name = "pre-commit", specifier = ">=4.6.0" },
-    { name = "pylint", specifier = ">=4.0.5" },
     { name = "pyright", specifier = ">=1.1.410" },
-    { name = "pytest", specifier = ">=9.1.0" },
     { name = "ruff", specifier = ">=0.5" },
     { name = "rumdl", specifier = ">=0.2.15" },
     { name = "tach", specifier = ">=0.15" },
-    { name = "tomli-w", specifier = ">=1.0" },
     { name = "ty", specifier = ">=0.0.49" },
     { name = "typeguard", specifier = ">=4.5.2" },
     { name = "types-defusedxml", specifier = ">=0.7.0.20260504" },
@@ -1391,6 +1389,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/1f/ea/49c993d6dfdd7338c9b1000a0f36817ed7ec84577ae2e52f890d1a4ff909/smmap-5.0.3.tar.gz", hash = "sha256:4d9debb8b99007ae47165abc08670bd74cb74b5227dda7f643eccc4e9eb5642c", size = 22506, upload-time = "2026-03-09T03:43:26.1Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c1/d4/59e74daffcb57a07668852eeeb6035af9f32cbfd7a1d2511f17d2fe6a738/smmap-5.0.3-py3-none-any.whl", hash = "sha256:c106e05d5a61449cf6ba9a1e650227ecfb141590d2a98412103ff35d89fc7b2f", size = 24390, upload-time = "2026-03-09T03:43:24.361Z" },
+]
+
+[[package]]
+name = "structlog"
+version = "26.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5e/89/b4a0bcfdf4f71a3dea31379f095929613d7e4528a0996bca6aa964cd0dca/structlog-26.1.0.tar.gz", hash = "sha256:f63a716cbd1b1291cf7661de7794b455acfa4c43c5bcf1630e6ad5ddc1adb3b7", size = 1459881, upload-time = "2026-06-06T07:33:39.348Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a9/18/489c97b834dfff9cf2fc2507cede4bcd4b11e67f84bc462acd1992496f86/structlog-26.1.0-py3-none-any.whl", hash = "sha256:e081a26d6c373e6d201eca24eede26d8ffab07f88f477822e679183428d3d91e", size = 73764, upload-time = "2026-06-06T07:33:38.046Z" },
 ]
 
 [[package]]
