@@ -10,6 +10,7 @@ uv sync
 
 - `uv run lint` — run all linters
 - `uv run pytest` — run all tests
+- `uv run pytest tests/integration.py -v` — fit-for-purpose integration test (NOT marked slow)
 
 ## Pull request expectations
 
