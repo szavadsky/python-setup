@@ -90,9 +90,10 @@ class FakeRunCmd:
     calls: list[_FakeRunCmdRecord] = ...
 
     def __call__(
-        self, cmd: list[str], *, cwd: Path = ..., label: str = ""
+        self, cmd: list[str], *, cwd: Path = ..., label: str = "",
+        timeout: int = 120, memory_limit_mb: int = 2048,
     ) -> LintResult:
-        """Match ``_run_cmd(cmd, *, cwd, label) -> LintResult`` signature."""
+        """Match ``_run_cmd(cmd, *, cwd, label, timeout, memory_limit_mb) -> LintResult``."""
 
 def fake_run_cmd_factory(
     results: dict[str, LintResult] | list[LintResult],
