@@ -6,7 +6,7 @@ This file is the entry point for all AI agents working on python-setup. Read thi
 
 | Command | What it does |
 |---------|-------------|
-| `uv run lint` | Full 13-tool lint pipeline (baseline diffing, ~107s) |
+ | `uv run lint` | Full 13-tool lint pipeline (baseline diffing, ~107s typical, 120s/tool cap) |
 | `uv run pytest -q` | Unit tests (1263 pass, 4 skip, ~58s) |
 | `uv run pytest tests/integration.py -v` | Integration tests (6 pass, ~26s) |
 | `uv run lint --rebaseline` | Regenerate `lint.baseline` after intentional rule changes |
