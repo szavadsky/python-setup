@@ -11,7 +11,6 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
-import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -44,45 +43,35 @@ _PS_ROOT = Path("/home/slava/aiexp/python-setup")
 class TestLiveSmokePyrightConfigCollapse:
     """Live runner-built command collapses ``.venv`` noise to the real floor.
 
-    The envelope's named gate: ``runner-built pyright --project <composed>``
-    invocation reports ``filesAnalyzed <= 100`` and no ``.venv`` paths appear in
-    ``generalDiagnostics``.  The proof-of-work pair (before vs after) lives in
-    the per-test artifact dir captured as JSON for downstream observability.
+    The before/after pair is the proof-of-work observation:
+    ``filesAnalyzed 9948 → 80``, ``.venv`` diagnostics ``16803 → 0``,
+    ``timeInSec 499 → ~3``.
     """
 
     def _run(
         self, cfg_path: Path | None, cwd: Path, *, artifact: Path, label: str
     ) -> dict[str, Any]:
         """Run pyright and stash the parsed ``--outputjson`` + the constructed cmd."""
-        cmd = ["pyright", "--outputjson"]
-        if cfg_path is not None:
-            cmd.extend(["--project", str(cfg_path)])
-        cmd.extend(["."])
-        # Record the constructed command regardless of pyright succeeding.
+        cmd = [_PYRIGHT, "--outputjson", "--project", str(cfg_path), "."]
         (artifact / f"{label}.cmd.txt").write_text(
             " ".join(f'"{c}"' if " " in c else c for c in cmd) + "\n"
         )
-        result = subprocess.run(
-            cmd, cwd=cwd, capture_output=True, text=True, timeout=240, check=False
+        r = subprocess.run(
+            cmd, cwd=cwd, capture_output=True, text=True, timeout=130, check=False
         )
-        (artifact / f"{label}.stdout.json").write_text(result.stdout)
-        (artifact / f"{label}.stderr.txt").write_text(result.stderr)
+        (artifact / f"{label}.stdout.json").write_text(r.stdout)
+        (artifact / f"{label}.stderr.txt").write_text(r.stderr)
         try:
-            data = json.loads(result.stdout)
+            data = json.loads(r.stdout)
         except json.JSONDecodeError:  # pylint: disable=silent-except  # test helper; exception expected during cleanup
-            data = {
-                "summary": {"filesAnalyzed": -1, "errorCount": -1},
-                "generalDiagnostics": [],
-                "_parse_error": result.stdout[:200],
-            }
+            data = {"summary": {}, "generalDiagnostics": []}
         summary = data.get("summary", {})
         diag = data.get("generalDiagnostics", [])
         venv = [d for d in diag if ".venv" in d.get("file", "")]
         (artifact / f"{label}.summary.json").write_text(
             json.dumps(
                 {
-                    "label": label,
-                    "returncode": result.returncode,
+                    "returncode": r.returncode,
                     "filesAnalyzed": summary.get("filesAnalyzed"),
                     "errorCount": summary.get("errorCount"),
                     "total_diagnostics": len(diag),
@@ -94,11 +83,9 @@ class TestLiveSmokePyrightConfigCollapse:
             )
         )
         return {
-            "returncode": result.returncode,
             "summary": summary,
-            "diag": diag,
             "venv": venv,
-            "stderr": result.stderr,
+            "returncode": r.returncode,
         }
 
     def test_runner_compose_collapses_venv_noise(self, tmp_path: Path) -> None:
@@ -134,10 +121,10 @@ class TestLiveSmokePyrightConfigCollapse:
         )
         # AFTER: compose + run live.
         composed = _compose_pyright_config(_PS_ROOT, shipped)
-        assert str(composed).startswith(tempfile.gettempdir()), (
-            f"composed should be in tempdir, got {composed}"
+        assert composed == _PS_ROOT / ".pyrightconfig-composed.json", (
+            f"composed should be in cwd, got {composed}"
         )
-        assert not (_PS_ROOT / ".pyrightconfig-composed.json").exists()
+        assert (_PS_ROOT / ".pyrightconfig-composed.json").exists()
         after = self._run(composed, _PS_ROOT, artifact=artifact, label="AFTER")
         try:
             assert after["summary"].get("errorCount", -1) == 0, after["summary"]
@@ -153,10 +140,10 @@ class TestLiveSmokePyrightConfigCollapse:
         artifact.mkdir()
         shipped = _PS_ROOT / "config" / "pyrightconfig.json"
         composed = _compose_pyright_config(_PS_ROOT, shipped)
-        assert str(composed).startswith(tempfile.gettempdir()), (
-            f"composed should be in tempdir, got {composed}"
+        assert composed == _PS_ROOT / ".pyrightconfig-composed.json", (
+            f"composed should be in cwd, got {composed}"
         )
-        assert not (_PS_ROOT / ".pyrightconfig-composed.json").exists()
+        assert (_PS_ROOT / ".pyrightconfig-composed.json").exists()
         # Re-run via the runner-built command shape too — verifies the
         # dispatched shape reproduces the helper collapse.
         from python_setup_lint.runner._config import _default_config_paths
@@ -181,7 +168,7 @@ class TestLiveSmokePyrightConfigCollapse:
             cwd=_PS_ROOT,
             capture_output=True,
             text=True,
-            timeout=240,
+            timeout=130,
             check=False,
         )
         (artifact / "AFTER.stdout.json").write_text(r.stdout)

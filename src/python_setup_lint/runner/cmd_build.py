@@ -10,7 +10,6 @@ declaratively (``mypy.stubtest``, ``pyright verify types``, ``detect-secrets``,
 
 from __future__ import annotations
 
-import json
 import tempfile
 import tomllib
 from pathlib import Path
@@ -204,43 +203,20 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     try:
         raw = shared_config.read_text(encoding="utf-8")
-    except OSError:  # pylint: disable=W9740  # best-effort config read fallback; logging would noise unavoidable IO degrade
+    except OSError:  # best-effort config read fallback
         return shared_config
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable IO degrade
-        return shared_config
-
-    # Fast path: when the shipped config already lives in cwd, relative
-    # paths resolve correctly as-is — no tmp file needed.
+    # Fast path: shipped config already in cwd → relative paths resolve correctly.
     if shared_config.resolve().parent == cwd.resolve():
         return shared_config
-
-    # Pyright resolves venvPath, extraPaths, and exclude entries relative
-    # to the config FILE's directory.  Since the composed config now lives
-    # in tmp, rewrite relative path fields to absolute against cwd.
-    if "venvPath" in data and isinstance(data["venvPath"], str):
-        data["venvPath"] = str(cwd.resolve())
-
-    if "extraPaths" in data and isinstance(data["extraPaths"], list):
-        data["extraPaths"] = [
-            str((cwd / p).resolve()) if isinstance(p, str) else p
-            for p in data["extraPaths"]
-        ]
-
-    if "exclude" in data and isinstance(data["exclude"], list):
-        data["exclude"] = [
-            str((cwd / entry).resolve())
-            if isinstance(entry, str) and not entry.startswith("**/")
-            else entry
-            for entry in data["exclude"]
-        ]
-
-    out_dir = Path(
-        tempfile.mkdtemp(prefix=f"python_setup_lint_pyright_{cwd.name}_")
-    )
-    composed = out_dir / "pyrightconfig.json"
-    composed.write_text(json.dumps(data, indent=4), encoding="utf-8")
+    # Pyright resolves exclude/venvPath/extraPaths relative to the config FILE's dir.
+    # Absolute paths in exclude are silently rejected; specifying exclude disables
+    # auto-excludes (**/__pycache__, **/.*). So: write the composed config INTO cwd
+    # (gitignored) with relative paths unchanged — pyright resolves them against cwd.
+    composed = cwd / ".pyrightconfig-composed.json"
+    try:
+        composed.write_text(raw, encoding="utf-8")
+    except OSError:  # read-only cwd or permission error; fall back to shared config
+        return shared_config
     return composed
 
 

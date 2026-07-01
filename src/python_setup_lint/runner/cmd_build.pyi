@@ -74,11 +74,11 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
 
 
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
-    """Write a copy of the shipped config with relative paths rewritten to
-    absolute to a temp directory, so pyright resolves ``venvPath``/``extraPaths``
-    correctly.  No-rewrite fast path: returns *shared_config* unchanged when the
-    config already lives in cwd.  Temp dir is created via ``tempfile.mkdtemp``
-    with a prefix derived from ``cwd.name``.
+    """Write a verbatim copy of the shipped config to ``cwd/.pyrightconfig-composed.json``
+    so pyright resolves ``venvPath``/``exclude`` relative to the project root.
+    No path rewriting — pyright resolves relative paths against the config file's
+    directory, which is cwd.  Fast path: returns *shared_config* unchanged when
+    the config already lives in cwd (no file written).
     """
 
 def _build_fix_flags(spec: ToolSpec, *, fix: bool) -> list[str]:
