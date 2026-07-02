@@ -3,7 +3,7 @@
 
 ``@pytest.mark.slow`` — excluded from ``-m "not slow"`` runs.  Spawns real
 subprocesses for all 11 lint tools (pylint ×3 configurations) on a minimal
-synthetic project.  Writes ``integration/bench-runner-overhead.md`` with the
+synthetic project.  Writes ``tmp_path/bench-runner-overhead.md`` with the
 per-tool time/memory table and the runner-overhead before/after numbers.
 
 Goal 5 (G-5) evidence: per-tool wall-time + peak RSS, runner Python overhead
@@ -106,8 +106,8 @@ class _RecordingRunCmd:
         self.elapsed_times: list[float] = []
         self.labels: list[str] = []
 
-    def __call__(self, cmd: list[str], *, cwd: Path, label: str) -> LintResult:
-        result = _run_cmd(cmd, cwd=cwd, label=label)
+    def __call__(self, cmd: list[str], *, cwd: Path, label: str, **kwargs: Any) -> LintResult:
+        result = _run_cmd(cmd, cwd=cwd, label=label, **kwargs)
         self.elapsed_times.append(result.elapsed)
         self.labels.append(label)
         return result
@@ -191,9 +191,7 @@ def test_bench_runner_overhead_given_tmp_path_then_within_threshold(tmp_path: Pa
     )
 
     # ── 3. Write artifact ──────────────────────────────────────
-    artifact_dir = Path(__file__).resolve().parent.parent.parent / "integration"
-    artifact_dir.mkdir(parents=True, exist_ok=True)
-    artifact_path = artifact_dir / "bench-runner-overhead.md"
+    artifact_path = tmp_path / "bench-runner-overhead.md"
 
     lines: list[str] = [
         "# Benchmark: Per-Tool Time/Memory + Runner Overhead",
