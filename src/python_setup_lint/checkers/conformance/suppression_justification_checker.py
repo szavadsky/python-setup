@@ -339,22 +339,36 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
         line = lines[idx].rstrip("\n")
 
         # Same-line trailing comment after the suppression.
-        # Find the LAST suppression match (the real comment), then look
-        # for a second ``#`` after it.  Using the last match avoids
-        # treating a real suppression as a "trailing reason" for a
-        # suppression pattern inside a string literal earlier on the line.
-        last_match: re.Match[str] | None = None
-        for pat in (_PAT_PYLINT_DISABLE, _PAT_NOQA, _PAT_TYPE_IGNORE, _PAT_TY_IGNORE):
+        # Check EVERY suppression match for a trailing reason — the reason
+        # may appear between two suppression patterns on the same line
+        # (e.g. ``# type: ignore[arg-type]  # reason  # ty:ignore[code]``).
+        # Only accept a trailing reason that appears BEFORE the next
+        # suppression pattern on the line, to avoid treating a real
+        # suppression as a "trailing reason" for a suppression pattern
+        # inside a string literal earlier on the line.
+        _suppression_patterns = (
+            _PAT_PYLINT_DISABLE, _PAT_NOQA, _PAT_TYPE_IGNORE, _PAT_TY_IGNORE,
+        )
+        for pat in _suppression_patterns:
             for m in pat.finditer(line):
-                if last_match is None or m.start() > last_match.start():
-                    last_match = m
-        if last_match is not None:
-            after = line[last_match.end() :]
-            tm = _PAT_TRAILING_REASON.search(after)
-            if tm:
-                reason = tm.group(1)
-                if check_if_meaningful(reason, comment=reason):
-                    return True
+                after = line[m.end() :]
+                # Find the next suppression pattern after this match.
+                next_supp: re.Match[str] | None = None
+                for next_pat in _suppression_patterns:
+                    next_m = next_pat.search(after)
+                    if next_m is not None and (
+                        next_supp is None or next_m.start() < next_supp.start()
+                    ):
+                        next_supp = next_m
+                # Only look for a trailing reason before the next suppression.
+                search_after = after
+                if next_supp is not None:
+                    search_after = after[: next_supp.start()]
+                tm = _PAT_TRAILING_REASON.search(search_after)
+                if tm:
+                    reason = tm.group(1)
+                    if check_if_meaningful(reason, comment=reason):
+                        return True
 
         # Preceding line is a comment with a reason.
         if idx > 0:
