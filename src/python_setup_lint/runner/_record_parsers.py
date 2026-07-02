@@ -276,3 +276,26 @@ def _parse_pyright_records(data: object) -> list[Record]:
         )
     records.sort(key=_compare_records_key)
     return records
+def _parse_pyright_check_records(stdout: str) -> list[Record]:
+    import json
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(data, dict):
+        return []
+    return _parse_pyright_records(data)
+
+
+def _parse_pyright_verify_types_records(stdout: str) -> list[Record]:
+    import json
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(data, dict):
+        return []
+    diags = data.get("diagnostics", [])
+    if isinstance(diags, list):
+        return _parse_pyright_records({"generalDiagnostics": diags})
+    return []
