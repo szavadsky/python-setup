@@ -60,6 +60,6 @@ def _handle_baseline(
         base_path.parent.mkdir(parents=True, exist_ok=True)
         with open(base_path, "w") as f:
             json.dump(base_data, f, indent=2, sort_keys=True)
-        print(f"[baseline] Baseline saved ({len(base_data)} tool entries)")
+        print(f"[baseline] Baseline saved ({len(base_data)} violation records)")
         overall_rc = 0
     return overall_rc

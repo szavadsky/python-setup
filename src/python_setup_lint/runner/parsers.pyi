@@ -26,9 +26,9 @@ when adding a parser.
 _RECORD_PARSERS: dict[str, Callable[..., list[Record]]]
 """Per-tool record-parser dispatch keyed by built-in tool name.
 
-Tools absent here keep the legacy rstrip-set behaviour in
-:mod:`python_setup_lint.runner.baseline`.  JSON-native tools (pyright,
-rumdl-when-JSON) go through ``baseline.py``'s diagnostics path instead.
+All built-in tools now have record parsers; the new violations-only
+baseline captures every tool through its record parser.  Tools without
+a parser produce no violations.
 """
 
 _STATISTICS_PARSERS: dict[str, Callable[..., list[tuple[str, int]]]]

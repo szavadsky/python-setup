@@ -26,6 +26,12 @@ from ._record_parsers import (
 from ._record_parsers import (
     _parse_yamllint_records as _parse_yamllint_records,
 )
+from ._record_parsers import (
+    _parse_pyright_check_records as _parse_pyright_check_records,
+)
+from ._record_parsers import (
+    _parse_pyright_verify_types_records as _parse_pyright_verify_types_records,
+)
 from ._record_types import Record  # re-exported for backward compat
 
 if TYPE_CHECKING:
@@ -206,6 +212,8 @@ _RECORD_PARSERS: dict[str, Callable[..., list[Record]]] = {
     "ty check": _parse_ty_records,
     "yamllint": _parse_yamllint_records,
     "rumdl check": _parse_rumdl_records,
+    "pyright check": _parse_pyright_check_records,
+    "pyright verify types": _parse_pyright_verify_types_records,
 }
 
 _STATISTICS_PARSERS: dict[str, Callable[..., list[tuple[str, int]]]] = {

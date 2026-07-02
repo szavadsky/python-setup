@@ -1,125 +1,47 @@
 """Stub for :mod:`python_setup_lint.runner.baseline`.
 
-Drift-resistant baseline capture + diff with silent shrinkage (T2).
-Additions ONLY are flagged as regressions; removals rewrite the baseline
-in-place.  New entries use the schema-v2 ``records`` form (order-tolerant
-sorted record list, multiset-accurate).  Legacy ``output``-string entries
-load on read and are upgraded in-memory when a per-tool records parser
-exists; tools without a parser keep the legacy rstrip-set path (recorded
-in ``decisions.md`` per fallback).
+Violations-only baseline: flat records sorted by (tool, file, line, col).
 """
 
-from collections.abc import Callable
 from pathlib import Path
 
 from .parsers import Record
 from .types import LintResult
 
+
+_FALLBACK_TOOLS: set[str]
+"""Legacy stub: always empty. The new format has no fallback path."""
+
+
 def peek_fallback_tools() -> frozenset[str]:
-    """Snapshot the per-run set of tools that took the legacy rstrip-set path.
-
-    Returns a frozen copy taken at call time; subsequent
-    :func:`_diff_baseline` invocations do NOT retroactively mutate a
-    previously returned snapshot.  Tests / the pipeline should assert
-    against this snapshot when a documented fallback is expected (T2 D1
-    — the legacy mutation-only set was previously invisible).
-
-    See :file:`decisions.md` D15 for the rationale + per-tool fallback list.
-    """
+    """Legacy stub: returns empty frozenset."""
 
 
-
-def _compare_sorted(  # pylint: disable=stub-symbol-missing  # imported via re-export in baseline.py
+def _compare_sorted(
     a: list[Record], b: list[Record]
 ) -> tuple[list[Record], list[Record]]:
-    """Compare two sorted record lists. Returns (added, removed)."""
-def _capture_baseline(results: list[LintResult]) -> list[dict[str, object]]:
-    """Capture structured baseline data from tool results.
+    """Re-export of :func:`_baseline_helpers._compare_sorted` for backwards compat.
 
-    Each entry is the schema-v2 ``records`` form when a per-tool record
-    parser exists; otherwise the legacy ``output`` string (rumdl timing
-    collapsed to ``(XXXms)``).  JSON-native tools (pyright,
-    rumdl-when-JSON) use the ``diagnostics`` slot with volatile fields
-    (``time``, ``version``, ``summary.timeInSec``) stripped.
-
-    Args:
-        results: :class:`LintResult` list from one ``run_lint`` invocation.
+    Returns:
+        A tuple ``(added, removed)``.
     """
+
+
+def _capture_baseline(results: list[LintResult]) -> list[dict]:
+    """All violations as a flat list sorted by (tool, file, line, col).
+
+    Returns:
+        A list of dicts with keys (tool, file, line, col, rule, msg).
+    """
+
 
 def _diff_baseline(current: list[LintResult], baseline_path: Path) -> list[str]:
-    """Compare current results against saved baseline.
+    """Compare current results against on-disk baseline of flat violation records.
 
-    Returns empty list when current output fully matches baseline.  Each
-    returned string describes a specific regression (additions only).
-    Removals (shrinkage) are silently auto-recorded by rewriting the
-    baseline in-place; if the write fails the function returns a single
-    ``"Cannot write baseline: ..."`` message.
+    Crash records (``rule == "__CRASH__"``) are always flagged and never
+    baseline-absorbable.
 
-    Schema handling: ``schema:"v2"`` entries → record walk-merge; legacy
-    ``output``-string entries → parsed into records on read when a parser
-    exists (in-memory upgrade), else the legacy rstrip-set path with the
-    tool recorded in the per-run fallback set (T2 D3 → ``decisions.md``).
-    Exit-code ``0 → nonzero`` flagged as a regression; ``nonzero → 0``
-    silently auto-records.
-
-    Args:
-        current: :class:`LintResult` list from current run.
-        baseline_path: Path to a JSON file previously written by
-            :func:`_capture_baseline`.
+    Returns:
+        A list of violation strings. Empty when current output fully
+        matches baseline.
     """
-
-def _try_rumdl_json(stdout: str | None) -> dict[str, object] | list[dict[str, object]] | None:
-    """Try to parse rumdl JSON output. Returns parsed dict/list or None."""
-
-def _capture_records_or_output(r: LintResult, entry: dict[str, object]) -> dict[str, object]:
-    """Decide whether to capture records or legacy output for a tool result."""
-def _normalise_legacy_output(text: str, tool_name: str) -> str:
-    """Normalise legacy tool output for comparison, applying tool-specific transforms."""
-
-def _remove_stale_tools(
-    saved: list[dict[str, object]],
-    saved_map: dict[str, dict[str, object]],
-    current_tool_names: set[str],
-) -> bool:
-    """Remove baseline entries for tools no longer in current results."""
-
-
-def _write_baseline_if_modified(
-    saved: list[dict[str, object]],
-    baseline_path: Path,
-    baseline_modified: bool,
-) -> list[str] | None:
-    """Write baseline if modified. Returns violations on write error, None on success."""
-
-
-def _build_saved_map(saved: list[dict[str, object]]) -> dict[str, dict[str, object]]:
-    """Build a tool-name to entry map from the saved baseline list."""
-
-
-def _check_exit_code(
-    r: LintResult, saved_entry: dict[str, object]
-) -> tuple[list[str], bool | None]:
-    """Check exit code changes. Returns (violations, modified|None) where None = fall through."""
-
-
-def _legacy_to_records(
-    saved_output: str, parser: Callable[[str], list[Record]]
-) -> list[Record]:
-    """Convert legacy output string to records via the given parser."""
-
-
-def _compare_record_sets(
-    current_records: list[Record],
-    saved_records: list[Record],
-    saved_entry: dict[str, object],
-    r: LintResult,
-) -> tuple[list[str], bool]:
-    """Compare current vs saved record sets. Returns (violations, modified)."""
-
-
-def _resolve_saved_records(
-    saved_entry: dict[str, object],
-    parser: Callable[[str], list[Record]] | None,
-    tool_name: str,
-) -> tuple[list[Record], bool]:
-    """Resolve saved records from schema-v2 or legacy output. Returns (records, fallback)."""
