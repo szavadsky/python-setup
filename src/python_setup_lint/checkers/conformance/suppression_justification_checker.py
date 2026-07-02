@@ -168,6 +168,15 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
         )
 
     def _check_any_annotation(self, node: nodes.AnnAssign) -> None:
+        # Skip modules outside source roots — AnnAssign Any checks are
+        # production-only.  Test files (tests/) are excluded so that test
+        # helpers (``x: Any = ...``) are not flagged.
+        file_path = _get_file_path(node)
+        if file_path is None or not _is_under_source_root(
+            file_path, self._source_roots
+        ):
+            return
+
         # Check Any annotations for trailing justification.
         #
         # If the annotation is ``Any`` (or contains ``Any``, e.g.

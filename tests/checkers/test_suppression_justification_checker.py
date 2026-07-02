@@ -264,6 +264,13 @@ def f(
         )
         assert len(msgs) == 0, f"Tests must be excluded by source-root filtering, got {msgs}"
 
+    def test_annassign_tests_path_excluded_by_source_root(self) -> None:
+        code = "x: Any = 1\n"
+        msgs = _walk_and_release(
+            code, SuppressionJustificationChecker, file_path="tests/checkers/test_foo.py"
+        )
+        assert len(msgs) == 0, f"AnnAssign tests must be excluded by source-root filtering, got {msgs}"
+
     def test_no_file_path_excluded(self) -> None:
         code = "def f(x: Any) -> Any:\n    pass\n"
         msgs = _walk_and_release(code, SuppressionJustificationChecker)
