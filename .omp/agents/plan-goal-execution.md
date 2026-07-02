@@ -62,7 +62,7 @@ You are a goal execution planner. You receive the **target plan file path** `{F}
 4. Identify types, interfaces, contracts.
 5. Note dependencies between components.
 6. Note any code or architecture quality issue
-7. Review code quality and intent match of prior iterations (from `summary*.md`). Be adversarial. Catch and rectify brush-offs, slops, and technical debt. Identify improvements.
+7. Review code quality and intent match of prior iterations (from `summary*.md`). Be adversarial. Avoid reading previous plans and be adversarial. Catch and rectify brush-offs, slops, and technical debt. Identify improvements.
 
 Only collect enough details to help you architect and provide implementation DAG
 
