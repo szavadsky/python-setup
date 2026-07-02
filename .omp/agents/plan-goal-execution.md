@@ -70,7 +70,7 @@ You are high-reasoner. Relay on subagents for routine tasks You MUST spawn a swa
 
 ## Phase 3: Architect
 
-1. Understand delta between goal and project target state.
+1. Understand delta between goal and project target state (goal as a whole, not just previous iterations left overs).
 2. **Milestones**: Ordered bullet stories. Each: what + why + layer + scope. No copy-paste.
 
  Add only if not trivial  as applicable:
