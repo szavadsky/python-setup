@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code  # shared test helper pattern with test_autofix_conflict_apply
 """Surface-unit tests for T11 v1 extra-tools: parse + validation (R4) +
 merge contract + GenericLintTool.build_command. Pure unit tests on
 synthetic ``tmp_path`` TOML — NO subprocess, NO real shell-out.

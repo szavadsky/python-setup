@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code  # all fidelity modules share the same import/dispatch pattern
 # Phase 3 orchestrator — top-level dispatcher for stub-impl fidelity.
 #
 # Public entrypoint :func:`emit_fidelity_violations` walks every module
