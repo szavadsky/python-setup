@@ -72,6 +72,81 @@ class TestDefaultUserFallback:
         assert result is False
 
 
+
+# ── Reranker import failure (sentinel prevents retry storm) ──────────
+
+
+class TestRerankerImportFallback:
+    """When sentence_transformers module cannot be imported inside _load_reranker.
+
+    The sentinel ``_RERANKER_UNAVAILABLE`` prevents repeated import attempts.
+    """
+
+    def test_import_error_returns_none_and_sets_sentinel(self) -> None:
+        """_load_reranker must return None and set sentinel on ImportError."""
+        from python_setup_lint.checkers._semantic import (
+            _load_reranker,
+            _reset_cache,
+        )
+
+        _reset_cache()
+
+        with patch(
+            "builtins.__import__",
+            side_effect=self._make_blocking_import(),
+        ):
+            result = _load_reranker()
+
+        assert result is None
+
+        # Check sentinel via re-import (global was set by _load_reranker)
+        from python_setup_lint.checkers._semantic import _RERANKER_UNAVAILABLE
+
+        assert _RERANKER_UNAVAILABLE is True
+
+        # Second call must skip import entirely
+        with patch(
+            "builtins.__import__",
+            side_effect=RuntimeError("should not be called"),
+        ) as mock_import:
+            result2 = _load_reranker()
+        assert result2 is None
+        mock_import.assert_not_called()
+
+    @staticmethod
+    def _make_blocking_import() -> Callable[..., object]:
+        """Return a side-effect function that blocks sentence_transformers imports."""
+        original_import = __builtins__["__import__"]  # type: ignore[index]  # __builtins__ is a Module
+
+        def _mock_import(name: str, *args: object, **kwargs: object) -> object:
+            if name == "sentence_transformers":
+                raise ImportError("No module named sentence_transformers")
+            return original_import(name, *args, **kwargs)
+
+        return _mock_import
+
+    def test_sentinel_prevents_retry_on_second_call(self) -> None:
+        """After sentinel is set, second _load_reranker call skips import."""
+        from python_setup_lint.checkers._semantic import (
+            _load_reranker,
+            _reset_cache,
+        )
+
+        _reset_cache()
+        with patch(
+            "python_setup_lint.checkers._semantic._RERANKER_UNAVAILABLE",
+            True,
+        ):
+            with patch(
+                "builtins.__import__",
+                side_effect=RuntimeError("should not be called"),
+            ) as mock_import:
+                result = _load_reranker()
+
+        assert result is None
+        mock_import.assert_not_called()
+
+
 # ── Brush-off pattern detection (heuristic) ──────────────────────────
 
 
