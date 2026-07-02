@@ -12,7 +12,13 @@ from ._record_parsers import (
     _parse_pylint_records as _parse_pylint_records,
 )
 from ._record_parsers import (
+    _parse_pyright_check_records as _parse_pyright_check_records,
+)
+from ._record_parsers import (
     _parse_pyright_records as _parse_pyright_records,
+)
+from ._record_parsers import (
+    _parse_pyright_verify_types_records as _parse_pyright_verify_types_records,
 )
 from ._record_parsers import (
     _parse_ruff_records as _parse_ruff_records,
@@ -25,12 +31,6 @@ from ._record_parsers import (
 )
 from ._record_parsers import (
     _parse_yamllint_records as _parse_yamllint_records,
-)
-from ._record_parsers import (
-    _parse_pyright_check_records as _parse_pyright_check_records,
-)
-from ._record_parsers import (
-    _parse_pyright_verify_types_records as _parse_pyright_verify_types_records,
 )
 from ._record_types import Record  # re-exported for backward compat
 
