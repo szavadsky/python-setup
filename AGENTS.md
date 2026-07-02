@@ -6,7 +6,7 @@ This file is the entry point for all AI agents working on python-setup. Read thi
 
 | Command | What it does |
 |---------|-------------|
- | `uv run lint` | Full 13-tool lint pipeline (baseline diffing, ~71s typical, 120s/tool cap) |
+ | `uv run lint` | Full 13-tool lint pipeline (baseline diffing, ~83s typical, 120s/tool cap) |
 | `uv run pytest -q` | Unit tests (1266 pass, 4 skip, ~58s) |
 | `uv run pytest tests/integration.py -v` | Integration tests (6 pass, ~26s) |
 | `uv run lint --rebaseline` | Regenerate `lint.baseline` after intentional rule changes |
@@ -71,7 +71,7 @@ The semantic checker (`W9704`) detects `Any` in function signatures and uses an 
 | Layer | Command | Scope |
 |-------|---------|-------|
 | Unit | `uv run pytest -q` | Individual checkers, runner logic, config parsing |
-| Integration | `uv run pytest tests/integration.py -v` | End-to-end: install, lint, update on a sample project |
+| Integration | `uv run pytest tests/integration.py -v` | End-to-end: install, lint, update on a sample project. Validates ALL 13 tools + custom checkers fire on planted violations; NOT marked slow; key fit-for-purpose gate. |
 | Lint | `uv run lint` | Self-lint: all 13 tools on python-setup itself |
 
 ## Common Patterns
