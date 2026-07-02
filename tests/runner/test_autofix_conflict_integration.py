@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code  # shared test helper pattern with test_extra_tools
 """T4 — conflict-tolerant autofix: integration tests for ``--fix`` route."""
 from __future__ import annotations
 

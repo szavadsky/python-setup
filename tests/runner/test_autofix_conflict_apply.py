@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code  # shared test helper pattern with test_extra_tools
 """T4 — conflict-tolerant autofix: ``_apply_autofix_conflict_aware`` branch tests."""
 from __future__ import annotations
 

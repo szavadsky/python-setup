@@ -18,7 +18,9 @@ load-plugins=python_setup_lint.checkers.conformance.no_try_import_checker,python
 #   - Structurally repetitive stubs: duplicate-code (min-similarity-lines=25 handles this)
 
 disable=unknown-option-value,unused-argument,broad-exception-caught,protected-access,missing-function-docstring,line-too-long,import-outside-toplevel,trailing-newlines,too-many-arguments,unspecified-encoding,unused-import,cell-var-from-loop,too-many-return-statements,too-few-public-methods,superfluous-parens,wrong-import-order,unused-variable,missing-module-docstring,missing-class-docstring,invalid-name,impl-missing-annotation,cyclic-import,bad-indentation,unnecessary-ellipsis,unnecessary-dunder-call,redefined-outer-name,reimported,use-implicit-booleaness-not-comparison,stub-symbol-missing,useless-import-alias
-enable=too-many-statements,too-many-branches,too-many-locals,too-many-nested-blocks,too-many-public-methods,too-complex,no-try-import,missing-beartype,pyi-underscore-symbol
+# NOTE: duplicate-code is enabled (SIMILARITIES min-similarity-lines=25 raised
+# above default 10 to handle structural repetition inherent in .pyi stubs)
+enable=too-many-statements,too-many-branches,too-many-locals,too-many-nested-blocks,too-many-public-methods,too-complex,no-try-import,missing-beartype,pyi-underscore-symbol,duplicate-code
 
 [DESIGN]
 max-statements=65

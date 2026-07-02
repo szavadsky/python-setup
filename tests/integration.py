@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import textwrap
 from pathlib import Path
+import re
 
 import pytest
 
@@ -138,6 +139,12 @@ class TestMinimalSampleProject:
                 f"Output excerpt:\n{output[:3000]}"
             )
 
+        # ── No tool crashed ────────────────────────────────────────────
+        assert "[CRASH]" not in output, (
+            f"Tool crash detected in lint output:\n{output}\n"
+            f"This must be fixed before committing."
+        )
+
     def test_config_overlay(
         self,
         tmp_path: Path,
@@ -164,11 +171,13 @@ class TestMinimalSampleProject:
             "disable=",
             "disable=use-structlog,",
         )
-        # Remove use-structlog from the enable list.
-        pylintrc_content = pylintrc_content.replace(
-            "enable=too-many-statements,too-many-branches,too-many-locals,too-many-nested-blocks,too-many-public-methods,too-complex,no-try-import,missing-beartype,tempfile-mkdtemp-in-test,asyncio-timeout,missing-module-stub,missing-import-declaration,missing-module-stub-for-import,star-import-unresolvable,signature-mismatch,annotation-mismatch,impl-missing-annotation,annotation-unverifiable,stub-symbol-missing,symbol-kind-mismatch,duplicate-code,pyi-underscore-symbol,use-structlog,docstring-in-impl,generic-return-requires-returns,internal-helper-docstring-allowed,unjustified-suppression,unnamed-tuple-dict-value,generic-key-dict,use-structured-logging",
-            "enable=too-many-statements,too-many-branches,too-many-locals,too-many-nested-blocks,too-many-public-methods,too-complex,no-try-import,missing-beartype,tempfile-mkdtemp-in-test,asyncio-timeout,missing-module-stub,missing-import-declaration,missing-module-stub-for-import,star-import-unresolvable,signature-mismatch,annotation-mismatch,impl-missing-annotation,annotation-unverifiable,stub-symbol-missing,symbol-kind-mismatch,duplicate-code,pyi-underscore-symbol,docstring-in-impl,generic-return-requires-returns,unjustified-suppression,unnamed-tuple-dict-value,generic-key-dict,use-structured-logging",
-        )
+        # Remove use-structlog from the enable list programmatically (robust against enable list churn).
+        enable_match = re.search(r"^enable=(.+)", pylintrc_content, re.MULTILINE)
+        assert enable_match, "Could not find enable= line in pylintrc"
+        enable_items = enable_match.group(1).split(",")
+        filtered = [item for item in enable_items if item != "use-structlog"]
+        new_enable = "enable=" + ",".join(filtered)
+        pylintrc_content = pylintrc_content[:enable_match.start()] + new_enable + pylintrc_content[enable_match.end():]
         local_pylintrc = project / ".pylintrc"
         local_pylintrc.write_text(pylintrc_content)
 
