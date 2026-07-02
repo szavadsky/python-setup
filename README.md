@@ -37,6 +37,10 @@ uv run python-setup install
 
 The installer copies shared configs to `python-setup/config/` and sets up the `lint` command.
 
+```bash
+uv sync --extra semantic  # enables sentence-transformer-powered justification scoring
+```
+
 ### Update
 
 ```bash
