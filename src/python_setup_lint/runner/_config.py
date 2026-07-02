@@ -66,7 +66,7 @@ def _infer_package_name(cwd: Path) -> str | None:
     return raw
 
 
-# CLI config-key aliases (T8 fail-fast)
+# CLI config-key aliases (reject unknown keys via argparse parser.error)
 # Canonical ``--config TOOL=PATH`` labels + short aliases (``ruff`` →
 # ``ruff check``).  Unknown ids exit non-zero via argparse ``parser.error``
 # — no silent drop where a typo produced an entry :func:`_config_flag_for`
