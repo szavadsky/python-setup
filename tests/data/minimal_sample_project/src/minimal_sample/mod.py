@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio  # noqa: F401
 import logging
 import tempfile
-from typing import ClassVar  # noqa: F401
+from typing import Any, ClassVar  # noqa: F401  # planted: Any used in annotations; ClassVar used below
 
 import httpx
 
@@ -54,6 +54,13 @@ def _brushoff_suppression() -> None:  # noqa: F401  # pre-existing
 
 
 def _carry_from_external() -> None:  # noqa: F401  # carried from external library httpx for type compatibility
+    pass
+
+# ── 3d. suppression_justification_checker (function Any param/return) ───
+# Function with unjustified Any param + return — should trigger W9704.
+
+
+def _unjustified_any_param_return(x: Any, y: dict[str, Any]) -> Any:
     pass
 
 
