@@ -133,110 +133,89 @@ class TestCompareSorted:
 
 class TestDriftResistantDiff:
     @pytest.mark.parametrize(
-        ("saved", "current_stdout", "expect_violation", "check_reloaded"),
+        ("saved", "current_stdout", "expect_violation", "check_reloaded", "exit_code"),
         [
             pytest.param(
                 [
-                    {
-                        "tool": "pylint", "exit_code": 0, "schema": "v2",
-                        "records": [{"file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"}],
-                    }
+                    {"tool": "pylint", "file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
                 ],
                 "a.py:1:1: W0611: x (unused-import)\nb.py:2:2: C0114: y (missing-module-docstring)\n",
                 True,
-                lambda r: {"file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"} in r[0]["records"],
+                lambda r: {"tool": "pylint", "file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"} in r,
+                0,
                 id="pure_insertion_no_spurious_diff",
             ),
             pytest.param(
                 [
-                    {
-                        "tool": "pylint", "exit_code": 0, "schema": "v2",
-                        "records": [
-                            {"file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
-                            {"file": "b.py", "line": 2, "col": 2, "rule": "missing-module-docstring", "msg": "y"},
-                        ],
-                    }
+                    {"tool": "pylint", "file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
+                    {"tool": "pylint", "file": "b.py", "line": 2, "col": 2, "rule": "missing-module-docstring", "msg": "y"},
                 ],
                 "a.py:1:1: W0611: x (unused-import)\n",
                 False,
-                lambda r: r[0]["records"] == [
-                    {"file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
+                lambda r: r == [
+                    {"tool": "pylint", "file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
                 ],
+                0,
                 id="pure_deletion_shrinkage_silently_recorded",
             ),
             pytest.param(
                 [
-                    {
-                        "tool": "pylint", "exit_code": 0, "schema": "v2",
-                        "records": [
-                            {"file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
-                            {"file": "b.py", "line": 2, "col": 2, "rule": "missing-module-docstring", "msg": "y"},
-                        ],
-                    }
+                    {"tool": "pylint", "file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
+                    {"tool": "pylint", "file": "b.py", "line": 2, "col": 2, "rule": "missing-module-docstring", "msg": "y"},
                 ],
                 "b.py:2:2: C0114: y (missing-module-docstring)\na.py:1:1: W0611: x (unused-import)\n",
                 False,
-                lambda r: {tuple(sorted(d.items())) for d in r[0]["records"]} == {
+                lambda r: {tuple(sorted(d.items())) for d in r} == {
                     tuple(sorted(d.items())) for d in [
-                        {"file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
-                        {"file": "b.py", "line": 2, "col": 2, "rule": "missing-module-docstring", "msg": "y"},
+                        {"tool": "pylint", "file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
+                        {"tool": "pylint", "file": "b.py", "line": 2, "col": 2, "rule": "missing-module-docstring", "msg": "y"},
                     ]
                 },
+                0,
                 id="reorder_only_no_spurious_diff",
             ),
             pytest.param(
                 [
-                    {
-                        "tool": "mypy", "exit_code": 0, "schema": "v2",
-                        "records": [{"file": "a.py", "line": 1, "col": None, "rule": "arg-type", "msg": "m"}],
-                    }
+                    {"tool": "mypy", "file": "a.py", "line": 1, "col": None, "rule": "arg-type", "msg": "m"},
                 ],
                 "a.py:1: error: m [arg-type]\na.py:1: error: m [arg-type]\n",
                 True,
                 None,
+                0,
                 id="count_change_on_duplicate_line_detected",
             ),
             pytest.param(
                 [
-                    {
-                        "tool": "pylint", "exit_code": 0, "schema": "v2",
-                        "records": [{"file": None, "line": None, "col": None, "rule": "R0801:src/a.py:1-5<->src/b.py:10-15", "msg": "Similar lines (R0801)"}],
-                    }
+                    {"tool": "pylint", "file": None, "line": None, "col": None, "rule": "R0801:src/a.py:1-5<->src/b.py:10-15", "msg": "Similar lines (R0801)"},
                 ],
                 "Similar lines in 2 files\n==src/b.py:[10:15]\n==src/a.py:[1:5]\n",
                 False,
                 None,
+                0,
                 id="r0801_reorder_no_spurious_diff",
             ),
             pytest.param(
-                [{"tool": "mypy", "exit_code": 0, "schema": "v2", "records": []}],
-                "x.py:1: error: m [code]\n",
+                [],
+                "",
                 True,
                 None,
-                id="exit_code_0_to_nonzero_flagged",
-            ),
-            pytest.param(
-                [
-                    {
-                        "tool": "mypy", "exit_code": 1, "schema": "v2",
-                        "records": [{"file": "a.py", "line": 1, "col": None, "rule": "code", "msg": "m"}],
-                    }
-                ],
-                "",
-                False,
-                lambda r: r[0]["exit_code"] == 0 and "records" not in r[0],
-                id="exit_code_nonzero_to_0_shrinkage",
+                -11,
+                id="crash_recorded",
             ),
         ],
     )
     def test_diff_baseline_given_drift_resistant_then_expected_violations(
         self, tmp_path: Path, saved: list[dict[str, Any]], current_stdout: str,
-        expect_violation: bool, check_reloaded: Any,
+        expect_violation: bool, check_reloaded: Any, exit_code: int,
     ) -> None:
-        current = [make_lint_result(tool_name=saved[0]["tool"], stdout=current_stdout)]
+        tool_name = saved[0]["tool"] if saved else "mypy"
+        current = [make_lint_result(tool_name=tool_name, stdout=current_stdout, exit_code=exit_code)]
         violations, reloaded = diff_baseline_with(tmp_path, saved, current)
         if expect_violation:
-            assert any(saved[0]["tool"] in v for v in violations)
+            if saved:
+                assert any(saved[0]["tool"] in v for v in violations)
+            else:
+                assert violations
         else:
             assert violations == []
         if check_reloaded:
