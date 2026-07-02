@@ -254,7 +254,7 @@ def _validate_extra_name(name: str, seen_names: set[str], location: str) -> str:
 
 
 def _validate_extra(
-    entry: dict[str, Any],  # validated dict, keys are known strings
+    entry: dict[str, object],  # validated dict, keys are known strings
     *,
     location: str,
     seen_names: set[str],
