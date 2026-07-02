@@ -41,7 +41,7 @@ __all__ = [
 # ── Helpers ──────────────────────────────────────────────────────────
 
 
-def _load_json_dict(data: str) -> dict[str, Any]:  # JSON parse result, values accessed by known keys
+def _load_json_dict(data: str) -> dict[str, object]:  # JSON parse result, values accessed by known keys with isinstance checks
     try:
         result = json.loads(data)
     except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade

@@ -138,8 +138,8 @@ def _validate_extra_name(
 ) -> str:
     """Validate extra-tool name uniqueness and return the validated name."""
 
-def _validate_extra(  # validated dict, keys are known strings; Any because values are heterogeneous (str|list[str]|None|bool) by construction
-    entry: dict[str, Any],
+def _validate_extra(  # validated dict, keys are known strings; values are heterogeneous (str|list[str]|None|bool) by construction
+    entry: dict[str, object],
     *,
     location: str,
     seen_names: set[str],
