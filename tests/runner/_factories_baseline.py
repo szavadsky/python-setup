@@ -30,7 +30,7 @@ def baseline_entry_for_tool(entries: list[dict[str, Any]], tool: str) -> dict[st
 
 # ── ``_diff_baseline`` invariant matrix ────────────────────────────
 
-DIFF_BASELINE_CASES: list[Any] = [
+DIFF_BASELINE_CASES: list[object] = [
     # 1. Saved has 2 ruff entries (a, b), current has 1 ruff entry (a) -> auto-shrink removes b
     _p(
         [
@@ -274,7 +274,7 @@ def _make_result(tool_name: str, exit_code: int = 0, stdout: str = "") -> LintRe
 
 # ── _diff_baseline edge-case tables ────────────────────────────────
 
-DIFF_EDGE_CASES: list[Any] = [
+DIFF_EDGE_CASES: list[object] = [
     # Saved and current produce identical records -> no violations
     _p(
         [{"tool": "ruff check", "file": "src/a.py", "line": 1, "col": 1,
@@ -285,7 +285,7 @@ DIFF_EDGE_CASES: list[Any] = [
     ),
 ]
 
-DIFF_EDGE_INVARIANTS: list[Any] = [
+DIFF_EDGE_INVARIANTS: list[object] = [
     # Current has records for a tool not in saved baseline -> flagged
     _p(
         [{"tool": "ruff check", "file": "src/a.py", "line": 1, "col": 1,
@@ -299,7 +299,7 @@ DIFF_EDGE_INVARIANTS: list[Any] = [
     ),
 ]
 
-DIFF_BASELINE_PATH_ERRORS: list[Any] = [
+DIFF_BASELINE_PATH_ERRORS: list[object] = [
     _p("missing", None, "not found", id="no_baseline_file"),
     _p("invalid", "not valid json", "Cannot read", id="invalid_json"),
     _p("empty", "[]", None, id="empty_baseline_no_current"),

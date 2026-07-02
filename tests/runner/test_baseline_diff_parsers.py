@@ -325,7 +325,7 @@ class TestCaptureOneEdgeCases:
 
     def test_capture_one_given_pyright_verifytypes_then_baseline_diff_stable(self, tmp_path: Path) -> None:
         baseline_path = tmp_path / "baseline.json"
-        saved: list[dict] = []
+        saved: list[dict[str, object]] = []
         baseline_path.write_text(json.dumps(saved))
         current = [make_lint_result(tool_name="pyright verify types", stdout=json.dumps(
             {"version": "1.1.411", "time": "1782394247000", "timeInSec": 0.72, "diagnostics": []},

@@ -22,6 +22,8 @@ from typing import TYPE_CHECKING
 
 import structlog
 from beartype import beartype
+ 
+__all__ = ["semantic_check_if_meaningful", "_load_reranker", "_RERANKER_UNAVAILABLE", "_reset_cache"]
 
 _LOG = structlog.get_logger(__name__)
 if TYPE_CHECKING:
