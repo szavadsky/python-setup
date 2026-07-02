@@ -14,7 +14,7 @@ uv run lint
 
 A reusable Python project template that ships:
 
-- **13 lint tools** — ruff, mypy, pylint, pyright, rumdl, ty, yamllint, tach, detect-secrets, vulture, pyupgrade, yesqa, and a custom semantic-justification checker.
+- **13 lint tools** — tach, ruff, rumdl, mypy, yamllint, ty, mypy.stubtest, pyright (check + verify types), pylint, pylint-pyi, pylint tests, detect-secrets.
 - **Shared config** — tool configs live in `python-setup/config/` and are inherited by consumer projects.
 - **Custom pylint checkers** — automatically registered; no manual plugin loading.
 - **Baseline diffing** — `lint.baseline` freezes pre-existing violations; CI only flags new ones.
@@ -25,7 +25,7 @@ A reusable Python project template that ships:
 
 ### Prerequisites
 
-- Python 3.13+
+- Python 3.14+
 - `uv` (package manager)
 
 ### Install

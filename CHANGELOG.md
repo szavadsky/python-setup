@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.17.0 (2026-07-02)
+
+- Fixed crash on non-existent baseline file (WS-1).
+- Fixed W9704 docstring false-positive (WS-2).
+- Enabled R0801 (similar lines) pylint checker (WS-4).
+- Improved crash visibility — runner now shows tool name and exit code on failure (WS-5).
+- Migrated baseline format to JSON (WS-6).
+- Fixed benchmark memory leak (WS-7).
+- Added config symlink support for consumer projects (WS-8).
+
 ## v0.16.0 (2026-07-01)
 
 - Rumdl now lints all project `.md` files (default_paths changed from `["src/"]` to `["."]`).
