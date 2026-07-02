@@ -151,7 +151,7 @@ def _capture_one(r: LintResult) -> list[dict]:
     return violations
 
 
-def _capture_baseline(results: list[LintResult]) -> list[dict]:
+def _capture_baseline(results: list[LintResult]) -> list[dict[str, object]]:
     """All violations as a flat list sorted by (tool, file, line, col, rule).
 
     Returns:
