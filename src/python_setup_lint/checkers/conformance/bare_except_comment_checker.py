@@ -67,7 +67,7 @@ class BareExceptCommentChecker(BaseChecker):
         """Check if the except handler has a justifying comment."""
         try:
             stream = node.root().stream()  # type: ignore[union-attr]  # ModuleNode has stream() at runtime
-        except AttributeError, OSError:  # pylint: disable=W9740  # best-effort stream access fallback; logging would noise unavoidable attribute/IO degrade
+        except (AttributeError, OSError):  # pylint: disable=W9740  # best-effort stream access fallback; logging would noise unavoidable attribute/IO degrade
             return False
 
         if stream is None:

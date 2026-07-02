@@ -48,7 +48,7 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
         # Walk the module's source lines looking for bare suppressions.
         try:
             stream = node.stream()  # type: ignore[union-attr]  # node is ModuleNode from astroid, stream() exists at runtime
-        except AttributeError, OSError:  # pylint: disable=W9740  # best-effort stream access fallback; logging would noise unavoidable attribute/IO degrade
+        except (AttributeError, OSError):  # pylint: disable=W9740  # best-effort stream access fallback; logging would noise unavoidable attribute/IO degrade
             return
 
         try:

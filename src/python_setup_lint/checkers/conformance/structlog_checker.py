@@ -143,7 +143,7 @@ class StructlogChecker(BaseChecker):
             if file_val is None:
                 return None
             return Path(file_val)
-        except AttributeError, TypeError:  # pylint: disable=W9740  # best-effort file path extraction fallback; logging would noise unavoidable attribute/type degrade
+        except (AttributeError, TypeError):  # pylint: disable=W9740  # best-effort file path extraction fallback; logging would noise unavoidable attribute/type degrade
             return None
 
     @staticmethod
