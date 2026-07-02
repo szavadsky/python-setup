@@ -9,7 +9,7 @@ annot_mismatch_var: str
 impl_missing_annot_var: str
 
 # annotation-unverifiable: .pyi uses slice syntax (unverifiable by normalizer)
-unverifiable_var: list[1:2]
+unverifiable_var: "list[1:2]"
 
 # signature-mismatch: .pyi has (a: int, b: str), .py has (a: int)
 def sig_mismatch_func(a: int, b: str) -> bool: ...

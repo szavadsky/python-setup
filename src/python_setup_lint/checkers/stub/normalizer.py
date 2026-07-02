@@ -83,6 +83,17 @@ class AnnotationNormalizer:
     def _ast_string(node: SuccessfulInferenceResult) -> str | None:
         # Const is a subclass of Proxy in astroid, so check it first.
         if isinstance(node, nodes.Const):
+            # String annotations (forward references) need re-parsing so slice
+            # syntax, unresolvable names, etc. propagate None through the
+            # normalizer (annotation-unverifiable) rather than being repr'd as
+            # a literal string.
+            if isinstance(node.value, str):
+                try:
+                    inner = astroid.parse(f"_: {node.value}")
+                    inner_ann = inner.body[0].annotation
+                    return AnnotationNormalizer.normalize(inner_ann)
+                except Exception:  # pylint: disable=W9740  # malformed annotation string — fall through to repr
+                    pass
             return repr(node.value)
         # Try the dispatch table for known NodeNG subclasses.
         handler = AnnotationNormalizer._AST_STRING_DISPATCH.get(type(node))

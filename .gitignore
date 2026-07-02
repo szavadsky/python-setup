@@ -235,6 +235,9 @@ ty.toml
 # But keep the sample project's planted source committed
 !/tests/data/minimal_sample_project/
 
+# Generated uv.lock for the sample test fixture project (not tracked)
+/tests/data/minimal_sample_project/uv.lock
+
 # NLP semantic model cache (sentence-transformers)
 .cache/python-setup/semantic/
 .tmpoutput

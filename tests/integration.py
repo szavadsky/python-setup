@@ -12,11 +12,11 @@ the binary is unavailable.
 from __future__ import annotations
 
 import logging
+import re
 import shutil
 import subprocess
 import textwrap
 from pathlib import Path
-import re
 
 import pytest
 

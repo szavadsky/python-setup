@@ -8,7 +8,6 @@ from pathlib import Path
 from .parsers import Record
 from .types import LintResult
 
-
 _FALLBACK_TOOLS: set[str]
 """Legacy stub: always empty. The new format has no fallback path."""
 
