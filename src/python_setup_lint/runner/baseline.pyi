@@ -44,3 +44,14 @@ def _diff_baseline(current: list[LintResult], baseline_path: Path) -> list[str]:
         A list of violation strings. Empty when current output fully
         matches baseline.
     """
+
+def _write_baseline_if_modified(
+    violations: list[dict[str, object]],
+    baseline_path: Path,
+    baseline_modified: bool,
+) -> list[str] | None:
+    """Atomically write baseline via temp file if modified.
+
+    Returns:
+        ``None`` on success, or a list containing one error string on failure.
+    """

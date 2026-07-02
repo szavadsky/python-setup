@@ -236,13 +236,19 @@ class _DetectSecretsLintTool(LintTool):
             return [
                 "bash",
                 "-c",
-                f"git ls-files -z | xargs -0 {' '.join(spec.command)} --baseline {config.secrets_baseline}",
+                (
+                    f"git ls-files -z | xargs -0 {' '.join(spec.command)} --baseline {config.secrets_baseline}; "
+                    f"python3 -c \"import json,sys; p=sys.argv[1]; d=json.load(open(p)); d.pop('generated_at',None); json.dump(d,open(p,'w'),indent=2,sort_keys=True)\" {config.secrets_baseline}"
+                ),
             ]
-        # Bootstrap: scan all files and create baseline on first invocation.
+        # Bootstrap: scan all files, create baseline, strip volatile metadata.
         return [
             "bash",
             "-c",
-            f"detect-secrets scan > {config.secrets_baseline}",
+            (
+                f"detect-secrets scan > {config.secrets_baseline} && "
+                f"python3 -c \"import json,sys; p=sys.argv[1]; d=json.load(open(p)); d.pop('generated_at',None); json.dump(d,open(p,'w'),indent=2,sort_keys=True)\" {config.secrets_baseline}"
+            ),
         ]
 
 

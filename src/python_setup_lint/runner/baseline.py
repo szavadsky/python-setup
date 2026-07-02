@@ -166,7 +166,7 @@ def _capture_baseline(results: list[LintResult]) -> list[dict[str, object]]:
 
 
 def _write_baseline_if_modified(
-    violations: list[dict],
+    violations: list[dict[str, object]],
     baseline_path: Path,
     baseline_modified: bool,
 ) -> list[str] | None:
