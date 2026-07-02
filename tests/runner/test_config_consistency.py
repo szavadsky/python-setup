@@ -28,7 +28,7 @@ class TestDesignSectionConsistency:
 
     @staticmethod
     @pytest.fixture(params=ALL_RCFILES, ids=lambda p: p.name)
-    def parsed(request: pytest.FixtureRequest) -> configparser.ConfigParser:
+    def parsed(request: pytest.FixtureRequest) -> configparser.ConfigParser:  # pylint: disable=W9728  # pytest fixture wrapper: provides a self-documenting fixture name for test parameterization; inlining would lose the fixture identity
         return _parse(request.param)
 
     def test_design_section_present(self, parsed: configparser.ConfigParser) -> None:
