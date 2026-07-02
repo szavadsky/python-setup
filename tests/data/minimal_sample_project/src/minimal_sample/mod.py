@@ -193,3 +193,24 @@ def sig_mismatch_func(a: int) -> bool:  # .pyi has (a: int, b: str) → mismatch
 
 def KindMismatch() -> None:  # .pyi has class → kind mismatch
     pass
+
+
+
+# ── 21. duplicate-code (R0801) ──────────────────────────────────────────
+# Planted duplicate with ≥10 identical lines for R0801 detection.
+
+
+def _duplicate_a():
+    """First half of planted duplicate for R0801 detection."""
+    a = 1
+    b = 2
+    c = a + b
+    d = c * 2
+    e = d - a
+    f = e // 3
+    g = f + b
+    h = g * a
+    i = h - c
+    j = i * 2
+    k = j // d
+    return k
