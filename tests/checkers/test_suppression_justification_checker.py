@@ -116,6 +116,13 @@ x = 1  # noqa: E501  # ok
         assert len(msgs) == 1, f"Expected 1 message, got {len(msgs)}"
         assert "unjustified-suppression" in _msg_ids(msgs)
 
+    def test_string_literal_then_real_suppression_flagged(self) -> None:
+        # A string literal containing '# noqa' followed by a real '# noqa'
+        # on the same line — the real suppression must be flagged.
+        code = 'x = "# noqa: E501"  # noqa: E501\n'
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert len(msgs) == 1, f"Expected 1 message for real # noqa, got {msgs}"
+
 class TestDataStrings:
     """Checker must NOT flag suppression patterns inside string literals."""
 
@@ -195,6 +202,12 @@ x = 1
 '''
         msgs = _walk_and_release(code, SuppressionJustificationChecker)
         assert "unjustified-suppression" not in _msg_ids(msgs)
+
+    def test_string_literal_with_suppression_then_justified_real(self) -> None:
+        # String literal '# noqa' then a justified real '# noqa' — no message.
+        code = 'x = "# noqa: E501"  # noqa: E501  # trailing reason here\n'
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert len(msgs) == 0, f"Expected 0 messages, got {msgs}"
 
 
 

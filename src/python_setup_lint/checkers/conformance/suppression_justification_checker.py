@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import io
 import re
-import tokenize
 from typing import TYPE_CHECKING
 
 from astroid import nodes
@@ -48,9 +46,9 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
     @beartype
     def visit_module(self, node: object) -> None:
         # Walk the module's source lines looking for bare suppressions.
-        # Use Python's tokenize module to distinguish COMMENT tokens from
-        # STRING tokens — suppression patterns inside string literals are
-        # never COMMENT tokens, so they are inherently excluded.
+        # Use astroid to build string-literal spans, then raw-line regex
+        # filtered by those spans — suppression patterns inside string
+        # literals are excluded by column-range overlap.
         try:
             stream = node.stream()  # type: ignore[union-attr]  # node is ModuleNode from astroid, stream() exists at runtime
         except (AttributeError, OSError):  # pylint: disable=W9740  # best-effort stream access fallback; logging would noise unavoidable attribute/IO degrade
@@ -63,38 +61,19 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
 
         source = raw.decode("utf-8") if isinstance(raw, bytes) else raw
         lines = source.splitlines(keepends=True)
-
-        try:
-            tokens = tokenize.generate_tokens(io.StringIO(source).readline)
-        except Exception:  # pylint: disable=W9740  # tokenize can raise on edge cases; fall back to legacy scan
-            self._legacy_scan(node, lines)
-            return
-
-        for tok in tokens:
-            if tok.type != tokenize.COMMENT:
-                continue
-            comment_text = tok.string
-            if not self._is_suppression_line(comment_text):
-                continue
-            lineno = tok.start[0]
-            if self._has_justification(lines, lineno - 1):
-                continue
-            self.add_message(
-                "unjustified-suppression",
-                line=lineno,
-                node=node,  # type: ignore[arg-type]  # node is object; add_message expects NodeNG | None  # ty:ignore[invalid-argument-type]
-                args=(lines[lineno - 1].rstrip("\n").strip(),),
-            )
+        self._legacy_scan(node, lines)
 
     def _legacy_scan(
         self,
         node: object,
         lines: list[str],
     ) -> None:
-        """Fallback scan using raw-line-regex + string-literal-span detection.
+        """Scan using raw-line-regex + string-literal-span detection.
 
-        Used when tokenize-based scanning fails (e.g. on old astroid versions
-        or edge-case source files).
+        Builds string-literal column spans via astroid, then applies
+        raw-line regex and filters out matches that fall inside string
+        spans — suppression patterns inside string literals are excluded
+        by column-range overlap.
         """
         string_spans = self._get_string_literal_spans(node)
 
@@ -319,26 +298,32 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
         line: str,
         spans: list[tuple[int, int]],
     ) -> bool:
-        """Return True if the suppression ``#`` on *line* is inside a string literal.
+        """Return True if ALL suppression matches on *line* are inside string literals.
+
+        A line may contain multiple suppression patterns (e.g. a string
+        literal ``"# noqa"`` followed by a real ``# noqa``).  Only skip
+        the line if every match falls inside a string-literal span.
 
         Args:
             line: The source line (without trailing newline).
             spans: List of ``(start_col, end_col)`` string literal spans on this line.
 
         Returns:
-            True if the suppression ``#`` falls inside any string literal span.
+            True if every suppression-pattern match is inside a string span.
         """
         if not spans:
             return False
-        for pat in (_PAT_PYLINT_DISABLE, _PAT_NOQA, _PAT_TYPE_IGNORE, _PAT_TY_IGNORE):
-            m = pat.search(line)
-            if m:
-                hash_pos = m.start()
-                return any(
-                    start_col <= hash_pos < end_col
-                    for start_col, end_col in spans
-                )
-        return False
+        matches: list[tuple[int, int]] = [
+            (m.start(), m.end())
+            for pat in (_PAT_PYLINT_DISABLE, _PAT_NOQA, _PAT_TYPE_IGNORE, _PAT_TY_IGNORE)
+            for m in pat.finditer(line)
+        ]
+        if not matches:
+            return False
+        return all(
+            any(start_col <= m_start < end_col for start_col, end_col in spans)
+            for m_start, _m_end in matches
+        )
 
 
     @staticmethod
@@ -354,18 +339,22 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
         line = lines[idx].rstrip("\n")
 
         # Same-line trailing comment after the suppression.
-        # Find the suppression comment position, then look for a second
-        # ``#`` after it.
+        # Find the LAST suppression match (the real comment), then look
+        # for a second ``#`` after it.  Using the last match avoids
+        # treating a real suppression as a "trailing reason" for a
+        # suppression pattern inside a string literal earlier on the line.
+        last_match: re.Match[str] | None = None
         for pat in (_PAT_PYLINT_DISABLE, _PAT_NOQA, _PAT_TYPE_IGNORE, _PAT_TY_IGNORE):
-            m = pat.search(line)
-            if m:
-                after = line[m.end() :]
-                tm = _PAT_TRAILING_REASON.search(after)
-                if tm:
-                    reason = tm.group(1)
-                    if check_if_meaningful(reason, comment=reason):
-                        return True
-                break
+            for m in pat.finditer(line):
+                if last_match is None or m.start() > last_match.start():
+                    last_match = m
+        if last_match is not None:
+            after = line[last_match.end() :]
+            tm = _PAT_TRAILING_REASON.search(after)
+            if tm:
+                reason = tm.group(1)
+                if check_if_meaningful(reason, comment=reason):
+                    return True
 
         # Preceding line is a comment with a reason.
         if idx > 0:
