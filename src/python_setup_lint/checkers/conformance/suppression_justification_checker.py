@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import io
 import re
+import tokenize
 from typing import TYPE_CHECKING
 
 from astroid import nodes
@@ -46,6 +48,9 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
     @beartype
     def visit_module(self, node: object) -> None:
         # Walk the module's source lines looking for bare suppressions.
+        # Use Python's tokenize module to distinguish COMMENT tokens from
+        # STRING tokens — suppression patterns inside string literals are
+        # never COMMENT tokens, so they are inherently excluded.
         try:
             stream = node.stream()  # type: ignore[union-attr]  # node is ModuleNode from astroid, stream() exists at runtime
         except (AttributeError, OSError):  # pylint: disable=W9740  # best-effort stream access fallback; logging would noise unavoidable attribute/IO degrade
@@ -57,9 +62,41 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
             return
 
         source = raw.decode("utf-8") if isinstance(raw, bytes) else raw
-
         lines = source.splitlines(keepends=True)
 
+        try:
+            tokens = tokenize.generate_tokens(io.StringIO(source).readline)
+        except Exception:  # pylint: disable=broad-except  # tokenize can raise on edge cases; fall back to legacy scan
+            self._legacy_scan(node, source, lines)
+            return
+
+        for tok in tokens:
+            if tok.type != tokenize.COMMENT:
+                continue
+            comment_text = tok.string
+            if not self._is_suppression_line(comment_text):
+                continue
+            lineno = tok.start[0]
+            if self._has_justification(lines, lineno - 1):
+                continue
+            self.add_message(
+                "unjustified-suppression",
+                line=lineno,
+                node=node,  # type: ignore[arg-type]  # node is object; add_message expects NodeNG | None  # ty:ignore[invalid-argument-type]
+                args=(lines[lineno - 1].rstrip("\n").strip(),),
+            )
+
+    def _legacy_scan(
+        self,
+        node: object,
+        source: str,
+        lines: list[str],
+    ) -> None:
+        """Fallback scan using raw-line-regex + string-literal-span detection.
+
+        Used when tokenize-based scanning fails (e.g. on old astroid versions
+        or edge-case source files).
+        """
         string_spans = self._get_string_literal_spans(node)
 
         for lineno, line in enumerate(lines, start=1):
@@ -303,6 +340,7 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
                     for start_col, end_col in spans
                 )
         return False
+
 
     @staticmethod
     def _has_justification(lines: list[str], idx: int) -> bool:

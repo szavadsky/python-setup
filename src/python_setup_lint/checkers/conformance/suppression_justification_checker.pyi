@@ -19,6 +19,15 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
     def visit_module(self, node: object) -> None:
         """Walk the module's source lines looking for bare suppressions."""
 
+    def _legacy_scan(
+        self,
+        node: object,
+        source: str,
+        lines: list[str],
+    ) -> None:
+        """Fallback scan using raw-line-regex + string-literal-span detection."""
+
+
     def visit_annassign(self, node: nodes.AnnAssign) -> None:
         """Visit annotated assignments and check for unjustified Any annotations."""
 
@@ -31,6 +40,20 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
     def _annotation_contains_any(annotation: nodes.NodeNG) -> bool: ...
 
     def _emit_if_unjustified(self, annotation: nodes.NodeNG, lineno: int) -> None: ...
+
+    @staticmethod
+    def _add_const_span(
+        spans: dict[int, list[tuple[int, int]]],
+        const_node: nodes.Const,
+    ) -> None:
+        """Add a single Const node's span(s) to *spans*."""
+
+    @staticmethod
+    def _add_doc_node_spans(
+        spans: dict[int, list[tuple[int, int]]],
+        ast_node: object,
+    ) -> None:
+        """Add spans from *ast_node*'s docstring if present."""
 
     @staticmethod
     def _get_string_literal_spans(node: object) -> dict[int, list[tuple[int, int]]]:
