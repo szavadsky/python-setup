@@ -5,8 +5,8 @@
     "tool": "tach check"
   },
   {
-    "exit_code": 0,
-    "output": "All checks passed!\n",
+    "exit_code": 1,
+    "output": "I001 [*] Import block is un-sorted or un-formatted\n  --> tests/integration.py:12:1\n   |\n10 |   \"\"\"\n11 |\n12 | / from __future__ import annotations\n13 | |\n14 | | import logging\n15 | | import shutil\n16 | | import subprocess\n17 | | import textwrap\n18 | | from pathlib import Path\n19 | | import re\n20 | |\n21 | | import pytest\n22 | |\n23 | | from python_setup_lint.runner import TOOLS, RunnerConfig, run_lint\n24 | | from python_setup_lint.runner._config import _SHIPPED_CONFIG_FILES\n25 | | from python_setup_lint.setup import install\n26 | | from python_setup_lint.testing import (\n27 | |     assert_precommit_config_valid,\n28 | |     assert_precommit_hooks_shape,\n29 | | )\n   | |_^\n30 |\n31 |   # \u2500\u2500 Helpers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n   |\nhelp: Organize imports\n\nFound 1 error.\n[*] 1 fixable with the `--fix` option.\n",
     "tool": "ruff check"
   },
   {
@@ -3870,13 +3870,22 @@
     "tool": "pyright verify types"
   },
   {
-    "exit_code": 0,
-    "output": "{\n    \"messages\": [],\n    \"statistics\": {\n        \"messageTypeCount\": {\n            \"fatal\": 0,\n            \"error\": 0,\n            \"warning\": 0,\n            \"refactor\": 0,\n            \"convention\": 0,\n            \"info\": 0\n        },\n        \"modulesLinted\": 57,\n        \"score\": 10.0\n    }\n}\n",
+    "exit_code": 4,
+    "output": "{\n    \"messages\": [\n        {\n            \"type\": \"warning\",\n            \"symbol\": \"unjustified-suppression\",\n            \"message\": \"Suppression comment without technical justification: body = ast_node.body  # type: ignore[union-attr]\",\n            \"messageId\": \"W9704\",\n            \"confidence\": \"UNDEFINED\",\n            \"module\": \"python_setup_lint.checkers.conformance.suppression_justification_checker\",\n            \"obj\": \"\",\n            \"line\": 247,\n            \"column\": 0,\n            \"endLine\": null,\n            \"endColumn\": null,\n            \"path\": \"src/python_setup_lint/checkers/conformance/suppression_justification_checker.py\",\n            \"absolutePath\": \"/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/suppression_justification_checker.py\"\n        },\n        {\n            \"type\": \"warning\",\n            \"symbol\": \"silent-except\",\n            \"message\": \"Silent except handler: catches  AttributeError: without logging or re-raising\",\n            \"messageId\": \"W9740\",\n            \"confidence\": \"UNDEFINED\",\n            \"module\": \"python_setup_lint.checkers.conformance.suppression_justification_checker\",\n            \"obj\": \"SuppressionJustificationChecker._add_doc_node_spans\",\n            \"line\": 248,\n            \"column\": 8,\n            \"endLine\": 249,\n            \"endColumn\": 18,\n            \"path\": \"src/python_setup_lint/checkers/conformance/suppression_justification_checker.py\",\n            \"absolutePath\": \"/home/slava/aiexp/python-setup/src/python_setup_lint/checkers/conformance/suppression_justification_checker.py\"\n        }\n    ],\n    \"statistics\": {\n        \"messageTypeCount\": {\n            \"fatal\": 0,\n            \"error\": 0,\n            \"warning\": 2,\n            \"refactor\": 0,\n            \"convention\": 0,\n            \"info\": 0\n        },\n        \"modulesLinted\": 57,\n        \"score\": 9.995329285380663\n    }\n}\n",
     "tool": "pylint"
   },
   {
-    "exit_code": 0,
-    "output": "\n--------------------------------------------------------------------\nYour code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)\n\n",
+    "exit_code": 4,
+    "records": [
+      {
+        "col": 0,
+        "file": "src/python_setup_lint/checkers/conformance/suppression_justification_checker.py",
+        "line": 247,
+        "msg": "Suppression comment without technical justification: body = ast_node.body  # type: ignore[union-attr]",
+        "rule": "unjustified-suppression"
+      }
+    ],
+    "schema": "v2",
     "tool": "pylint-pyi"
   },
   {
