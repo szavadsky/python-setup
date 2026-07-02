@@ -25,6 +25,8 @@ from beartype import beartype
  
 __all__ = ["semantic_check_if_meaningful", "_load_reranker", "_RERANKER_UNAVAILABLE", "_reset_cache"]
 
+__all__ = ["semantic_check_if_meaningful", "_load_reranker", "_RERANKER_UNAVAILABLE", "_reset_cache"]
+
 _LOG = structlog.get_logger(__name__)
 if TYPE_CHECKING:
     from sentence_transformers import CrossEncoder  # type: ignore[import-not-found]  # optional semantic extra
