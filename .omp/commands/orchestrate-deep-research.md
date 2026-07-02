@@ -284,7 +284,7 @@ if start_idx <= 4 and "final" not in state["completed_stages"]:
             for i in range(1, page_count + 1):
                 os.system(
                     f"scripts/container-run.sh pdftoppm -png -r 100 -f {i} -l {i} "
-                    f"{p_dir}/output/{p_slug}.pdf {p_dir}/build/pages/page-{i}"
+                    f"{p_dir}/output/{p_slug}.pdf {p_dir}/build/pages/page"
                 )
 
         FORMAT_SCHEMA = {
