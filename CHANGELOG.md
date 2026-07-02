@@ -4,11 +4,15 @@
 
 - Fixed crash on non-existent baseline file (WS-1).
 - Fixed W9704 docstring false-positive (WS-2).
+- W9704 Any param/return detection in prod code (WS-3).
 - Enabled R0801 (similar lines) pylint checker (WS-4).
 - Improved crash visibility — runner now shows tool name and exit code on failure (WS-5).
 - Migrated baseline format to JSON (WS-6).
 - Fixed benchmark memory leak (WS-7).
 - Added config symlink support for consumer projects (WS-8).
+- Config symlink root stubs (WS-8 detail).
+- Unjustified suppression audit (WS-12).
+- Sentence-transformer download-avoidance + fallback test (WS-11).
 
 ## v0.16.0 (2026-07-01)
 
@@ -66,4 +70,4 @@
 ## v0.5.0 (2026-06-21)
 
 - `ty check` `--config-file` flag (previous `--config` was rejected by ty>=0.0.49).
-- `RunnerConfig.conf
+- `RunnerConfig.config_paths` now defaults to empty dict instead of None.
