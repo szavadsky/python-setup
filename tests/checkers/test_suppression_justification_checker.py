@@ -161,6 +161,41 @@ class TestDataStrings:
         msgs = _walk_and_release(code, SuppressionJustificationChecker)
         assert "unjustified-suppression" not in _msg_ids(msgs)
 
+    def test_module_docstring_not_flagged(self) -> None:
+        """Checker must NOT flag # type: ignore inside module docstring."""  # pylint: disable=unjustified-suppression  # docstring contains suppression pattern; test verifies it's not flagged
+        code = '''"""# type: ignore
+Module docstring with suppression pattern.
+"""
+
+x = 1
+'''
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert "unjustified-suppression" not in _msg_ids(msgs)
+
+    def test_nested_function_docstring_not_flagged(self) -> None:
+        """Checker must NOT flag # type: ignore inside nested function docstring."""  # pylint: disable=unjustified-suppression  # docstring contains suppression pattern; test verifies it's not flagged
+        code = '''def outer():
+    def inner():
+        """# type: ignore
+        Nested function docstring.
+        """
+        pass
+    pass
+'''
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert "unjustified-suppression" not in _msg_ids(msgs)
+
+    def test_class_docstring_not_flagged(self) -> None:
+        """Checker must NOT flag # type: ignore inside class docstring."""  # pylint: disable=unjustified-suppression  # docstring contains suppression pattern; test verifies it's not flagged
+        code = '''class MyClass:
+    """# type: ignore
+    Class docstring with suppression pattern.
+    """
+    pass
+'''
+        msgs = _walk_and_release(code, SuppressionJustificationChecker)
+        assert "unjustified-suppression" not in _msg_ids(msgs)
+
 
 
 class TestFunctionParamReturnAny:
