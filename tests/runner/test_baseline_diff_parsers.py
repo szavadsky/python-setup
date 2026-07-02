@@ -226,41 +226,35 @@ class TestCaptureSchemaV2:
             pytest.param(
                 "pylint",
                 "src/a.py:1:1: W0611: x (unused-import)\n",
-                lambda cap: (
-                    cap[0]["schema"] == "v2"
-                    and cap[0]["records"] == [
-                        {"file": "src/a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
-                    ]
-                ),
+                lambda cap: cap == [
+                    {"tool": "pylint", "file": "src/a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
+                ],
                 id="pylint_captured_as_schema_v2_records",
             ),
             pytest.param(
                 "ruff check",
                 "src/a.py:1:3: E501 msg\n",
-                lambda cap: (
-                    cap[0]["schema"] == "v2"
-                    and cap[0]["records"] == [
-                        {"file": "src/a.py", "line": 1, "col": 3, "rule": "E501", "msg": "msg"},
-                    ]
-                ),
+                lambda cap: cap == [
+                    {"tool": "ruff check", "file": "src/a.py", "line": 1, "col": 3, "rule": "E501", "msg": "msg"},
+                ],
                 id="ruff_captured_as_schema_v2_records",
             ),
             pytest.param(
                 "mypy",
                 "src/a.py:1: error: Bad [arg-type]\n",
-                lambda cap: cap[0]["schema"] == "v2" and cap[0]["records"][0]["rule"] == "arg-type",
+                lambda cap: cap[0]["rule"] == "arg-type" and cap[0]["tool"] == "mypy",
                 id="mypy_captured_as_schema_v2_records",
             ),
             pytest.param(
                 "strange-tool",
                 "noise\n",
-                lambda cap: "schema" not in cap[0] and cap[0]["output"] == "noise\n",
+                lambda cap: cap == [],
                 id="unknown_tool_keeps_legacy_output",
             ),
             pytest.param(
                 "pylint",
                 "************* Module banner only\n",
-                lambda cap: "schema" not in cap[0] and cap[0]["output"] == "************* Module banner only\n",
+                lambda cap: cap == [],
                 id="pylint_empty_records_nonempty_stdout_falls_back_to_output",
             ),
         ],
@@ -280,51 +274,47 @@ class TestCaptureOneEdgeCases:
             pytest.param(
                 "pyright check",
                 json.dumps({"summary": {"errorCount": 0, "warningCount": 0}}),
-                lambda cap: cap[0]["diagnostics"]["summary"]["errorCount"] == 0,
+                lambda cap: cap == [],
                 id="pyright_captured_as_diagnostics",
             ),
             pytest.param(
                 "pyright check",
                 json.dumps({"time": "2024-01-01", "version": "1.0", "summary": {"errorCount": 0, "warningCount": 0, "timeInSec": 1.5}}),
-                lambda cap: (
-                    "time" not in cap[0]["diagnostics"]
-                    and "version" not in cap[0]["diagnostics"]
-                    and "timeInSec" not in cap[0]["diagnostics"].get("summary", {})
-                ),
+                lambda cap: cap == [],
                 id="pyright_volatile_fields_stripped",
             ),
             pytest.param(
                 "pyright verify types",
                 json.dumps({"version": "1.1.410", "time": "1782394246865", "timeInSec": 0.51, "diagnostics": []}),
-                lambda cap: (
-                    "time" not in cap[0].get("output", "")
-                    and "timeInSec" not in cap[0].get("output", "")
-                    and "version" not in cap[0].get("output", "")
-                ),
+                lambda cap: cap == [],
                 id="pyright_verifytypes_volatile_fields_stripped",
             ),
             pytest.param(
                 "rumdl check",
                 json.dumps([{"file": "README.md", "rule": "MD013"}]),
-                lambda cap: "diagnostics" in cap[0],
+                lambda cap: cap == [],
                 id="rumdl_json_captured_as_diagnostics",
             ),
             pytest.param(
                 "rumdl check",
                 "README.md:8:1: [MD013] Line too long\n",
-                lambda cap: cap[0]["schema"] == "v2" and cap[0]["records"][0]["rule"] == "MD013",
+                lambda cap: cap == [
+                    {"tool": "rumdl check", "file": "README.md", "line": 8, "col": 1, "rule": "MD013", "msg": "Line too long"},
+                ],
                 id="rumdl_text_captured_as_records",
             ),
             pytest.param(
                 "rumdl check",
                 "No issues found (42ms)\n",
-                lambda cap: "schema" not in cap[0] and "(XXXms)" in cap[0]["output"],
+                lambda cap: cap == [],
                 id="rumdl_text_empty_records_nonempty_stdout_falls_back",
             ),
             pytest.param(
                 "rumdl check",
                 "README.md:8:1: [MD013] Line too long\nIssues: Found 1 issue (123ms)\n",
-                lambda cap: cap[0]["schema"] == "v2" and cap[0]["records"][0]["rule"] == "MD013",
+                lambda cap: cap == [
+                    {"tool": "rumdl check", "file": "README.md", "line": 8, "col": 1, "rule": "MD013", "msg": "Line too long"},
+                ],
                 id="rumdl_timing_normalised_in_output",
             ),
         ],
@@ -335,10 +325,7 @@ class TestCaptureOneEdgeCases:
 
     def test_capture_one_given_pyright_verifytypes_then_baseline_diff_stable(self, tmp_path: Path) -> None:
         baseline_path = tmp_path / "baseline.json"
-        saved = [{
-            "tool": "pyright verify types", "exit_code": 0,
-            "output": json.dumps({"version": "1.1.410", "time": "1782394246865", "timeInSec": 0.51, "diagnostics": []}),
-        }]
+        saved: list[dict] = []
         baseline_path.write_text(json.dumps(saved))
         current = [make_lint_result(tool_name="pyright verify types", stdout=json.dumps(
             {"version": "1.1.411", "time": "1782394247000", "timeInSec": 0.72, "diagnostics": []},
