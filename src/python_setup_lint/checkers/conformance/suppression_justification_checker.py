@@ -66,8 +66,8 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
 
         try:
             tokens = tokenize.generate_tokens(io.StringIO(source).readline)
-        except Exception:  # pylint: disable=broad-except  # tokenize can raise on edge cases; fall back to legacy scan
-            self._legacy_scan(node, source, lines)
+        except Exception:  # pylint: disable=W9740  # tokenize can raise on edge cases; fall back to legacy scan
+            self._legacy_scan(node, lines)
             return
 
         for tok in tokens:
@@ -89,7 +89,6 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
     def _legacy_scan(
         self,
         node: object,
-        source: str,
         lines: list[str],
     ) -> None:
         """Fallback scan using raw-line-regex + string-literal-span detection.
