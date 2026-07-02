@@ -45,12 +45,21 @@ def _build_statistics_flags(spec: ToolSpec) -> list[str]:
     return flags.get(spec.name, [])
 
 
+_EXCLUDE_DIRS: frozenset[str] = frozenset({
+    ".venv", "build", "__pycache__", "node_modules", ".git", ".omp",
+    ".tox", "dist", ".eggs", "htmlcov", ".mypy_cache", ".pytest_cache",
+    ".ruff_cache", "venv",
+})
+
+
 def _find_py_files(dirs: Sequence[str], *, cwd: Path) -> list[str]:
     files: set[Path] = set()
     for d in dirs:
         p = cwd / d
         if p.is_dir():
-            files.update(p.rglob("*.py"))
+            for f in p.rglob("*.py"):
+                if not any(part in _EXCLUDE_DIRS for part in f.relative_to(cwd).parts[:-1]):
+                    files.add(f)
         elif p.is_file() and p.suffix == ".py":
             files.add(p)
     return sorted(str(f.relative_to(cwd)) for f in files)
@@ -58,13 +67,16 @@ def _find_py_files(dirs: Sequence[str], *, cwd: Path) -> list[str]:
 
 def _find_pyi_files(dirs: Sequence[str], *, cwd: Path) -> list[str]:
     files: set[Path] = set()
+    resolved_cwd = cwd.resolve()
     for d in dirs:
-        resolved = (cwd / d).resolve()
-        if resolved.is_dir():
-            files.update(resolved.rglob("*.pyi"))
-        elif resolved.is_file():
-            files.add(resolved)
-    return sorted(str(f.relative_to(cwd)) for f in files)
+        p = resolved_cwd / d
+        if p.is_dir():
+            for f in p.rglob("*.pyi"):
+                if not any(part in _EXCLUDE_DIRS for part in f.relative_to(resolved_cwd).parts[:-1]):
+                    files.add(f)
+        elif p.is_file():
+            files.add(p)
+    return sorted(str(f.relative_to(resolved_cwd)) for f in files)
 
 
 def _expand_globs(paths: Sequence[str], *, cwd: Path) -> list[str]:
