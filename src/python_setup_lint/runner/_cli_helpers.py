@@ -1,7 +1,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from .types import LintResult, ToolSpec  # TYPE_CHECKING-only import; not available at runtime
@@ -36,7 +35,7 @@ def _handle_baseline(
     overall_rc: int,
 ) -> int:
 
-    from .baseline import _capture_baseline, _diff_baseline
+    from .baseline import _capture_baseline, _diff_baseline, _write_baseline_if_modified
 
     base_path = Path(baseline)
     if base_path.exists() and not overwrite_baseline:
@@ -57,9 +56,10 @@ def _handle_baseline(
         print(f"\n{'=' * 60}")
         print(f"[baseline] {action} baseline \u2192 {baseline}")
         base_data = _capture_baseline(results)
-        base_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(base_path, "w") as f:
-            json.dump(base_data, f, indent=2, sort_keys=True)
+        err = _write_baseline_if_modified(base_data, base_path, baseline_modified=True)
+        if err:
+            print(f"[baseline] {'; '.join(err)}")
+            return 1
         print(f"[baseline] Baseline saved ({len(base_data)} violation records)")
         overall_rc = 0
     return overall_rc

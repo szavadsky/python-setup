@@ -23,32 +23,13 @@ A reusable Python project template that ships:
 
 ## Installation
 
-### Prerequisites
-
-- Python 3.14+
-- `uv` (package manager)
-
-### Install
-
 ```bash
 uv add python-setup
 uv run python-setup install
+uv sync --extra semantic  # optional: enables sentence-transformer-powered justification scoring
 ```
 
-The installer copies shared configs to `python-setup/config/` and sets up the `lint` command.
-
-```bash
-uv sync --extra semantic  # enables sentence-transformer-powered justification scoring
-```
-
-### Update
-
-```bash
-uv add "python-setup @ latest"
-uv run python-setup update
-```
-
-The `update` command checksums all shipped configs and warns if any have drifted from the installed version.
+See [Using python-setup in another project](#using-python-setup-in-another-project) for details.
 
 ## Using python-setup in another project
 
