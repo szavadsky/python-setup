@@ -1,3 +1,4 @@
+# [DESIGN] section sourced from config/.pylintrc (single source of truth)
 [MAIN]
 # Test-code rcfile — reduced rule set for test files.
 #
