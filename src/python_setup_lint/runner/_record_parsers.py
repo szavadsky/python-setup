@@ -280,7 +280,7 @@ def _parse_pyright_check_records(stdout: str) -> list[Record]:
     import json
     try:
         data = json.loads(stdout)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
         return []
     if not isinstance(data, dict):
         return []
@@ -291,7 +291,7 @@ def _parse_pyright_verify_types_records(stdout: str) -> list[Record]:
     import json
     try:
         data = json.loads(stdout)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
         return []
     if not isinstance(data, dict):
         return []

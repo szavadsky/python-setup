@@ -1,6 +1,7 @@
 # Violations-only baseline: flat records sorted by (tool, file, line, col).
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import tempfile
@@ -139,15 +140,14 @@ def _capture_one(r: LintResult) -> list[dict]:
     violations: list[dict] = []
     parser = _RECORD_PARSERS.get(r.tool_name)
     if parser is not None:
-        for rec in parser(r.stdout or ""):
-            violations.append({
-                "tool": r.tool_name,
-                "file": rec.file,
-                "line": rec.line,
-                "col": rec.col,
-                "rule": rec.rule,
-                "msg": rec.msg,
-            })
+        violations.extend({
+            "tool": r.tool_name,
+            "file": rec.file,
+            "line": rec.line,
+            "col": rec.col,
+            "rule": rec.rule,
+            "msg": rec.msg,
+        } for rec in parser(r.stdout or ""))
     return violations
 
 
@@ -187,11 +187,9 @@ def _write_baseline_if_modified(
                 json.dump(violations, f, indent=2, sort_keys=True)
             os.replace(tmp_path, str(baseline_path))
         finally:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp_path)
-            except OSError:
-                pass
-    except OSError as exc:
+    except OSError as exc:  # pylint: disable=W9740  # best-effort baseline write fallback; logging would noise unavoidable IO degrade
         return [f"Cannot write baseline: {exc}"]
     return None
 
@@ -215,7 +213,7 @@ def _diff_baseline(  # pylint: disable=too-many-locals  # _diff_baseline needs s
     try:
         with open(baseline_path) as f:
             saved: list[dict] = json.load(f)
-    except (json.JSONDecodeError, OSError) as exc:
+    except (json.JSONDecodeError, OSError) as exc:  # pylint: disable=W9740  # best-effort baseline read fallback; logging would noise unavoidable parse/IO degrade
         return [f"Cannot read baseline: {exc}"]
 
     current_violations = _capture_baseline(current)
@@ -235,10 +233,10 @@ def _diff_baseline(  # pylint: disable=too-many-locals  # _diff_baseline needs s
     violations: list[str] = []
 
     # Crashes are always violations.
-    for crash in crash_records:
-        violations.append(
-            f"[{crash['tool']}] CRASH (exit={crash['msg'].replace('exit code ', '')})"
-        )
+    violations.extend(
+        f"[{crash['tool']}] CRASH (exit={crash['msg'].replace('exit code ', '')})"
+        for crash in crash_records
+    )
 
     # Added = new/different violations.
     for v in added:

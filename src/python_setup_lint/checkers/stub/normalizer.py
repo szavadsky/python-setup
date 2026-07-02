@@ -92,8 +92,8 @@ class AnnotationNormalizer:
                     inner = astroid.parse(f"_: {node.value}")
                     inner_ann = inner.body[0].annotation
                     return AnnotationNormalizer.normalize(inner_ann)
-                except Exception:  # pylint: disable=W9740  # malformed annotation string — fall through to repr
-                    pass
+                except Exception:  # noqa: S110  # pylint: disable=W9740  # malformed annotation string — fall through to repr
+                    pass  # expected: malformed annotation string from user code; silently fall through to repr
             return repr(node.value)
         # Try the dispatch table for known NodeNG subclasses.
         handler = AnnotationNormalizer._AST_STRING_DISPATCH.get(type(node))

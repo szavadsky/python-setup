@@ -23,7 +23,7 @@ def find_tool_entry(entries: list[dict[str, Any]], tool: str) -> dict[str, Any]:
     return matches[0]
 
 
-def baseline_entry_for_tool(entries: list[dict[str, Any]], tool: str) -> dict[str, Any]:
+def baseline_entry_for_tool(entries: list[dict[str, Any]], tool: str) -> dict[str, Any]:  # pylint: disable=W9728  # public API alias: provides a self-documenting name for test consumers; inlining would force callers to understand find_tool_entry's semantics
     """Return the first baseline entry whose ``tool`` equals *tool* (asserts at least one)."""
     return find_tool_entry(entries, tool)
 
