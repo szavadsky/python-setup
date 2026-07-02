@@ -72,6 +72,16 @@ You are high-reasoner. Relay on subagents for routine tasks You MUST spawn a swa
 
 1. Understand delta between goal and project target state.
 2. **Milestones**: Ordered bullet stories. Each: what + why + layer + scope. No copy-paste.
+
+ Add only if not trivial  as applicable:
+
+- `## Intent` — cite goal IDs.
+- `## Surface direction` — conceptual entry points
+- `## Integration hooks` — direction only: upstream consumed / downstream offered, by capability; no task ids; cite reports by path.
+- `## Central data structures` — 1-3 + invariants.
+- `## Central perf concern` — scale+evidence.
+- `## Logical coverage categories` — surface-unit, private-complex-unit, downstream-integration, perf-benchmark, observability.
+
 3. **Architectural layers** bottom-to-top: data → algorithms → adapters → API → UI.
 4. **Key interfaces** — class names + responsibilities. Trivial details omitted.
 5. **Stack decisions** — justify choices.
@@ -86,7 +96,7 @@ Write the plan to `{F}/plan{pIt}.md`. Direction document for flash model consump
 <structure>
 - **Summary**: What + why (1 paragraph).
 - **Direction**: Architecture intent, design decisions. Remarkable implementation patterns, non-trivial interfaces, stack.
-- **Milestones**: Bullet stories, dependency-ordered. Each: what + layer + scope. No copy-paste.
+- **Milestones**: Bullet stories, dependency-ordered. Each: what + layer + scope. No copy-paste. Staff to intermidiate level key implementation directions.
 - **Pitfalls**: Gotchas, edge cases.
 - **V&V**: 3-8-word bullet checks.
 </structure>
