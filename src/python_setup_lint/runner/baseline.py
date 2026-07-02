@@ -228,6 +228,10 @@ def _diff_baseline(
 def _check_exit_code(
     r: LintResult, saved_entry: dict[str, object]
 ) -> tuple[list[str], bool | None]:
+    # A negative exit code means the tool died from a signal (crash).
+    # Always flag as violation — a crash is never baseline-absorbable.
+    if r.exit_code < 0:
+        return [f"[{r.tool_name}] CRASH (exit={r.exit_code})"], False
     saved_rc = saved_entry.get("exit_code", -1)
     if r.exit_code == saved_rc:
         return [], None

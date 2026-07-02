@@ -219,7 +219,8 @@ def _run_cmd(
 
 
 def _print_result(result: LintResult) -> None:
-    status = "PASSED" if result.exit_code == 0 else f"FAILED (exit={result.exit_code})"
+    crash = " [CRASH]" if result.exit_code < 0 else ""
+    status = "PASSED" if result.exit_code == 0 else f"FAILED (exit={result.exit_code}){crash}"
     print(f"\n{'=' * 60}")
     print(f"[{result.tool_name}] {status} [{result.elapsed:.1f}s]")
     print(f"{'=' * 60}")
