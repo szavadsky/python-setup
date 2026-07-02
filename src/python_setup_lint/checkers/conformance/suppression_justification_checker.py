@@ -244,8 +244,8 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
             return
         # Fallback for older astroid: docstring stored as body[0] Expr(Const)
         try:
-            body = ast_node.body  # type: ignore[union-attr]
-        except AttributeError:
+            body = ast_node.body  # type: ignore[union-attr]  # ast_node may not be a Module (e.g. FunctionDef/ClassDef); fallback guard for non-doc_node astroid versions
+        except AttributeError:  # pylint: disable=W9740  # best-effort body attr fallback; logging would noise unavoidable attribute degrade
             return
         if body and isinstance(body[0], nodes.Expr) and isinstance(body[0].value, nodes.Const) and isinstance(body[0].value.value, str):
             SuppressionJustificationChecker._add_const_span(spans, body[0].value)
