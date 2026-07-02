@@ -123,7 +123,7 @@ def test_bench_runner_overhead_given_tmp_path_then_within_threshold(tmp_path: Pa
     cwd = tmp_path
     config = RunnerConfig(cwd=cwd, package_name="bench_test")
 
-    rows: list[dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []  # benchmark rows: per-tool measurements (wall_time, rss_delta, label, exit_code) -- dict values vary by tool
 
     # ── 1. Per-tool individual measurements ─────────────────────
     for spec in TOOLS:

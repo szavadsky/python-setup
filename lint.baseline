@@ -11,7 +11,7 @@
   },
   {
     "exit_code": 0,
-    "output": "\nSuccess: No issues found in 19 files (XXXms)\n",
+    "output": "\nSuccess: No issues found in 20 files (XXXms)\n",
     "tool": "rumdl check"
   },
   {
@@ -3880,8 +3880,8 @@
     "tool": "pylint-pyi"
   },
   {
-    "exit_code": 4,
-    "output": "{\n    \"messages\": [\n        {\n            \"type\": \"warning\",\n            \"symbol\": \"unjustified-suppression\",\n            \"message\": \"Suppression comment without technical justification: list[dict[str, Any]]\",\n            \"messageId\": \"W9704\",\n            \"confidence\": \"UNDEFINED\",\n            \"module\": \"tests.runner.test_bench_runner_overhead\",\n            \"obj\": \"test_bench_runner_overhead_given_tmp_path_then_within_threshold\",\n            \"line\": 126,\n            \"column\": 10,\n            \"endLine\": 126,\n            \"endColumn\": 30,\n            \"path\": \"tests/runner/test_bench_runner_overhead.py\",\n            \"absolutePath\": \"/home/slava/aiexp/python-setup/tests/runner/test_bench_runner_overhead.py\"\n        }\n    ],\n    \"statistics\": {\n        \"messageTypeCount\": {\n            \"fatal\": 0,\n            \"error\": 0,\n            \"warning\": 1,\n            \"refactor\": 0,\n            \"convention\": 0,\n            \"info\": 0\n        },\n        \"modulesLinted\": 62,\n        \"score\": 9.998151912770282\n    }\n}\n",
+    "exit_code": 0,
+    "output": "{\n    \"messages\": [],\n    \"statistics\": {\n        \"messageTypeCount\": {\n            \"fatal\": 0,\n            \"error\": 0,\n            \"warning\": 0,\n            \"refactor\": 0,\n            \"convention\": 0,\n            \"info\": 0\n        },\n        \"modulesLinted\": 62,\n        \"score\": 10.0\n    }\n}\n",
     "tool": "pylint tests"
   },
   {
