@@ -88,7 +88,7 @@ Runs all 13 lint tools sequentially with baseline diffing and statistics aggrega
 
 When lint rules or checkers change in `python-setup`:
 
-1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.16.0"`
+1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v0.17.0"`
 2. Re-run the installer: `uv run python-setup install`
 3. Commit the updated config in the consuming project.
 
