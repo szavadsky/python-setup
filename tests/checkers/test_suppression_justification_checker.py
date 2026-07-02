@@ -117,9 +117,9 @@ x = 1  # noqa: E501  # ok
         assert "unjustified-suppression" in _msg_ids(msgs)
 
     def test_string_literal_then_real_suppression_flagged(self) -> None:
-        # A string literal containing '# noqa' followed by a real '# noqa'
+        # A string literal containing '# noqa' followed by a real '# noqa'  # pylint: disable=unjustified-suppression  # comment contains suppression pattern as documentation; test verifies mixed-match detection
         # on the same line — the real suppression must be flagged.
-        code = 'x = "# noqa: E501"  # noqa: E501\n'
+        code = 'x = "# noqa: E501"  # noqa: E501\n'  # pylint: disable=unjustified-suppression  # test data contains suppression pattern to verify mixed-match detection
         msgs = _walk_and_release(code, SuppressionJustificationChecker)
         assert len(msgs) == 1, f"Expected 1 message for real # noqa, got {msgs}"
 
@@ -204,8 +204,8 @@ x = 1
         assert "unjustified-suppression" not in _msg_ids(msgs)
 
     def test_string_literal_with_suppression_then_justified_real(self) -> None:
-        # String literal '# noqa' then a justified real '# noqa' — no message.
-        code = 'x = "# noqa: E501"  # noqa: E501  # trailing reason here\n'
+        # String literal '# noqa' then a justified real '# noqa' — no message.  # pylint: disable=unjustified-suppression  # comment contains suppression pattern as documentation; test verifies justified suppression after string literal
+        code = 'x = "# noqa: E501"  # noqa: E501  # trailing reason here\n'  # pylint: disable=unjustified-suppression  # test data verifies justified suppression after string literal
         msgs = _walk_and_release(code, SuppressionJustificationChecker)
         assert len(msgs) == 0, f"Expected 0 messages, got {msgs}"
 
