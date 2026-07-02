@@ -9,7 +9,7 @@ from ._record_types import Record, _compare_records_key
 def _parse_int(text: str) -> int | None:
     try:
         return int(text)
-    except TypeError, ValueError:  # pylint: disable=W9740  # best-effort int parse fallback; logging would noise unavoidable parse degrade
+    except (TypeError, ValueError):  # pylint: disable=W9740  # best-effort int parse fallback; logging would noise unavoidable parse degrade
         return None
 
 

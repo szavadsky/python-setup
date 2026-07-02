@@ -90,7 +90,7 @@ def _apply_autofix_conflict_aware(
         candidate = config.cwd / rel
         try:
             snapshot[candidate] = candidate.read_bytes()
-        except FileNotFoundError, IsADirectoryError:  # pylint: disable=W9740  # best-effort snapshot read fallback; logging would noise unavoidable file-not-found/dir degrade
+        except (FileNotFoundError, IsADirectoryError):  # pylint: disable=W9740  # best-effort snapshot read fallback; logging would noise unavoidable file-not-found/dir degrade
             continue
 
     strategy = _strategy_for(spec.name, spec)
