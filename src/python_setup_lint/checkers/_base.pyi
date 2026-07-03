@@ -43,9 +43,9 @@ class MessageDef(NamedTuple):
 class SourceRootMixin:
     """Mixin for checkers that filter by source root directories.
 
-    Provides shared ``options`` (``source-roots``), ``__init__``, ``open``,
-    ``visit_functiondef``, and ``visit_asyncfunctiondef`` boilerplate that
-    is structurally identical across multiple checkers by pylint API design.
+    Provides shared ``options`` (``source-roots``), ``__init__``, and ``open``
+    boilerplate that is structurally identical across multiple checkers by
+    pylint API design.
     """
 
     _source_roots: list[Path]
@@ -54,9 +54,18 @@ class SourceRootMixin:
 
     def __init__(self, linter: PyLinter) -> None: ...
     def open(self) -> None: ...
+    def _skip_if_outside_source_roots(self, node: nodes.NodeNG) -> bool: ...
+
+
+class FunctionVisitMixin(SourceRootMixin):
+    """Mixin for checkers that visit function definitions.
+
+    Adds ``visit_functiondef`` and ``visit_asyncfunctiondef`` dispatching to
+    ``self._check_function(node)``.  Subclass MUST define ``_check_function``.
+    """
+
     def visit_functiondef(self, node: nodes.FunctionDef) -> None: ...
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None: ...
-    def _skip_if_outside_source_roots(self, node: nodes.NodeNG) -> bool: ...
 
 
 def check_if_meaningful(
