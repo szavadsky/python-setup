@@ -10,6 +10,7 @@ from pylint.lint import PyLinter  # TYPE_CHECKING-only import; pylint is a dev d
 
 from python_setup_lint.checkers._base import (
     MessageDef,
+    _get_file_path,
     _is_under_source_root,
     _msgs,
 )
@@ -75,8 +76,7 @@ class StructlogChecker(BaseChecker):
             return
         if func.expr.name != "logging":
             return
-
-        file_path = self._get_node_file_path(node)
+        file_path = _get_file_path(node)
         if file_path is None or not _is_under_source_root(
             file_path, self._source_roots
         ):
@@ -92,8 +92,7 @@ class StructlogChecker(BaseChecker):
         if func.attrname not in ("debug", "info", "warning", "error", "critical"):
             return
 
-        # Source root check: skip files outside configured source roots
-        file_path = self._get_node_file_path(node)
+        file_path = _get_file_path(node)
         if file_path is None or not _is_under_source_root(
             file_path, self._source_roots
         ):
@@ -135,15 +134,6 @@ class StructlogChecker(BaseChecker):
                     node=node,
                     args=(func.attrname,),
                 )
-
-    @staticmethod
-    def _get_node_file_path(node: nodes.NodeNG) -> Path | None:
-        try:
-            file_val = node.root().file
-            if file_val is None:
-                return None
-            return Path(file_val)
-        except (AttributeError, TypeError):  # pylint: disable=W9740  # best-effort file path extraction fallback; logging would noise unavoidable attribute/type degrade
             return None
 
     @staticmethod

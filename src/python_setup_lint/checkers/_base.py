@@ -74,6 +74,22 @@ def _get_file_path(node: nodes.NodeNG) -> Path | None:
     except (AttributeError, TypeError):  # pylint: disable=W9740  # best-effort file path extraction fallback; logging would noise unavoidable attribute/type degrade
         return None
 
+def _get_except_str(node: nodes.ExceptHandler) -> str:
+    """Get the string representation of the except clause."""
+    if node.type is None:
+        return ":"
+    if isinstance(node.type, nodes.Name):
+        return f" {node.type.name}:"
+    if isinstance(node.type, nodes.Tuple):
+        parts: list[str] = []
+        for elt in node.type.elts:
+            if isinstance(elt, nodes.Name):
+                parts.append(elt.name)
+            else:
+                parts.append("...")
+        return f" ({', '.join(parts)}):"
+    return ":"
+
 
 class SourceRootMixin:
 
