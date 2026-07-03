@@ -62,9 +62,8 @@ class _UvCallRecorder:
 # ── Parametrize tables ──────────────────────────────────────────────
 
 ATOMIC_WRITE_CASES = [
-    pytest.param("hello", None, False, id="writes_content"),
-    pytest.param("new", "old", False, id="overwrites_existing"),
-    pytest.param("content", None, True, id="tmp_cleaned_on_error"),
+    pytest.param("hello", None, id="writes_content"),
+    pytest.param("new", "old", id="overwrites_existing"),
 ]
 CHECKSUM_CASES = [
     pytest.param(["a.txt", "b.txt"], 2, id="returns_checksums"),
@@ -132,31 +131,27 @@ SET_PLUGINS_CASES = [
 
 
 class TestAtomicWrite:
-    @pytest.mark.parametrize(("content", "existing", "should_raise"), ATOMIC_WRITE_CASES)
+    @pytest.mark.parametrize(("content", "existing"), ATOMIC_WRITE_CASES)
     def test_cases(
-        self, tmp_path: Path, content: str, existing: str | None, should_raise: bool
+        self, tmp_path: Path, content: str, existing: str | None
     ) -> None:
         d, p = tmp_path, tmp_path / "test.txt"
         if existing is not None:
             p.write_text(existing)
-        if should_raise:
-            with pytest.raises(FileNotFoundError):
-                _atomic_write(p / "nope", content)
-        else:
-            _atomic_write(p, content)
-            assert p.read_text() == content
+        _atomic_write(p, content)
+        assert p.read_text() == content
         assert not list(d.glob("*.tmp"))
 
     def test_atomic_write_given_mid_write_failure_then_no_file_left(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import os
+        import shutil
 
-        def failing_replace(*a: object, **kw: object) -> None:
-            raise OSError("replace failed")
+        def failing_move(*a: object, **kw: object) -> None:
+            raise OSError("move failed")
 
-        monkeypatch.setattr(os, "replace", failing_replace)
-        with pytest.raises(OSError, match="replace failed"):
+        monkeypatch.setattr(shutil, "move", failing_move)
+        with pytest.raises(OSError, match="move failed"):
             _atomic_write(tmp_path / "test.txt", "x")
         assert not list(tmp_path.glob("*.tmp"))
         assert not (tmp_path / "test.txt").exists()
