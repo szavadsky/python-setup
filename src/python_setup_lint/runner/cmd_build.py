@@ -103,6 +103,8 @@ def _config_flag_for(spec_name: str, config_path: Path | None) -> list[str]:
         "rumdl check": ["--config", str(config_path)],
         "ty check": ["--config-file", str(config_path)],
         "yamllint": ["--config-file", str(config_path)],
+        # tach check: no --config flag; auto-discovers tach.toml from repo root
+        "tach check": [],
     }
     return flags.get(spec_name, [])
 
