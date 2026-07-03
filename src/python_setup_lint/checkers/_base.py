@@ -139,12 +139,6 @@ class SourceRootMixin:
 
 
 class FunctionVisitMixin(SourceRootMixin):
-    """Mixin for checkers that visit function definitions.
-
-    Adds ``visit_functiondef`` and ``visit_asyncfunctiondef`` dispatching to
-    ``self._check_function(node)``.  Subclass MUST define ``_check_function``.
-    """
-
     # pylint: disable=missing-beartype  # mixin: _check_function defined in subclass; @beartype cannot resolve forward ref
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass
         self._check_function(node)  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass

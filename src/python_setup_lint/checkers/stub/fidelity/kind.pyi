@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from astroid import nodes
 
-from ._ast_helpers import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+from ._ast_helpers import (
     _FidelityState,
 )
 

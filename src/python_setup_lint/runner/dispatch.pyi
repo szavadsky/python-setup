@@ -100,3 +100,5 @@ def register_lint_tool(
     Idempotent per ``tool.name`` — a re-call with the same name is an
     update-in-place (no duplicate append).
     """
+def _strategy_for(name: str, spec: ToolSpec) -> LintTool:
+    """Return a cached or new strategy for *spec*."""

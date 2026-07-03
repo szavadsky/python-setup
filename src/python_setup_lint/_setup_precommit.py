@@ -67,9 +67,9 @@ uv run pre-commit install
 def _atomic_write(path: Path, content: str) -> None:
     parent = path.parent
     parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = tempfile.NamedTemporaryFile(
+    tmp_path = tempfile.NamedTemporaryFile(  # noqa: SIM115  # pylint: disable=consider-using-with  # intentional: need delete=False + manual cleanup in finally
         dir=tempfile.gettempdir(), prefix="psl_setup_", suffix=path.suffix, delete=False
-    ).name  # noqa: SIM115  # pylint: disable=consider-using-with  # intentional: need delete=False + manual cleanup in finally
+    ).name
     try:
         with open(tmp_path, "w", encoding="utf-8") as f:
             f.write(content)
