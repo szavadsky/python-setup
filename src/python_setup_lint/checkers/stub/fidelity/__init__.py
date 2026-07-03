@@ -33,9 +33,8 @@ imports (e.g. ``from python_setup_lint.checkers.stub_fidelity import
 _is_classvar``) resolve unchanged after the T10 split.
 
 Re-exports use redundant ``as`` aliases so ruff F401 treats them as
-intentional re-exports.  CodingRules forbids ``import *``; this
-``__init__.py`` is pure re-export (no logic) so no ``.pyi`` is required
-per the CodingRules ``__init__.py`` exemption.
+intentional re-exports.  The companion ``__init__.pyi`` exposes only the
+public surface.
 """
 
 from __future__ import annotations
