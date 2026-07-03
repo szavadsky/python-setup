@@ -32,7 +32,6 @@ The project ships three pylintrc files, each scoped to a different code category
 
 Pylint rcfiles do not support inheritance, so the runner dispatches each file to the appropriate rcfile based on its path. The `--rcfile` flag is set per-file, not per-project.
 
-
 ### Mypy
 
 The shared `config/mypy.ini` is extended by the consumer's `pyproject.toml`:
