@@ -71,6 +71,14 @@ def _run_update_steps(project_dir: Path) -> list[str]:
     else:
         print("  [refresh] python-setup version pins refreshed")
 
+    # Step 3: Re-verify config symlinks exist (recreate missing)
+    from .setup import SetupState, _step_config_symlinks
+
+    update_state = SetupState()
+    _step_config_symlinks(update_state, project_dir)
+    if update_state.errors:
+        errors.extend(update_state.errors)
+
     return errors
 
 
