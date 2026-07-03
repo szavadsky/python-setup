@@ -2,7 +2,7 @@
 """Benchmark: per-tool time/memory + runner overhead measurement.
 
 ``@pytest.mark.slow`` — excluded from ``-m "not slow"`` runs.  Spawns real
-subprocesses for all 11 lint tools (pylint ×3 configurations) on a minimal
+subprocesses for all 13 lint tools (pylint ×3 configurations) on a minimal
 synthetic project.  Writes ``tmp_path/bench-runner-overhead.md`` with the
 per-tool time/memory table and the runner-overhead before/after numbers.
 
@@ -229,7 +229,7 @@ def test_bench_runner_overhead_given_tmp_path_then_within_threshold(tmp_path: Pa
             "`extra_tools.py:348-360`) so that repeated `run_lint` invocations "
             "in the same process reuse the cached parse. Overhead was already "
             "negligible before any memoisation (T11 PoW baseline 0.001s) and "
-            "remains negligible because per-process tool-dispatch is N=11 tool "
+            "remains negligible because per-process tool-dispatch is N=13 tool "
             "spec entries already in memory.",
             "",
             "## Verification Gate",

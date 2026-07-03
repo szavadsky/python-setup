@@ -1,4 +1,4 @@
-# pylint: disable=too-many-lines  # 502 lines — factory data for 11 tools; splitting would lose context
+# pylint: disable=too-many-lines  # 502 lines — factory data for 13 tools; splitting would lose context
 """Extra-tools, dispatch, and small parametrize tables for python-setup runner tests.
 
 Moved from ``_factories.py`` to keep each file under 500 lines (pylint C0302).
