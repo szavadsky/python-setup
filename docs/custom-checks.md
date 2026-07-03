@@ -101,13 +101,4 @@ def test_example_checker() -> None:
 
 ## Semantic pipeline
 
-The `check_if_meaningful` function implements a reranker-first with heuristic fallback pipeline:
-
-1. **Cross-encoder reranker** — when `PYTHON_SETUP_LINT_SEMANTIC` env var is set (default: enabled) and `sentence-transformers` is importable, the justification is re-scored against its context by a pairwise model. Scores >= 0.5 pass.
-2. **Heuristic fallback** — fast, zero-dependency check (non-empty, non-boilerplate, not equal to the rule symbol). Runs when the reranker is unavailable.
-
-**Configuration:**
-
-- `PYTHON_SETUP_LINT_SEMANTIC=0` — disable the reranker entirely (heuristic only).
-- `PYTHON_SETUP_LINT_RERANKER_MODEL` — override the default reranker model (default: `jina-reranker-v2-base-multilingual`).
-keyed by SHA-256 of (text, rule, code_context, comment, model) — changing ``PYTHON_SETUP_LINT_RERANKER_MODEL`` invalidates the cache.
+For a full description of the reranker-first pipeline (cross-encoder reranker, heuristic fallback, configuration, and caching), see [semantic justification](semantic-justification.md).
