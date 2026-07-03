@@ -125,15 +125,6 @@ class SourceRootMixin:
             else [Path("src").resolve()]
         )
 
-    # pylint: disable=missing-beartype  # mixin: _check_function defined in subclass; @beartype cannot resolve forward ref
-    def visit_functiondef(self, node: nodes.FunctionDef) -> None:  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass
-        self._check_function(node)  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass
-
-    def visit_asyncfunctiondef(  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass  # pylint: disable=missing-beartype  # circular import — AsyncFunctionDef not available at runtime
-        self, node: nodes.AsyncFunctionDef
-    ) -> None:
-        self._check_function(node)  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass
-
     def _skip_if_outside_source_roots(self, node: nodes.NodeNG) -> bool:  # pylint: disable=missing-beartype  # mixin: _source_roots resolved at runtime via MRO; @beartype cannot resolve forward ref
         """Check if *node* is outside configured source roots.
 
@@ -144,6 +135,24 @@ class SourceRootMixin:
         return file_path is None or not _is_under_source_root(
             file_path, self._source_roots
         )
+
+
+
+class FunctionVisitMixin(SourceRootMixin):
+    """Mixin for checkers that visit function definitions.
+
+    Adds ``visit_functiondef`` and ``visit_asyncfunctiondef`` dispatching to
+    ``self._check_function(node)``.  Subclass MUST define ``_check_function``.
+    """
+
+    # pylint: disable=missing-beartype  # mixin: _check_function defined in subclass; @beartype cannot resolve forward ref
+    def visit_functiondef(self, node: nodes.FunctionDef) -> None:  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass
+        self._check_function(node)  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass
+
+    def visit_asyncfunctiondef(  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass  # pylint: disable=missing-beartype  # circular import — AsyncFunctionDef not available at runtime
+        self, node: nodes.AsyncFunctionDef
+    ) -> None:
+        self._check_function(node)  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass
 
 
 @beartype

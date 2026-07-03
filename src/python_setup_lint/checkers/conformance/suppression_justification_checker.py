@@ -9,8 +9,8 @@ from pylint.checkers import BaseChecker
 from pylint.typing import MessageDefinitionTuple
 
 from python_setup_lint.checkers._base import (
+    FunctionVisitMixin,
     MessageDef,
-    SourceRootMixin,
     _msgs,
     check_if_meaningful,
 )
@@ -28,7 +28,7 @@ _PAT_TRAILING_REASON = re.compile(r"#\s+(.+)")
 _PAT_PRECEDING_COMMENT = re.compile(r"^\s*#\s+(.+)")
 
 
-class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
+class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
 
     name: str = "suppression-justification"
     msgs: dict[str, MessageDefinitionTuple] = _msgs(
