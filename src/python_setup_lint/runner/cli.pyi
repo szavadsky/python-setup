@@ -3,29 +3,7 @@
 Lint pipeline orchestration (``run_lint``) + CLI entry point (``main``).
 """
 
-from .types import LintResult, RunnerConfig, ToolSpec
-
-def _run_tool_pipeline(
-    selected: list[ToolSpec],
-    *,
-    config: RunnerConfig,
-    fix: bool,
-    path: str | None,
-    exclude: str | None,
-    statistics: bool,
-) -> tuple[int, list[LintResult]]:
-    """Iterate over selected tools, run each via the dispatch strategy, collect results."""
-
-
-def _emit_statistics(
-    results: list[LintResult],
-    *,
-    statistics_format: str,
-    group: str,
-    sort_by_rule: bool,
-) -> None:
-    """Aggregate and print per-rule violation statistics."""
-
+from .types import RunnerConfig
 
 def run_lint(
     *,

@@ -1,9 +1,5 @@
 """Semantic justification checker using sentence-transformers (Track B)."""
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from sentence_transformers import CrossEncoder  # type: ignore[import-not-found]  # optional semantic extra
 def semantic_check_if_meaningful(
     text: str,
     *,
@@ -31,17 +27,3 @@ def semantic_check_if_meaningful(
     """
 
 
-def _reset_cache() -> None:
-    """Reset the in-memory result cache and remove the persisted cache file."""
-
-_RERANKER_UNAVAILABLE: bool
-"""Sentinel: True after first failed model load prevents retry."""
-
-
-def _load_reranker() -> CrossEncoder | None:
-    """Lazy-load the cross-encoder reranker model.
-
-    Returns:
-        The model instance, or ``None`` if the model is unavailable
-        (sentence-transformers not installed or download failed).
-    """
