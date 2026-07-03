@@ -12,9 +12,9 @@ This file is the entry point for all AI agents working on python-setup. Read thi
 | `uv run lint --rebaseline` | Regenerate `lint.baseline` after intentional rule changes |
 | `uv run python-setup install` | Install configs in consumer project |
 | `uv run python-setup update` | Update configs + drift detection |
- 
+
  ## Tool Scope
- 
+
  | Tool | Scope |
  |------|-------|
  | ty check | `src/` only (oracle-reviewed exception, see [design/0002](design/0002-ty-src-only-exception.md)) |
