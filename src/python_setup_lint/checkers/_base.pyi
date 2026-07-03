@@ -30,6 +30,9 @@ def _is_under_source_root(path: Path, source_roots: list[Path]) -> bool:
 def _get_file_path(node: nodes.NodeNG) -> Path | None:
     """Resolve the file path for an AST node's module."""
 
+def _get_except_str(node: nodes.ExceptHandler) -> str:
+    """Get the string representation of the except clause."""
+
 class MessageDef(NamedTuple):
     """Named representation for a pylint checker message definition."""
 
