@@ -4,6 +4,7 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import shutil
 import tempfile
 from typing import TYPE_CHECKING
 
@@ -181,11 +182,11 @@ def _write_baseline_if_modified(
     try:
         parent = baseline_path.parent
         parent.mkdir(parents=True, exist_ok=True)
-        fd, tmp_path = tempfile.mkstemp(dir=parent, prefix=".#", suffix=".json")  # same-FS for atomic os.replace; gitignored prefix avoids worktree clutter
+        tmp_path = tempfile.NamedTemporaryFile(dir=tempfile.gettempdir(), prefix="psl_baseline_", suffix=".json", delete=False).name  # noqa: SIM115  # pylint: disable=consider-using-with  # intentional: need delete=False + manual cleanup in finally
         try:
-            with os.fdopen(fd, "w") as f:
+            with open(tmp_path, "w") as f:
                 json.dump(violations, f, indent=2, sort_keys=True)
-            os.replace(tmp_path, str(baseline_path))
+            shutil.move(tmp_path, str(baseline_path))
         finally:
             with contextlib.suppress(OSError):
                 os.unlink(tmp_path)
