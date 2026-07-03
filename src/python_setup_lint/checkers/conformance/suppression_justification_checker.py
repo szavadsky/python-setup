@@ -157,7 +157,7 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
         m = _PAT_TRAILING_REASON.search(src_line)
         if m:
             reason = m.group(1)
-            if check_if_meaningful(reason, comment=reason):
+            if check_if_meaningful(reason, comment=reason, rule="unjustified-suppression", code_context=src_line.split("#", 1)[0].strip()):
                 return
 
         self.add_message(
@@ -376,7 +376,7 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
                 tm = _PAT_TRAILING_REASON.search(search_after)
                 if tm:
                     reason = tm.group(1)
-                    if check_if_meaningful(reason, comment=reason):
+                    if check_if_meaningful(reason, comment=reason, rule="unjustified-suppression", code_context=line.split("#", 1)[0].strip()):
                         return True
 
         # Preceding line is a comment with a reason.
@@ -385,7 +385,7 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
             pm = _PAT_PRECEDING_COMMENT.match(prev)
             if pm:
                 reason = pm.group(1)
-                if check_if_meaningful(reason, comment=reason):
+                if check_if_meaningful(reason, comment=reason, rule="unjustified-suppression", code_context=lines[idx].split("#", 1)[0].strip()):
                     return True
 
         return False
