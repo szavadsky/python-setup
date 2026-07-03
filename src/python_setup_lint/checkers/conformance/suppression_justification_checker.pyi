@@ -6,9 +6,9 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 from pylint.typing import MessageDefinitionTuple
 
-from python_setup_lint.checkers._base import SourceRootMixin
+from python_setup_lint.checkers._base import FunctionVisitMixin
 
-class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
+class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
     """AST visitor that flags unjustified suppression comments."""
 
     name: str = "suppression-justification"
