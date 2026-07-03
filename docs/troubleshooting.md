@@ -57,11 +57,13 @@ python-setup lint --overwrite-baseline --baseline lint.baseline
 Commit the updated `lint.baseline` alongside your changes. The `--overwrite-baseline` flag replaces the existing baseline file with the current violation set, so only future regressions are flagged.
 
 **When to re-baseline:**
+
 - Adding a new lint tool or rule that fires on existing code
 - Refactoring that legitimately changes violation counts
 - Upgrading a tool version with new checks
 
 **When NOT to re-baseline:**
+
 - You introduced a real regression — fix the code instead
 - The baseline file is missing or corrupted — re-run `uv run lint --rebaseline`
 
@@ -96,6 +98,7 @@ A pylint crash (segfault, signal, unhandled exception) produces a `[CRASH]` mark
 ```
 
 The runner detects crashes via:
+
 - **Negative exit codes** (signals): `exit=-6` = SIGABRT, `exit=-11` = SIGSEGV
 - **`__CRASH__` records**: crash violations are never baseline-absorbable — they always appear in the diff output
 - **Pylint's F0002**: fatal error code emitted by pylint itself for internal failures
@@ -107,6 +110,7 @@ Crash records are formatted as:
 ```
 
 **Triage steps:**
+
 1. Run pylint standalone to isolate: `uv run pylint --rcfile config/.pylintrc src/`
 2. Check for plugin conflicts — disable custom checkers one by one
 3. File an issue with the full crash output and `uv run pylint --version`
@@ -124,12 +128,14 @@ uv run pytest tests/integration.py -v
 ```
 
 **What it covers:**
+
 - All 13 lint tools fire on planted violations
 - Config overlays work
 - Setup is idempotent
 - Pre-commit hooks validate
 
 **When to run it:**
+
 - After adding a new lint tool
 - After modifying the runner or config resolution
 - After changing the installer

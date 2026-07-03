@@ -45,6 +45,7 @@ src/mod.py:1: error: Module has no attribute "x"
 ```
 
 Each tool section shows:
+
 - **Tool name** in a banner line.
 - **Violations** with file, line, code, and message.
 - **PASSED** / **FAILED** status with violation count.
