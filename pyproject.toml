@@ -23,6 +23,7 @@ text = "MIT"
 lint = "python_setup_lint.runner:main"
 install = "python_setup_lint.setup:main"
 python-setup-test-checked = "python_setup_lint.testing:test_checked_main"
+python-setup = "python_setup_lint.setup:main"
 
 [project.optional-dependencies]
 semantic = [
