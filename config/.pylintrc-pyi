@@ -1,5 +1,10 @@
-# [DESIGN] section sourced from config/.pylintrc (single source of truth)
-# [STUB-CHECKER] section sourced from config/.pylintrc (single source of truth)
+# [DESIGN]: values are project-wide constants (max-statements=65, max-branches=16, etc.)
+# intentionally duplicated across all 3 pylintrc files because pylint rcfiles have no
+# inheritance mechanism. Single-source-of-truth is the rationale, not the mechanism.
+# [STUB-CHECKER]: stub-specific config, not a duplication of the main rcfile — values
+# (source-roots, test-patterns, star-import-policy) differ intentionally.
+# [SIMILARITIES] min-similarity-lines differs by target: 25 for .pyi stubs due to
+# structural repetition inherent in stub type declarations (vs 10 for .py/tests).
 [MAIN]
 max-module-lines=500
 ignore-paths=tests/data/,.venv,__pycache__,node_modules,build/,.tmp*,.omp  # agentic orchestration, not product
