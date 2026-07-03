@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 _AGENTS_SENTINEL: str
 _AGENTS_SENTINEL_END: str
 _PRECOMMIT_TEMPLATE: str
+_RUFF_FALLBACK_REV: str
 _AGENTS_SNIPPET: str
 
 def _atomic_write(path: Path, content: str) -> None:
