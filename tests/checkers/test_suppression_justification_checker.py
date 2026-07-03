@@ -12,6 +12,7 @@ from python_setup_lint.checkers.conformance.suppression_justification_checker im
     SuppressionJustificationChecker,
 )
 from python_setup_lint.testing import _walk_and_release
+import pytest
 
 
 def _msg_ids(msgs: list[Any]) -> set[str]:
@@ -379,3 +380,46 @@ class C:
             code, SuppressionJustificationChecker, file_path="src/python_setup_lint/foo.py"
         )
         assert len(msgs) == 0, f"Expected no messages, got {msgs}"
+
+
+@pytest.mark.slow  # requires sentence-transformers download
+class TestSuppressionRerankerPipeline:
+    """Full-pipeline integration test for reranker path.
+
+    Exercises the SuppressionJustificationChecker through the full pipeline
+    (heuristic + reranker) with brush-off and meaningful justifications.
+    Guarded with importorskip so it only runs when sentence-transformers is available.
+    """
+
+    def test_brush_off_rejected(self) -> None:
+        """Brush-off "pre-existing" must be rejected (W9704 emitted)."""
+        pytest.importorskip("sentence_transformers")
+        from python_setup_lint.checkers._semantic import _reset_cache
+
+        _reset_cache()
+
+        code = "x: Any = 1  # type: ignore  # pre-existing\n"
+        msgs = _walk_and_release(
+            code, SuppressionJustificationChecker, file_path="src/mod.py"
+        )
+        assert len(msgs) >= 1, (
+            f"Expected at least 1 W9704 for brush-off, got {len(msgs)}"
+        )
+        assert "unjustified-suppression" in _msg_ids(msgs), (
+            f"Expected unjustified-suppression in {_msg_ids(msgs)}"
+        )
+
+    def test_meaningful_accepted(self) -> None:
+        """Meaningful justification must be accepted (no messages)."""
+        pytest.importorskip("sentence_transformers")
+        from python_setup_lint.checkers._semantic import _reset_cache
+
+        _reset_cache()
+
+        code = "x: Any = 1  # type: ignore  # carried from library httpx for type compatibility\n"
+        msgs = _walk_and_release(
+            code, SuppressionJustificationChecker, file_path="src/mod.py"
+        )
+        assert len(msgs) == 0, (
+            f"Expected 0 messages for meaningful justification, got {len(msgs)}"
+        )
