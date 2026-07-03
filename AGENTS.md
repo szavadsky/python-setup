@@ -7,8 +7,8 @@ This file is the entry point for all AI agents working on python-setup. Read thi
 | Command | What it does |
 |---------|-------------|
  | `uv run lint` | Full 13-tool lint pipeline (baseline diffing, ~80s typical, 120s/tool cap) |
-| `uv run pytest -q` | Unit tests (1263 pass, 4 skip, 13 deselected, ~38s) |
-| `uv run pytest tests/integration.py -v` | Integration tests (6 pass, ~26s) |
+| `uv run pytest -q` | Unit tests (1264 pass, 4 skip, 15 deselected, ~44s) |
+| `uv run pytest tests/integration.py -v` | Integration tests (6 pass, ~32s) |
 | `uv run lint --rebaseline` | Regenerate `lint.baseline` after intentional rule changes |
 | `uv run python-setup install` | Install configs in consumer project |
 | `uv run python-setup update` | Update configs + drift detection |
@@ -61,10 +61,10 @@ runner composes final config at runtime
 ### Semantic justification pipeline
 
 ```
-suppressed violation → _semantic.py → LLM reranker → justification stored → validated on re-lint
+suppressed violation → _semantic.py → LLM reranker → score cached → reused on re-lint
 ```
 
-The semantic checker (`W9704`) detects `Any` in function signatures and uses an optional LLM reranker to validate justifications against the suppressed code context. The reranker is lazy-loaded and configurable via `PYTHON_SETUP_LINT_RERANKER_MODEL`.
+The semantic checker (`W9704`) detects `Any` in function signatures, unjustified suppressions (`# type: ignore`, `# noqa`, `# pylint: disable`), standalone `Any` assignments, and `Any` in returns. Uses an optional LLM reranker to validate cached scores against the suppressed code context. The reranker is lazy-loaded and configurable via `PYTHON_SETUP_LINT_RERANKER_MODEL`.
 
 ## Testing Strategy
 
