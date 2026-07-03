@@ -117,12 +117,17 @@ def _compare_violation_lists(
     return added, removed
 
 
-def _capture_one(r: LintResult) -> list[dict]:
+def _capture_one(r: LintResult, *, cwd: Path | None = None) -> list[dict]:
     """Capture violations from one LintResult as flat records.
 
     Negative exit codes (signals) produce a __CRASH__ record that is
     never baseline-absorbable. Positive exit codes with a record parser
     produce parsed violations.
+
+    Args:
+        r: The lint result to capture.
+        cwd: If provided, absolute ``file`` paths are relativized against
+            this directory.
 
     Returns:
         A list of violation dicts with keys (tool, file, line, col, rule, msg).
@@ -143,7 +148,7 @@ def _capture_one(r: LintResult) -> list[dict]:
     if parser is not None:
         violations.extend({
             "tool": r.tool_name,
-            "file": rec.file,
+            "file": _relativize_file(rec.file, cwd),
             "line": rec.line,
             "col": rec.col,
             "rule": rec.rule,
@@ -152,8 +157,34 @@ def _capture_one(r: LintResult) -> list[dict]:
     return violations
 
 
-def _capture_baseline(results: list[LintResult]) -> list[dict[str, object]]:
+def _relativize_file(path: str | None, cwd: Path | None) -> str | None:
+    """Relativize *path* against *cwd* if it is absolute.
+
+    Args:
+        path: The file path to relativize (may be ``None``).
+        cwd: The working directory to relativize against.
+
+    Returns:
+        The relativized path as a string, or the original *path* if it
+        is already relative, ``None``, or lies outside *cwd*.
+    """
+    if cwd is not None and path is not None:
+        p = Path(path)
+        if p.is_absolute():
+            try:
+                return str(p.relative_to(cwd))
+            except ValueError:
+                return path
+    return path
+
+
+def _capture_baseline(results: list[LintResult], *, cwd: Path | None = None) -> list[dict[str, object]]:
     """All violations as a flat list sorted by (tool, file, line, col, rule).
+
+    Args:
+        results: List of lint results to capture.
+        cwd: If provided, absolute ``file`` paths are relativized against
+            this directory.
 
     Returns:
         A list of dicts with keys (tool, file, line, col, rule, msg).
@@ -161,7 +192,7 @@ def _capture_baseline(results: list[LintResult]) -> list[dict[str, object]]:
 
     all_violations: list[dict] = []
     for r in results:
-        all_violations.extend(_capture_one(r))
+        all_violations.extend(_capture_one(r, cwd=cwd))
     all_violations.sort(key=_violation_sort_key)
     return all_violations
 
@@ -198,8 +229,16 @@ def _write_baseline_if_modified(
 def _diff_baseline(  # pylint: disable=too-many-locals  # _diff_baseline needs several locals for the two-pointer diff, crash/add/remove separation; 20 would be cramped
     current: list[LintResult],
     baseline_path: Path,
+    *,
+    cwd: Path | None = None,
 ) -> list[str]:
     """Compare current results against on-disk baseline of flat violation records.
+
+    Args:
+        current: Current lint results.
+        baseline_path: Path to the on-disk baseline file.
+        cwd: If provided, absolute ``file`` paths in *current* are relativized
+            against this directory before comparison.
 
     Returns:
         A list of violation strings. Empty when current output fully
@@ -217,7 +256,7 @@ def _diff_baseline(  # pylint: disable=too-many-locals  # _diff_baseline needs s
     except (json.JSONDecodeError, OSError) as exc:  # pylint: disable=W9740  # best-effort baseline read fallback; logging would noise unavoidable parse/IO degrade
         return [f"Cannot read baseline: {exc}"]
 
-    current_violations = _capture_baseline(current)
+    current_violations = _capture_baseline(current, cwd=cwd)
 
     # Separate crash records — never baseline-absorbable.
     crash_records = [v for v in current_violations if v.get("rule") == "__CRASH__"]
