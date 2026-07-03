@@ -26,7 +26,7 @@ A reusable Python project template that ships:
 ```bash
 uv add python-setup
 uv run python-setup install
-uv sync --extra semantic  # optional: enables sentence-transformer-powered justification scoring
+uv add "python-setup[semantic]"  # optional: enables sentence-transformer-powered justification scoring
 ```
 
 See [Using python-setup in another project](#using-python-setup-in-another-project) for details.

@@ -52,7 +52,7 @@ Use `MessageDef` (a `NamedTuple` with `message`, `symbol`, `description` fields)
 
 Custom checkers use `W` (warning) codes in the range `W90xx`–`W97xx`. Actual codes: W9001 (no-try-import), W9701 (missing-beartype), W9702 (tempfile-mkdtemp-in-test), W9703 (asyncio-timeout), W9704 (unjustified-suppression), W9707 (pyi-underscore), W9710/W9711 (structlog), W9720 (unnamed-tuple-dict), W9721 (generic-key-dict), W9728 (trivial-wrapper), W9729 (redundant-type-guard), W9738 (bare-except-comment), W9739 (missing-error-chain), W9740 (silent-except), W9741 (missing-return-annotation), plus stub-checker symbols.
 
-W9704 (unjustified-suppression) checks `Any` in standalone annotated assignments (source-root files only, excluding tests) AND function parameter/return annotations (source-root files only, excluding tests). Each Any-bearing line must carry a trailing `# <reason>` — def-line comments do not propagate to individual param lines.
+W9704 (unjustified-suppression) checks `Any` in standalone annotated assignments AND function parameter/return annotations (source-root files only, excluding tests). Each Any-bearing line must carry a trailing `# <reason>` — def-line comments do not propagate to individual param lines.
 
 ### LintRuleId
 
