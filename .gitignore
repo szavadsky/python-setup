@@ -243,4 +243,3 @@ ty.toml
 .tmpoutput
 integration/
 _test_output.txt
-/.#*.json
