@@ -237,3 +237,35 @@ def _duplicate_b():
     j = i * 2
     k = j // d
     return k
+
+
+# ── 22. missing_error_chain_checker ────────────────────────────────────
+# Raise without `from err` inside an except block.
+
+
+def _chain_errors_improperly() -> None:
+    try:
+        _ = 1 / 0
+    except ValueError:
+        raise RuntimeError("wrap")  # should trigger missing-error-chain
+
+
+# ── 23. redundant_type_guard_checker ───────────────────────────────────
+# isinstance on already-typed param (not isinstance(x, T) → raise).
+
+
+def _with_redundant_type_guard(x: int) -> int:
+    if not isinstance(x, int):
+        raise TypeError("expected int")
+    return x
+
+
+# ── 24. bare_except_comment_checker ────────────────────────────────────
+# except Exception without justifying comment.
+
+
+def _suppress_exception() -> None:
+    try:
+        _ = 1 / 0
+    except Exception:
+        pass  # should trigger bare-except-comment

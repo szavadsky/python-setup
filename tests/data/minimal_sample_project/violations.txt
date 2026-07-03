@@ -1,16 +1,72 @@
 # Rule symbols that fire on this sample (conformance checkers; stub checkers exempt tests/ paths — see unit tests).
+# Sorted by checker category.
+
+# ── unnamed-tuple-dict-checker ──
 unnamed-tuple-dict-value
+
+# ── generic-key-dict-checker ──
 generic-key-dict
+
+# ── suppression-justification-checker ──
 unjustified-suppression
+
+# ── beartype-checker ──
 missing-beartype
+
+# ── no-try-import-checker ──
 no-try-import
+
+# ── asyncio-timeout-checker ──
 asyncio-timeout
+
+# ── tmp-path-checker ──
 tempfile-mkdtemp-in-test
+
+# ── structlog-checker ──
 use-structlog
 use-structured-logging
-# Rumdl (markdown linting) — planted markdown violations
+
+# ── silent-except-checker ──
+silent-except
+
+# ── trivial-wrapper-checker ──
+trivial-wrapper
+
+# ── missing-return-annotation-checker ──
+missing-return-annotation
+
+# ── missing-error-chain-checker ──
+missing-error-chain
+
+# ── redundant-type-guard-checker ──
+redundant-type-guard
+
+# ── bare-except-comment-checker ──
+bare-except-comment
+
+# ── pyi-underscore-checker ──
+pyi-underscore-symbol
+
+# ── docstring-checker ──
+docstring-in-impl
+generic-return-requires-returns
+
+# ── stub-checker (pyi files in sample project) ──
+annotation-mismatch
+annotation-unverifiable
+impl-missing-annotation
+missing-import-declaration
+missing-module-stub
+missing-module-stub-for-import
+signature-mismatch
+star-import-unresolvable
+symbol-kind-mismatch
+
+# ── Rumdl (markdown linting) — planted markdown violations ──
 MD022
 MD009
 MD012
 MD071
+
+# ── Pylint duplicate-code (R0801) ──
 duplicate-code
