@@ -20,5 +20,3 @@ def _compare_records_key(rec: Record) -> tuple[tuple[str, ...], tuple[int, ...],
     return (file_k, line_k, col_k, rec.rule)
 
 
-def _records_unchanged(a: list[Record], b: list[Record]) -> bool:
-    return len(a) == len(b) and all(x == y for x, y in zip(a, b, strict=True))

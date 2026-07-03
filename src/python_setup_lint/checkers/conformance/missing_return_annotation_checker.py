@@ -8,8 +8,6 @@ from pylint.checkers import BaseChecker
 from python_setup_lint.checkers._base import (
     MessageDef,
     SourceRootMixin,
-    _get_file_path,
-    _is_under_source_root,
     _msgs,
 )
 
@@ -31,10 +29,7 @@ class MissingReturnAnnotationChecker(SourceRootMixin, BaseChecker):  # type: ign
 
     def _check_function(self, node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> None:
         # Skip modules outside source roots
-        file_path = _get_file_path(node)
-        if file_path is None or not _is_under_source_root(
-            file_path, self._source_roots
-        ):
+        if self._skip_if_outside_source_roots(node):
             return
 
         # Skip public functions (no _ prefix) — beartype checker covers those
