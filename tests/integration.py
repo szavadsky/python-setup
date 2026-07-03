@@ -12,6 +12,7 @@ the binary is unavailable.
 from __future__ import annotations
 
 import logging
+import json
 import re
 import shutil
 import subprocess
@@ -417,3 +418,35 @@ class TestMinimalSampleProject:
         assert "ruff-format" in result.stdout or "ruff" in result.stdout, (
             f"Expected ruff hooks in dry-run output:\n{result.stdout}"
         )
+
+    def test_baseline_relative_paths(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        isolated_runner_registries: None,
+    ) -> None:
+        """Create a baseline and verify all ``file`` values are relative paths.
+
+        Asserts:
+        - Every ``file`` value in the baseline JSON is either ``None`` or a
+          relative path (does not start with ``/``).
+        """
+        project = _copy_sample(tmp_path)
+        _init_git(project)
+
+        config = _make_config(project)
+        baseline_file = tmp_path / "lint.baseline"
+        rc = run_lint(config=config, path=".", baseline=str(baseline_file), overwrite_baseline=True)
+        assert isinstance(rc, int)
+
+        assert baseline_file.exists(), "Baseline file was not created"
+        data = json.loads(baseline_file.read_text())
+        assert isinstance(data, list), f"Expected list, got {type(data)}"
+
+        for entry in data:
+            file_val = entry.get("file")
+            if file_val is not None:
+                assert not str(file_val).startswith("/"), (
+                    f"Expected relative path, got absolute: {file_val!r}\n"
+                    f"Full entry: {entry}"
+                )

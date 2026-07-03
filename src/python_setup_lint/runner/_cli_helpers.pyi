@@ -4,6 +4,7 @@ CLI helper functions for the lint pipeline.
 """
 
 from .types import LintResult, ToolSpec
+from pathlib import Path
 
 def _print_tool_notes(spec: ToolSpec, *, fix: bool, path: str | None, exclude: str | None) -> None: ...
 def _handle_baseline(
@@ -12,4 +13,5 @@ def _handle_baseline(
     *,
     overwrite_baseline: bool,
     overall_rc: int,
+    cwd: Path | None = None,
 ) -> int: ...

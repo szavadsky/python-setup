@@ -26,19 +26,30 @@ def _compare_sorted(
     """
 
 
-def _capture_baseline(results: list[LintResult]) -> list[dict[str, object]]:
-    """All violations as a flat list sorted by (tool, file, line, col).
+def _capture_baseline(results: list[LintResult], *, cwd: Path | None = None) -> list[dict[str, object]]:
+    """All violations as a flat list sorted by (tool, file, line, col, rule).
+
+    Args:
+        results: List of lint results to capture.
+        cwd: If provided, absolute ``file`` paths are relativized against
+            this directory.
 
     Returns:
         A list of dicts with keys (tool, file, line, col, rule, msg).
     """
 
 
-def _diff_baseline(current: list[LintResult], baseline_path: Path) -> list[str]:
+def _diff_baseline(current: list[LintResult], baseline_path: Path, *, cwd: Path | None = None) -> list[str]:
     """Compare current results against on-disk baseline of flat violation records.
 
     Crash records (``rule == "__CRASH__"``) are always flagged and never
     baseline-absorbable.
+
+    Args:
+        current: Current lint results.
+        baseline_path: Path to the on-disk baseline file.
+        cwd: If provided, absolute ``file`` paths in *current* are relativized
+            against this directory before comparison.
 
     Returns:
         A list of violation strings. Empty when current output fully

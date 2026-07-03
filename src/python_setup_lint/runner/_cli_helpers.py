@@ -33,13 +33,14 @@ def _handle_baseline(
     *,
     overwrite_baseline: bool,
     overall_rc: int,
+    cwd: Path | None = None,
 ) -> int:
 
     from .baseline import _capture_baseline, _diff_baseline, _write_baseline_if_modified
 
     base_path = Path(baseline)
     if base_path.exists() and not overwrite_baseline:
-        new_issues = _diff_baseline(results, base_path)
+        new_issues = _diff_baseline(results, base_path, cwd=cwd)
         if new_issues:
             print(f"\n{'=' * 60}")
             print("[baseline] New violations detected:")
@@ -55,7 +56,7 @@ def _handle_baseline(
         action = "Overwriting" if base_path.exists() else "Creating"
         print(f"\n{'=' * 60}")
         print(f"[baseline] {action} baseline \u2192 {baseline}")
-        base_data = _capture_baseline(results)
+        base_data = _capture_baseline(results, cwd=cwd)
         err = _write_baseline_if_modified(base_data, base_path, baseline_modified=True)
         if err:
             print(f"[baseline] {'; '.join(err)}")

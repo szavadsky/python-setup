@@ -196,6 +196,7 @@ def run_lint(
             baseline,
             overwrite_baseline=overwrite_baseline,
             overall_rc=overall_rc,
+            cwd=config.cwd,
         )
 
     return overall_rc
