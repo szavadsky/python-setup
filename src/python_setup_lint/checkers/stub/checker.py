@@ -386,7 +386,7 @@ class StubChecker(BaseChecker):
                         impl_ann[t.name] = (None, child)  # type: ignore[assignment]  # dict value type is wider at runtime  # ty:ignore[invalid-assignment]
                         impl_names.add(t.name)
 
-        f.impl_annotations[module_name] = impl_ann  # type: ignore[assignment]  # dict value type is wider at runtime  # ty:ignore[invalid-assignment]
+        f.impl_annotations[module_name] = impl_ann  # type: ignore[assignment]  # dict value type is wider at runtime
         f.impl_callable_nodes[module_name] = impl_callables
         f.impl_class_nodes[module_name] = impl_classes
         f.impl_all_names[module_name] = impl_names
