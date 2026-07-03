@@ -9,6 +9,7 @@ from pylint.checkers import BaseChecker
 
 from python_setup_lint.checkers._base import (
     MessageDef,
+    _get_except_str,
     _msgs,
     check_if_meaningful,
 )
@@ -43,8 +44,7 @@ class BareExceptCommentChecker(BaseChecker):
         if self._has_justifying_comment(node):
             return
 
-        # Emit warning
-        except_str = self._get_except_str(node)
+        except_str = _get_except_str(node)
         self.add_message(
             "bare-except-comment",
             node=node,
@@ -111,15 +111,6 @@ class BareExceptCommentChecker(BaseChecker):
                     return True
 
         return False
-
-    @staticmethod
-    def _get_except_str(node: nodes.ExceptHandler) -> str:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
-        """Get the string representation of the except clause."""
-        if node.type is None:
-            return ":"
-        if isinstance(node.type, nodes.Name):
-            return f" {node.type.name}:"
-        return ":"
 
 
 def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API; @beartype cannot resolve PyLinter forward ref
