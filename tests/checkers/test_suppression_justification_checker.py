@@ -8,11 +8,12 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from python_setup_lint.checkers.conformance.suppression_justification_checker import (
     SuppressionJustificationChecker,
 )
 from python_setup_lint.testing import _walk_and_release
-import pytest
 
 
 def _msg_ids(msgs: list[Any]) -> set[str]:
