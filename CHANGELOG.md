@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.0 (2026-07-03)
+
+- Baseline: relativize file paths in lint.baseline for cross-machine portability
+- Installer: create root-level config symlinks for single-source-of-truth tool config
+- Runner: fix pylint-pyi/tests config resolution to check root symlinks first
+- Installer: dynamically resolve ruff version for pre-commit template
+
 ## v0.17.0 (2026-07-02)
 
 - Fixed crash on non-existent baseline file (WS-1).
