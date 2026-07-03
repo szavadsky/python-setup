@@ -23,8 +23,8 @@ Running a tool directly (`uv run pylint src/`) may produce different results tha
 
    ```bash
    ls -la .pylintrc .yamllint
-   # Expected: .pylintrc -> config/.pylintrc
-   #           .yamllint -> config/.yamllint
+   # Expected: .pylintrc -> /home/.../python-setup/config/.pylintrc
+   #           .yamllint -> /home/.../python-setup/config/.yamllint
    ```
 
    Missing symlinks? Re-run the installer:
