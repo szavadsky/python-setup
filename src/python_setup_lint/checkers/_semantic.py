@@ -190,13 +190,18 @@ def semantic_check_if_meaningful(
         return None  # signal fallback to heuristic
 
     # Build a query string from the available context.
-    query_parts = [primary]
-    if rule:
-        query_parts.append(f"rule: {rule}")
-    if code_context:
-        query_parts.append(f"context: {code_context[:200]}")  # truncate to avoid OOM
-
-    query = " | ".join(query_parts)
+    # When rule or code_context is present, the query describes the suppressed code
+    # so the pair (primary, query) measures justification-vs-code relevance.
+    # When both are absent, fall back to self-pair (primary, primary).
+    if rule or code_context:
+        query_parts = []
+        if rule:
+            query_parts.append(f"rule: {rule}")
+        if code_context:
+            query_parts.append(f"context: {code_context[:200]}")  # truncate to avoid OOM
+        query = " | ".join(query_parts)
+    else:
+        query = primary
 
     try:
         pairs = [(primary, query)]
