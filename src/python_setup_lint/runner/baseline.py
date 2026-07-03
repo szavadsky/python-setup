@@ -1,11 +1,12 @@
 # Violations-only baseline: flat records sorted by (tool, file, line, col).
 from __future__ import annotations
 
-import contextlib
 import json
 import os
+from pathlib import Path
 import shutil
 import tempfile
+import contextlib
 from typing import TYPE_CHECKING
 
 import beartype
