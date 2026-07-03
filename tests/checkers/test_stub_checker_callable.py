@@ -182,7 +182,7 @@ def test_compare_callable_descriptors(
     if expected_failure is None:
         assert result is None
     else:
-        assert expected_failure in result, (  # type: ignore[operator]  # result is Any from test fixture; in-check works at runtime
+        assert expected_failure in result, (  # result is Any from test fixture; in-check works at runtime
             f"result={result!r} (expected substring {expected_failure!r})"
         )
 

@@ -335,7 +335,7 @@ class TestComparePureHelpersDirect:
 
     def test_compare_callable_descriptors_given_count_mismatch_then_diffs(self) -> None:
         a = [ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, None)]
-        assert "param_count" in _compare_callable_descriptors(a, [])  # type: ignore[operator]  # result is Any from test fixture; in-check works at runtime
+        assert "param_count" in _compare_callable_descriptors(a, [])  # result is Any from test fixture; in-check works at runtime
 
     def test_compare_callable_annotations_given_matching_then_empty(self) -> None:
         a = [
