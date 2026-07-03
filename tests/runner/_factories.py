@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 InstallFakeFn = Callable[..., Any]
 
 
-# The 11 built-in tool names — used both for the canned-results factory
+# The 13 built-in tool names — used both for the canned-results factory
 # (dict-mode ``FakeRunCmd``) and for the "every tool dispatched" assertion
 # in the orchestration tests.
 ALL_TOOL_NAMES: frozenset[str] = frozenset(t.name for t in TOOLS)

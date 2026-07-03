@@ -231,7 +231,7 @@ class TestExtraToolsMerge:
         _register_extra_tools([_X1, _X2])
         names = {t.name for t in LINT_TOOLS}
         assert {"x1", "x2"} <= names
-        assert set(TOOLS_BY_NAME) <= names  # all 11 built-ins remain post-merge
+        assert set(TOOLS_BY_NAME) <= names  # all 13 built-ins remain post-merge
 
     def test_extra_tools_merge_given_builtin_name_collision_then_rejects(self) -> None:
         collision = _ExtraToolRegistration(
