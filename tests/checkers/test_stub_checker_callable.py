@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, cast
 import astroid
 import pytest
 
-from python_setup_lint.checkers.stub.fidelity import (
+from python_setup_lint.checkers.stub.fidelity import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works
     CallableComparisonCtx,
     ParamDescriptor,
     _compare_callable_annotations,

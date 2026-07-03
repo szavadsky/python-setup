@@ -13,7 +13,9 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from python_setup_lint.checkers.stub.coverage import _CoverageState
-from python_setup_lint.checkers.stub.fidelity import _FidelityState
+from python_setup_lint.checkers.stub.fidelity import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+    _FidelityState,
+)
 
 class StubChecker(BaseChecker):
     """Enforce Invariant 1 (coverage), 2 (import contract), 3 (fidelity)."""

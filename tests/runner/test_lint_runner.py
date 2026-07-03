@@ -129,7 +129,9 @@ class TestStrategyBuildCommand:
     """Strategy-driven ``build_command`` cases — exercises LintTool subclasses."""
 
     def test_pylint_strategy_expands_py_files(self) -> None:
-        from python_setup_lint.runner.dispatch import _PylintLintTool
+        from python_setup_lint.runner.dispatch import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+            _PylintLintTool,
+        )
 
         cmd = _PylintLintTool(
             ToolSpec("pylint", ["pylint"], supports_path=True)
@@ -190,7 +192,9 @@ class TestStrategyBuildCommand:
 
     def test_strategy_build_command_given_pylint_then_injects_rcfile(self) -> None:
         """build_command includes --rcfile when auto-discovered."""
-        from python_setup_lint.runner.dispatch import _PylintLintTool
+        from python_setup_lint.runner.dispatch import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+            _PylintLintTool,
+        )
 
         cmd = _PylintLintTool(
             ToolSpec("pylint", ["pylint"], supports_path=True)
@@ -299,7 +303,9 @@ class TestDetectSecretsBootstrap:
 
     def test_detect_secrets_bootstrap_given_baseline_missing_then_bootstraps(self, tmp_path: Path) -> None:
         """When ``.secrets.baseline`` does not exist, build_command returns a bootstrap scan command."""
-        from python_setup_lint.runner.dispatch import _DetectSecretsLintTool
+        from python_setup_lint.runner.dispatch import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+            _DetectSecretsLintTool,
+        )
 
         config = RunnerConfig(cwd=tmp_path)
         cmd = _DetectSecretsLintTool(
@@ -311,7 +317,9 @@ class TestDetectSecretsBootstrap:
 
     def test_detect_secrets_bootstrap_given_baseline_exists_then_standard_pipeline(self, tmp_path: Path) -> None:
         """When ``.secrets.baseline`` exists, build_command returns the standard git-ls-files pipeline."""
-        from python_setup_lint.runner.dispatch import _DetectSecretsLintTool
+        from python_setup_lint.runner.dispatch import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+            _DetectSecretsLintTool,
+        )
 
         (tmp_path / ".secrets.baseline").write_text("{}")
         config = RunnerConfig(cwd=tmp_path)
@@ -325,7 +333,9 @@ class TestDetectSecretsBootstrap:
 
     def test_detect_secrets_bootstrap_given_custom_baseline_path_then_uses_custom(self, tmp_path: Path) -> None:
         """Custom ``secrets_baseline`` path is respected in bootstrap command."""
-        from python_setup_lint.runner.dispatch import _DetectSecretsLintTool
+        from python_setup_lint.runner.dispatch import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+            _DetectSecretsLintTool,
+        )
 
         config = RunnerConfig(cwd=tmp_path, secrets_baseline="config/secrets.baseline")
         cmd = _DetectSecretsLintTool(

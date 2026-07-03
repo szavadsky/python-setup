@@ -39,7 +39,7 @@ public surface.
 
 from __future__ import annotations
 
-from ._ast_helpers import (
+from ._ast_helpers import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
     CallableComparisonCtx,
     ClassComparisonCtx,
     ParamDescriptor,

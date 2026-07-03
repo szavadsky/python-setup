@@ -34,7 +34,7 @@ def _restore_structlog_wrapper() -> None:  # type: ignore[misc]  # fixture uses 
 from python_setup_lint.checkers.stub.checker import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
     StubChecker,
 )
-from python_setup_lint.checkers.stub.fidelity import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
+from python_setup_lint.checkers.stub.fidelity import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works; pylint: disable=wrong-import-position  # conditional import after module-level check
     _is_classvar,
 )
 from python_setup_lint.checkers.stub.import_contract import (  # pylint: disable=wrong-import-position  # conditional import after module-level check

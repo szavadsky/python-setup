@@ -10,7 +10,9 @@ from pathlib import Path  # TYPE_CHECKING-only import; not available at runtime
 import beartype
 
 from .cmd_build import _expand_globs, _find_py_files
-from .dispatch import _strategy_for
+from .dispatch import (
+    _strategy_for,  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+)
 from .types import LintResult, RunnerConfig, ToolSpec  # TYPE_CHECKING-only import; not available at runtime
 
 _AUTOFIX_ENV_VAR: str = "PYTHON_SETUP_LINT_NO_AUTOFIX"
