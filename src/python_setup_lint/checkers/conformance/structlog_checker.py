@@ -134,7 +134,7 @@ class StructlogChecker(BaseChecker):
                     node=node,
                     args=(func.attrname,),
                 )
-            return None
+            return
 
     @staticmethod
     def _has_format_spec(s: str) -> bool:
