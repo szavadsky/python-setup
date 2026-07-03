@@ -65,7 +65,7 @@ def _is_under_source_root(path: Path, source_roots: list[Path]) -> bool:
     return False
 
 
-def _get_file_path(node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> Path | None:
+def _get_file_path(node: nodes.NodeNG) -> Path | None:
     try:
         file_val = node.root().file
         if file_val is None:
