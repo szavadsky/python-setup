@@ -311,11 +311,16 @@ class _PylintPyiLintTool(LintTool):
         spec = self.spec
         cmd = list(spec.command)
 
-        # Use .pylintrc-pyi
-        rcfile = config.cwd / "config" / ".pylintrc-pyi"
+        # Use .pylintrc-pyi — check root-level symlink first, then config/
+        # subdir, then installed-package fallback.
+        rcfile = config.cwd / ".pylintrc-pyi"
         if not rcfile.exists():
+            rcfile = config.cwd / "config" / ".pylintrc-pyi"
+        if not rcfile.exists():
+            import python_setup_lint
+
             rcfile = (
-                Path(__file__).parent.parent.parent.parent / "config" / ".pylintrc-pyi"
+                Path(python_setup_lint.__file__).parent / "config" / ".pylintrc-pyi"
             )
         cmd.extend(["--rcfile", str(rcfile)])
 
@@ -344,11 +349,16 @@ class _PylintTestsLintTool(LintTool):
         spec = self.spec
         cmd = list(spec.command)
 
-        # Use .pylintrc-tests
-        rcfile = config.cwd / "config" / ".pylintrc-tests"
+        # Use .pylintrc-tests — check root-level symlink first, then config/
+        # subdir, then installed-package fallback.
+        rcfile = config.cwd / ".pylintrc-tests"
         if not rcfile.exists():
+            rcfile = config.cwd / "config" / ".pylintrc-tests"
+        if not rcfile.exists():
+            import python_setup_lint
+
             rcfile = (
-                Path(__file__).parent.parent.parent.parent / "config" / ".pylintrc-tests"
+                Path(python_setup_lint.__file__).parent / "config" / ".pylintrc-tests"
             )
         cmd.extend(["--rcfile", str(rcfile)])
 
