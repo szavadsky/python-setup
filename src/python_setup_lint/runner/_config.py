@@ -15,6 +15,7 @@ _SHIPPED_CONFIG_FILES: dict[str, str] = {
     "rumdl check": "rumdl.toml",
     "ty check": "ty.toml",
     "yamllint": ".yamllint",
+    "tach check": "tach.toml",
 }
 
 

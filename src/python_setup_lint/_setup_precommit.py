@@ -1,7 +1,9 @@
-
 from __future__ import annotations
 
+import contextlib
 import os
+import shutil
+import tempfile
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -63,13 +65,18 @@ uv run pre-commit install
 
 
 def _atomic_write(path: Path, content: str) -> None:
-    tmp = path.with_suffix(path.suffix + ".tmp")
+    parent = path.parent
+    parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = tempfile.NamedTemporaryFile(
+        dir=tempfile.gettempdir(), prefix="psl_setup_", suffix=path.suffix, delete=False
+    ).name  # noqa: SIM115  # pylint: disable=consider-using-with  # intentional: need delete=False + manual cleanup in finally
     try:
-        tmp.write_text(content, encoding="utf-8")
-        os.replace(tmp, path)
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        shutil.move(tmp_path, str(path))
     finally:
-        if tmp.exists():
-            tmp.unlink(missing_ok=True)
+        with contextlib.suppress(OSError):
+            os.unlink(tmp_path)
 
 
 # ── Install steps ────────────────────────────────────────────────────
