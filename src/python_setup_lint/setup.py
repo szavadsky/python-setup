@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import pkgutil
 import shutil
 import subprocess
@@ -44,6 +45,7 @@ _BUNDLED_CONFIGS: tuple[str, ...] = (
     ".yamllint",
     "tach.toml",
 )
+_SKIP_SYMLINK_IF_EXISTS: frozenset[str] = frozenset({"tach.toml"})
 
 # ── Data structures ─────────────────────────────────────────────────
 
@@ -60,6 +62,8 @@ class SetupState:
     coding_rules_copied: bool = False
     coding_rules_skipped: bool = False
     agents_appended: bool = False
+    config_symlinks_created: int = 0
+    config_symlinks_skipped: int = 0
     agents_skipped: bool = False
     errors: list[str] = field(default_factory=list)
 
@@ -297,6 +301,61 @@ def _step_coding_rules(state: SetupState, project_dir: Path, /) -> None:
     print("  [coding-rules] Copied CodingRules.md")
 
 
+def _step_config_symlinks(state: SetupState, project_dir: Path, /) -> None:
+    pkg_dir = _get_package_dir()
+    config_dir = pkg_dir / "config"
+    created = 0
+    skipped = 0
+
+    for fname in _BUNDLED_CONFIGS:
+        target = project_dir / fname
+        source = config_dir / fname
+
+        # Skip creation if target already exists and is a symlink/file with matching content
+        if target.exists():
+            if fname in _SKIP_SYMLINK_IF_EXISTS:
+                skipped += 1
+                continue
+            if target.is_symlink():
+                try:
+                    existing_target = os.readlink(target)
+                    if os.path.isabs(existing_target):
+                        if Path(existing_target).resolve() == source.resolve():
+                            skipped += 1
+                            continue
+                    elif (project_dir / existing_target).resolve() == source.resolve():
+                        skipped += 1
+                        continue
+                except OSError:
+                    pass
+            # File exists but not a matching symlink — compare content
+            try:
+                if target.read_bytes() == source.read_bytes():
+                    skipped += 1
+                    continue
+            except OSError:
+                pass
+
+        # Create parent dirs if needed
+        target.parent.mkdir(parents=True, exist_ok=True)
+
+        # Remove existing file/dangling symlink so we can create a fresh one
+        if target.exists() or target.is_symlink():
+            target.unlink()
+
+        try:
+            os.symlink(str(source.resolve()), str(target))
+        except OSError:
+            # Fall back to copy2 on Windows or other symlink-hostile environments
+            shutil.copy2(str(source), str(target))
+
+        created += 1
+
+    state.config_symlinks_created = created
+    state.config_symlinks_skipped = skipped
+    print(f"  [config-symlinks] Created {created} symlinks, skipped {skipped}")
+
+
 def _save_state(project_dir: Path, /) -> None:
     pkg_dir = _get_package_dir()
     config_dir = pkg_dir / "config"
@@ -324,6 +383,8 @@ def _format_install_summary(state: SetupState, /) -> list[str]:
         ("coding_rules_skipped", "CodingRules.md already exists"),
         ("agents_appended", "appended AGENTS.md snippet"),
         ("agents_skipped", "AGENTS.md snippet skipped"),
+        ("config_symlinks_created", "created config symlinks"),
+        ("config_symlinks_skipped", "config symlinks already exist"),
     )
     for attr, msg in _summary_items:
         if getattr(state, attr):
@@ -350,6 +411,7 @@ def install(  # pylint: disable=docstring-in-impl  # usage docs in .pyi
 
     _step_add_dep(state, project_dir, dev_path=dev_path)
     _step_pylint_plugins(state, project_dir)
+    _step_config_symlinks(state, project_dir)
     _step_precommit(state, project_dir)  # type: ignore[arg-type]  # .pyi stub SetupState vs .py SetupState  # ty:ignore[invalid-argument-type]
     _step_coding_rules(state, project_dir)
     _step_agents_snippet(state, project_dir)  # type: ignore[arg-type]  # .pyi stub SetupState vs .py SetupState  # ty:ignore[invalid-argument-type]
