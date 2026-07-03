@@ -25,7 +25,9 @@ from ._cli_complexity import (
     _select_tools,
 )
 from ._cli_helpers import _handle_baseline, _print_tool_notes
-from .dispatch import _strategy_for
+from .dispatch import (
+    _strategy_for,  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+)
 from .extra_tools import (
     _EXTRA_TOOLS_REGISTERED_PATHS,
     _load_extra_tools,

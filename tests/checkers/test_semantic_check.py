@@ -50,7 +50,9 @@ class TestDefaultUserFallback:
 
     def test_fallback_to_heuristic_when_reranker_unavailable(self) -> None:
         """When sentence_transformers absent, check_if_meaningful falls through to heuristic."""
-        from python_setup_lint.checkers._semantic import _reset_cache
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+            _reset_cache,
+        )
 
         _reset_cache()
         with patch(
@@ -62,7 +64,9 @@ class TestDefaultUserFallback:
 
     def test_fallback_rejects_brushoff_when_reranker_unavailable(self) -> None:
         """The heuristic fallback must still reject brush-off justifications."""
-        from python_setup_lint.checkers._semantic import _reset_cache
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+            _reset_cache,
+        )
 
         _reset_cache()
         with patch(
@@ -85,7 +89,7 @@ class TestRerankerImportFallback:
 
     def test_import_error_returns_none_and_sets_sentinel(self) -> None:
         """_load_reranker must return None and set sentinel on ImportError."""
-        from python_setup_lint.checkers._semantic import (
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works
             _load_reranker,
             _reset_cache,
         )
@@ -101,7 +105,9 @@ class TestRerankerImportFallback:
         assert result is None
 
         # Check sentinel via re-import (global was set by _load_reranker)
-        from python_setup_lint.checkers._semantic import _RERANKER_UNAVAILABLE
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+            _RERANKER_UNAVAILABLE,
+        )
 
         assert _RERANKER_UNAVAILABLE is True
 
@@ -128,7 +134,7 @@ class TestRerankerImportFallback:
 
     def test_sentinel_prevents_retry_on_second_call(self) -> None:
         """After sentinel is set, second _load_reranker call skips import."""
-        from python_setup_lint.checkers._semantic import (
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works
             _load_reranker,
             _reset_cache,
         )
@@ -428,7 +434,7 @@ class TestRerankerPairs:
         """A meaningful justification with context should score >= 0.5."""
         pytest.importorskip("sentence_transformers")
 
-        from python_setup_lint.checkers._semantic import (  # private import for white-box testing
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works; private import for white-box testing
             _reset_cache,
             semantic_check_if_meaningful,
         )
@@ -449,7 +455,7 @@ class TestRerankerPairs:
         """A weak justification with context should score < 0.5."""
         pytest.importorskip("sentence_transformers")
 
-        from python_setup_lint.checkers._semantic import (  # private import for white-box testing
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works; private import for white-box testing
             _reset_cache,
             semantic_check_if_meaningful,
         )
@@ -469,7 +475,7 @@ class TestRerankerPairs:
         """A brush-off justification with context should score < 0.5."""
         pytest.importorskip("sentence_transformers")
 
-        from python_setup_lint.checkers._semantic import (  # private import for white-box testing
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works; private import for white-box testing
             _reset_cache,
             semantic_check_if_meaningful,
         )
@@ -489,7 +495,7 @@ class TestRerankerPairs:
         """A meaningful justification without context should still score >= 0.5."""
         pytest.importorskip("sentence_transformers")
 
-        from python_setup_lint.checkers._semantic import (  # private import for white-box testing
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works; private import for white-box testing
             _reset_cache,
             semantic_check_if_meaningful,
         )

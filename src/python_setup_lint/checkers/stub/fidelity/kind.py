@@ -6,7 +6,10 @@ from typing import TYPE_CHECKING
 
 import structlog
 
-from ._ast_helpers import ClassComparisonCtx, _FidelityState
+from ._ast_helpers import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+    ClassComparisonCtx,
+    _FidelityState,
+)
 from .annotation import (
     _compare_class_attrs,
     _compare_class_bases,

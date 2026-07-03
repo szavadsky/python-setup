@@ -395,7 +395,9 @@ class TestSuppressionRerankerPipeline:
     def test_brush_off_rejected(self) -> None:
         """Brush-off "pre-existing" must be rejected (W9704 emitted)."""
         pytest.importorskip("sentence_transformers")
-        from python_setup_lint.checkers._semantic import _reset_cache
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+            _reset_cache,
+        )
 
         _reset_cache()
 
@@ -413,7 +415,9 @@ class TestSuppressionRerankerPipeline:
     def test_meaningful_accepted(self) -> None:
         """Meaningful justification must be accepted (no messages)."""
         pytest.importorskip("sentence_transformers")
-        from python_setup_lint.checkers._semantic import _reset_cache
+        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
+            _reset_cache,
+        )
 
         _reset_cache()
 
