@@ -1,4 +1,8 @@
-# [DESIGN] section sourced from config/.pylintrc (single source of truth)
+# [DESIGN]: values are project-wide constants (max-statements=65, max-branches=16, etc.)
+# intentionally duplicated across all 3 pylintrc files because pylint rcfiles have no
+# inheritance mechanism. Single-source-of-truth is the rationale, not the mechanism.
+# [SIMILARITIES] min-similarity-lines=10 (same as main .pylintrc) — tests share the same
+# structural repetition sensitivity as production code; only .pyi stubs raise it to 25.
 [MAIN]
 # Test-code rcfile — reduced rule set for test files.
 #
