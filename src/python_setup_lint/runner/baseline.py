@@ -181,7 +181,7 @@ def _write_baseline_if_modified(
     try:
         parent = baseline_path.parent
         parent.mkdir(parents=True, exist_ok=True)
-        fd, tmp_path = tempfile.mkstemp(dir=parent, suffix=".json")
+        fd, tmp_path = tempfile.mkstemp(dir=parent, prefix=".#", suffix=".json")  # same-FS for atomic os.replace; gitignored prefix avoids worktree clutter
         try:
             with os.fdopen(fd, "w") as f:
                 json.dump(violations, f, indent=2, sort_keys=True)
