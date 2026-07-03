@@ -64,7 +64,7 @@ runner composes final config at runtime
 suppressed violation → _semantic.py → LLM reranker → justification stored → validated on re-lint
 ```
 
-The semantic checker (`W9704`) detects `Any` in function signatures and uses an optional LLM reranker to generate meaningful justifications. The reranker is lazy-loaded and configurable via `PYTHON_SETUP_LINT_RERANKER_MODEL`.
+The semantic checker (`W9704`) detects `Any` in function signatures and uses an optional LLM reranker to validate justifications against the suppressed code context. The reranker is lazy-loaded and configurable via `PYTHON_SETUP_LINT_RERANKER_MODEL`.
 
 ## Testing Strategy
 
