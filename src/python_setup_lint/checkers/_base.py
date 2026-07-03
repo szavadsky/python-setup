@@ -134,6 +134,17 @@ class SourceRootMixin:
     ) -> None:
         self._check_function(node)  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass
 
+    def _skip_if_outside_source_roots(self, node: nodes.NodeNG) -> bool:  # pylint: disable=missing-beartype  # mixin: _source_roots resolved at runtime via MRO; @beartype cannot resolve forward ref
+        """Check if *node* is outside configured source roots.
+
+        Returns:
+            True if the node's file is outside all source roots (should be skipped).
+        """
+        file_path = _get_file_path(node)
+        return file_path is None or not _is_under_source_root(
+            file_path, self._source_roots
+        )
+
 
 @beartype
 def check_if_meaningful(

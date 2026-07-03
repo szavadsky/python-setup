@@ -10,15 +10,14 @@ from pylint.lint import PyLinter  # TYPE_CHECKING-only import; pylint is a dev d
 
 from python_setup_lint.checkers._base import (
     MessageDef,
-    _get_file_path,
-    _is_under_source_root,
+    SourceRootMixin,
     _msgs,
 )
 
 log = structlog.get_logger(__name__)
 
 
-class StructlogChecker(BaseChecker):
+class StructlogChecker(SourceRootMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
     name: str = "structlog-checker"
     msgs = _msgs(
         W9710=MessageDef(
@@ -76,10 +75,7 @@ class StructlogChecker(BaseChecker):
             return
         if func.expr.name != "logging":
             return
-        file_path = _get_file_path(node)
-        if file_path is None or not _is_under_source_root(
-            file_path, self._source_roots
-        ):
+        if self._skip_if_outside_source_roots(node):
             return
 
         self._uses_stdlib_logging = True
@@ -92,12 +88,8 @@ class StructlogChecker(BaseChecker):
         if func.attrname not in ("debug", "info", "warning", "error", "critical"):
             return
 
-        file_path = _get_file_path(node)
-        if file_path is None or not _is_under_source_root(
-            file_path, self._source_roots
-        ):
+        if self._skip_if_outside_source_roots(node):
             return
-
         callee = func.expr
         if not isinstance(callee, nodes.Name):
             return

@@ -11,8 +11,6 @@ from pylint.typing import MessageDefinitionTuple
 from python_setup_lint.checkers._base import (
     MessageDef,
     SourceRootMixin,
-    _get_file_path,
-    _is_under_source_root,
     _msgs,
     check_if_meaningful,
 )
@@ -100,10 +98,7 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
         # Skip modules outside source roots — param/return Any checks are
         # production-only.  Test files (tests/) are excluded so that test
         # helpers (``**kwargs: Any``, factory returns) are not flagged.
-        file_path = _get_file_path(node)
-        if file_path is None or not _is_under_source_root(
-            file_path, self._source_roots
-        ):
+        if self._skip_if_outside_source_roots(node):
             return
 
         # Collect every annotation-bearing parameter plus the return annotation.
@@ -171,10 +166,7 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
         # Skip modules outside source roots — AnnAssign Any checks are
         # production-only.  Test files (tests/) are excluded so that test
         # helpers (``x: Any = ...``) are not flagged.
-        file_path = _get_file_path(node)
-        if file_path is None or not _is_under_source_root(
-            file_path, self._source_roots
-        ):
+        if self._skip_if_outside_source_roots(node):
             return
 
         # Check Any annotations for trailing justification.
