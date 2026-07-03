@@ -93,8 +93,10 @@ class TestRunLintFixDownstream:
         # (c) The autofix route was exercised: run_lint was called with
         # fix=True, completed (rc is int, baseline exists and parses), and
         # the runner iterated over all tools including supports_fix tools.
-        # When violations exist, also verify a supports_fix tool label appears
-        # in the captured baseline entries.
+        # On a clean repo the baseline is empty (no violations), which is
+        # expected — the assertions above already prove the runner completed
+        # the full tool loop.  When violations exist, also verify a
+        # supports_fix tool label appears in the captured baseline entries.
         if entries:
             baseline_labels = {e.get("tool") for e in entries}
             fix_labels_seen = baseline_labels & _FIX_TOOL_NAMES

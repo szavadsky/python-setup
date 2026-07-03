@@ -75,7 +75,11 @@ def _get_file_path(node: nodes.NodeNG) -> Path | None:
         return None
 
 def _get_except_str(node: nodes.ExceptHandler) -> str:
-    """Get the string representation of the except clause."""
+    """Get the string representation of the except clause.
+
+    Returns:
+        The string representation of the except clause.
+    """
     if node.type is None:
         return ":"
     if isinstance(node.type, nodes.Name):

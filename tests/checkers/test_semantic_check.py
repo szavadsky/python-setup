@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines  # 504 lines — test module for semantic NLP pipeline; splitting would lose shared fixture context
 """Unit tests for python_setup_lint.checkers._semantic.
 
 Tests the single-stage NLP ``semantic_check_if_meaningful`` function.
