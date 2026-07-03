@@ -86,14 +86,13 @@ class TestPerfBenchmark:
         assert elapsed_ms < 200.0, f"_compare_sorted took {elapsed_ms:.1f}ms (>200ms ceiling)"
 
     def test_diff_baseline_50k_end_to_end_under_1s(self, tmp_path: Path) -> None:
-        records: list[dict[str, Any]] = [  # dict shape: {"file": str, "line": int, "col": int, "rule": str, "msg": str}
-            {"file": f"src/file_{f:04d}.py", "line": line, "col": 1, "rule": "E001", "msg": "m"}
+        records: list[dict[str, Any]] = [  # dict shape: {"tool": str, "file": str, "line": int, "col": int, "rule": str, "msg": str}
+            {"tool": "ruff check", "file": f"src/file_{f:04d}.py", "line": line, "col": 1, "rule": "E001", "msg": "m"}
             for f in range(1000)
             for line in range(1, 51)
         ]
-        saved = [{"tool": "ruff check", "exit_code": 0, "schema": "v2", "records": records}]
         baseline_path = tmp_path / "big.json"
-        baseline_path.write_text(json.dumps(saved))
+        baseline_path.write_text(json.dumps(records))
         stdout = "\n".join(
             f"src/file_{f:04d}.py:{line}:1: E001 m"
             for f in range(1000) for line in range(1, 51)
