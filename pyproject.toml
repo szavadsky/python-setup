@@ -4,8 +4,9 @@ version = "0.17.0"
 requires-python = ">=3.14"
 description = "Shared linting, formatting, and dev tooling for Python projects."
 readme = "README.md"
-license = { text = "MIT" }
-authors = [{ name = "Vyacheslav Zavadsky" }]
+authors = [
+    { name = "Vyacheslav Zavadsky" },
+]
 dependencies = [
     "astroid>=4.0.4",
     "beartype>=0.22.9",
@@ -15,24 +16,33 @@ dependencies = [
     "tomli-w>=1.0",
 ]
 
+[project.license]
+text = "MIT"
+
 [project.scripts]
 lint = "python_setup_lint.runner:main"
 install = "python_setup_lint.setup:main"
 python-setup-test-checked = "python_setup_lint.testing:test_checked_main"
 
+[project.optional-dependencies]
+semantic = [
+    "sentence-transformers>=3.0.0",
+]
+
 [build-system]
-requires = ["hatchling"]
+requires = [
+    "hatchling",
+]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/python_setup_lint"]
+packages = [
+    "src/python_setup_lint",
+]
 
 [tool.hatch.build.targets.wheel.force-include]
 "config/" = "python_setup_lint/config/"
 "CodingRules.md" = "python_setup_lint/CodingRules.md"
-
-[project.optional-dependencies]
-semantic = ["sentence-transformers>=3.0.0"]
 
 [tool.pytest.ini_options]
 addopts = "-m 'not slow'"
@@ -41,6 +51,27 @@ markers = [
     "no_external_api: marks tests that do not call external APIs or subprocesses",
     "with_real_api: marks tests that call real external APIs or subprocesses",
     "implementation_detail: marks tests of file-private helpers not reachable through public API",
+]
+
+[tool.pylint.main]
+load-plugins = [
+    "python_setup_lint.checkers.conformance.asyncio_timeout_checker",
+    "python_setup_lint.checkers.conformance.bare_except_comment_checker",
+    "python_setup_lint.checkers.conformance.beartype_checker",
+    "python_setup_lint.checkers.conformance.generic_key_dict_checker",
+    "python_setup_lint.checkers.conformance.missing_error_chain_checker",
+    "python_setup_lint.checkers.conformance.missing_return_annotation_checker",
+    "python_setup_lint.checkers.conformance.no_try_import_checker",
+    "python_setup_lint.checkers.conformance.pyi_underscore_checker",
+    "python_setup_lint.checkers.conformance.redundant_type_guard_checker",
+    "python_setup_lint.checkers.conformance.silent_except_checker",
+    "python_setup_lint.checkers.conformance.structlog_checker",
+    "python_setup_lint.checkers.conformance.suppression_justification_checker",
+    "python_setup_lint.checkers.conformance.tmp_path_checker",
+    "python_setup_lint.checkers.conformance.trivial_wrapper_checker",
+    "python_setup_lint.checkers.conformance.unnamed_tuple_dict_checker",
+    "python_setup_lint.checkers.stub.checker",
+    "python_setup_lint.checkers.stub.docstring_checker",
 ]
 
 [dependency-groups]
@@ -71,4 +102,3 @@ dev = [
     "types-tqdm>=4.68.0.20260608",
     "hypothesis>=6.150.0",
 ]
-
