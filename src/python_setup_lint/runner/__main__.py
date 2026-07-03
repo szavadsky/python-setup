@@ -1,5 +1,3 @@
-"""``python -m python_setup_lint.runner`` entry shim."""
-
 from __future__ import annotations
 
 import sys
