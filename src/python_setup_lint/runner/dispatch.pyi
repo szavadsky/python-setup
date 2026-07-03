@@ -62,17 +62,6 @@ class LintTool:
     def statistics_flags(self) -> list[str]: ...
     def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]: ...
 
-class _StubtestLintTool(LintTool):
-    """Strategy for ``mypy.stubtest`` — builds command from ``package_name`` + optional allowlist."""
-
-class _VerifyTypesLintTool(LintTool):
-    """Strategy for ``pyright verify types`` — builds command from ``package_name`` + optional project."""
-
-class _DetectSecretsLintTool(LintTool):
-    """Strategy for ``detect-secrets`` — wraps in ``bash -c`` pipeline over ``git ls-files``."""
-
-class _PylintLintTool(LintTool):
-    """Strategy for ``pylint`` — always resolves ``_find_py_files()`` for path expansion."""
 
 class GenericLintTool(LintTool):
     """Minimal strategy for extras registered via :func:`register_lint_tool`.
@@ -92,13 +81,6 @@ class GenericLintTool(LintTool):
         config_flag: list[str] | None = None,
     ) -> None: ...
 
-def _strategy_for(name: str, spec: ToolSpec) -> LintTool:
-    """Resolve a strategy for *name*, default-aware.
-
-    Returns the cached :data:`STRATEGIES` entry when present; otherwise
-    synthesises a :class:`GenericLintTool` for *spec* WITHOUT mutating
-    :data:`STRATEGIES`.
-    """
 
 def register_lint_tool(
     tool: ToolSpec,
