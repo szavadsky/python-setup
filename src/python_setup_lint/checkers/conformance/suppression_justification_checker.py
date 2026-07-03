@@ -296,7 +296,7 @@ class SuppressionJustificationChecker(SourceRootMixin, BaseChecker):  # type: ig
             # Module docstring is stored as .doc_node, not as a tree child — add it explicitly
             SuppressionJustificationChecker._add_doc_node_spans(spans, node)
             # Function and class docstrings are also .doc_node — iterate all sub-containers
-            for sub in node.nodes_of_class((nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef)):  # type: ignore[union-attr]
+            for sub in node.nodes_of_class((nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef)):  # type: ignore[union-attr]  # node is FunctionDef/AsyncFunctionDef/ClassDef at runtime; nodes_of_class available
                 SuppressionJustificationChecker._add_doc_node_spans(spans, sub)
         except AttributeError:  # pylint: disable=W9740  # node may not have nodes_of_class (e.g. non-Module node); fall back to empty spans  # best-effort fallback; logging would noise unavoidable attribute degrade
             pass
