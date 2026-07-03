@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import os
 import shutil
+import subprocess
 import tempfile
 from typing import TYPE_CHECKING
 
@@ -21,7 +22,7 @@ _PRECOMMIT_TEMPLATE: str = """\
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.10
+    rev: {ruff_rev}
     hooks:
       - id: ruff-format
       - id: ruff-check
@@ -35,6 +36,8 @@ repos:
         types: [python]
         pass_filenames: false
 """
+
+_RUFF_FALLBACK_REV: str = "v0.14.10"
 
 _AGENTS_SNIPPET: str = """\
 
@@ -89,7 +92,30 @@ def _step_precommit(state: SetupState, project_dir: Path) -> None:
         print("  [pre-commit] .pre-commit-config.yaml already exists — not overwriting")
         return
 
-    _atomic_write(precommit_path, _PRECOMMIT_TEMPLATE)
+    # Resolve installed ruff version for the pre-commit hook rev.
+    ruff_rev = _RUFF_FALLBACK_REV
+    try:
+        proc = subprocess.run(  # noqa: S603  # ruff is a trusted project tool
+            ["ruff", "--version"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if proc.returncode == 0:
+            # ruff --version output: "ruff 0.15.17" or similar
+            version_str = proc.stdout.strip()
+            # Parse the version number from the output
+            for part in version_str.split():
+                # Find the first part that looks like a version number
+                if part[0].isdigit() or (part[0] == "v" and len(part) > 1 and part[1].isdigit()):
+                    version = part.lstrip("v")
+                    ruff_rev = f"v{version}"
+                    break
+    except FileNotFoundError:
+        pass
+
+    content = _PRECOMMIT_TEMPLATE.format(ruff_rev=ruff_rev)
+    _atomic_write(precommit_path, content)
     state.precommit_written = True
     print("  [pre-commit] Wrote .pre-commit-config.yaml")
 
