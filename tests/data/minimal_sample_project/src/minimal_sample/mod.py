@@ -136,6 +136,11 @@ def public_func_with_usage_docstring(x: int, y: int) -> int:
 # Function with non-None return type but no Returns: clause.
 
 
+def _private_missing_returns_clause() -> int:
+    """Calculate a value but missing Returns clause."""
+    return 42
+
+
 def public_func_missing_returns_clause() -> int:
     """Calculate something but missing Returns clause."""
     return 42

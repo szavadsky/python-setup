@@ -124,7 +124,7 @@ class TestMinimalSampleProject:
 
         config = _make_config(project)
         rc = run_lint(config=config, path=".")
-        assert isinstance(rc, int), f"Expected int exit code, got {type(rc)}: {rc}"
+        assert rc != 0, f"Expected non-zero exit (sample project has planted violations), got rc={rc}"
 
         captured = capsys.readouterr()
         output = captured.out + captured.err
@@ -152,6 +152,17 @@ class TestMinimalSampleProject:
 
         # ── No tool crashed ────────────────────────────────────────────
         assert "[CRASH]" not in output, f"Tool crash detected in lint output:\n{output}\nThis must be fixed before committing."
+        # ── All tools executed (no SKIPPED for non-package_name reasons) ──
+        skipped_lines = [l for l in output.splitlines() if "SKIPPED:" in l]
+        unexpected_skipped = [l for l in skipped_lines if "package_name" not in l]
+        assert not unexpected_skipped, (
+            "Expected no tools to be skipped for non-package_name reasons.\n"
+            "Unexpected SKIPPED lines:\n" + "\n".join(unexpected_skipped)
+        )
+        # ── W9705 fires end-to-end ────────────────────────────────────────
+        assert "generic-return-requires-returns" in output, (
+            f"Expected W9705 (generic-return-requires-returns) in lint output.\nOutput excerpt:\n{output[:3000]}"
+        )
 
     def test_config_overlay(
         self,
