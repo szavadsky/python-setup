@@ -478,3 +478,47 @@ class TestPrintResult:
         )
         out = capsys.readouterr().out
         assert out.index("stderr line") < out.index("stdout line")
+
+
+class TestSummarizePyrightVerifyTypes:
+    """``_summarize_pyright_verify_types`` strips docstring/default-param noise."""
+
+    def _call(self, stdout: str) -> str | None:
+        from python_setup_lint.runner.output import _summarize_pyright_verify_types
+
+        return _summarize_pyright_verify_types(stdout)
+
+    def test_given_score_present_then_renders_score_only(self) -> None:
+        """Normal case: completenessScore rendered, docstring/default counts stripped."""
+        result = self._call(
+            '{"typeCompleteness": {"completenessScore": 0.87, '
+            '"missingFunctionDocStringCount": 5, '
+            '"missingClassDocStringCount": 3, '
+            '"missingDefaultParamCount": 2}}'
+        )
+        assert result == "  pyright verify types: completenessScore=0.87"
+
+    def test_given_score_absent_then_fallback(self) -> None:
+        """Score absent → "all complete" fallback."""
+        result = self._call('{"typeCompleteness": {}}')
+        assert result == "  pyright verify types: all complete"
+
+    def test_given_malformed_json_then_none(self) -> None:
+        """Malformed JSON → None."""
+        result = self._call("not json")
+        assert result is None
+
+    def test_given_non_dict_top_level_then_none(self) -> None:
+        """Non-dict top-level → None."""
+        result = self._call("[]")
+        assert result is None
+
+    def test_given_all_zero_counts_then_all_complete(self) -> None:
+        """All-zero counts → "all complete" (no zero-valued noise)."""
+        result = self._call(
+            '{"typeCompleteness": {"completenessScore": 1.0, '
+            '"missingFunctionDocStringCount": 0, '
+            '"missingClassDocStringCount": 0, '
+            '"missingDefaultParamCount": 0}}'
+        )
+        assert result == "  pyright verify types: completenessScore=1.0"
