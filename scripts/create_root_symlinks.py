@@ -23,7 +23,6 @@ import os
 import sys
 from pathlib import Path
 
-
 # Config files to symlink (must exist under config/)
 _CONFIG_FILES: tuple[str, ...] = (
     "ruff.toml",
