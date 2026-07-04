@@ -1,0 +1,1 @@
+cd ~/aiexp/consultant.mcp && git status --short && echo "===STAGED===" && git diff --cached --stat && echo "===UNSTAGED===" && git diff --stat && echo "===LOG===" && git log --oneline -3

@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.5 (2026-07-04)
+
+- Docs: fixed `--rebaseline`→`--overwrite-baseline` references in AGENTS.md, docs/troubleshooting.md, docs/tutorials.md
+- Docs: fixed bare `python-setup lint` command in troubleshooting.md
+- Docs: fixed integration test count in troubleshooting.md (6→7)
+- Docs: bumped README.md update-workflow example to v1.2.5
+
 ## v1.2.4 (2026-07-04)
 
 - Fix I001 import-sort violation in `scripts/create_root_symlinks.py`
