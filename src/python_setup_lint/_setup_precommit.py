@@ -31,7 +31,7 @@ repos:
     hooks:
       - id: lint
         name: lint
-        entry: python-setup lint --fix --baseline lint.baseline
+        entry: lint --fix --baseline lint.baseline
         language: system
         types: [python]
         pass_filenames: false
@@ -51,12 +51,12 @@ uv run pre-commit install
 ```
 
 - **`git commit`** triggers fast hooks: `ruff-format` (auto-format) and `ruff-check` (auto-fix). Both run silently and apply changes automatically.
-- **`git commit`** also triggers the full lint pipeline (`python-setup lint --fix --baseline lint.baseline`). The `lint` hook autofixes ALL tools that support it (ruff, rumdl, ty) via the wrapper's `--fix` route, then re-runs the baseline-gated verification pass. Autofix is **courtesy**: it skips files where staged AND unstaged changes overlap (avoids conflicts with the staged blob), reverts any file a tool's fix breaks parseability on (E999 canary), and never blocks — only NEW violations (regressions) vs the baseline fail the hook. Autofix never blocks the commit; files with both staged and unstaged changes are skipped, and any file a fix breaks parseability on is reverted in-memory.
+- **`git commit`** also triggers the full lint pipeline (`lint --fix --baseline lint.baseline`). The `lint` hook autofixes ALL tools that support it (ruff, rumdl, ty) via the wrapper's `--fix` route, then re-runs the baseline-gated verification pass. Autofix is **courtesy**: it skips files where staged AND unstaged changes overlap (avoids conflicts with the staged blob), reverts any file a tool's fix breaks parseability on (E999 canary), and never blocks — only NEW violations (regressions) vs the baseline fail the hook. Autofix never blocks the commit; files with both staged and unstaged changes are skipped, and any file a fix breaks parseability on is reverted in-memory.
 - **Autofix opt-out**: set `PYTHON_SETUP_LINT_NO_AUTOFIX=1` to disable autofix for the run (the `--fix` CLI flag still parses; the runner flips autofix off internally before the loop). Useful when you want only the verification pass to run.
 - **Baseline regeneration**: When you intentionally want to accept the current violation state, run:
 
   ```bash
-  python-setup lint --overwrite-baseline --baseline lint.baseline
+  lint --overwrite-baseline --baseline lint.baseline
   ```
 
   Commit the updated `lint.baseline` alongside your changes.
