@@ -270,10 +270,12 @@ class TestMinimalSampleProject:
         project = _copy_sample(tmp_path)
         _init_git(project)
 
-        # Create .pre-commit-config.yaml from the template.
+        # Create .pre-commit-config.yaml from the template with a known rev.
         from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
 
-        (project / ".pre-commit-config.yaml").write_text(_PRECOMMIT_TEMPLATE)
+        (project / ".pre-commit-config.yaml").write_text(
+            _PRECOMMIT_TEMPLATE.format(ruff_rev="v0.15.17")
+        )
 
         # Run pre-commit validate-config.
         subprocess.run(
