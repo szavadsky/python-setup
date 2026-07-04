@@ -342,7 +342,7 @@ class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type:
         # Same-line trailing comment after the suppression.
         # Check EVERY suppression match for a trailing reason — the reason
         # may appear between two suppression patterns on the same line
-        # (e.g. ``# type: ignore[arg-type]  # reason  # ty:ignore[code]``).
+        # (e.g. ``# type: ignore[arg-type]  # reason  # type: ignore[assignment]``).
         # Only accept a trailing reason that appears BEFORE the next
         # suppression pattern on the line, to avoid treating a real
         # suppression as a "trailing reason" for a suppression pattern
