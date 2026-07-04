@@ -7,7 +7,7 @@ This file is the entry point for all AI agents working on python-setup. Read thi
 | Command | What it does |
 |---------|-------------|
  | `uv run lint` | Full 13-tool lint pipeline (baseline diffing, ~100s warm, 120s/tool cap) |
- | `uv run pytest -q` | Unit tests (1263 pass, 4 skip, 15 deselected, ~53s) |
+ | `uv run pytest -q` | Unit tests (1290 pass, 4 skip, 15 deselected, ~53s) |
  | `uv run pytest tests/integration.py -v` | Integration tests (6 pass, ~39s) |
 | `uv run lint --rebaseline` | Regenerate `lint.baseline` after intentional rule changes |
 | `uv run python-setup install` | Install configs in consumer project |
@@ -127,12 +127,12 @@ uv run pre-commit install
 ```
 
 - **`git commit`** triggers fast hooks: `ruff-format` (auto-format) and `ruff-check` (auto-fix). Both run silently and apply changes automatically.
-- **`git commit`** also triggers the full lint pipeline (`python-setup lint --fix --baseline lint.baseline`). The `lint` hook autofixes ALL tools that support it (ruff, rumdl, ty) via the wrapper's `--fix` route, then re-runs the baseline-gated verification pass. Autofix is **courtesy**: it skips files where staged AND unstaged changes overlap (avoids conflicts with the staged blob), reverts any file a tool's fix breaks parseability on (E999 canary), and never blocks — only NEW violations (regressions) vs the baseline fail the hook. Autofix never blocks the commit; files with both staged and unstaged changes are skipped, and any file a fix breaks parseability on is reverted in-memory.
+- **`git commit`** also triggers the full lint pipeline (`lint --fix --baseline lint.baseline`). The `lint` hook autofixes ALL tools that support it (ruff, rumdl, ty) via the wrapper's `--fix` route, then re-runs the baseline-gated verification pass. Autofix is **courtesy**: it skips files where staged AND unstaged changes overlap (avoids conflicts with the staged blob), reverts any file a tool's fix breaks parseability on (E999 canary), and never blocks — only NEW violations (regressions) vs the baseline fail the hook. Autofix never blocks the commit; files with both staged and unstaged changes are skipped, and any file a fix breaks parseability on is reverted in-memory.
 - **Autofix opt-out**: set `PYTHON_SETUP_LINT_NO_AUTOFIX=1` to disable autofix for the run (the `--fix` CLI flag still parses; the runner flips autofix off internally before the loop). Useful when you want only the verification pass to run.
 - **Baseline regeneration**: When you intentionally want to accept the current violation state, run:
 
   ```bash
-  python-setup lint --overwrite-baseline --baseline lint.baseline
+  lint --overwrite-baseline --baseline lint.baseline
   ```
 
   Commit the updated `lint.baseline` alongside your changes.
