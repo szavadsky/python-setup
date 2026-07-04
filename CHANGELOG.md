@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.7 (2026-07-04)
+
+- Style: applied `ruff format` across `src/` and `tests/` (123 files); restored 4 suppression comments
+  (`# noqa: SIM115` in `runner/baseline.py`, `# noqa: ARG002`×2 in `testing.py`, W9704 `# reason` in
+  `runner/extra_tools.py`) displaced by formatter line-wrapping. No behavior change.
+  `requires-python = ">=3.14"` affirms `except A, B:` tuple-catch syntax.
+
 ## v1.2.6 (2026-07-04)
 
 - Docs: fixed bare `lint` → `uv run lint` in AGENTS.md pre-commit snippet bash code block (portability for fresh worktrees)
