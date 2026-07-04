@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.8 (2026-07-04)
+
+- Harden integration test to guard pipeline contract (W9705 verification, non-zero exit on violations, rumdl-fmt disabled-rules guard, individual-tool parity assertion).
+
 ## v1.2.7 (2026-07-04)
 
 - Style: applied `ruff format` across `src/` and `tests/` (123 files); restored 4 suppression comments
