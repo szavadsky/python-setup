@@ -20,7 +20,6 @@ from python_setup_lint._setup_precommit import (
 )
 from python_setup_lint.setup import SetupState
 
-
 # ── Helpers ────────────────────────────────────────────────────────────
 
 

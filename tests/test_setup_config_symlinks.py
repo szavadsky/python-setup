@@ -7,11 +7,10 @@ from pathlib import Path
 import pytest
 
 from python_setup_lint.setup import (
-    SetupState,
     _BUNDLED_CONFIGS,
+    SetupState,
     _step_config_symlinks,
 )
-
 
 # ── Helpers ──────────────────────────────────────────────────────────
 
