@@ -10,7 +10,6 @@ import pkgutil
 import shutil
 import subprocess
 import sys
-
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -22,17 +21,15 @@ from ._setup_precommit import (
     _step_agents_snippet,
     _step_precommit,
 )
-from ._setup_update import update
 from ._setup_pyproject import (
     _get_dev_deps,
     _get_pylint_load_plugins,
     _has_python_setup_dep,
-    _pylint_main_section,
     _read_pyproject_toml,
     _set_pylint_load_plugins,
     _write_pyproject_toml,
-    _ensure_pylint_main_section,
 )
+from ._setup_update import update
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

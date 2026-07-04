@@ -8,7 +8,6 @@ from ._setup_precommit import _atomic_write
 if TYPE_CHECKING:
     from pathlib import Path
 
-
 # ── Constants ───────────────────────────────────────────────────────
 
 _PACKAGE_NAME: str = "python-setup"
