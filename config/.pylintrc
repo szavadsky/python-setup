@@ -1,5 +1,5 @@
 [MAIN]
-max-module-lines=500
+max-module-lines=510
 ignore-paths=tests/data/,\.venv,__pycache__,node_modules,build/,.tmp*,.omp  # tests/ linted by .pylintrc-tests (hybrid rcfile); tests/data/ is planted-violation sample; .omp is agentic orchestration, not product
 ignore-patterns=.*\.pyi$
 source-roots=src

@@ -44,6 +44,8 @@ _BUNDLED_CONFIGS: tuple[str, ...] = (
     "ty.toml",
     ".yamllint",
     "tach.toml",
+    ".pylintrc-pyi",
+    ".pylintrc-tests",
 )
 _SKIP_SYMLINK_IF_EXISTS: frozenset[str] = frozenset({"tach.toml"})
 

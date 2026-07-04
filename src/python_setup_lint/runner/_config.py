@@ -16,6 +16,7 @@ _SHIPPED_CONFIG_FILES: dict[str, str] = {
     "ty check": "ty.toml",
     "yamllint": ".yamllint",
     "tach check": "tach.toml",
+    "pylint-pyi": ".pylintrc-pyi",
 }
 
 
