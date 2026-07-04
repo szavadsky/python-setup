@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable
-from pathlib import Path
 
 from beartype import beartype
 
+from ._config import _default_config_paths
 from .cmd_build import (
     _build_command,
     _build_statistics_flags,
@@ -237,7 +237,7 @@ class _DetectSecretsLintTool(LintTool):
                 "bash",
                 "-c",
                 (
-                    f"git ls-files -z | xargs -0 {' '.join(spec.command)} --baseline {config.secrets_baseline}; "
+                    f"git ls-files -z | xargs -0 {' '.join(spec.command)} --baseline {config.secrets_baseline} && "
                     f"python3 -c \"import json,sys; p=sys.argv[1]; d=json.load(open(p)); d.pop('generated_at',None); json.dump(d,open(p,'w'),indent=2,sort_keys=True)\" {config.secrets_baseline}"
                 ),
             ]
@@ -310,19 +310,12 @@ class _PylintPyiLintTool(LintTool):
     ) -> list[str]:
         spec = self.spec
         cmd = list(spec.command)
-
-        # Use .pylintrc-pyi — check root-level symlink first, then config/
-        # subdir, then installed-package fallback.
-        rcfile = config.cwd / ".pylintrc-pyi"
-        if not rcfile.exists():
-            rcfile = config.cwd / "config" / ".pylintrc-pyi"
-        if not rcfile.exists():
-            import python_setup_lint
-
-            rcfile = (
-                Path(python_setup_lint.__file__).parent / "config" / ".pylintrc-pyi"
-            )
-        cmd.extend(["--rcfile", str(rcfile)])
+        # Use .pylintrc-pyi — explicit override first, then auto-discovery.
+        rcfile = config.config_paths.get("pylint-pyi")
+        if rcfile is None:
+            rcfile = _default_config_paths(config.cwd).get("pylint-pyi")
+        if rcfile is not None:
+            cmd.extend(["--rcfile", str(rcfile)])
 
         # Find .pyi files
         if _path is not None:
@@ -349,18 +342,12 @@ class _PylintTestsLintTool(LintTool):
         spec = self.spec
         cmd = list(spec.command)
 
-        # Use .pylintrc-tests — check root-level symlink first, then config/
-        # subdir, then installed-package fallback.
-        rcfile = config.cwd / ".pylintrc-tests"
-        if not rcfile.exists():
-            rcfile = config.cwd / "config" / ".pylintrc-tests"
-        if not rcfile.exists():
-            import python_setup_lint
-
-            rcfile = (
-                Path(python_setup_lint.__file__).parent / "config" / ".pylintrc-tests"
-            )
-        cmd.extend(["--rcfile", str(rcfile)])
+        # Use .pylintrc-tests — explicit override first, then auto-discovery.
+        rcfile = config.config_paths.get("pylint tests")
+        if rcfile is None:
+            rcfile = _default_config_paths(config.cwd).get("pylint tests")
+        if rcfile is not None:
+            cmd.extend(["--rcfile", str(rcfile)])
 
         # Find .py files in tests/ (excluding tests/data/)
         if _path is not None:
