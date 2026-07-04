@@ -124,10 +124,14 @@ class TrivialWrapperChecker(BaseChecker):
         return False
 
     @staticmethod
-    def _is_protocol_or_abc_method(  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+    def _is_protocol_or_abc_method(
         node: nodes.FunctionDef | nodes.AsyncFunctionDef,
     ) -> bool:
-        """Check if the function is a method of a Protocol or ABC class."""
+        """Check if the function is a method of a Protocol or ABC class.
+
+        Returns:
+            True if the function is a method of a Protocol or ABC class.
+        """
         parent = node.parent
         if not isinstance(parent, nodes.ClassDef):
             return False
@@ -143,7 +147,7 @@ class TrivialWrapperChecker(BaseChecker):
         return False
 
     @staticmethod
-    def _extract_call(body: list[nodes.NodeNG]) -> nodes.Call | None:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+    def _extract_call(body: list[nodes.NodeNG]) -> nodes.Call | None:
         """Extract the single call node from a function body.
 
         Accepts:
@@ -185,12 +189,16 @@ class TrivialWrapperChecker(BaseChecker):
         return None
 
     @staticmethod
-    def _is_self_call(call_node: nodes.Call) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
-        """Check if the call is a method delegation to self (self.method(...))."""
+    def _is_self_call(call_node: nodes.Call) -> bool:
+        """Check if the call is a method delegation to self (self.method(...)).
+
+        Returns:
+            True if the call is a ``self.method(...)`` pattern.
+        """
         return isinstance(call_node.func, nodes.Attribute) and isinstance(call_node.func.expr, nodes.Name) and call_node.func.expr.name == "self"
 
     @staticmethod
-    def _get_call_target_name(call_node: nodes.Call) -> str | None:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+    def _get_call_target_name(call_node: nodes.Call) -> str | None:
         """Get the name of the called function."""
         if isinstance(call_node.func, nodes.Name):
             return call_node.func.name
@@ -199,15 +207,15 @@ class TrivialWrapperChecker(BaseChecker):
         return None
 
     @staticmethod
-    def _signatures_match(  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+    def _signatures_match(
         func_node: nodes.FunctionDef | nodes.AsyncFunctionDef,
         call_node: nodes.Call,
     ) -> bool:
         """Check that the function signature roughly matches the call.
 
-        We check that the number of positional arguments in the call
-        matches the number of parameters in the function definition
-        (accounting for self/cls in methods).
+        Returns:
+            True if the number of call arguments is within 1 of the number of
+            function parameters (accounting for self/cls).
         """
         func_args = func_node.args
         if func_args is None:  # pragma: no cover  # astroid always provides args
@@ -230,15 +238,19 @@ class TrivialWrapperChecker(BaseChecker):
         return abs(num_params - num_call_args) <= 1
 
 
-def _unwrap_await(node: nodes.NodeNG) -> nodes.NodeNG:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+def _unwrap_await(node: nodes.NodeNG) -> nodes.NodeNG:
     """Unwrap an ``Await`` node to get the inner expression."""
     if isinstance(node, nodes.Await):
         return node.value
     return node
 
 
-def _node_name(node: nodes.NodeNG) -> str:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
-    """Get a string name from an AST node."""
+def _node_name(node: nodes.NodeNG) -> str:
+    """Get a string name from an AST node.
+
+    Returns:
+        The node's name as a string, or ``"<expr>"`` for unrecognised nodes.
+    """
     if isinstance(node, nodes.Name):
         return node.name
     if isinstance(node, nodes.Attribute):

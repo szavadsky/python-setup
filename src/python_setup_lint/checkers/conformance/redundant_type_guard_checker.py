@@ -56,8 +56,12 @@ class RedundantTypeGuardChecker(BaseChecker):
             )
 
     @staticmethod
-    def _has_class_ancestor(node: nodes.If) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
-        """Return True if *node* is nested inside a class definition."""
+    def _has_class_ancestor(node: nodes.If) -> bool:
+        """Return True if *node* is nested inside a class definition.
+
+        Returns:
+            True if any ancestor is a ``ClassDef``.
+        """
         parent = node.parent
         while parent is not None:
             if isinstance(parent, nodes.ClassDef):
@@ -66,7 +70,7 @@ class RedundantTypeGuardChecker(BaseChecker):
         return False
 
     @staticmethod
-    def _find_enclosing_function(node: nodes.If) -> nodes.FunctionDef | None:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+    def _find_enclosing_function(node: nodes.If) -> nodes.FunctionDef | None:
         """Walk up to find the nearest enclosing FunctionDef."""
         parent = node.parent
         while parent is not None:
@@ -76,8 +80,12 @@ class RedundantTypeGuardChecker(BaseChecker):
         return None
 
     @staticmethod
-    def _is_not_isinstance_guard(node: nodes.If) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
-        """Return True if *node* is ``if not isinstance(x, T): raise ...``."""
+    def _is_not_isinstance_guard(node: nodes.If) -> bool:
+        """Return True if *node* is ``if not isinstance(x, T): raise ...``.
+
+        Returns:
+            True if the pattern matches.
+        """
         # Test must be `not <call>`
         if not isinstance(node.test, nodes.UnaryOp):
             return False
@@ -98,7 +106,7 @@ class RedundantTypeGuardChecker(BaseChecker):
         return isinstance(first_stmt, nodes.Raise)
 
     @staticmethod
-    def _get_isinstance_arg_name(call: nodes.Call) -> str | None:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+    def _get_isinstance_arg_name(call: nodes.Call) -> str | None:
         """Extract the variable name from an isinstance call's first arg."""
         if not call.args:
             return None
@@ -108,7 +116,7 @@ class RedundantTypeGuardChecker(BaseChecker):
         return None
 
     @staticmethod
-    def _get_isinstance_type_name(call: nodes.Call) -> str | None:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+    def _get_isinstance_type_name(call: nodes.Call) -> str | None:
         """Extract the type name from an isinstance call's second arg.
 
         Only handles single-type checks (not tuples of types).
@@ -121,7 +129,7 @@ class RedundantTypeGuardChecker(BaseChecker):
         return None
 
     @staticmethod
-    def _get_param_annotation(func: nodes.FunctionDef, param_name: str) -> str | None:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+    def _get_param_annotation(func: nodes.FunctionDef, param_name: str) -> str | None:
         """Return the annotation type name for *param_name* in *func*, or None."""
         for arg, ann in zip(func.args.args, func.args.annotations, strict=True):  # type: ignore[arg-type]  # astroid's args/annotations are list | None; at runtime always list  # ty:ignore[invalid-argument-type]
             if arg.name == param_name:

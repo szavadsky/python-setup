@@ -41,18 +41,22 @@ class SilentExceptChecker(BaseChecker):
         )
 
     @staticmethod
-    def _has_raise(node: nodes.ExceptHandler) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
-        """Return True if the handler body contains any raise statement."""
+    def _has_raise(node: nodes.ExceptHandler) -> bool:
+        """Return True if the handler body contains any raise statement.
+
+        Returns:
+            True if a ``Raise`` node is found in the handler body.
+        """
         for _ in node.nodes_of_class(nodes.Raise):
             return True
         return False
 
     @staticmethod
-    def _has_log_call(node: nodes.ExceptHandler) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+    def _has_log_call(node: nodes.ExceptHandler) -> bool:
         """Return True if the handler body contains a logging call.
 
-        Recognises ``log.*(...)``, ``logger.*(...)``, ``logging.*(...)``,
-        and any attribute call whose root name contains ``log`` (case-insensitive).
+        Returns:
+            True if a logging call is found in the handler body.
         """
         for child in node.nodes_of_class(nodes.Call):
             func = child.func
