@@ -14,7 +14,7 @@ def _check_config_drift(project_dir: Path, /) -> list[str]:
 
 
 def _run_update_steps(project_dir: Path) -> list[str]:
-    """Run uv sync and uv add --refresh-package python-setup.
+    """Run uv sync, uv add --refresh-package python-setup, and re-verify config symlinks.
 
     Returns:
         List of error messages (empty on success).

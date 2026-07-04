@@ -95,23 +95,25 @@ def _step_precommit(state: SetupState, project_dir: Path) -> None:
     # Resolve installed ruff version for the pre-commit hook rev.
     ruff_rev = _RUFF_FALLBACK_REV
     try:
-        proc = subprocess.run(  # noqa: S603  # ruff is a trusted project tool
-            ["ruff", "--version"],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if proc.returncode == 0:
-            # ruff --version output: "ruff 0.15.17" or similar
-            version_str = proc.stdout.strip()
-            # Parse the version number from the output
-            for part in version_str.split():
-                # Find the first part that looks like a version number
-                if part[0].isdigit() or (part[0] == "v" and len(part) > 1 and part[1].isdigit()):
-                    version = part.lstrip("v")
-                    ruff_rev = f"v{version}"
-                    break
-    except FileNotFoundError:
+        ruff_path = shutil.which("ruff")
+        if ruff_path:
+            proc = subprocess.run(  # noqa: S603  # ruff_path comes from shutil.which("ruff"), a trusted project tool
+                [ruff_path, "--version"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if proc.returncode == 0:
+                # ruff --version output: "ruff 0.15.17" or similar
+                version_str = proc.stdout.strip()
+                # Parse the version number from the output
+                for part in version_str.split():
+                    # Find the first part that looks like a version number
+                    if part[0].isdigit() or (part[0] == "v" and len(part) > 1 and part[1].isdigit()):
+                        version = part.lstrip("v")
+                        ruff_rev = f"v{version}"
+                        break
+    except FileNotFoundError:  # pylint: disable=W9740  # ruff not installed — fall back to default rev; no action needed
         pass
 
     content = _PRECOMMIT_TEMPLATE.format(ruff_rev=ruff_rev)

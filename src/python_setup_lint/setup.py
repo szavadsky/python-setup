@@ -326,14 +326,14 @@ def _step_config_symlinks(state: SetupState, project_dir: Path, /) -> None:
                     elif (project_dir / existing_target).resolve() == source.resolve():
                         skipped += 1
                         continue
-                except OSError:
+                except OSError:  # pylint: disable=W9740  # symlink read failed — fall through to content comparison; best-effort
                     pass
             # File exists but not a matching symlink — compare content
             try:
                 if target.read_bytes() == source.read_bytes():
                     skipped += 1
                     continue
-            except OSError:
+            except OSError:  # pylint: disable=W9740  # file read failed — fall through to create symlink; best-effort
                 pass
 
         # Create parent dirs if needed
@@ -345,7 +345,7 @@ def _step_config_symlinks(state: SetupState, project_dir: Path, /) -> None:
 
         try:
             os.symlink(str(source.resolve()), str(target))
-        except OSError:
+        except OSError:  # pylint: disable=W9740  # symlink failed — fall back to copy; best-effort
             # Fall back to copy2 on Windows or other symlink-hostile environments
             shutil.copy2(str(source), str(target))
 
