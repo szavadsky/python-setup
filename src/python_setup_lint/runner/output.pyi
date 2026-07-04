@@ -86,5 +86,13 @@ def _run_cmd(
     through the package namespace at call time so the patch is honoured.
     """
 
+def _summarize_pyright_verify_types(stdout: str) -> str | None:
+    """Return a concise summary of pyright verify-types output, or None if not parseable.
+
+    Returns:
+        A one-line summary string, or None if the output cannot be parsed.
+    """
+
+
 def _print_result(result: LintResult) -> None:
     """Print a formatted result block (status + stderr + stdout) to stdout."""
