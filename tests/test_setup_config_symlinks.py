@@ -59,6 +59,10 @@ class TestConfigSymlinks:
             assert target.resolve() == source.resolve(), (
                 f"{fname} should point to {source}"
             )
+            # Symlink target must be relative (not an absolute path)
+            assert not os.readlink(target).startswith("/"), (
+                f"{fname} symlink target should be relative, got: {os.readlink(target)}"
+            )
 
     def test_skip_if_symlink_exists_and_matches(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
