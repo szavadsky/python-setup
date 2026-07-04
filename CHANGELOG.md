@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.2.0 (2026-07-04)
+
+- Config symlinks: create relative symlinks instead of absolute paths for cross-machine portability
+- W9705 (generic-return-requires-returns): disabled in both .pylintrc and .pylintrc-pyi
+- max-module-lines: restored to 500 (was inadvertently lowered)
+- pyright verifytypes: filter metadata noise from _print_result display
+- Root config symlinks: create root-level symlinks for standalone-tool parity
+
 ## v1.1.1 (2026-07-04)
 
 - Config registries: add .pylintrc-pyi/.pylintrc-tests to _BUNDLED_CONFIGS and _SHIPPED_CONFIG_FILES
