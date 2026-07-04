@@ -1,7 +1,5 @@
 # Changelog
 
-## v1.2.0 (2026-07-04)
-
 ## v1.2.1 (2026-07-04)
 
 - Pyright verifytypes: strip docstring/default-param noise from runner summary display
@@ -10,6 +8,8 @@
 - Output stub: add _summarize_pyright_verify_types to output.pyi stub
 - Fix M6 verification regressions: pylint too-many-lines and rumdl Execute2 exclusion
 - Docs: align deployment docs with actual code behavior
+
+## v1.2.0 (2026-07-04)
 
 - Config symlinks: create relative symlinks instead of absolute paths for cross-machine portability
 - W9705 (generic-return-requires-returns): disabled in both .pylintrc and .pylintrc-pyi
