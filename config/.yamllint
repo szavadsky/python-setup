@@ -26,10 +26,11 @@ rules:
   truthy:
     check-keys: false
 
+# agentic orchestration, not product
 ignore: |
   **/.venv/**
   **/build/**
   **/.tmp*/
   **/node_modules/**
   **/dist/**
-  **/.omp/**  # agentic orchestration, not product
+  **/.omp/**
