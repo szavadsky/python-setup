@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.1 (2026-07-04)
+
+- Config registries: add .pylintrc-pyi/.pylintrc-tests to _BUNDLED_CONFIGS and _SHIPPED_CONFIG_FILES
+- Dispatch: fix pylint-pyi/tests rcfile fallback to use _default_config_paths instead of broken Path(__file__) arithmetic
+- Detect-secrets: fix `;`→`&&` separator so missing tool surfaces as exit 1 instead of being masked
+
 ## v1.1.0 (2026-07-03)
 
 - Baseline: relativize file paths in lint.baseline for cross-machine portability
