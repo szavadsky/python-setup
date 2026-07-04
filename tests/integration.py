@@ -513,3 +513,113 @@ class TestMinimalSampleProject:
             f"Runner output:\n{runner_output[:2000]}\n"
             f"Direct output:\n{direct_output[:2000]}"
         )
+
+    def test_rumdl_disabled_rules_guard(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """Verify rumdl respects disabled rules (MD013, MD040) from config/rumdl.toml.
+
+        The runner uses ``rumdl check --fix`` (not ``rumdl fmt``). This test
+        exercises that exact invocation path against a fixture that would be
+        modified by MD013 and MD040 if they were enabled.
+
+        Asserts:
+        - ``rumdl check --fix --config config/rumdl.toml`` leaves the fixture
+          unchanged (disabled rules are not applied).
+        - A mutation (re-enabling MD040) causes the fixture to be modified —
+          confirms the guard actually bites.
+        """
+        # ── Fixture: lines that would trigger MD013 (line-length >80) and
+        #    MD040 (bare fenced code block without language tag).
+        fixture_text = textwrap.dedent("""\
+        # Test
+
+        This is a long line that exceeds 80 characters and would normally trigger MD013 line-length enforcement by rumdl.
+
+        ```
+        x = 1
+        ```
+        """)
+        config_path = Path("config/rumdl.toml").resolve()
+        assert config_path.is_file(), "Shipped rumdl.toml not found"
+
+        # ── Primary: rumdl check --fix with shipped config (runner path) ─────
+        md_file = tmp_path / "test.md"
+        md_file.write_text(fixture_text)
+
+        proc = subprocess.run(
+            ["rumdl", "check", "--fix", "--config", str(config_path), str(md_file)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        # Exit 0 means no issues found — the disabled rules stay silent.
+        assert proc.returncode == 0, (
+            f"rumdl check --fix with shipped config exited {proc.returncode}:\nstdout:{proc.stdout}\nstderr:{proc.stderr}"
+        )
+        assert md_file.read_text() == fixture_text, (
+            "Fixture was modified by rumdl check --fix with shipped config.\n"
+            "MD013 and/or MD040 appear to be active despite being in the disable list."
+        )
+
+        # ── Mutation: re-enable MD040 (auto-fixable) in a copy of the config ──
+        #    MD013 is not auto-fixable (rumdl reports it but doesn't fix it),
+        #    so we use MD040 which IS auto-fixable (injects a language tag).
+        #    The shipped config uses ``enable`` as a whitelist, so we must
+        #    both remove MD040 from ``disable`` and add it to ``enable``.
+        mutated_config = config_path.read_text()
+        mutated_config = mutated_config.replace(
+            '    "MD040",  # fenced-code-language',
+            '    # "MD040",  # fenced-code-language — re-enabled for mutation test',
+        )
+        mutated_config = mutated_config.replace(
+            '    "MD009",  # no-trailing-spaces',
+            '    "MD040",  # fenced-code-language\n    "MD009",  # no-trailing-spaces',
+        )
+        mutated = tmp_path / "mutated_rumdl.toml"
+        mutated.write_text(mutated_config)
+
+        md_file2 = tmp_path / "test_mutate.md"
+        md_file2.write_text(fixture_text)
+
+        proc2 = subprocess.run(
+            ["rumdl", "check", "--fix", "--config", str(mutated), str(md_file2)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        # MD040 is auto-fixable — the file content should change (language tag
+        # injected).  If it doesn't, the guard is not catching regressions.
+        assert md_file2.read_text() != fixture_text, (
+            "Mutation test failed: re-enabling MD040 did not cause rumdl to "
+            "modify the fixture. The guard test would not catch a regression.\n"
+            f"rumdl stdout: {proc2.stdout}\nstderr: {proc2.stderr}"
+        )
+
+        # ── Optional: rumdl fmt standalone ──────────────────────────────────
+        #    Document whether it also respects the config (it does, as of
+        #    rumdl 0.2.28 — both paths honor the disable list).
+        md_file3 = tmp_path / "test_fmt.md"
+        md_file3.write_text(fixture_text)
+        proc3 = subprocess.run(
+            ["rumdl", "fmt", "--config", str(config_path), str(md_file3)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if proc3.returncode == 0 and md_file3.read_text() == fixture_text:
+            pass  # rumdl fmt also respects the disable list — consistent.
+        else:
+            # Log the behavioral difference without failing the primary test.
+            # As of rumdl 0.2.28 the fmt subcommand does honor the config,
+            # but this guard is not authoritative for ``fmt`` (the runner
+            # uses ``check --fix``).
+            logging.info(
+                "rumdl fmt behavior differs from check --fix (exit %d): %s",
+                proc3.returncode,
+                proc3.stdout or proc3.stderr,
+            )
