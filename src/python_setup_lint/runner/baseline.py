@@ -28,9 +28,7 @@ def peek_fallback_tools() -> frozenset[str]:
     return frozenset()
 
 
-def _compare_sorted(
-    a: list[Record], b: list[Record]
-) -> tuple[list[Record], list[Record]]:
+def _compare_sorted(a: list[Record], b: list[Record]) -> tuple[list[Record], list[Record]]:
     """Re-export of :func:`_baseline_helpers._compare_sorted` for backwards compat.
 
     The new violations-only baseline uses a direct violation-list diff instead,
@@ -78,7 +76,8 @@ def _violation_tuple(v: dict) -> tuple:
 
 
 def _compare_violation_lists(
-    current: list[dict], saved: list[dict],
+    current: list[dict],
+    saved: list[dict],
 ) -> tuple[list[dict], list[dict]]:
     """Two-pointer diff on sorted flat violation lists.
 
@@ -132,25 +131,30 @@ def _capture_one(r: LintResult, *, cwd: Path | None = None) -> list[dict]:
     """
 
     if r.exit_code < 0:
-        return [{
-            "tool": r.tool_name,
-            "file": None,
-            "line": None,
-            "col": None,
-            "rule": "__CRASH__",
-            "msg": f"exit code {r.exit_code}",
-        }]
+        return [
+            {
+                "tool": r.tool_name,
+                "file": None,
+                "line": None,
+                "col": None,
+                "rule": "__CRASH__",
+                "msg": f"exit code {r.exit_code}",
+            }
+        ]
     violations: list[dict] = []
     parser = _RECORD_PARSERS.get(r.tool_name)
     if parser is not None:
-        violations.extend({
-            "tool": r.tool_name,
-            "file": _relativize_file(rec.file, cwd),
-            "line": rec.line,
-            "col": rec.col,
-            "rule": rec.rule,
-            "msg": rec.msg,
-        } for rec in parser(r.stdout or ""))
+        violations.extend(
+            {
+                "tool": r.tool_name,
+                "file": _relativize_file(rec.file, cwd),
+                "line": rec.line,
+                "col": rec.col,
+                "rule": rec.rule,
+                "msg": rec.msg,
+            }
+            for rec in parser(r.stdout or "")
+        )
     return violations
 
 
@@ -210,7 +214,9 @@ def _write_baseline_if_modified(
     try:
         parent = baseline_path.parent
         parent.mkdir(parents=True, exist_ok=True)
-        tmp_path = tempfile.NamedTemporaryFile(dir=tempfile.gettempdir(), prefix="psl_baseline_", suffix=".json", delete=False).name  # noqa: SIM115  # pylint: disable=consider-using-with  # intentional: need delete=False + manual cleanup in finally
+        tmp_path = tempfile.NamedTemporaryFile(  # noqa: SIM115  # pylint: disable=consider-using-with  # intentional: need delete=False + manual cleanup in finally
+            dir=tempfile.gettempdir(), prefix="psl_baseline_", suffix=".json", delete=False
+        ).name
         try:
             with open(tmp_path, "w") as f:
                 json.dump(violations, f, indent=2, sort_keys=True)
@@ -270,10 +276,7 @@ def _diff_baseline(  # pylint: disable=too-many-locals  # _diff_baseline needs s
     violations: list[str] = []
 
     # Crashes are always violations.
-    violations.extend(
-        f"[{crash['tool']}] CRASH (exit={crash['msg'].replace('exit code ', '')})"
-        for crash in crash_records
-    )
+    violations.extend(f"[{crash['tool']}] CRASH (exit={crash['msg'].replace('exit code ', '')})" for crash in crash_records)
 
     # Added = new/different violations.
     for v in added:
@@ -288,11 +291,11 @@ def _diff_baseline(  # pylint: disable=too-many-locals  # _diff_baseline needs s
     baseline_modified = bool(removed)
     if baseline_modified:
         removed_tuples = {_violation_tuple(v) for v in removed}
-        new_saved = [
-            v for v in crashless_saved if _violation_tuple(v) not in removed_tuples
-        ]
+        new_saved = [v for v in crashless_saved if _violation_tuple(v) not in removed_tuples]
         write_result = _write_baseline_if_modified(
-            new_saved, baseline_path, True,
+            new_saved,
+            baseline_path,
+            True,
         )
         if write_result is not None:
             return write_result

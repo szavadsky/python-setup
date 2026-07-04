@@ -29,7 +29,7 @@ def _walk_and_release(
     *,
     file_path: str | None = None,
     module_name: str = "",
-    ) -> list[Any]:  # released pylint messages are dynamically typed; Any is the accurate contract
+) -> list[Any]:  # released pylint messages are dynamically typed; Any is the accurate contract
     tc = _make_tc(checker_class)
     module = astroid.parse(code, module_name=module_name)
     if file_path is not None:
@@ -63,21 +63,24 @@ def make_lint_result(
 
 @dataclass
 class _FakeRunCmdRecord:
-
     cmd: list[str]
     label: str
 
 
 @dataclass
 class FakeRunCmd:
-
     # tool labels are identifiers, a legitimate string-key category
     results: dict[str, LintResult] | list[LintResult]  # pylint: disable=generic-key-dict
     calls: list[_FakeRunCmdRecord] = field(default_factory=list)
 
     def __call__(
-        self, cmd: list[str], *, cwd: Path = Path(), label: str = "",  # noqa: ARG002  # fake matches _run_cmd signature; unused in fake
-        timeout: int = 120, memory_limit_mb: int = 2048,  # noqa: ARG002  # fake matches _run_cmd signature; unused in fake
+        self,
+        cmd: list[str],
+        *,
+        cwd: Path = Path(),  # noqa: ARG002  # fake matches _run_cmd signature; unused in fake
+        label: str = "",  # fake matches _run_cmd signature; unused in fake
+        timeout: int = 120,  # noqa: ARG002  # fake matches _run_cmd signature; unused in fake
+        memory_limit_mb: int = 2048,  # noqa: ARG002  # fake matches _run_cmd signature; unused in fake
     ) -> LintResult:
         self.calls.append(_FakeRunCmdRecord(cmd=cmd, label=label))
         if isinstance(self.results, dict):
@@ -127,9 +130,7 @@ def _load_precommit_config(repo_root: Path, /) -> dict[str, object]:
     assert config_path.exists(), f"Missing pre-commit config: {config_path}"
     with open(config_path) as f:
         data = yaml.safe_load(f)
-    assert isinstance(data, dict), (
-        "Expected .pre-commit-config.yaml to be a YAML mapping (dict)"
-    )
+    assert isinstance(data, dict), "Expected .pre-commit-config.yaml to be a YAML mapping (dict)"
     assert "repos" in data, "Expected 'repos' key in pre-commit config"
     return data
 
@@ -171,9 +172,7 @@ def assert_precommit_hooks_shape(
 
     lint_hook = _find_hook("lint")
     assert lint_hook is not None, "Missing 'lint' local hook in .pre-commit-config.yaml"
-    assert lint_hook.get("language") == "system", (
-        "'lint' hook must use language: system"
-    )
+    assert lint_hook.get("language") == "system", "'lint' hook must use language: system"
     lint_entry = lint_hook.get("entry", "")
     assert isinstance(lint_entry, str)
     assert f"--baseline {baseline_filename}" in lint_entry, (
@@ -184,9 +183,7 @@ def assert_precommit_hooks_shape(
     assert ruff_hook is not None, "Missing ruff fix hook (id 'ruff' or 'ruff-check')"
     ruff_args = ruff_hook.get("args", [])
     assert isinstance(ruff_args, list)
-    assert "--fix" in ruff_args, (
-        f"ruff fix hook must carry --fix, got args: {ruff_args!r}"
-    )
+    assert "--fix" in ruff_args, f"ruff fix hook must carry --fix, got args: {ruff_args!r}"
 
     for fast_id in ("ruff-format", "ruff", "ruff-check"):
         fast_hook = _find_hook(fast_id)
