@@ -346,6 +346,27 @@ PARSER_STATISTICS_CASES: list[ParameterSet] = [
     ),
     pytest.param("tach check", '{"errors":[]}', "", [], id="tach_no_errors"),
     pytest.param("tach check", "bad", "", [], id="tach_invalid_json"),
+    pytest.param(
+        "tach check",
+        '[{"Global": {"severity": "Error", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}}]',
+        "",
+        [("tach:error", 1)],
+        id="tach_list_with_errors",
+    ),
+    pytest.param(
+        "tach check",
+        '[{"Global": {"severity": "Warning", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}}]',
+        "",
+        [("tach:warning", 1)],
+        id="tach_list_with_warnings",
+    ),
+    pytest.param(
+        "tach check",
+        "[]",
+        "",
+        [],
+        id="tach_list_empty",
+    ),
     # yamllint parsable
     pytest.param(
         "yamllint",

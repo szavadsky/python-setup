@@ -198,6 +198,38 @@ class TestParserEdgeCases:
         out = json.dumps({"errors": "not_a_list"})
         assert _parse_tach_json(out, "") == []
 
+    def test_parser_edge_given_tach_json_list_with_errors(self) -> None:
+        """tach 0.35.0 list format with Error severity."""
+        out = json.dumps([
+            {"Global": {"severity": "Error", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}},
+            {"Located": {"severity": "Error", "path": "src/a.py", "message": "bad import"}},
+        ])
+        assert _parse_tach_json(out, "") == [("tach:error", 2)]
+
+    def test_parser_edge_given_tach_json_list_with_warnings(self) -> None:
+        """tach 0.35.0 list format with Warning severity."""
+        out = json.dumps([
+            {"Global": {"severity": "Warning", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}},
+        ])
+        assert _parse_tach_json(out, "") == [("tach:warning", 1)]
+
+    def test_parser_edge_given_tach_json_list_with_mixed(self) -> None:
+        """tach 0.35.0 list format with both Error and Warning."""
+        out = json.dumps([
+            {"Global": {"severity": "Error", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}},
+            {"Global": {"severity": "Warning", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}},
+        ])
+        assert _parse_tach_json(out, "") == [("tach:error", 1), ("tach:warning", 1)]
+
+    def test_parser_edge_given_tach_json_list_empty(self) -> None:
+        """tach 0.35.0 list format with no items."""
+        assert _parse_tach_json("[]", "") == []
+
+    def test_parser_edge_given_tach_json_legacy_dict(self) -> None:
+        """Legacy dict format still works."""
+        out = json.dumps({"errors": [{"message": "bad import"}]})
+        assert _parse_tach_json(out, "") == [("tach:error", 1)]
+
 
 # ── Aggregation edge cases ────────────────────────────────────────
 
