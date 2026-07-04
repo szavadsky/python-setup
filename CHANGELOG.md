@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.4 (2026-07-04)
+
+- Fix I001 import-sort violation in `scripts/create_root_symlinks.py`
+- Add `explicit_package_bases = true` to shipped mypy.ini to resolve consumer duplicate-module technical failure
+
 ## v1.2.3 (2026-07-04)
 
 - Self-lint fixes: SIM102×2 (collapsible nested-if), MD009 (trailing whitespace), W9728 (trivial-wrapper suppression)
