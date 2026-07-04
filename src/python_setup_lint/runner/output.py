@@ -235,18 +235,9 @@ def _summarize_pyright_verify_types(stdout: str) -> str | None:
     if not isinstance(tc, dict):
         return None
     score = tc.get("completenessScore")
-    missing_func = tc.get("missingFunctionDocStringCount", 0)
-    missing_class = tc.get("missingClassDocStringCount", 0)
-    missing_default = tc.get("missingDefaultParamCount", 0)
     parts = []
     if score is not None:
         parts.append(f"completenessScore={score}")
-    if missing_func:
-        parts.append(f"missingFunctionDocStringCount={missing_func}")
-    if missing_class:
-        parts.append(f"missingClassDocStringCount={missing_class}")
-    if missing_default:
-        parts.append(f"missingDefaultParamCount={missing_default}")
     return "  pyright verify types: " + ", ".join(parts) if parts else "  pyright verify types: all complete"
 
 
