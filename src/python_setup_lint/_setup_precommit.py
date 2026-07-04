@@ -56,7 +56,7 @@ uv run pre-commit install
 - **Baseline regeneration**: When you intentionally want to accept the current violation state, run:
 
   ```bash
-  lint --overwrite-baseline --baseline lint.baseline
+  uv run lint --overwrite-baseline --baseline lint.baseline
   ```
 
   Commit the updated `lint.baseline` alongside your changes.
