@@ -49,6 +49,7 @@ pyi-underscore-symbol
 
 # ── docstring-checker ──
 docstring-in-impl
+generic-return-requires-returns
 
 # ── stub-checker (pyi files in sample project) ──
 annotation-mismatch
