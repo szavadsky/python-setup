@@ -75,7 +75,7 @@ def _ck_pylint(p: Path) -> None:
 
 def _ck_precommit(p: Path) -> None:
     c = (p / ".pre-commit-config.yaml").read_text()
-    assert "ruff-pre-commit" in c and "python-setup lint" in c
+    assert "ruff-pre-commit" in c and "lint --fix --baseline lint.baseline" in c
 
 
 def _ck_coding(p: Path) -> None:

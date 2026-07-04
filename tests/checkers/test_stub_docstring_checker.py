@@ -94,7 +94,7 @@ def test_checker_given_docstring_in_impl_not_stub_then_flagged(
 # ── W9705: generic-return-requires-returns ─────────────────────────
 
 
-def _returns_msg_count(msgs: list[Any]) -> int:
+def _returns_msg_count(msgs: list[Any]) -> int:  # pylint: disable=W9728  # test helper: counts generic-return-requires-returns messages
     return sum(1 for m in msgs if m.msg_id == "generic-return-requires-returns")
 
 

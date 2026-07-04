@@ -287,15 +287,3 @@ def _parse_pyright_check_records(stdout: str) -> list[Record]:
     return _parse_pyright_records(data)
 
 
-def _parse_pyright_verify_types_records(stdout: str) -> list[Record]:
-    import json
-    try:
-        data = json.loads(stdout)
-    except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
-        return []
-    if not isinstance(data, dict):
-        return []
-    diags = data.get("diagnostics", [])
-    if isinstance(diags, list):
-        return _parse_pyright_records({"generalDiagnostics": diags})
-    return []

@@ -214,8 +214,7 @@ class StubDocstringChecker(BaseChecker):
         if isinstance(returns, nodes.Name):
             return returns.name in {"int", "str", "bool"}
         # dict[str, X] or dict[int, X] — Subscript with Name("dict") value
-        if isinstance(returns, nodes.Subscript):
-            if isinstance(returns.value, nodes.Name) and returns.value.name == "dict":
+        if isinstance(returns, nodes.Subscript) and isinstance(returns.value, nodes.Name) and returns.value.name == "dict":
                 # Check the first subscript argument is str or int
                 slice_node = returns.slice
                 if isinstance(slice_node, nodes.Tuple):
@@ -223,12 +222,12 @@ class StubDocstringChecker(BaseChecker):
                         first = slice_node.elts[0]
                         if isinstance(first, nodes.Name) and first.name in {"str", "int"}:
                             return True
-                elif isinstance(slice_node, nodes.Name) and slice_node.name in {"str", "int"}:
+                elif (
+                    isinstance(slice_node, nodes.Name) and slice_node.name in {"str", "int"}
+                ) or (
+                    isinstance(slice_node, nodes.Subscript) and isinstance(slice_node.value, nodes.Name) and slice_node.value.name in {"str", "int"}
+                ):
                     return True
-                elif isinstance(slice_node, nodes.Subscript):
-                    # dict[str, ...] where the slice itself is a Subscript
-                    if isinstance(slice_node.value, nodes.Name) and slice_node.value.name in {"str", "int"}:
-                        return True
         return False
 
     @staticmethod

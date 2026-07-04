@@ -72,9 +72,9 @@ When lint rules or checkers change in `python-setup`:
 1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v1.1.0"`
 2. Re-run the installer: `uv run python-setup install`
 3. Commit the updated config in the consuming project.
- 
+
  ### Release & deploy
- 
+
  1. Bump version in `pyproject.toml` and update `CHANGELOG.md`.
  2. Commit: `git add -A && git commit -m "v<VERSION>"`
  3. Tag: `git tag v<VERSION>`

@@ -18,9 +18,6 @@ from ._record_parsers import (
     _parse_pyright_records as _parse_pyright_records,
 )
 from ._record_parsers import (
-    _parse_pyright_verify_types_records as _parse_pyright_verify_types_records,
-)
-from ._record_parsers import (
     _parse_ruff_records as _parse_ruff_records,
 )
 from ._record_parsers import (
@@ -245,7 +242,6 @@ _RECORD_PARSERS: dict[str, Callable[..., list[Record]]] = {
     "yamllint": _parse_yamllint_records,
     "rumdl check": _parse_rumdl_records,
     "pyright check": _parse_pyright_check_records,
-    "pyright verify types": _parse_pyright_verify_types_records,
 }
 
 _STATISTICS_PARSERS: dict[str, Callable[..., list[tuple[str, int]]]] = {

@@ -36,9 +36,6 @@ def _dicts_to_records(payload: object) -> list[Record]:
     """Convert a list of plain dicts back to a sorted list of Records."""
 
 
-def _strip_pyright_volatile(diag: object) -> None:
-    """Strip volatile fields (time, version, summary.timeInSec) from a pyright diagnostics dict."""
-
 
 def _diag_error_count(d: object) -> int:
     """Count total errors + warnings from a pyright diagnostics summary."""

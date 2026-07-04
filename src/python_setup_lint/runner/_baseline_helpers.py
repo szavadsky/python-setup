@@ -77,23 +77,6 @@ def _dicts_to_records(payload: object) -> list[Record]:
     return out
 
 
-def _strip_pyright_volatile(diag: object) -> None:
-    if not isinstance(diag, dict):
-        return
-    d = diag
-    d.pop("time", None)  # type: ignore[arg-type]  # dict value is object; pop expects _VT  # ty:ignore[no-matching-overload]
-    d.pop("version", None)  # type: ignore[arg-type]  # dict value is object; pop expects _VT  # ty:ignore[no-matching-overload]
-    d.pop("timeInSec", None)  # type: ignore[arg-type]  # dict value is object; pop expects _VT  # ty:ignore[no-matching-overload]
-    summary = d.get("summary")
-    if isinstance(summary, dict):
-        summary.pop("timeInSec", None)  # type: ignore[arg-type]  # dict value is object; pop expects _VT  # ty:ignore[no-matching-overload]
-    # pyright verify-types embeds absolute machine paths in typeCompleteness
-    # that differ across checkouts — strip them to avoid false drift.
-    tc = d.get("typeCompleteness")
-    if isinstance(tc, dict):
-        tc.pop("moduleRootDirectory", None)  # type: ignore[arg-type]  # dict value is object; pop expects _VT  # ty:ignore[no-matching-overload]
-        tc.pop("packageRootDirectory", None)  # type: ignore[arg-type]  # dict value is object; pop expects _VT  # ty:ignore[no-matching-overload]
-        tc.pop("pyTypedPath", None)  # type: ignore[arg-type]  # dict value is object; pop expects _VT  # ty:ignore[no-matching-overload]
 
 
 def _diag_error_count(d: object) -> int:

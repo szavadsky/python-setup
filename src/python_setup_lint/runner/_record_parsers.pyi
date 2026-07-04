@@ -19,6 +19,3 @@ def _parse_pyright_check_records(stdout: str) -> list[Record]:
     """Parse pyright --outputjson output from a string."""
 
 
-def _parse_pyright_verify_types_records(stdout: str) -> list[Record]:
-    """Parse pyright verify-types output from a string."""
-

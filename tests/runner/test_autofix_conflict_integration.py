@@ -113,8 +113,8 @@ class TestPrecommitTemplateHasFix:
         from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
 
         # The lint line is a unique substring; assert it carries --fix.
-        assert "python-setup lint --fix" in _PRECOMMIT_TEMPLATE, (
-            "expected 'python-setup lint --fix' in template"
+        assert "lint --fix --baseline lint.baseline" in _PRECOMMIT_TEMPLATE, (
+            "expected 'lint --fix --baseline lint.baseline' in template"
         )
 
     def test_precommit_template_given_lint_entry_then_no_timeout(self) -> None:
@@ -176,7 +176,7 @@ class TestPrecommitTemplateHasFix:
         agents.write_text("# Test\n")
         assert install(tmp_path, dev_path="/home/slava/aiexp/python-setup") == 0
         precommit = (tmp_path / ".pre-commit-config.yaml").read_text()
-        assert "python-setup lint --fix" in precommit
+        assert "lint --fix --baseline lint.baseline" in precommit
 
 
 # ── Surface-unit: env-var opt-out is honoured before the loop ────
