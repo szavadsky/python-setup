@@ -78,7 +78,7 @@ Do not copy paste or add trvial context. Typical task "
 
 | Type | agent | isolated | role | assignment |
 |---|---|---|---|---|
-| `dev` | `subtask-dev-process` | True | Task implementation orchestrator | Pass filename `{F}/Execute{pIt}/{WaveSlug}{SubtaskSlug}.md`. Nothing else. |
+| `dev` | `subtask-dev-process` | False | Task implementation orchestrator | Pass filename `{F}/Execute{pIt}/{WaveSlug}{SubtaskSlug}.md`. Nothing else. |
 | `verify` | `fact-finder` | False | Verifier | Verify: read `{F}/plan{pIt}.md:<ranges>`, report status + findings. |
 | `housekeeping` | `sonic` | False | Housekeeper | Read `{F}/Execute{pIt}/{WaveSlug}{SubtaskSlug}.md`, apply the trivial edit described. |
 
@@ -130,10 +130,11 @@ Return execution summary + concerns as markdown in structured `report` field.
 - Maintain hyperfocus. NEVER deviate.
 - Return minimum useful result. Do not repeat what's in your `report` field.
 - Be concise. No filler, repetition, or tool transcripts.
-- `dev` subtasks: `isolated=True`. `verify`/`housekeeping` + consultative spawns (`wave-end-checkpoint`, `oracle`): `isolated=False`.
+- Directive: harness isolation mechanism is buggy and temporary disabled. Use Isolated false `dev` subtasks: `isolated=True`. `verify`/`housekeeping` + consultative spawns (`wave-end-checkpoint`, `oracle`): `isolated=False`.
 - NEVER edit project code, run bash. Write ONLY task spec files under `{F}/Execute{pIt}/`.
 - Report blockers honestly. `failed`/`blocked` is correct. Both fabricating completion/not completing when not blocked are prohibited.
 - Harness auto-merges subtask results; stashConflicts handled by `wave-end-checkpoint`.
 - NEVER ask for verbatim long output from implementers. They deliver files, git commits and QA internally.
 - waiting though job poll is required. You genuinely blocked and has nothing else to do till wave is done and checkpointed.
+- when using task took, set agent to subagent you want to spawn  one of `subtask-dev-process`, `wave-end-checkpoint`, `fact-finder`, `oracle`, `sonic`. Agents of same type can be launched with on tool call, multiple types -> multiple calls.
 </directives>
