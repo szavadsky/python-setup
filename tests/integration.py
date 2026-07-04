@@ -444,3 +444,61 @@ class TestMinimalSampleProject:
                 assert not str(file_val).startswith("/"), (
                     f"Expected relative path, got absolute: {file_val!r}\nFull entry: {entry}"
                 )
+
+    def test_individual_tool_parity(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        isolated_runner_registries: None,
+    ) -> None:
+        """Verify that the runner's ruff invocation and direct ``ruff check``
+        produce the same set of violation rule symbols.
+
+        Guards against regressions where the runner's tool command diverges
+        from the standalone tool invocation (single-source-of-truth broken).
+        """
+        project = _copy_sample(tmp_path)
+        _init_git(project)
+
+        # ── Run ruff through the runner ──────────────────────────────
+        config = _make_config(project)
+        config.tools_override = ["ruff check"]
+        rc = run_lint(config=config, path=".")
+        assert isinstance(rc, int)
+
+        captured = capsys.readouterr()
+        runner_output = captured.out + captured.err
+
+        # Extract rule symbols from ``file:line:col: CODE message`` lines.
+        runner_rules = set(re.findall(r"^.*?:\d+:\d+: (\w+)", runner_output, re.MULTILINE))
+
+        # ── Run ruff directly as a subprocess ───────────────────────
+        ruff_config = (Path("config") / "ruff.toml").resolve()
+        assert ruff_config.is_file(), f"Shipped ruff config not found: {ruff_config}"
+
+        result = subprocess.run(
+            [
+                "ruff",
+                "check",
+                "--output-format",
+                "concise",
+                "--config",
+                str(ruff_config),
+                ".",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=project,
+        )
+
+        direct_output = result.stdout + result.stderr
+        direct_rules = set(re.findall(r"^.*?:\d+:\d+: (\w+)", direct_output, re.MULTILINE))
+
+        # ── Assert parity ───────────────────────────────────────────
+        assert runner_rules == direct_rules, (
+            f"Rule symbol mismatch between runner and direct ruff check.\n"
+            f"Runner only: {runner_rules - direct_rules}\n"
+            f"Direct only: {direct_rules - runner_rules}\n"
+            f"Runner output:\n{runner_output[:2000]}\n"
+            f"Direct output:\n{direct_output[:2000]}"
+        )
