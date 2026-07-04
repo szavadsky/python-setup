@@ -230,6 +230,8 @@ mypy.ini
 ruff.toml
 rumdl.toml
 ty.toml
+.pylintrc-pyi
+.pylintrc-tests
 .yamllint
 
 # But keep the sample project's planted source committed
