@@ -33,4 +33,3 @@ ignore: |
   **/.tmp*/
   **/node_modules/**
   **/dist/**
-  **/.omp/**

@@ -6,6 +6,7 @@ task:
   maxRecursionDepth: 7
   isolation:
     # auto = picks overlayfs (Linux) or APFS clone (macOS) automatically
+    # yamllint disable-line rule:truthy
     mode: off
     # branch = commits to omp/task/<id>, cherry-picks into parent on completion
     merge: branch
