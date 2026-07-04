@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.2 (2026-07-04)
+
+- pre-commit fix, violations.txt fix, yamllint ignore fix, doc alignment
+
 ## v1.2.1 (2026-07-04)
 
 - Pyright verifytypes: strip docstring/default-param noise from runner summary display
