@@ -219,11 +219,15 @@ def _run_cmd(
 
 
 def _summarize_pyright_verify_types(stdout: str) -> str | None:
-    """Return a concise summary of pyright verify-types output, or None if not parseable."""
+    """Return a concise summary of pyright verify-types output, or None if not parseable.
+
+    Returns:
+        A one-line summary string, or None if the output cannot be parsed.
+    """
     import json
     try:
         data = json.loads(stdout)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
         return None
     if not isinstance(data, dict):
         return None

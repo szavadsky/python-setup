@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import tomllib
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ._setup_precommit import _atomic_write
 
 if TYPE_CHECKING:
-    pass
+    from pathlib import Path
 
 
 # ── Constants ───────────────────────────────────────────────────────
