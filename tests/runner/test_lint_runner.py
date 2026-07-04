@@ -3,6 +3,7 @@
 Per-tool / per-flag rows are parametrised via shared tables in
 ``tests/runner/_factories.py`` (T12 consolidation).
 """
+# pylint: disable=too-many-lines  # test file with many parametrised classes; splitting would hurt readability
 from __future__ import annotations
 
 from pathlib import Path
