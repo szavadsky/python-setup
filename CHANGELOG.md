@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.6 (2026-07-04)
+
+- Docs: fixed bare `lint` → `uv run lint` in AGENTS.md pre-commit snippet bash code block (portability for fresh worktrees)
+
 ## v1.2.5 (2026-07-04)
 
 - Docs: fixed `--rebaseline`→`--overwrite-baseline` references in AGENTS.md, docs/troubleshooting.md, docs/tutorials.md
