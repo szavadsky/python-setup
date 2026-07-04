@@ -88,7 +88,7 @@ HAS_DEP_CASES = [
 TEMPLATE_CASES = [
     pytest.param(
         _PRECOMMIT_TEMPLATE,
-        ["ruff-format", "ruff-check", "python-setup lint"],
+        ["ruff-format", "ruff-check", "lint --fix --baseline lint.baseline"],
         ["pre-push"],
         id="precommit",
     ),

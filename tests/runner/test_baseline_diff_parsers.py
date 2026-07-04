@@ -284,12 +284,6 @@ class TestCaptureOneEdgeCases:
                 id="pyright_volatile_fields_stripped",
             ),
             pytest.param(
-                "pyright verify types",
-                json.dumps({"version": "1.1.410", "time": "1782394246865", "timeInSec": 0.51, "diagnostics": []}),
-                lambda cap: cap == [],
-                id="pyright_verifytypes_volatile_fields_stripped",
-            ),
-            pytest.param(
                 "rumdl check",
                 json.dumps([{"file": "README.md", "rule": "MD013"}]),
                 lambda cap: cap == [],

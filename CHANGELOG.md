@@ -16,7 +16,7 @@
 ## v1.2.0 (2026-07-04)
 
 - Config symlinks: create relative symlinks instead of absolute paths for cross-machine portability
-- W9705 (generic-return-requires-returns): disabled in both .pylintrc and .pylintrc-pyi
+- W9705 (generic-return-requires-returns): enabled and correctly gates on canonical docstring location and generic return types per CodingRules
 - max-module-lines: restored to 500 (was inadvertently lowered)
 - pyright verifytypes: filter metadata noise from _print_result display
 - Root config symlinks: create root-level symlinks for standalone-tool parity
