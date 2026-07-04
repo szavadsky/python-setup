@@ -9,7 +9,6 @@ from python_setup_lint.checkers._base import MessageDef, _msgs
 
 
 class MissingErrorChainChecker(BaseChecker):
-
     name: str = "missing-error-chain"
     msgs = _msgs(
         W9739=MessageDef(

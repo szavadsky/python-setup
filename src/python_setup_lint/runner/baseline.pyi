@@ -11,20 +11,15 @@ from .types import LintResult
 _FALLBACK_TOOLS: set[str]
 """Legacy stub: always empty. The new format has no fallback path."""
 
-
 def peek_fallback_tools() -> frozenset[str]:
     """Legacy stub: returns empty frozenset."""
 
-
-def _compare_sorted(
-    a: list[Record], b: list[Record]
-) -> tuple[list[Record], list[Record]]:
+def _compare_sorted(a: list[Record], b: list[Record]) -> tuple[list[Record], list[Record]]:
     """Re-export of :func:`_baseline_helpers._compare_sorted` for backwards compat.
 
     Returns:
         A tuple ``(added, removed)``.
     """
-
 
 def _capture_baseline(results: list[LintResult], *, cwd: Path | None = None) -> list[dict[str, object]]:
     """All violations as a flat list sorted by (tool, file, line, col, rule).
@@ -37,7 +32,6 @@ def _capture_baseline(results: list[LintResult], *, cwd: Path | None = None) -> 
     Returns:
         A list of dicts with keys (tool, file, line, col, rule, msg).
     """
-
 
 def _diff_baseline(current: list[LintResult], baseline_path: Path, *, cwd: Path | None = None) -> list[str]:
     """Compare current results against on-disk baseline of flat violation records.

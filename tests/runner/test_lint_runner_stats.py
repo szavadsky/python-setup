@@ -3,6 +3,7 @@
 
 Split from ``test_lint_runner.py`` to stay under the 500-line pylint C0302 limit.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -75,18 +76,29 @@ def test_statistics_parsers_given_all_tools_then_covered() -> None:
 def test_parse_strategies_given_stats_then_includes_all_keys() -> None:
     assert {"regex_count", "raw_lines", "none"} <= set(PARSE_STRATEGIES)
     assert {
-        "ruff_statistics", "rumdl_statistics", "pylint_json2", "pyright_outputjson",
-        "pyright_verify_types", "mypy_stderr", "ty_concise", "tach_json",
-        "yamllint_parsable", "stubtest_stderr", "detect_secrets_json",
+        "ruff_statistics",
+        "rumdl_statistics",
+        "pylint_json2",
+        "pyright_outputjson",
+        "pyright_verify_types",
+        "mypy_stderr",
+        "ty_concise",
+        "tach_json",
+        "yamllint_parsable",
+        "stubtest_stderr",
+        "detect_secrets_json",
     } <= set(PARSE_STRATEGIES)
 
 
 class TestSortCounts:
-    @pytest.mark.parametrize(("counts", "sort_by_rule", "expected_rules"), [
-        (SORT_DEFAULT_COUNTS, False, ["A001", "B001", "Z001"]),
-        (SORT_BY_RULE_COUNTS, True, None),
-    ],
-    ids=["default_sort_highest_count_first", "sort_by_rule"],)
+    @pytest.mark.parametrize(
+        ("counts", "sort_by_rule", "expected_rules"),
+        [
+            (SORT_DEFAULT_COUNTS, False, ["A001", "B001", "Z001"]),
+            (SORT_BY_RULE_COUNTS, True, None),
+        ],
+        ids=["default_sort_highest_count_first", "sort_by_rule"],
+    )
     def test_sort_counts(self: object, counts: list[Any], sort_by_rule: bool, expected_rules: list[str] | None) -> None:
         result = _sort_counts(counts, sort_by_rule=sort_by_rule)
         if expected_rules is not None:
@@ -100,7 +112,9 @@ class TestSortCounts:
 
 
 @pytest.mark.parametrize("args", MAIN_GROUP_SORT_CASES)
-def test_main_group_and_sort_given_rule_accepted_then_works(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, args: list[str]) -> None:
+def test_main_group_and_sort_given_rule_accepted_then_works(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, args: list[str]
+) -> None:
     install_fake_runner(monkeypatch)
     rc = main(args, config=RunnerConfig(cwd=tmp_path, package_name="python_setup_lint"))
     assert isinstance(rc, int)
@@ -108,14 +122,22 @@ def test_main_group_and_sort_given_rule_accepted_then_works(tmp_path: Path, monk
 
 def test_run_lint_group_sort_given_rule_then_forwarded(monkeypatch: pytest.MonkeyPatch) -> None:
     install_fake_runner(monkeypatch)
-    rc = run_lint(config=RunnerConfig(cwd=Path("/tmp"), package_name="python_setup_lint"), statistics=True, group="tool", sort_by_rule=True)
+    rc = run_lint(
+        config=RunnerConfig(cwd=Path("/tmp"), package_name="python_setup_lint"), statistics=True, group="tool", sort_by_rule=True
+    )
     assert isinstance(rc, int)
 
 
 class TestGroupedOutput:
     @pytest.mark.parametrize(("group", "counts", "header", "markers", "tokens"), GROUPED_OUTPUT_CASES)
     def test_group_format_and_subtotals(
-        self, capsys: pytest.CaptureFixture[str], group: str, counts: list[ViolationCount], header: str, markers: list[str], tokens: list[str]
+        self,
+        capsys: pytest.CaptureFixture[str],
+        group: str,
+        counts: list[ViolationCount],
+        header: str,
+        markers: list[str],
+        tokens: list[str],
     ) -> None:
         _print_statistics_grouped(counts, group=group)
         out = capsys.readouterr().out
@@ -135,7 +157,13 @@ class TestGroupedOutput:
 class TestT8FailFastConfig:
     @pytest.mark.parametrize(("body", "reason_want", "exact_match"), MALFORMATION_CASES)
     def test_malformed_pyproject_raises(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None, body: str, reason_want: str, exact_match: bool
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        isolated_runner_registries: None,
+        body: str,
+        reason_want: str,
+        exact_match: bool,
     ) -> None:
         pyproject = write_pyproject(tmp_path, body)
         install_fake_runner(monkeypatch)
@@ -148,7 +176,13 @@ class TestT8FailFastConfig:
         else:
             assert reason_want in err.reason, f"reason: got {err.reason!r}, want substring {reason_want!r}"
 
-    def test_t8_fail_fast_given_unknown_tool_id_then_raises(self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None) -> None:
+    def test_t8_fail_fast_given_unknown_tool_id_then_raises(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        isolated_runner_registries: None,
+    ) -> None:
         install_fake_runner(monkeypatch)
         with pytest.raises(SystemExit) as exc_info:
             main(["--config", "bogus=/some/path.toml"], config=lint_config(tmp_path))
@@ -158,7 +192,9 @@ class TestT8FailFastConfig:
         assert "bogus" not in _SUPPORTED_CONFIG_KEYS
         assert {"ruff", "mypy", "pylint", "pyright", "rumdl", "ty"} <= _SUPPORTED_CONFIG_KEYS
 
-    def test_t8_fail_fast_given_bad_tools_list_then_raises(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None) -> None:
+    def test_t8_fail_fast_given_bad_tools_list_then_raises(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None
+    ) -> None:
         install_fake_runner(monkeypatch)
         config = RunnerConfig(cwd=tmp_path, tools_override=["ruff check", "bogus-tool-name"])
         with pytest.raises(ExtraToolsConfigError) as exc_info:
@@ -167,7 +203,9 @@ class TestT8FailFastConfig:
         assert "ruff check" in exc_info.value.reason
         assert exc_info.value.location == "<RunnerConfig.tools_override>"
 
-    def test_t8_fail_fast_given_clean_pyproject_then_runs_clean(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None) -> None:
+    def test_t8_fail_fast_given_clean_pyproject_then_runs_clean(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolated_runner_registries: None
+    ) -> None:
         write_pyproject(tmp_path, CLEAN_EXTRAS_PYPROJECT_BODY)
         (tmp_path / "src").mkdir(exist_ok=True)
         (tmp_path / "src" / "__init__.py").write_text("", encoding="utf-8")
@@ -194,9 +232,7 @@ class TestLintToolRegistry:
         from python_setup_lint.runner.dispatch import LintTool
 
         for name, strategy in STRATEGIES.items():
-            assert isinstance(strategy, LintTool), (
-                f"Strategy {strategy!r} is not a LintTool"
-            )
+            assert isinstance(strategy, LintTool), f"Strategy {strategy!r} is not a LintTool"
             assert strategy.name == name and strategy.spec.name == name
 
 
@@ -211,22 +247,14 @@ class TestRegisterLintTool:
         assert any(t.name == "t4-extra-test-tool" for t in LINT_TOOLS)
         assert isinstance(STRATEGIES.get("t4-extra-test-tool"), GenericLintTool)
 
-    def test_register_lint_tool_given_same_name_then_idempotent(
-        self, isolated_runner_registries: None
-    ) -> None:
+    def test_register_lint_tool_given_same_name_then_idempotent(self, isolated_runner_registries: None) -> None:
         register_lint_tool(ToolSpec("t4-idempotent-tool", ["t4ida"]))
         count_after_first = len(LINT_TOOLS)
-        register_lint_tool(
-            ToolSpec("t4-idempotent-tool", ["t4idb"])
-        )  # update-in-place, no growth
+        register_lint_tool(ToolSpec("t4-idempotent-tool", ["t4idb"]))  # update-in-place, no growth
         assert len(LINT_TOOLS) == count_after_first
-        assert next(
-            t for t in LINT_TOOLS if t.name == "t4-idempotent-tool"
-        ).command == ["t4idb"]
+        assert next(t for t in LINT_TOOLS if t.name == "t4-idempotent-tool").command == ["t4idb"]
 
-    def test_register_lint_tool_given_builtin_then_does_not_replace(
-        self, isolated_runner_registries: None
-    ) -> None:
+    def test_register_lint_tool_given_builtin_then_does_not_replace(self, isolated_runner_registries: None) -> None:
         original_strategy = STRATEGIES["ruff check"]
         register_lint_tool(ToolSpec("ruff check", ["ruff", "duplicate"]))
         assert STRATEGIES["ruff check"] is original_strategy
@@ -247,9 +275,7 @@ class TestGenericLintTool:
             default_paths=["src/"],
         )
         g = GenericLintTool(spec, statistics_flag=[], parser=None, config_flag=None)
-        assert g.build_command(
-            config=RunnerConfig(cwd=Path("/tmp")), _fix=True, _path=None, _exclude="tests/"
-        ) == [
+        assert g.build_command(config=RunnerConfig(cwd=Path("/tmp")), _fix=True, _path=None, _exclude="tests/") == [
             "t4g",
             "check",
             "--fix",
@@ -258,13 +284,14 @@ class TestGenericLintTool:
             "tests/",
         ]
 
-    @pytest.mark.parametrize(("override", "expected"), [
-        (["--stat-foo"], ["--stat-foo"]),  # explicit override wins
-    ],
-    ids=["stats_override_wins"],)
-    def test_statistics_flags_use_override(
-        self, override: list[str], expected: list[str]
-    ) -> None:
+    @pytest.mark.parametrize(
+        ("override", "expected"),
+        [
+            (["--stat-foo"], ["--stat-foo"]),  # explicit override wins
+        ],
+        ids=["stats_override_wins"],
+    )
+    def test_statistics_flags_use_override(self, override: list[str], expected: list[str]) -> None:
         from python_setup_lint.runner.dispatch import GenericLintTool
 
         g = GenericLintTool(
@@ -322,10 +349,7 @@ class TestStrategyForFallback:
         )
 
         original = STRATEGIES["ruff check"]
-        assert (
-            _strategy_for("ruff check", ToolSpec("ruff check", ["ruff", "check"]))
-            is original
-        )
+        assert _strategy_for("ruff check", ToolSpec("ruff check", ["ruff", "check"])) is original
 
     def test_unknown_name_returns_generic(self) -> None:
         from python_setup_lint.runner.dispatch import (
@@ -342,11 +366,8 @@ class TestStrategyForFallback:
             _strategy_for,
         )
 
-        _strategy_for(
-            "t4-no-cache-fallback", ToolSpec("t4-no-cache-fallback", ["t4nc"])
-        )
+        _strategy_for("t4-no-cache-fallback", ToolSpec("t4-no-cache-fallback", ["t4nc"]))
         assert "t4-no-cache-fallback" not in STRATEGIES
-
 
 
 def test_invalid_group_value_given_invalid_then_rejected() -> None:
@@ -354,4 +375,3 @@ def test_invalid_group_value_given_invalid_then_rejected() -> None:
     with pytest.raises(SystemExit) as exc_info:
         main(["--statistics", "--group", "bogus"])
     assert exc_info.value.code != 0
-

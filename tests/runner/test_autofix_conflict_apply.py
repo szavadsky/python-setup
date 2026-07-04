@@ -1,4 +1,5 @@
 """T4 — conflict-tolerant autofix: ``_apply_autofix_conflict_aware`` branch tests."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -62,17 +63,11 @@ class TestApplyAutofixConflictAware:
         assert result.tool_name == "ruff check"
         # (a) The fix tool's own pass fired — recorded with label + --fix.
         fix_passes = [c for c in fake.calls if c.label == "ruff check"]
-        assert len(fix_passes) == 1, (
-            f"expected exactly one 'ruff check' fix pass, got {fake.calls!r}"
-        )
-        assert "--fix" in fix_passes[0].cmd, (
-            f"--fix not in fix-pass cmd: {fix_passes[0].cmd!r}"
-        )
+        assert len(fix_passes) == 1, f"expected exactly one 'ruff check' fix pass, got {fake.calls!r}"
+        assert "--fix" in fix_passes[0].cmd, f"--fix not in fix-pass cmd: {fix_passes[0].cmd!r}"
         # (b) The canary fired once with the canary label.
         canary_calls = [c for c in fake.calls if c.label == _CANARY_LABEL]
-        assert len(canary_calls) == 1, (
-            f"canary did not fire exactly once: {fake.calls!r}"
-        )
+        assert len(canary_calls) == 1, f"canary did not fire exactly once: {fake.calls!r}"
         captured = capsys.readouterr()
         assert "autofix skipped" not in captured.err
         assert "autofix reverted" not in captured.err
@@ -188,12 +183,8 @@ class TestApplyAutofixConflictAware:
         # post-fix bytes — proves the fix tool actually wrote (the snapshot
         # the runner will revert has something to differ from).
         after_fix = wrapped.snapshots_after_label("ruff check")
-        assert after_fix is not None, (
-            "fix pass (label 'ruff check') was never invoked — no snapshot"
-        )
-        assert after_fix == post_fix, (
-            f"file NOT modified by fix pass: got {after_fix!r}, want {post_fix!r}"
-        )
+        assert after_fix is not None, "fix pass (label 'ruff check') was never invoked — no snapshot"
+        assert after_fix == post_fix, f"file NOT modified by fix pass: got {after_fix!r}, want {post_fix!r}"
         # (b) After the canary call (label == _CANARY_LABEL) the file STILL
         # held the post-fix bytes — proves the canary itself did NOT touch
         # the file (only the post-canary revert should change file state).
@@ -201,16 +192,13 @@ class TestApplyAutofixConflictAware:
         # inside ``_apply_autofix_conflict_aware`` — so the snapshot recorded
         # inside the canary's ``__call__`` is BEFORE the revert.
         after_canary = wrapped.snapshots_after_label(_CANARY_LABEL)
-        assert after_canary == post_fix, (
-            f"canary mutated file unexpectedly: got {after_canary!r}"
-        )
+        assert after_canary == post_fix, f"canary mutated file unexpectedly: got {after_canary!r}"
         # (c) Final on-disk state — RECORDED AFTER the helper returned —
         # equals original; proves the in-memory snapshot revert ran AFTER
         # the canary call (the only path that could transition post_fix →
         # original is the revert code path).
         assert target.read_text() == original, (
-            f"file NOT reverted to original after helper returned: "
-            f"got {target.read_text()!r}, want {original!r}"
+            f"file NOT reverted to original after helper returned: got {target.read_text()!r}, want {original!r}"
         )
 
     def test_apply_autofix_conflict_aware_given_canary_no_e999_then_no_revert(
@@ -248,14 +236,10 @@ class TestApplyAutofixConflictAware:
         assert "autofix reverted" not in captured.err
         # (a) The fix pass fired and modified the file.
         after_fix = wrapped.snapshots_after_label("ruff check")
-        assert after_fix == post_fix, (
-            f"fix pass did not modify file: got {after_fix!r}, want {post_fix!r}"
-        )
+        assert after_fix == post_fix, f"fix pass did not modify file: got {after_fix!r}, want {post_fix!r}"
         # (b) The canary fired (no E999 → no revert); file stays at post_fix.
         after_canary = wrapped.snapshots_after_label(_CANARY_LABEL)
-        assert after_canary == post_fix, (
-            f"canary mutated file unexpectedly: got {after_canary!r}"
-        )
+        assert after_canary == post_fix, f"canary mutated file unexpectedly: got {after_canary!r}"
         # (c) Final on-disk state is the post-fix content (no revert path;
         # the canary returned no E999 so the helper's revert loop never
         # entered — the file is left at the post-fix state).

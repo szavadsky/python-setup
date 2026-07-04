@@ -13,13 +13,9 @@ from tests.runner._factories import canned_results_all_tools, tmp_config
 
 _CANARY_LABEL = "python-setup:autofix-canary"
 
-_FIX_TOOL_NAMES: frozenset[str] = frozenset(
-    t.name for t in LINT_TOOLS if t.supports_fix
-)
+_FIX_TOOL_NAMES: frozenset[str] = frozenset(t.name for t in LINT_TOOLS if t.supports_fix)
 
-assert {"ruff check", "rumdl check", "ty check"} == _FIX_TOOL_NAMES, (
-    f"Built-in supports_fix set drifted: {_FIX_TOOL_NAMES!r}"
-)
+assert {"ruff check", "rumdl check", "ty check"} == _FIX_TOOL_NAMES, f"Built-in supports_fix set drifted: {_FIX_TOOL_NAMES!r}"
 
 
 # ── Git scaffolding ───────────────────────────────────────────────
@@ -29,11 +25,15 @@ def _git_init(cwd: Path) -> None:
     subprocess.run(["git", "init", "-q"], cwd=cwd, check=True, capture_output=True)
     subprocess.run(
         ["git", "config", "user.email", "test@example.com"],
-        cwd=cwd, check=True, capture_output=True,
+        cwd=cwd,
+        check=True,
+        capture_output=True,
     )
     subprocess.run(
         ["git", "config", "user.name", "Test"],
-        cwd=cwd, check=True, capture_output=True,
+        cwd=cwd,
+        check=True,
+        capture_output=True,
     )
 
 
@@ -51,19 +51,23 @@ def _stage(cwd: Path, rel: str) -> None:
 def _commit_all(cwd: Path, msg: str = "init") -> None:
     subprocess.run(["git", "add", "."], cwd=cwd, check=True, capture_output=True)
     subprocess.run(
-        ["git", "commit", "-q", "-m", msg], cwd=cwd, check=True, capture_output=True,
+        ["git", "commit", "-q", "-m", msg],
+        cwd=cwd,
+        check=True,
+        capture_output=True,
     )
 
 
 def _make_canned_fix_results(
-    *, canary_e999_files: tuple[str, ...] = (),
+    *,
+    canary_e999_files: tuple[str, ...] = (),
 ) -> dict[str, LintResult]:  # pylint: disable=generic-key-dict  # dict[str, LintResult] is a test helper; string keys are fixture labels
     base = canned_results_all_tools(exit_code=0, stdout="")
-    canary_stdout = "\n".join(
-        f"{f}:1:1: E999 SyntaxError" for f in canary_e999_files
-    ) if canary_e999_files else ""
+    canary_stdout = "\n".join(f"{f}:1:1: E999 SyntaxError" for f in canary_e999_files) if canary_e999_files else ""
     base[_CANARY_LABEL] = make_lint_result(
-        tool_name=_CANARY_LABEL, exit_code=1, stdout=canary_stdout,
+        tool_name=_CANARY_LABEL,
+        exit_code=1,
+        stdout=canary_stdout,
     )
     return base
 

@@ -46,12 +46,8 @@ _DETECT_CASES: list[Any] = [  # pylint: disable=unjustified-suppression  # test 
 ]
 
 
-@pytest.mark.parametrize(
-    ("code", "expected_symbol", "expected_field_count"), _DETECT_CASES
-)
-def test_detects_unnamed_tuple_dict_values(
-    code: str, expected_symbol: str, expected_field_count: int
-) -> None:
+@pytest.mark.parametrize(("code", "expected_symbol", "expected_field_count"), _DETECT_CASES)
+def test_detects_unnamed_tuple_dict_values(code: str, expected_symbol: str, expected_field_count: int) -> None:
     """Checker must flag bare tuple literals as dict values."""
     msgs = _walk_and_release(code, UnnamedTupleDictChecker)
     assert len(msgs) >= 1

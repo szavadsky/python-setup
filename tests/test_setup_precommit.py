@@ -41,9 +41,7 @@ def _read_precommit(project_dir: Path) -> str:  # pylint: disable=trivial-wrappe
 def _assert_rev_in_config(content: str, expected_rev: str) -> None:
     """Assert the config contains the expected ``rev: <expected_rev>`` line."""
     expected_line = f"    rev: {expected_rev}"
-    assert expected_line in content, (
-        f"Expected rev line {expected_line!r} not found in:\n{content}"
-    )
+    assert expected_line in content, f"Expected rev line {expected_line!r} not found in:\n{content}"
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────

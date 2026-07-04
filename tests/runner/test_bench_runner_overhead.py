@@ -9,6 +9,7 @@ per-tool time/memory table and the runner-overhead before/after numbers.
 Goal 5 (G-5) evidence: per-tool wall-time + peak RSS, runner Python overhead
 isolated and reduced to <5% of total ``run_lint`` walltime or <200ms absolute.
 """
+
 from __future__ import annotations
 
 import resource
@@ -44,9 +45,7 @@ def _make_synthetic_project(root: Path) -> None:
         "    def greet(self, name: str) -> str:\n"
         "        return f'{self.prefix} {name}'\n"
     )
-    (root / "pyproject.toml").write_text(
-        "[project]\nname = 'bench-test'\nversion = '0.1.0'\n"
-    )
+    (root / "pyproject.toml").write_text("[project]\nname = 'bench-test'\nversion = '0.1.0'\n")
     (root / ".secrets.baseline").write_text("{}")
 
 
@@ -123,7 +122,9 @@ def test_bench_runner_overhead_given_tmp_path_then_within_threshold(tmp_path: Pa
     cwd = tmp_path
     config = RunnerConfig(cwd=cwd, package_name="bench_test")
 
-    rows: list[dict[str, Any]] = []  # benchmark rows: per-tool measurements (wall_time, rss_delta, label, exit_code) -- dict values vary by tool
+    rows: list[
+        dict[str, Any]
+    ] = []  # benchmark rows: per-tool measurements (wall_time, rss_delta, label, exit_code) -- dict values vary by tool
 
     # ── 1. Per-tool individual measurements ─────────────────────
     for spec in TOOLS:
@@ -140,9 +141,7 @@ def test_bench_runner_overhead_given_tmp_path_then_within_threshold(tmp_path: Pa
                 py_dirs = config.default_py_dirs or ["src"]
                 paths = _find_py_files(py_dirs, cwd=cwd)
                 full_cmd.extend(paths)
-                elapsed, rss_delta, exit_code = _measure_tool(
-                    full_cmd, cwd=cwd, label=pylint_label
-                )
+                elapsed, rss_delta, exit_code = _measure_tool(full_cmd, cwd=cwd, label=pylint_label)
                 rows.append(
                     {
                         "tool": pylint_label,
@@ -184,11 +183,7 @@ def test_bench_runner_overhead_given_tmp_path_then_within_threshold(tmp_path: Pa
     runner_overhead_before = total_wall_before - sum_elapsed_before
     runner_rss_kb = round((rss_self_after - rss_self_before) / 1024, 1)
 
-    overhead_pct_before = (
-        (runner_overhead_before / total_wall_before * 100)
-        if total_wall_before > 0
-        else 0.0
-    )
+    overhead_pct_before = (runner_overhead_before / total_wall_before * 100) if total_wall_before > 0 else 0.0
 
     # ── 3. Write artifact ──────────────────────────────────────
     artifact_path = tmp_path / "bench-runner-overhead.md"
@@ -201,10 +196,7 @@ def test_bench_runner_overhead_given_tmp_path_then_within_threshold(tmp_path: Pa
         "| Tool | Wall-time (s) | Peak RSS (KB) | Exit code |",
         "|------|--------------:|--------------:|----------:|",
     ]
-    lines.extend(
-        f"| {row['tool']} | {row['walltime_s']} | {row['peak_rss_kb']} | {row['exit_code']} |"
-        for row in rows
-    )
+    lines.extend(f"| {row['tool']} | {row['walltime_s']} | {row['peak_rss_kb']} | {row['exit_code']} |" for row in rows)
 
     lines.extend(
         [
@@ -245,7 +237,5 @@ def test_bench_runner_overhead_given_tmp_path_then_within_threshold(tmp_path: Pa
 
     artifact_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"\n[bench] Artifact written to {artifact_path}")
-    print(
-        f"[bench] Runner overhead: {runner_overhead_before:.3f}s ({overhead_pct_before:.1f}%)"
-    )
+    print(f"[bench] Runner overhead: {runner_overhead_before:.3f}s ({overhead_pct_before:.1f}%)")
     print(f"[bench] Per-tool measurements: {len(rows)} rows")

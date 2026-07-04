@@ -47,23 +47,17 @@ class TestUseStructlog:
 
     def test_use_structlog_given_logging_getlogger_in_source_root_then_flagged(self) -> None:
         """``logging.getLogger(...)`` in source root is flagged."""
-        msgs = _walk_and_release(
-            "import logging\nlogger = logging.getLogger(__name__)\n"
-        )
+        msgs = _walk_and_release("import logging\nlogger = logging.getLogger(__name__)\n")
         assert _msg_count(msgs, "use-structlog") == 1
 
     def test_use_structlog_given_logging_getlogger_with_name_then_flagged(self) -> None:
         """``logging.getLogger("name")`` is flagged."""
-        msgs = _walk_and_release(
-            'import logging\nlogger = logging.getLogger("my_logger")\n'
-        )
+        msgs = _walk_and_release('import logging\nlogger = logging.getLogger("my_logger")\n')
         assert _msg_count(msgs, "use-structlog") == 1
 
     def test_use_structlog_given_structlog_get_logger_then_not_flagged(self) -> None:
         """``structlog.get_logger`` is NOT flagged."""
-        msgs = _walk_and_release(
-            "import structlog\nlogger = structlog.get_logger(__name__)\n"
-        )
+        msgs = _walk_and_release("import structlog\nlogger = structlog.get_logger(__name__)\n")
         assert _msg_count(msgs, "use-structlog") == 0
 
     def test_use_structlog_given_logging_getlogger_outside_source_root_then_not_flagged(self) -> None:
@@ -77,9 +71,7 @@ class TestUseStructlog:
 
     def test_use_structlog_given_other_module_getlogger_then_not_flagged(self) -> None:
         """``other.getLogger`` is NOT flagged."""
-        msgs = _walk_and_release(
-            "import other\nlogger = other.getLogger(__name__)\n"
-        )
+        msgs = _walk_and_release("import other\nlogger = other.getLogger(__name__)\n")
         assert _msg_count(msgs, "use-structlog") == 0
 
 
@@ -91,41 +83,30 @@ class TestUseStructuredLogging:
 
     def test_use_structured_logging_given_printf_style_format_then_flagged(self) -> None:
         """``log.info("fmt %s", arg)`` is flagged."""
-        msgs = _walk_and_release(
-            'import structlog\nlog = structlog.get_logger(__name__)\n'
-            'log.info("hello %s", "world")\n'
-        )
+        msgs = _walk_and_release('import structlog\nlog = structlog.get_logger(__name__)\nlog.info("hello %s", "world")\n')
         assert _msg_count(msgs, "use-structured-logging") == 1
 
     def test_use_structured_logging_given_fstring_then_flagged(self) -> None:
         """``log.info(f"msg {var}")`` is flagged."""
         msgs = _walk_and_release(
-            'import structlog\nlog = structlog.get_logger(__name__)\n'
-            'name = "world"\n'
-            'log.info(f"hello {name}")\n'
+            'import structlog\nlog = structlog.get_logger(__name__)\nname = "world"\nlog.info(f"hello {name}")\n'
         )
         assert _msg_count(msgs, "use-structured-logging") == 1
 
     def test_use_structured_logging_given_kwargs_only_then_not_flagged(self) -> None:
         """``log.info("msg", key=val)`` is NOT flagged."""
-        msgs = _walk_and_release(
-            'import structlog\nlog = structlog.get_logger(__name__)\n'
-            'log.info("hello", name="world")\n'
-        )
+        msgs = _walk_and_release('import structlog\nlog = structlog.get_logger(__name__)\nlog.info("hello", name="world")\n')
         assert _msg_count(msgs, "use-structured-logging") == 0
 
     def test_use_structured_logging_given_single_string_arg_then_not_flagged(self) -> None:
         """``log.info("plain message")`` is NOT flagged."""
-        msgs = _walk_and_release(
-            'import structlog\nlog = structlog.get_logger(__name__)\n'
-            'log.info("hello world")\n'
-        )
+        msgs = _walk_and_release('import structlog\nlog = structlog.get_logger(__name__)\nlog.info("hello world")\n')
         assert _msg_count(msgs, "use-structured-logging") == 0
 
     def test_use_structured_logging_given_all_log_levels_then_flagged(self) -> None:
         """All log levels are checked for printf-style."""
         code = (
-            'import structlog\nlog = structlog.get_logger(__name__)\n'
+            "import structlog\nlog = structlog.get_logger(__name__)\n"
             'log.debug("fmt %s", "a")\n'
             'log.info("fmt %s", "b")\n'
             'log.warning("fmt %s", "c")\n'
@@ -138,8 +119,7 @@ class TestUseStructuredLogging:
     def test_use_structured_logging_given_outside_source_root_then_not_flagged(self) -> None:
         """Logger calls outside source roots are NOT flagged."""
         msgs = _walk_and_release(
-            'import structlog\nlog = structlog.get_logger(__name__)\n'
-            'log.info("fmt %s", "world")\n',
+            'import structlog\nlog = structlog.get_logger(__name__)\nlog.info("fmt %s", "world")\n',
             file_path="tests/test_mod.py",
             source_roots=["src"],
         )
@@ -147,22 +127,15 @@ class TestUseStructuredLogging:
 
     def test_use_structured_logging_given_printf_on_logger_then_flagged(self) -> None:
         """``log.info("fmt %s", "arg")`` is flagged (conservative lint)."""
-        msgs = _walk_and_release(
-            'import structlog\nlog = structlog.get_logger(__name__)\n'
-            'log.info("fmt %s", "arg")\n'
-        )
+        msgs = _walk_and_release('import structlog\nlog = structlog.get_logger(__name__)\nlog.info("fmt %s", "arg")\n')
         assert _msg_count(msgs, "use-structured-logging") == 1
+
     def test_use_structured_logging_given_non_logger_object_then_not_flagged(self) -> None:
         """``obj.info("fmt %s", "arg")`` is NOT flagged (not a logger)."""
-        msgs = _walk_and_release(
-            'obj = SomeClass()\nobj.info("fmt %s", "arg")\n'
-        )
+        msgs = _walk_and_release('obj = SomeClass()\nobj.info("fmt %s", "arg")\n')
         assert _msg_count(msgs, "use-structured-logging") == 0
 
     def test_use_structured_logging_given_percent_literal_then_not_flagged(self) -> None:
         """``log.info("100% done")`` with literal %% is NOT flagged."""
-        msgs = _walk_and_release(
-            'import structlog\nlog = structlog.get_logger(__name__)\n'
-            'log.info("100% done")\n'
-        )
+        msgs = _walk_and_release('import structlog\nlog = structlog.get_logger(__name__)\nlog.info("100% done")\n')
         assert _msg_count(msgs, "use-structured-logging") == 0

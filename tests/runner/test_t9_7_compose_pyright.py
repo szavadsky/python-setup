@@ -21,6 +21,7 @@ Coverage mapping (envelope ``T9.7.envelope.md``):
 * **observability** — the live smoke records ``summary`` + ``.venv`` diagnostic
   count + the raw constructed command in the per-test artifact dir.
 """
+
 from __future__ import annotations
 
 import json
@@ -86,9 +87,7 @@ class TestComposePyrightConfigNoRewrite:
         # shared is in tmp_path (cwd) → fast path.
         assert _compose_pyright_config(tmp_path, shared) == shared
 
-    def test_compose_pyright_config_given_unreadable_file_then_returns_shared(
-        self, tmp_path: Path
-    ) -> None:
+    def test_compose_pyright_config_given_unreadable_file_then_returns_shared(self, tmp_path: Path) -> None:
         """Missing or unreadable shipped config ⇒ shared returned unchanged."""
         shared = tmp_path / "does_not_exist.json"
         # The helper must not crash the runner; pyright surfaces the missing
@@ -182,9 +181,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
     """
 
     def _config_with_shipped(self, tmp_path: Path) -> RunnerConfig:
-        shipped = _write_shipped_config(
-            tmp_path / "shared" / "pyrightconfig.json", body=_SHIPPED_BODY
-        )
+        shipped = _write_shipped_config(tmp_path / "shared" / "pyrightconfig.json", body=_SHIPPED_BODY)
         return RunnerConfig(
             cwd=tmp_path,
             tools_override=["pyright check"],
@@ -214,9 +211,7 @@ class TestRunLintConsumesPyrightDefaultCompose:
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config)
         pyright_rec = next((r for r in fake.calls if r.cmd[:1] == ["pyright"]), None)
-        assert pyright_rec is not None, (
-            f"pyright not dispatched; calls={[r.cmd[:2] for r in fake.calls[:3]]}"
-        )
+        assert pyright_rec is not None, f"pyright not dispatched; calls={[r.cmd[:2] for r in fake.calls[:3]]}"
         proj_idx = pyright_rec.cmd.index("--project")
         composed_path = pyright_rec.cmd[proj_idx + 1]
         assert composed_path == str(tmp_path / ".pyrightconfig-composed.json")
@@ -265,13 +260,8 @@ class TestRunLintConsumesPyrightDefaultCompose:
         shared_ruff = tmp_path / "shared_ruff.toml"
         shared_ruff.write_text("line-length = 130\n")
         pp = tmp_path / "pyproject.toml"
-        pp.write_text(
-            '[project]\nname = "x"\n[tool.ruff.lint.flake8-tidy-imports]\n'
-            'banned-api."foo.bar" = { msg = "no" }\n'
-        )
-        pyright_shipped = _write_shipped_config(
-            tmp_path / "shared" / "pyrightconfig.json", body=_SHIPPED_BODY
-        )
+        pp.write_text('[project]\nname = "x"\n[tool.ruff.lint.flake8-tidy-imports]\nbanned-api."foo.bar" = { msg = "no" }\n')
+        pyright_shipped = _write_shipped_config(tmp_path / "shared" / "pyrightconfig.json", body=_SHIPPED_BODY)
         config = RunnerConfig(
             cwd=tmp_path,
             ruff_project_overrides=True,

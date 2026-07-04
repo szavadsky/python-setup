@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import tomllib
@@ -52,13 +51,11 @@ def _infer_package_name(cwd: Path) -> str | None:
     try:
         with open(pyproject, "rb") as f:
             data = tomllib.load(f)
-    except (OSError, tomllib.TOMLDecodeError):  # pylint: disable=W9740  # best-effort pyproject parse fallback; logging would noise unavoidable parse/IO degrade
+    except OSError, tomllib.TOMLDecodeError:  # pylint: disable=W9740  # best-effort pyproject parse fallback; logging would noise unavoidable parse/IO degrade
         return None
     try:
-        packages: list[str] = data["tool"]["hatch"]["build"]["targets"]["wheel"][
-            "packages"
-        ]  # type: ignore[index]  # nested dict access; mypy cannot infer the deep key
-    except (KeyError, TypeError):  # pylint: disable=W9740  # best-effort config key lookup fallback; logging would noise unavoidable key-missing degrade
+        packages: list[str] = data["tool"]["hatch"]["build"]["targets"]["wheel"]["packages"]  # type: ignore[index]  # nested dict access; mypy cannot infer the deep key
+    except KeyError, TypeError:  # pylint: disable=W9740  # best-effort config key lookup fallback; logging would noise unavoidable key-missing degrade
         return None
     if not packages:
         return None
@@ -81,9 +78,7 @@ _CONFIG_KEY_ALIASES: dict[str, str] = {
     "mypy": "mypy",
     "pylint": "pylint",
 }
-_SUPPORTED_CONFIG_KEYS: frozenset[str] = frozenset(
-    set(_CONFIG_KEY_ALIASES) | set(_CONFIG_KEY_ALIASES.values())
-)
+_SUPPORTED_CONFIG_KEYS: frozenset[str] = frozenset(set(_CONFIG_KEY_ALIASES) | set(_CONFIG_KEY_ALIASES.values()))
 
 
 def _config_origin(

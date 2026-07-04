@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from astroid import nodes
@@ -14,7 +13,6 @@ from python_setup_lint.checkers._base import (
 
 
 class TempFileChecker(BaseChecker):
-
     name: str = "tempfile-mkdtemp-in-test"
     msgs = _msgs(
         W9702=MessageDef(
@@ -61,25 +59,18 @@ class TempFileChecker(BaseChecker):
         # For NamedTemporaryFile, only flag if NOT used as context manager
         if self._is_named_temporary(node) and self._is_context_manager(node):
             return
-        self.add_message(
-            "tempfile-mkdtemp-in-test", node=node, args=(self._call_name(node),)
-        )
+        self.add_message("tempfile-mkdtemp-in-test", node=node, args=(self._call_name(node),))
 
     def _is_tempfile_call(self, node: nodes.Call) -> bool:
         if not isinstance(node.func, nodes.Attribute):
             return False
         if node.func.attrname not in self._TEMP_FILE_FUNCS:
             return False
-        return (
-            isinstance(node.func.expr, nodes.Name) and node.func.expr.name == "tempfile"
-        )
+        return isinstance(node.func.expr, nodes.Name) and node.func.expr.name == "tempfile"
 
     @staticmethod
     def _is_named_temporary(node: nodes.Call) -> bool:
-        return (
-            isinstance(node.func, nodes.Attribute)
-            and node.func.attrname == "NamedTemporaryFile"
-        )
+        return isinstance(node.func, nodes.Attribute) and node.func.attrname == "NamedTemporaryFile"
 
     @staticmethod
     def _is_context_manager(node: nodes.Call) -> bool:

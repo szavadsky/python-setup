@@ -10,7 +10,6 @@ __all__ = ["LintResult", "RunnerConfig", "ToolSpec", "ViolationCount"]
 
 
 class ToolSpec(NamedTuple):
-
     name: str
     command: list[str]
     supports_fix: bool = False
@@ -25,7 +24,6 @@ class ToolSpec(NamedTuple):
 
 @dataclass
 class LintResult:
-
     tool_name: str
     exit_code: int
     stdout: str
@@ -35,7 +33,6 @@ class LintResult:
 
 @dataclass
 class ViolationCount:
-
     tool: str
     rule: str
     count: int
@@ -50,7 +47,6 @@ class ViolationCount:
 
 @dataclass
 class RunnerConfig:
-
     cwd: Path
     package_name: str | None = None
     default_py_dirs: list[str] | None = None

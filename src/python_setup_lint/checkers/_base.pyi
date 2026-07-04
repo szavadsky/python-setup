@@ -56,7 +56,6 @@ class SourceRootMixin:
     def open(self) -> None: ...
     def _skip_if_outside_source_roots(self, node: nodes.NodeNG) -> bool: ...
 
-
 class FunctionVisitMixin(SourceRootMixin):
     """Mixin for checkers that visit function definitions.
 
@@ -66,7 +65,6 @@ class FunctionVisitMixin(SourceRootMixin):
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None: ...
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None: ...
-
 
 def check_if_meaningful(
     text: str,

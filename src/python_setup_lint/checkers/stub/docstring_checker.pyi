@@ -30,5 +30,4 @@ class StubDocstringChecker(BaseChecker):
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
         """Emit W9700 if async function/method has a docstring in an enabled module."""
 
-
 def register(linter: PyLinter) -> None: ...

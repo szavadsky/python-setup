@@ -9,7 +9,6 @@ from python_setup_lint.checkers._base import MessageDef, _msgs
 
 
 class TrivialWrapperChecker(BaseChecker):
-
     name: str = "trivial-wrapper"
     msgs = _msgs(
         W9728=MessageDef(
@@ -179,12 +178,7 @@ class TrivialWrapperChecker(BaseChecker):
             assign_is_call = is_assign and isinstance(body[0].value, nodes.Call)
             return_is_name = is_return and body[1].value is not None and isinstance(body[1].value, nodes.Name)
             target_is_assignname = has_single_target and isinstance(body[0].targets[0], nodes.AssignName)
-            if (
-                target_is_assignname
-                and assign_is_call
-                and return_is_name
-                and body[1].value.name == body[0].targets[0].name
-            ):
+            if target_is_assignname and assign_is_call and return_is_name and body[1].value.name == body[0].targets[0].name:
                 return body[0].value
         return None
 
@@ -195,7 +189,11 @@ class TrivialWrapperChecker(BaseChecker):
         Returns:
             True if the call is a ``self.method(...)`` pattern.
         """
-        return isinstance(call_node.func, nodes.Attribute) and isinstance(call_node.func.expr, nodes.Name) and call_node.func.expr.name == "self"
+        return (
+            isinstance(call_node.func, nodes.Attribute)
+            and isinstance(call_node.func.expr, nodes.Name)
+            and call_node.func.expr.name == "self"
+        )
 
     @staticmethod
     def _get_call_target_name(call_node: nodes.Call) -> str | None:
@@ -229,9 +227,7 @@ class TrivialWrapperChecker(BaseChecker):
             num_params += 1
 
         # Count call arguments
-        num_call_args = len(call_node.args) + (
-            len(call_node.keywords) if call_node.keywords else 0
-        )
+        num_call_args = len(call_node.args) + (len(call_node.keywords) if call_node.keywords else 0)
 
         # Rough match: call args should be close to params
         # Allow some flexibility for *args/**kwargs

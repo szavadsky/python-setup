@@ -29,7 +29,6 @@ _PAT_PRECEDING_COMMENT = re.compile(r"^\s*#\s+(.+)")
 
 
 class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
-
     name: str = "suppression-justification"
     msgs: dict[str, MessageDefinitionTuple] = _msgs(
         W9704=MessageDef(
@@ -37,7 +36,7 @@ class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type:
             symbol="unjustified-suppression",
             description="Suppression comments (pylint-disable, noqa, "
             "type-ignore comments) must be accompanied by a technical reason "
-            "on the same line or the preceding line."
+            "on the same line or the preceding line.",
         ),
     )
 
@@ -49,7 +48,7 @@ class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type:
         # literals are excluded by column-range overlap.
         try:
             stream = node.stream()  # type: ignore[union-attr]  # node is ModuleNode from astroid, stream() exists at runtime
-        except (AttributeError, OSError):  # pylint: disable=W9740  # best-effort stream access fallback; logging would noise unavoidable attribute/IO degrade
+        except AttributeError, OSError:  # pylint: disable=W9740  # best-effort stream access fallback; logging would noise unavoidable attribute/IO degrade
             return
 
         try:
@@ -134,9 +133,7 @@ class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type:
             return SuppressionJustificationChecker._subscript_contains_any(annotation)
         return False
 
-    def _emit_if_unjustified(
-        self, annotation: nodes.NodeNG, lineno: int
-    ) -> None:
+    def _emit_if_unjustified(self, annotation: nodes.NodeNG, lineno: int) -> None:
         # Extract the source line for *lineno* and look for a trailing
         # ``# <reason>`` comment on that same line.
         try:
@@ -146,13 +143,15 @@ class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type:
             source = raw.decode("utf-8") if isinstance(raw, bytes) else raw
             lines = source.splitlines(keepends=True)
             src_line = lines[lineno - 1].rstrip("\n")
-        except (AttributeError, OSError, IndexError):  # pylint: disable=W9740  # best-effort source line extraction; silently skip if unavailable
+        except AttributeError, OSError, IndexError:  # pylint: disable=W9740  # best-effort source line extraction; silently skip if unavailable
             return
 
         m = _PAT_TRAILING_REASON.search(src_line)
         if m:
             reason = m.group(1)
-            if check_if_meaningful(reason, comment=reason, rule="unjustified-suppression", code_context=src_line.split("#", 1)[0].strip()):
+            if check_if_meaningful(
+                reason, comment=reason, rule="unjustified-suppression", code_context=src_line.split("#", 1)[0].strip()
+            ):
                 return
 
         self.add_message(
@@ -263,7 +262,12 @@ class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type:
             body = ast_node.body  # type: ignore[union-attr]  # ast_node may not be a Module (e.g. FunctionDef/ClassDef); fallback guard for non-doc_node astroid versions
         except AttributeError:  # pylint: disable=W9740  # best-effort body attr fallback; logging would noise unavoidable attribute degrade
             return
-        if body and isinstance(body[0], nodes.Expr) and isinstance(body[0].value, nodes.Const) and isinstance(body[0].value.value, str):
+        if (
+            body
+            and isinstance(body[0], nodes.Expr)
+            and isinstance(body[0].value, nodes.Const)
+            and isinstance(body[0].value.value, str)
+        ):
             SuppressionJustificationChecker._add_const_span(spans, body[0].value)
 
     @staticmethod
@@ -321,11 +325,7 @@ class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type:
         ]
         if not matches:
             return False
-        return all(
-            any(start_col <= m_start < end_col for start_col, end_col in spans)
-            for m_start, _m_end in matches
-        )
-
+        return all(any(start_col <= m_start < end_col for start_col, end_col in spans) for m_start, _m_end in matches)
 
     @staticmethod
     def _has_justification(lines: list[str], idx: int) -> bool:
@@ -348,7 +348,10 @@ class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type:
         # suppression as a "trailing reason" for a suppression pattern
         # inside a string literal earlier on the line.
         _suppression_patterns = (
-            _PAT_PYLINT_DISABLE, _PAT_NOQA, _PAT_TYPE_IGNORE, _PAT_TY_IGNORE,
+            _PAT_PYLINT_DISABLE,
+            _PAT_NOQA,
+            _PAT_TYPE_IGNORE,
+            _PAT_TY_IGNORE,
         )
         for pat in _suppression_patterns:
             for m in pat.finditer(line):
@@ -357,9 +360,7 @@ class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type:
                 next_supp: re.Match[str] | None = None
                 for next_pat in _suppression_patterns:
                     next_m = next_pat.search(after)
-                    if next_m is not None and (
-                        next_supp is None or next_m.start() < next_supp.start()
-                    ):
+                    if next_m is not None and (next_supp is None or next_m.start() < next_supp.start()):
                         next_supp = next_m
                 # Only look for a trailing reason before the next suppression.
                 search_after = after
@@ -368,7 +369,9 @@ class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type:
                 tm = _PAT_TRAILING_REASON.search(search_after)
                 if tm:
                     reason = tm.group(1)
-                    if check_if_meaningful(reason, comment=reason, rule="unjustified-suppression", code_context=line.split("#", 1)[0].strip()):
+                    if check_if_meaningful(
+                        reason, comment=reason, rule="unjustified-suppression", code_context=line.split("#", 1)[0].strip()
+                    ):
                         return True
 
         # Preceding line is a comment with a reason.
@@ -377,7 +380,9 @@ class SuppressionJustificationChecker(FunctionVisitMixin, BaseChecker):  # type:
             pm = _PAT_PRECEDING_COMMENT.match(prev)
             if pm:
                 reason = pm.group(1)
-                if check_if_meaningful(reason, comment=reason, rule="unjustified-suppression", code_context=lines[idx].split("#", 1)[0].strip()):
+                if check_if_meaningful(
+                    reason, comment=reason, rule="unjustified-suppression", code_context=lines[idx].split("#", 1)[0].strip()
+                ):
                     return True
 
         return False

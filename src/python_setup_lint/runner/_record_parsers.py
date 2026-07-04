@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import re
@@ -9,7 +8,7 @@ from ._record_types import Record, _compare_records_key
 def _parse_int(text: str) -> int | None:
     try:
         return int(text)
-    except (TypeError, ValueError):  # pylint: disable=W9740  # best-effort int parse fallback; logging would noise unavoidable parse degrade
+    except TypeError, ValueError:  # pylint: disable=W9740  # best-effort int parse fallback; logging would noise unavoidable parse degrade
         return None
 
 
@@ -37,17 +36,13 @@ def _parse_pylint_records(stdout: str) -> list[Record]:
         # R0401 cyclic-import
         cyc = _PYLINT_R0401_RE.search(line)
         if cyc:
-            records.append(
-                Record(None, None, None, f"R0401:{cyc.group('cycle')}", line)
-            )
+            records.append(Record(None, None, None, f"R0401:{cyc.group('cycle')}", line))
             i += 1
             continue
         # R0801 similar-lines: gather ==file:[l:c] spans
         is_banner = "Similar lines in" in line or _PYLINT_R0801_SPAN_RE.search(line)
         if is_banner:
-            collected: list[tuple[str, str, str]] = list(
-                _PYLINT_R0801_SPAN_RE.findall(line)
-            )
+            collected: list[tuple[str, str, str]] = list(_PYLINT_R0801_SPAN_RE.findall(line))
             j = i + 1
             while j < n and len(collected) < 2:
                 nxt = lines[j].rstrip()
@@ -146,9 +141,7 @@ def _parse_mypy_records(stdout: str) -> list[Record]:
 # Ty: path:line:col: error_code msg OR error[code]: msg / --> path:line:col
 _TY_LONG_RE = re.compile(r"^error\[(?P<code>[^\]]+)\]:\s*(?P<msg>.*?)\s*$")
 _TY_ARROW_RE = re.compile(r"^\s*-->\s*(?P<file>\S+?):(?P<line>\d+):(?P<col>\d+)")
-_TY_CONCISE_RE = re.compile(
-    r"^(?P<file>\S+?):(?P<line>\d+):(?P<col>\d+):\s+(?P<code>\S+)\s+(?P<msg>.*?)\s*$"
-)
+_TY_CONCISE_RE = re.compile(r"^(?P<file>\S+?):(?P<line>\d+):(?P<col>\d+):\s+(?P<code>\S+)\s+(?P<msg>.*?)\s*$")
 
 
 def _parse_ty_records(stdout: str) -> list[Record]:
@@ -192,9 +185,7 @@ def _parse_ty_records(stdout: str) -> list[Record]:
 
 
 # Yamllint: file:line:col:rule_id:message
-_YAMLLINT_RE = re.compile(
-    r"^(?P<file>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<rule>[^:\s]+):(?P<msg>.*)$"
-)
+_YAMLLINT_RE = re.compile(r"^(?P<file>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<rule>[^:\s]+):(?P<msg>.*)$")
 
 
 def _parse_yamllint_records(stdout: str) -> list[Record]:
@@ -217,9 +208,7 @@ def _parse_yamllint_records(stdout: str) -> list[Record]:
 
 
 # Rumdl: file:line:col: [RULE] msg
-_RUMDL_LINE_RE = re.compile(
-    r"^(?P<file>[^:]+):(?P<line>\d+):(?P<col>\d+):\s+\[(?P<rule>[^\]]+)\]\s+(?P<msg>.*?)\s*$"
-)
+_RUMDL_LINE_RE = re.compile(r"^(?P<file>[^:]+):(?P<line>\d+):(?P<col>\d+):\s+\[(?P<rule>[^\]]+)\]\s+(?P<msg>.*?)\s*$")
 
 
 def _parse_rumdl_records(stdout: str) -> list[Record]:
@@ -269,15 +258,16 @@ def _parse_pyright_records(data: object) -> list[Record]:
                 (line_int + 1) if line_int is not None else None,
                 (col_int + 1) if col_int is not None else None,
                 rule,
-                (d.get("message") or "").rstrip()
-                if isinstance(d.get("message"), str)
-                else "",
+                (d.get("message") or "").rstrip() if isinstance(d.get("message"), str) else "",
             )
         )
     records.sort(key=_compare_records_key)
     return records
+
+
 def _parse_pyright_check_records(stdout: str) -> list[Record]:
     import json
+
     try:
         data = json.loads(stdout)
     except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
@@ -285,5 +275,3 @@ def _parse_pyright_check_records(stdout: str) -> list[Record]:
     if not isinstance(data, dict):
         return []
     return _parse_pyright_records(data)
-
-

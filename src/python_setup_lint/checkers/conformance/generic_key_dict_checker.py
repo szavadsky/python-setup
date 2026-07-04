@@ -25,7 +25,6 @@ _DOMAIN_VALUE_TYPES: frozenset[str] = frozenset(
 
 
 class GenericKeyDictChecker(BaseChecker):
-
     name: str = "generic-key-dict"
     msgs: dict[str, MessageDefinitionTuple] = _msgs(
         W9721=MessageDef(
@@ -43,8 +42,7 @@ class GenericKeyDictChecker(BaseChecker):
                 "type": "csv",
                 "metavar": "<categories>",
                 "default": ["filenames", "identifiers", "paths", "display"],
-                "help": "Comma-separated list of allowed string-key categories: "
-                "filenames, identifiers, paths, display.",
+                "help": "Comma-separated list of allowed string-key categories: filenames, identifiers, paths, display.",
             },
         ),
     )
@@ -139,14 +137,10 @@ class GenericKeyDictChecker(BaseChecker):
         """
         parent = node.parent
         # AnnAssign: x: dict[str, X] = ...
-        if isinstance(parent, nodes.AnnAssign) and isinstance(
-            parent.target, nodes.AssignName
-        ):
+        if isinstance(parent, nodes.AnnAssign) and isinstance(parent.target, nodes.AssignName):
             return parent.target.name
         # Assign: x = ...  (type annotation on the value side)
-        if isinstance(parent, nodes.Assign) and isinstance(
-            parent.targets[0], nodes.AssignName
-        ):
+        if isinstance(parent, nodes.Assign) and isinstance(parent.targets[0], nodes.AssignName):
             return parent.targets[0].name
         return None
 
@@ -160,12 +154,7 @@ class GenericKeyDictChecker(BaseChecker):
         # ``msgs`` is the canonical pylint checker message dict — always allowed.
         if lower == "msgs":
             return True
-        if (
-            "filename" in lower
-            or "file" in lower
-            or "_path" in lower
-            or "path" in lower
-        ):
+        if "filename" in lower or "file" in lower or "_path" in lower or "path" in lower:
             return "filenames" in self._allowed or "paths" in self._allowed
         if "index" in lower or "map" in lower or "by_" in lower:
             return "identifiers" in self._allowed

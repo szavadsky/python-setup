@@ -24,7 +24,7 @@ def _check_config_drift(project_dir: Path, /) -> list[str]:
     try:
         saved = json.loads(state_path.read_text(encoding="utf-8"))
         saved_checksums: dict[str, str] = saved.get("config_checksums", {})
-    except (json.JSONDecodeError, KeyError):  # pylint: disable=W9740  # best-effort state file parse fallback; logging would noise unavoidable parse/IO degrade
+    except json.JSONDecodeError, KeyError:  # pylint: disable=W9740  # best-effort state file parse fallback; logging would noise unavoidable parse/IO degrade
         print("  [config] .python-setup-state.json unreadable — skipping drift check")
         return []
 

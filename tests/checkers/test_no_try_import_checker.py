@@ -4,6 +4,7 @@ Verifies the AST checker detects (and does not detect) the correct
 try/except+import patterns. All fixture src strings live in
 ``tests/checkers/_factories.py`` (free LOC, not counted against the gate).
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -37,14 +38,10 @@ def test_checker_given_try_except_import_pattern_then_flags_violation(
     first message's ``args`` tuple matches (verifying the labelled reason).
     """
     msgs = _walk_and_release(code, NoTryImportChecker)
-    assert len(msgs) == expected_count, (
-        f"src={code!r} → {len(msgs)} messages (expected {expected_count})"
-    )
+    assert len(msgs) == expected_count, f"src={code!r} → {len(msgs)} messages (expected {expected_count})"
     if expected_args:
         assert msgs[0].msg_id == "no-try-import"
-        assert msgs[0].args == expected_args, (
-            f"args={msgs[0].args!r} (expected {expected_args!r})"
-        )
+        assert msgs[0].args == expected_args, f"args={msgs[0].args!r} (expected {expected_args!r})"
 
 
 @pytest.mark.parametrize("code", _NO_TRY_DO_NOT_DETECT_CASES)

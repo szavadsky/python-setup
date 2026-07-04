@@ -47,7 +47,6 @@ def _has_companion_stub(py_path: Path, linter: PyLinter) -> bool:
 
 
 class StubDocstringChecker(BaseChecker):
-
     name: str = "stub-docstring-checker"
     _enabled_for_module: bool
     _current_module_name: str | None
@@ -93,14 +92,8 @@ class StubDocstringChecker(BaseChecker):
 
         # Only process modules that passed stub_checker exemptions
         stub_checker = _get_stub_checker(self.linter)
-        if (
-            stub_checker is not None
-            and module_name
-            and module_name not in stub_checker._coverage.module_index
-        ):
-            log.debug(
-                "Skip module not in stub_checker module_index", module=module_name
-            )
+        if stub_checker is not None and module_name and module_name not in stub_checker._coverage.module_index:
+            log.debug("Skip module not in stub_checker module_index", module=module_name)
             return
 
         if suffix == ".py":
@@ -142,9 +135,7 @@ class StubDocstringChecker(BaseChecker):
                 args=(self._current_module_name or "", getattr(node, "name", "")),
             )
 
-    def _check_function(
-        self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef
-    ) -> None:
+    def _check_function(self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> None:
         # Rule 1: docstring-in-impl — flag usage docstrings in .py with companion .pyi
         if func_node.doc_node is not None and not func_node.name.startswith("_"):
             self.add_message(
@@ -164,9 +155,7 @@ class StubDocstringChecker(BaseChecker):
             return  # non-_ in .py — docstring is canonical in .pyi
         self._check_returns_clause(func_node)
 
-    def _check_returns_clause(
-        self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef
-    ) -> None:
+    def _check_returns_clause(self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef) -> None:
         """Emit W9705 if function has a generic return type but no Returns: clause."""
         returns = func_node.returns
         if returns is None:
@@ -215,19 +204,19 @@ class StubDocstringChecker(BaseChecker):
             return returns.name in {"int", "str", "bool"}
         # dict[str, X] or dict[int, X] — Subscript with Name("dict") value
         if isinstance(returns, nodes.Subscript) and isinstance(returns.value, nodes.Name) and returns.value.name == "dict":
-                # Check the first subscript argument is str or int
-                slice_node = returns.slice
-                if isinstance(slice_node, nodes.Tuple):
-                    if slice_node.elts:
-                        first = slice_node.elts[0]
-                        if isinstance(first, nodes.Name) and first.name in {"str", "int"}:
-                            return True
-                elif (
-                    isinstance(slice_node, nodes.Name) and slice_node.name in {"str", "int"}
-                ) or (
-                    isinstance(slice_node, nodes.Subscript) and isinstance(slice_node.value, nodes.Name) and slice_node.value.name in {"str", "int"}
-                ):
-                    return True
+            # Check the first subscript argument is str or int
+            slice_node = returns.slice
+            if isinstance(slice_node, nodes.Tuple):
+                if slice_node.elts:
+                    first = slice_node.elts[0]
+                    if isinstance(first, nodes.Name) and first.name in {"str", "int"}:
+                        return True
+            elif (isinstance(slice_node, nodes.Name) and slice_node.name in {"str", "int"}) or (
+                isinstance(slice_node, nodes.Subscript)
+                and isinstance(slice_node.value, nodes.Name)
+                and slice_node.value.name in {"str", "int"}
+            ):
+                return True
         return False
 
     @staticmethod
@@ -242,6 +231,7 @@ class StubDocstringChecker(BaseChecker):
             if stripped.startswith(("Returns:", "Yields:")):
                 return True
         return False
+
 
 def register(linter: PyLinter) -> None:  # pylint: disable=missing-beartype  # pylint entry point, signature fixed by pylint API; @beartype cannot resolve PyLinter forward ref
     linter.register_checker(StubDocstringChecker(linter))

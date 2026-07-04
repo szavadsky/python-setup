@@ -76,7 +76,7 @@ class TestParserCompleteness:
             "mypy.stubtest",
             "detect-secrets",
             "pylint-pyi",
-        "pylint tests",
+            "pylint tests",
         }, f"Tools with parsers but no flags: {no_flag_but_parser}"
 
 
@@ -128,9 +128,7 @@ class TestParserEdgeCases:
         # rule_id is parts[3]
         out = "f.yaml:1:1:trailing-spaces:message:with:extra\n"
         result = _parse_yamllint_parsable(out, "")
-        assert ("trailing-spaces", 1) in result, (
-            f"Expected trailing-spaces, got {result}"
-        )
+        assert ("trailing-spaces", 1) in result, f"Expected trailing-spaces, got {result}"
 
     def test_parser_edge_given_yamllint_parsable_no_colons_then_empty(self) -> None:
         """Line without colons is ignored."""
@@ -200,25 +198,31 @@ class TestParserEdgeCases:
 
     def test_parser_edge_given_tach_json_list_with_errors(self) -> None:
         """tach 0.35.0 list format with Error severity."""
-        out = json.dumps([
-            {"Global": {"severity": "Error", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}},
-            {"Located": {"severity": "Error", "path": "src/a.py", "message": "bad import"}},
-        ])
+        out = json.dumps(
+            [
+                {"Global": {"severity": "Error", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}},
+                {"Located": {"severity": "Error", "path": "src/a.py", "message": "bad import"}},
+            ]
+        )
         assert _parse_tach_json(out, "") == [("tach:error", 2)]
 
     def test_parser_edge_given_tach_json_list_with_warnings(self) -> None:
         """tach 0.35.0 list format with Warning severity."""
-        out = json.dumps([
-            {"Global": {"severity": "Warning", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}},
-        ])
+        out = json.dumps(
+            [
+                {"Global": {"severity": "Warning", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}},
+            ]
+        )
         assert _parse_tach_json(out, "") == [("tach:warning", 1)]
 
     def test_parser_edge_given_tach_json_list_with_mixed(self) -> None:
         """tach 0.35.0 list format with both Error and Warning."""
-        out = json.dumps([
-            {"Global": {"severity": "Error", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}},
-            {"Global": {"severity": "Warning", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}},
-        ])
+        out = json.dumps(
+            [
+                {"Global": {"severity": "Error", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}},
+                {"Global": {"severity": "Warning", "details": {"Configuration": {"NoFirstPartyImportsFound": []}}}},
+            ]
+        )
         assert _parse_tach_json(out, "") == [("tach:error", 1), ("tach:warning", 1)]
 
     def test_parser_edge_given_tach_json_list_empty(self) -> None:
@@ -268,9 +272,7 @@ class TestAggregateStatisticsEdgeCases:
         ):
             r = LintResult(tool_name, 0, "", "", 0.0)
             counts = _aggregate_statistics([r])
-            assert counts == [], (
-                f"{tool_name} should produce empty counts from empty output"
-            )
+            assert counts == [], f"{tool_name} should produce empty counts from empty output"
 
     def test_aggregate_statistics_given_large_counts_then_aggregates(self) -> None:
         """Large counts are preserved accurately."""
@@ -282,9 +284,7 @@ class TestAggregateStatisticsEdgeCases:
     def test_aggregate_statistics_given_counts_then_sorts(self) -> None:
         """Sorting by count desc, then tool, then rule."""
         results = [
-            LintResult(
-                "ruff check", 0, "Count\tCode\n-----\t----\n2\tE501\n1\tF401\n", "", 0.0
-            ),
+            LintResult("ruff check", 0, "Count\tCode\n-----\t----\n2\tE501\n1\tF401\n", "", 0.0),
             LintResult("mypy", 0, "", "file.py:1: error: x [code-a]\n" * 3, 0.0),
         ]
         counts = _aggregate_statistics(results)
@@ -382,9 +382,7 @@ class TestStatisticsObservability:
 class TestPrintStatisticsTableEdgeCases:
     """Edge-case output for _print_statistics_table."""
 
-    def test_print_statistics_table_given_mixed_tool_names_then_formats(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_print_statistics_table_given_mixed_tool_names_then_formats(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Long tool names are displayed (column format is minimum width, not max)."""
         counts = [
             ViolationCount(tool="a" * 30, rule="X1", count=1),
@@ -404,9 +402,7 @@ class TestPrintStatisticsTableEdgeCases:
         assert "0" in captured.out
         assert "Z001" in captured.out
 
-    def test_print_statistics_table_given_no_violations_then_message(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_print_statistics_table_given_no_violations_then_message(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Empty list prints 'No violations found' message."""
         _print_statistics_table([])
         captured = capsys.readouterr()

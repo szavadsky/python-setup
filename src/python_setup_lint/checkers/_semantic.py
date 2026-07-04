@@ -63,7 +63,7 @@ def _load_result_cache() -> dict[int, bool]:
         return {int(k): v for k, v in json.loads(raw).items()}
     except FileNotFoundError:  # pylint: disable=W9740  # expected on first run, cache file doesn't exist yet
         return {}
-    except (json.JSONDecodeError, OSError, ValueError):
+    except json.JSONDecodeError, OSError, ValueError:
         _LOG.warning("Failed to load result cache", exc_info=True)
         return {}
 
@@ -73,9 +73,7 @@ def _save_result_cache() -> None:
     try:
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
         assert _RESULT_CACHE is not None  # only called after lazy init
-        _RESULT_CACHE_FILE.write_text(
-            json.dumps({str(k): v for k, v in _RESULT_CACHE.items()})
-        )
+        _RESULT_CACHE_FILE.write_text(json.dumps({str(k): v for k, v in _RESULT_CACHE.items()}))
     except OSError:
         _LOG.warning("Failed to save result cache", exc_info=True)
 
@@ -118,7 +116,7 @@ def _load_reranker() -> CrossEncoder | None:
             cache_folder=str(cache),
         )
         return _RERANKER_INSTANCE
-    except (OSError, RuntimeError, ValueError):
+    except OSError, RuntimeError, ValueError:
         _RERANKER_UNAVAILABLE = True
         _LOG.warning("Failed to load reranker model", exc_info=True)
         return None
@@ -181,7 +179,7 @@ def semantic_check_if_meaningful(
         pairs = [(primary, query)]
         scores = reranker.predict(pairs)
         score = float(scores[0])
-    except (OSError, RuntimeError, ValueError):
+    except OSError, RuntimeError, ValueError:
         _LOG.warning("Reranker prediction failed", exc_info=True)
         return None
 

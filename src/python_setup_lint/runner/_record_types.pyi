@@ -3,7 +3,6 @@
 Shared types for the runner module.
 """
 
-
 from dataclasses import dataclass
 
 @dataclass(frozen=True)
@@ -20,6 +19,5 @@ class Record:
     col: int | None
     rule: str
     msg: str
-
 
 def _compare_records_key(rec: Record) -> tuple[tuple[str, ...], tuple[int, ...], tuple[int, ...], str]: ...

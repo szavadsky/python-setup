@@ -31,12 +31,14 @@ from python_setup_lint.testing import (
 
 # ── Helpers ────────────────────────────────────────────────────────────
 
+
 def _copy_sample(tmp_path: Path) -> Path:
     """Copy the minimal sample project to *tmp_path* and return the path."""
     sample = Path("tests/data/minimal_sample_project")
     dest = tmp_path / "project"
     shutil.copytree(sample, dest)
     return dest
+
 
 def _init_git(project: Path) -> None:
     """Initialise a git repo in *project* (needed by detect-secrets)."""
@@ -55,16 +57,16 @@ def _init_git(project: Path) -> None:
     )
     subprocess.run(["git", "add", "."], cwd=project, capture_output=True, check=True)
 
+
 def _read_violation_rules() -> list[str]:
     """Read expected violation rule names from ``violations.txt``."""
     rules: list[str] = []
-    for line in (
-        Path("tests/data/minimal_sample_project/violations.txt").read_text().splitlines()
-    ):
+    for line in Path("tests/data/minimal_sample_project/violations.txt").read_text().splitlines():
         stripped = line.strip()
         if stripped and not stripped.startswith("#"):
             rules.append(stripped)
     return rules
+
 
 def _shipped_config_paths() -> dict[str, Path]:
     """Build config_paths dict from the python-setup project root config/ dir."""
@@ -75,6 +77,7 @@ def _shipped_config_paths() -> dict[str, Path]:
         if candidate.is_file():
             paths[tool_label] = candidate.resolve()
     return paths
+
 
 def _make_config(project: Path) -> RunnerConfig:
     """Build a ``RunnerConfig`` for the sample project with shipped config paths."""
@@ -97,7 +100,9 @@ def _make_config(project: Path) -> RunnerConfig:
         config_paths=config_paths,
     )
 
+
 # ── Tests ─────────────────────────────────────────────────────────────
+
 
 class TestMinimalSampleProject:
     """Integration tests exercising the full lint pipeline on the sample project."""
@@ -127,37 +132,26 @@ class TestMinimalSampleProject:
         # ── All planted violations are reported ──────────────────────
         expected_rules = _read_violation_rules()
         for rule in expected_rules:
-            assert rule in output, (
-                f"Expected violation rule {rule!r} not found in lint output.\n"
-                f"Output excerpt:\n{output[:3000]}"
-            )
+            assert rule in output, f"Expected violation rule {rule!r} not found in lint output.\nOutput excerpt:\n{output[:3000]}"
 
         # ── Brush-off suppression is detected ─────────────────────────
         assert "pre-existing" in output, (
-            "Expected brush-off suppression 'pre-existing' to trigger W9704.\n"
-            f"Output excerpt:\n{output[:3000]}"
+            f"Expected brush-off suppression 'pre-existing' to trigger W9704.\nOutput excerpt:\n{output[:3000]}"
         )
 
         # Carry-from external library should NOT be flagged as unjustified-suppression
-        carry_from_violations = [
-            l for l in output.splitlines()
-            if "_carry_from_external" in l and "unjustified-suppression" in l
-        ]
+        carry_from_violations = [l for l in output.splitlines() if "_carry_from_external" in l and "unjustified-suppression" in l]
         assert not carry_from_violations, f"Carry-from should NOT trigger W9704:\n{carry_from_violations}"
 
         # ── All tool sections appear ──────────────────────────────────
         tool_names = {t.name for t in TOOLS}
         for name in sorted(tool_names):
             assert f"[{name}]" in output, (
-                f"Expected tool section [{name}] not found in lint output.\n"
-                f"Output excerpt:\n{output[:3000]}"
+                f"Expected tool section [{name}] not found in lint output.\nOutput excerpt:\n{output[:3000]}"
             )
 
         # ── No tool crashed ────────────────────────────────────────────
-        assert "[CRASH]" not in output, (
-            f"Tool crash detected in lint output:\n{output}\n"
-            f"This must be fixed before committing."
-        )
+        assert "[CRASH]" not in output, f"Tool crash detected in lint output:\n{output}\nThis must be fixed before committing."
 
     def test_config_overlay(
         self,
@@ -191,7 +185,7 @@ class TestMinimalSampleProject:
         enable_items = enable_match.group(1).split(",")
         filtered = [item for item in enable_items if item != "use-structlog"]
         new_enable = "enable=" + ",".join(filtered)
-        pylintrc_content = pylintrc_content[:enable_match.start()] + new_enable + pylintrc_content[enable_match.end():]
+        pylintrc_content = pylintrc_content[: enable_match.start()] + new_enable + pylintrc_content[enable_match.end() :]
         local_pylintrc = project / ".pylintrc"
         local_pylintrc.write_text(pylintrc_content)
 
@@ -217,14 +211,11 @@ class TestMinimalSampleProject:
         pylint_output = output[pylint_section_start:pylint_pyi_start] if 0 <= pylint_section_start < pylint_pyi_start else output
 
         assert "use-structlog" not in pylint_output, (
-            "Expected 'use-structlog' to be disabled by config overlay in pylint output, "
-            "but it still appears."
+            "Expected 'use-structlog' to be disabled by config overlay in pylint output, but it still appears."
         )
 
         # Other violations should still be present in pylint output.
-        assert "unnamed-tuple-dict-value" in pylint_output, (
-            "Expected other violations to remain after config overlay."
-        )
+        assert "unnamed-tuple-dict-value" in pylint_output, "Expected other violations to remain after config overlay."
 
     def test_resetup_idempotent(
         self,
@@ -256,9 +247,7 @@ class TestMinimalSampleProject:
 
             # Second install — should be idempotent.
             rc2 = install(project)
-            assert rc2 == 0, (
-                f"Second install failed with exit code {rc2} (should be idempotent)"
-            )
+            assert rc2 == 0, f"Second install failed with exit code {rc2} (should be idempotent)"
         finally:
             monkeypatch.setattr(_setup_mod, "_run_uv", original_run_uv)
 
@@ -276,7 +265,7 @@ class TestMinimalSampleProject:
                 capture_output=True,
                 check=True,
             )
-        except (FileNotFoundError, subprocess.CalledProcessError):
+        except FileNotFoundError, subprocess.CalledProcessError:
             logging.warning("pre-commit not available, skipping test")
             pytest.skip("pre-commit not available")
 
@@ -286,9 +275,7 @@ class TestMinimalSampleProject:
         # Create .pre-commit-config.yaml from the template with a known rev.
         from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
 
-        (project / ".pre-commit-config.yaml").write_text(
-            _PRECOMMIT_TEMPLATE.format(ruff_rev="v0.15.17")
-        )
+        (project / ".pre-commit-config.yaml").write_text(_PRECOMMIT_TEMPLATE.format(ruff_rev="v0.15.17"))
 
         # Run pre-commit validate-config.
         subprocess.run(
@@ -326,12 +313,9 @@ class TestMinimalSampleProject:
         (d / "AGENTS.md").write_text("# C\n")
         _init_git(d)
         (d / ".secrets.baseline").write_text(
-            '{"version":"1.0","plugins_used":[],"filters_used":[],'
-            '"results":{},"generated_at":"2025-01-01T00:00:00Z"}\n'
+            '{"version":"1.0","plugins_used":[],"filters_used":[],"results":{},"generated_at":"2025-01-01T00:00:00Z"}\n'
         )
-        (d / "tach.toml").write_text(
-            '[[modules]]\npath = "src/consumer"\ndepends_on = []\n'
-        )
+        (d / "tach.toml").write_text('[[modules]]\npath = "src/consumer"\ndepends_on = []\n')
 
         # Install
         rc = install(d, dev_path=str(Path.cwd()))
@@ -372,7 +356,7 @@ class TestMinimalSampleProject:
                 capture_output=True,
                 check=True,
             )
-        except (FileNotFoundError, subprocess.CalledProcessError):
+        except FileNotFoundError, subprocess.CalledProcessError:
             logging.warning("pre-commit not available, skipping test")
             pytest.skip("pre-commit not available")
 
@@ -395,12 +379,9 @@ class TestMinimalSampleProject:
         (d / "AGENTS.md").write_text("# C\n")
         _init_git(d)
         (d / ".secrets.baseline").write_text(
-            '{"version":"1.0","plugins_used":[],"filters_used":[],'
-            '"results":{},"generated_at":"2025-01-01T00:00:00Z"}\n'
+            '{"version":"1.0","plugins_used":[],"filters_used":[],"results":{},"generated_at":"2025-01-01T00:00:00Z"}\n'
         )
-        (d / "tach.toml").write_text(
-            '[[modules]]\npath = "src/consumer"\ndepends_on = []\n'
-        )
+        (d / "tach.toml").write_text('[[modules]]\npath = "src/consumer"\ndepends_on = []\n')
 
         # Install
         rc = install(d, dev_path=str(Path.cwd()))
@@ -426,8 +407,7 @@ class TestMinimalSampleProject:
             result = exc
         # Dry-run should succeed (exit 0) or report hooks would change files (exit 1)
         assert result.returncode in (0, 1), (
-            f"pre-commit dry-run failed (exit {result.returncode}):\n"
-            f"{result.stdout}\n{result.stderr}"
+            f"pre-commit dry-run failed (exit {result.returncode}):\n{result.stdout}\n{result.stderr}"
         )
         # Output should mention the hooks we expect
         assert "ruff-format" in result.stdout or "ruff" in result.stdout, (
@@ -462,6 +442,5 @@ class TestMinimalSampleProject:
             file_val = entry.get("file")
             if file_val is not None:
                 assert not str(file_val).startswith("/"), (
-                    f"Expected relative path, got absolute: {file_val!r}\n"
-                    f"Full entry: {entry}"
+                    f"Expected relative path, got absolute: {file_val!r}\nFull entry: {entry}"
                 )

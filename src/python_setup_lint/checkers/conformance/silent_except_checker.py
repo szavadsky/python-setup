@@ -13,14 +13,12 @@ if TYPE_CHECKING:
 
 
 class SilentExceptChecker(BaseChecker):
-
     name: str = "silent-except"
     msgs = _msgs(
         W9740=MessageDef(
             message="Silent except handler: catches %s without logging or re-raising",
             symbol="silent-except",
-            description="Caught errors must be logged or re-raised (CodingRules: fail-fast, "
-            "no swallowed exceptions).",
+            description="Caught errors must be logged or re-raised (CodingRules: fail-fast, no swallowed exceptions).",
         ),
     )
 

@@ -10,7 +10,6 @@ from python_setup_lint.checkers._base import MessageDef, _msgs
 
 
 class PyiUnderscoreChecker(BaseChecker):
-
     name: str = "pyi-underscore"
     msgs: dict[str, MessageDefinitionTuple] = _msgs(
         W9707=MessageDef(
@@ -33,9 +32,7 @@ class PyiUnderscoreChecker(BaseChecker):
         Returns:
             True if *name* is a private (underscore-prefixed) symbol.
         """
-        return name.startswith("_") and not (
-            name.startswith("__") and name.endswith("__")
-        )
+        return name.startswith("_") and not (name.startswith("__") and name.endswith("__"))
 
     @beartype
     def visit_module(self, node: nodes.Module) -> None:
@@ -72,9 +69,7 @@ class PyiUnderscoreChecker(BaseChecker):
         # Check annotated assignment targets in .pyi files.
         if not self._is_pyi:
             return
-        if isinstance(node.target, nodes.AssignName) and self._is_private(
-            node.target.name
-        ) and not _in_type_checking_block(node):
+        if isinstance(node.target, nodes.AssignName) and self._is_private(node.target.name) and not _in_type_checking_block(node):
             self.add_message("W9707", node=node, args=(node.target.name,))
 
     @beartype

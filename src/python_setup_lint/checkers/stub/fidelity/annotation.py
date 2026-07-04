@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
@@ -52,11 +51,7 @@ def _is_public_method(member_name: str) -> bool:
 
 
 def _is_classvar(ann_node: nodes.NodeNG) -> bool:
-    return (
-        isinstance(ann_node, nodes.Subscript)
-        and isinstance(ann_node.value, nodes.Name)
-        and ann_node.value.name == "ClassVar"
-    )
+    return isinstance(ann_node, nodes.Subscript) and isinstance(ann_node.value, nodes.Name) and ann_node.value.name == "ClassVar"
 
 
 def _compare_class_bases(ctx: ClassComparisonCtx) -> None:
@@ -101,14 +96,10 @@ def _compare_class_methods(ctx: ClassComparisonCtx) -> None:
     stub_methods: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     impl_methods: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     for child in ctx.stub_class.body:
-        if isinstance(
-            child, (nodes.FunctionDef, nodes.AsyncFunctionDef)
-        ) and _is_public_method(child.name):
+        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)) and _is_public_method(child.name):
             stub_methods[child.name] = child
     for child in ctx.impl_class.body:
-        if isinstance(
-            child, (nodes.FunctionDef, nodes.AsyncFunctionDef)
-        ) and _is_public_method(child.name):
+        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)) and _is_public_method(child.name):
             impl_methods[child.name] = child
 
     for mname, stub_method in stub_methods.items():
@@ -187,13 +178,9 @@ def _build_attr_index(
 ]:
     # no docstring — moved to .pyi stub
     stub_attrs: dict[str, nodes.AnnAssign] = {}
-    impl_attrs: dict[
-        str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]
-    ] = {}
+    impl_attrs: dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]] = {}
     for child in ctx.stub_class.body:
-        if isinstance(child, nodes.AnnAssign) and isinstance(
-            child.target, nodes.AssignName
-        ):
+        if isinstance(child, nodes.AnnAssign) and isinstance(child.target, nodes.AssignName):
             if child.annotation is not None and _is_classvar(child.annotation):
                 log.debug(
                     "Skipping ClassVar",
@@ -204,9 +191,7 @@ def _build_attr_index(
                 continue
             stub_attrs[child.target.name] = child
     for child in ctx.impl_class.body:
-        if isinstance(child, nodes.AnnAssign) and isinstance(
-            child.target, nodes.AssignName
-        ):
+        if isinstance(child, nodes.AnnAssign) and isinstance(child.target, nodes.AssignName):
             impl_attrs[child.target.name] = (child.annotation, child)
         elif isinstance(child, nodes.Assign):
             for t in child.targets:
@@ -221,12 +206,8 @@ def _compare_class_attrs(ctx: ClassComparisonCtx) -> None:
         stub_annotation = stub_attr_node.annotation
         impl_data = impl_attrs.get(attr_name, (None, None))
         impl_annotation, impl_source_node = impl_data
-        attr_msg_node = (
-            impl_source_node if impl_source_node is not None else ctx.msg_node
-        )
-        _compare_one_attr(
-            ctx, attr_name, stub_annotation, impl_annotation, attr_msg_node
-        )
+        attr_msg_node = impl_source_node if impl_source_node is not None else ctx.msg_node
+        _compare_one_attr(ctx, attr_name, stub_annotation, impl_annotation, attr_msg_node)
 
 
 def _check_one_variable(

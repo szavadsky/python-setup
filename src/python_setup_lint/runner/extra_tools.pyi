@@ -78,9 +78,7 @@ def _compile_regex_count(pattern: str) -> re.Pattern[str]:
             exactly one capture group.
     """
 
-def _parse_regex_count(
-    stdout: str, stderr: str, *, regex: str
-) -> list[tuple[str, int]]:
+def _parse_regex_count(stdout: str, stderr: str, *, regex: str) -> list[tuple[str, int]]:
     """Count distinct capture-group values across all stdout+stderr lines.
 
     The regex MUST have exactly one capture group; the captured text is the
@@ -113,29 +111,21 @@ def _extra_tool_parser(
             ``parse_regex``, or a regex without exactly one capture group.
     """
 
-def _validate_extra_bool_fields(
-    entry: dict[str, object], location: str
-) -> tuple[bool, bool, bool]:
+def _validate_extra_bool_fields(entry: dict[str, object], location: str) -> tuple[bool, bool, bool]:
     """Validate supports_fix, supports_path, supports_exclude fields."""
 
-def _validate_extra_list_field(
-    entry: dict[str, object], key: str, location: str
-) -> list[str]:
+def _validate_extra_list_field(entry: dict[str, object], key: str, location: str) -> list[str]:
     """Validate a list-of-strings field and return the validated list."""
 
-def _validate_extra_config_flag(
-    entry: dict[str, object], location: str
-) -> list[str] | None:
+def _validate_extra_config_flag(entry: dict[str, object], location: str) -> list[str] | None:
     """Validate config_flag field (str, list[str], or None)."""
 
 def _validate_extra_fields(  # validated dict, keys are known strings; return dict is built from validated fields, values are str|list[str]|None|bool by construction
     entry: dict[str, object], location: str
-    ) -> dict[str, Any]:  # validated dict, keys are known strings; values are str|list[str]|None|bool by construction
+) -> dict[str, Any]:  # validated dict, keys are known strings; values are str|list[str]|None|bool by construction
     """Validate all fields in an extra-tool entry and return validated values."""
 
-def _validate_extra_name(
-    name: str, seen_names: set[str], location: str
-) -> str:
+def _validate_extra_name(name: str, seen_names: set[str], location: str) -> str:
     """Validate extra-tool name uniqueness and return the validated name."""
 
 def _validate_extra(  # validated dict, keys are known strings; values are heterogeneous (str|list[str]|None|bool) by construction
@@ -175,10 +165,13 @@ def _load_extra_tools(cwd: Path) -> list[_ExtraToolRegistration]:
     """
 
 def register_lint_tool(
-    tool: ToolSpec, *, statistics_flag: list[str] | None = None, parser: Callable[..., list[tuple[str, int]]] | None = None, config_flag: list[str] | None = None,
+    tool: ToolSpec,
+    *,
+    statistics_flag: list[str] | None = None,
+    parser: Callable[..., list[tuple[str, int]]] | None = None,
+    config_flag: list[str] | None = None,
 ) -> None:
     """Register a custom lint tool (re-exported from dispatch)."""
-
 
 def _register_extra_tools(registrations: list[_ExtraToolRegistration]) -> None:
     """Register each validated extra via :func:`register_lint_tool`.

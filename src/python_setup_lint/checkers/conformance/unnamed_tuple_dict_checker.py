@@ -10,12 +10,10 @@ from python_setup_lint.checkers._base import MessageDef, _msgs
 
 
 class UnnamedTupleDictChecker(BaseChecker):
-
     name: str = "unnamed-tuple-dict"
     msgs: dict[str, MessageDefinitionTuple] = _msgs(
         W9720=MessageDef(
-            message="Dict value is a bare tuple literal with %d unnamed fields; "
-            "use a NamedTuple or dataclass instead",
+            message="Dict value is a bare tuple literal with %d unnamed fields; use a NamedTuple or dataclass instead",
             symbol="unnamed-tuple-dict-value",
             description="Dict values that are bare tuple literals with >1 unnamed "
             "positional fields should use a NamedTuple or dataclass for clarity.",
@@ -52,7 +50,13 @@ class UnnamedTupleDictChecker(BaseChecker):
             return False
 
         # Unwrap ClassVar[...]
-        if isinstance(ann, nodes.Subscript) and isinstance(ann.value, nodes.Name) and ann.value.name == "ClassVar" and ann.slice is not None and isinstance(ann.slice, nodes.Subscript):
+        if (
+            isinstance(ann, nodes.Subscript)
+            and isinstance(ann.value, nodes.Name)
+            and ann.value.name == "ClassVar"
+            and ann.slice is not None
+            and isinstance(ann.slice, nodes.Subscript)
+        ):
             ann = ann.slice
 
         if not isinstance(ann, nodes.Subscript):

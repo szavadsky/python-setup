@@ -5,6 +5,7 @@ and startup-overhead benchmark.
 
 Reason strings LOCKED per DESIGN-8 D6 — production code is source-of-truth.
 """
+
 from __future__ import annotations
 
 import json
@@ -36,7 +37,10 @@ from tests.runner._factories_extras import (
 class TestRunLintExtraDownstreamIntegration:
     """End-to-end fake-subprocess integration of the extras pipeline."""
 
-    @pytest.mark.parametrize(("block", "extra_name", "extra_cmd", "extra_stdout", "expected_counts"), DOWNSTREAM_CASES,)
+    @pytest.mark.parametrize(
+        ("block", "extra_name", "extra_cmd", "extra_stdout", "expected_counts"),
+        DOWNSTREAM_CASES,
+    )
     def test_extra_downstream_pipeline(
         self,
         tmp_path: Path,
@@ -54,9 +58,7 @@ class TestRunLintExtraDownstreamIntegration:
             tmp_path,
             f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{block}",
         )
-        fake = fake_run_cmd_factory(
-            {extra_name: make_lint_result(tool_name=extra_name, stdout=extra_stdout)}
-        )
+        fake = fake_run_cmd_factory({extra_name: make_lint_result(tool_name=extra_name, stdout=extra_stdout)})
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
 
         rc = run_lint(
@@ -75,19 +77,13 @@ class TestRunLintExtraDownstreamIntegration:
         by_key = {(e["tool"], e["rule"]): e["count"] for e in data}
         if expected_counts:
             for tool, rule, count in expected_counts:
-                assert by_key.get((tool, rule)) == count, (
-                    f"{tool}/{rule} → got {by_key.get((tool, rule))}. Full: {data}"
-                )
+                assert by_key.get((tool, rule)) == count, f"{tool}/{rule} → got {by_key.get((tool, rule))}. Full: {data}"
         else:  # parse_strategy="none" → the extra's tool name must NOT appear
             leaked = [e for e in data if e.get("tool") == extra_name]
-            assert leaked == [], (
-                f"parse_strategy=none extra must not contribute rows: {leaked}. Full: {data}"
-            )
+            assert leaked == [], f"parse_strategy=none extra must not contribute rows: {leaked}. Full: {data}"
 
         # (c) Direct re-aggregation reproduces the expected counts/skip.
-        direct = _aggregate_statistics(
-            [make_lint_result(tool_name=extra_name, stdout=extra_stdout)]
-        )
+        direct = _aggregate_statistics([make_lint_result(tool_name=extra_name, stdout=extra_stdout)])
         if expected_counts:
             for tool, rule, count in expected_counts:
                 assert ViolationCount(tool, rule, count) in direct, (
@@ -201,12 +197,8 @@ class TestExtraStatisticsObservability:
         out = capsys.readouterr().out.strip()
         if fmt == "json":
             by_key = {(e["tool"], e["rule"]): e["count"] for e in json.loads(out)}
-            assert by_key[("regextool", "RC1")] == 2, (
-                f"RC1 wrong: {by_key}. Full: {out}"
-            )
-            assert by_key.get(("regextool", "RC2")) == 1, (
-                f"RC2 wrong: {by_key}. Full: {out}"
-            )
+            assert by_key[("regextool", "RC1")] == 2, f"RC1 wrong: {by_key}. Full: {out}"
+            assert by_key.get(("regextool", "RC2")) == 1, f"RC2 wrong: {by_key}. Full: {out}"
         else:
             assert "VIOLATION STATISTICS" in out
             for token in ("regextool", "RC1", "RC2", "1", "2"):

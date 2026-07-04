@@ -77,7 +77,6 @@ class TestDefaultUserFallback:
         assert result is False
 
 
-
 # ── Reranker import failure (sentinel prevents retry storm) ──────────
 
 
@@ -338,9 +337,7 @@ class TestSemanticCheck:
 
         # Compute the cache key the same way the function does.
         cache_key = hashlib.sha256(
-            "|".join(
-                str(x) for x in (text, rule, code_context, comment, _RERANKER_MODEL)
-            ).encode()
+            "|".join(str(x) for x in (text, rule, code_context, comment, _RERANKER_MODEL)).encode()
         ).digest()
         cache_key_int = int.from_bytes(cache_key[:8], "big")
 

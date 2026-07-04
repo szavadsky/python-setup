@@ -3,6 +3,7 @@
 Covers ``_default_config_paths`` and ``_infer_package_name`` as pure
 functions, plus the yamllint ``_config_flag_for`` entry.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -61,9 +62,7 @@ class TestDefaultConfigPaths:
             "ty check",
             "yamllint",
         }
-        assert expected_labels.issubset(result.keys()), (
-            f"Missing shipped configs. Got: {set(result)}"
-        )
+        assert expected_labels.issubset(result.keys()), f"Missing shipped configs. Got: {set(result)}"
         for label, path in result.items():
             assert path.is_file(), f"Config {label} -> {path} does not exist"
 

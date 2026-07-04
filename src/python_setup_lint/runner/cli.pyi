@@ -43,7 +43,6 @@ def run_lint(
             pyproject extra-tools entry.
     """
 
-
 def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -> int:
     """CLI entry point for ``uv run lint``.
 

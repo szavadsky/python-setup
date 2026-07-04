@@ -3,7 +3,6 @@
 Per-tool violation-record parsers (T2 baseline diff).
 """
 
-
 from ._record_types import Record
 
 def _parse_pylint_records(stdout: str) -> list[Record]: ...
@@ -13,9 +12,5 @@ def _parse_ty_records(stdout: str) -> list[Record]: ...
 def _parse_yamllint_records(stdout: str) -> list[Record]: ...
 def _parse_rumdl_records(stdout: str) -> list[Record]: ...
 def _parse_pyright_records(data: object) -> list[Record]: ...
-
-
 def _parse_pyright_check_records(stdout: str) -> list[Record]:
     """Parse pyright --outputjson output from a string."""
-
-

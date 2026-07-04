@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import inspect
@@ -51,9 +50,7 @@ def _extract_param_descriptors(
                 name=p.name,
                 kind=inspect.Parameter.POSITIONAL_ONLY,
                 has_default=_has_default(i),
-                annotation_normalized=(
-                    AnnotationNormalizer.normalize(ann) if ann is not None else None
-                ),
+                annotation_normalized=(AnnotationNormalizer.normalize(ann) if ann is not None else None),
             )
         )
 
@@ -66,9 +63,7 @@ def _extract_param_descriptors(
                 name=p.name,
                 kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
                 has_default=_has_default(idx),
-                annotation_normalized=(
-                    AnnotationNormalizer.normalize(ann) if ann is not None else None
-                ),
+                annotation_normalized=(AnnotationNormalizer.normalize(ann) if ann is not None else None),
             )
         )
 
@@ -80,9 +75,7 @@ def _extract_param_descriptors(
                 kind=inspect.Parameter.VAR_POSITIONAL,
                 has_default=False,
                 annotation_normalized=(
-                    AnnotationNormalizer.normalize(args.varargannotation)
-                    if args.varargannotation is not None
-                    else None
+                    AnnotationNormalizer.normalize(args.varargannotation) if args.varargannotation is not None else None
                 ),
             )
         )
@@ -97,9 +90,7 @@ def _extract_param_descriptors(
                 name=p.name,
                 kind=inspect.Parameter.KEYWORD_ONLY,
                 has_default=kwd is not None,
-                annotation_normalized=(
-                    AnnotationNormalizer.normalize(ann) if ann is not None else None
-                ),
+                annotation_normalized=(AnnotationNormalizer.normalize(ann) if ann is not None else None),
             )
         )
 
@@ -111,9 +102,7 @@ def _extract_param_descriptors(
                 kind=inspect.Parameter.VAR_KEYWORD,
                 has_default=False,
                 annotation_normalized=(
-                    AnnotationNormalizer.normalize(args.kwargannotation)
-                    if args.kwargannotation is not None
-                    else None
+                    AnnotationNormalizer.normalize(args.kwargannotation) if args.kwargannotation is not None else None
                 ),
             )
         )
@@ -155,9 +144,7 @@ def _compare_callable_annotations(
             and ip.annotation_normalized is not None
             and sp.annotation_normalized != ip.annotation_normalized
         ):
-            mismatches.append(
-                (sp.name, sp.annotation_normalized, ip.annotation_normalized)
-            )
+            mismatches.append((sp.name, sp.annotation_normalized, ip.annotation_normalized))
     return mismatches
 
 
@@ -248,9 +235,7 @@ def _emit_callable_fidelity_issues(ctx: CallableComparisonCtx) -> None:
             )
     elif ctx.stub_func.returns is not None and ctx.impl_func.returns is not None:
         # Both have return annotations but one or both failed normalization
-        log.debug(
-            "Return annotation unverifiable", func=ctx.func_name, module=ctx.module_name
-        )
+        log.debug("Return annotation unverifiable", func=ctx.func_name, module=ctx.module_name)
         ctx.checker.add_message(
             "annotation-unverifiable",
             node=ctx.msg_node,

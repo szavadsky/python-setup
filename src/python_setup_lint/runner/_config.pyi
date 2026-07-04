@@ -3,7 +3,6 @@
 T1b — self-discovery helpers + CLI config-key aliases.
 """
 
-
 from pathlib import Path
 
 _SHIPPED_CONFIG_FILES: dict[str, str] = ...

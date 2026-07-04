@@ -19,7 +19,6 @@ log = structlog.get_logger(__name__)
 
 
 class BeartypeCoverageChecker(FunctionVisitMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
-
     name: str = "beartype-coverage"
     msgs = _msgs(
         W9701=MessageDef(

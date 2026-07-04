@@ -17,6 +17,7 @@ The fixtures cover every emitted message-id family:
 - W97B5 ``impl-missing-annotation`` — stub annotates, impl does not.
 - I97B6 ``annotation-unverifiable`` — annotation cannot be normalized.
 """
+
 from __future__ import annotations
 
 import inspect
@@ -51,9 +52,7 @@ def _make_tc() -> Any:  # pylint: disable=W9728  # test helper: type-specific al
     return _make_tc_factory(StubChecker)
 
 
-def _run(
-    tmp_path: Path, py_code: str, pyi_code: str, module_name: str = "mod_a"
-) -> list[Any]:
+def _run(tmp_path: Path, py_code: str, pyi_code: str, module_name: str = "mod_a") -> list[Any]:
     """Run StubChecker end-to-end on a synthetic module + stub.
 
     Returns released messages sorted (msg_id, args tuple).
@@ -338,19 +337,13 @@ class TestComparePureHelpersDirect:
         assert "param_count" in _compare_callable_descriptors(a, [])  # result is Any from test fixture; in-check works at runtime
 
     def test_compare_callable_annotations_given_matching_then_empty(self) -> None:
-        a = [
-            ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, "int")
-        ]
-        b = [
-            ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, "int")
-        ]
+        a = [ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, "int")]
+        b = [ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, "int")]
         assert _compare_callable_annotations(a, b) == []
 
     def test_compare_callable_annotations_given_unilateral_then_skips(self) -> None:
         a = [ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, None)]
-        b = [
-            ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, "int")
-        ]
+        b = [ParamDescriptor("x", inspect.Parameter.POSITIONAL_OR_KEYWORD, False, "int")]
         assert _compare_callable_annotations(a, b) == []
 
     def test_compare_return_annotations_given_both_present_then_normalizes(self) -> None:

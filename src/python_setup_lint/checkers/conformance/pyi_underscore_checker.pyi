@@ -1,6 +1,5 @@
 """Pylint checker: flag _-prefixed symbols in .pyi files."""
 
-
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
@@ -20,7 +19,6 @@ class PyiUnderscoreChecker(BaseChecker):
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Check function names for _-prefix."""
-
 
 def register(linter: PyLinter) -> None:
     """Register the checker with the linter."""

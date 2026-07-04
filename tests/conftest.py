@@ -114,9 +114,7 @@ def runner_config_factory(tmp_path: Path) -> Callable[..., RunnerConfig]:
         return RunnerConfig(
             cwd=cwd if cwd is not None else tmp_path,
             package_name=package_name,
-            default_py_dirs=default_py_dirs
-            if default_py_dirs is not None
-            else ["src", "scripts", "tests"],
+            default_py_dirs=default_py_dirs if default_py_dirs is not None else ["src", "scripts", "tests"],
             tools_override=tools_override,
             config_paths=config_paths or {},
         )
@@ -149,12 +147,7 @@ def isolated_runner_registries() -> Iterable[None]:
     # Reset to builtins at setup
     LINT_TOOLS[:] = list(_BUILTIN_TOOLS)
     STRATEGIES.clear()
-    STRATEGIES.update(
-        {
-            spec.name: (_STRATEGY_CLASSES.get(spec.name) or LintTool)(spec)
-            for spec in _BUILTIN_TOOLS
-        }
-    )
+    STRATEGIES.update({spec.name: (_STRATEGY_CLASSES.get(spec.name) or LintTool)(spec) for spec in _BUILTIN_TOOLS})
 
     yield
 

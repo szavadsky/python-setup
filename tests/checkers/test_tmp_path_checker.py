@@ -3,6 +3,7 @@
 Uses synthetic code strings parsed via astroid, with module.file patched to
 simulate test-file paths.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -53,21 +54,15 @@ class TestDetectsTempfileInTests:
 
     def test_checker_given_named_temporary_file_as_context_manager_then_flagged(self) -> None:
         """NamedTemporaryFile used as context manager is OK."""
-        msgs = _walk_and_release(
-            "import tempfile\n\nwith tempfile.NamedTemporaryFile() as f: pass"
-        )
+        msgs = _walk_and_release("import tempfile\n\nwith tempfile.NamedTemporaryFile() as f: pass")
         assert len(msgs) == 0
 
     def test_checker_given_multiple_tempfile_calls_then_flags_all(self) -> None:
-        msgs = _walk_and_release(
-            "import tempfile\n\na = tempfile.mkdtemp()\nb = tempfile.mkdtemp()"
-        )
+        msgs = _walk_and_release("import tempfile\n\na = tempfile.mkdtemp()\nb = tempfile.mkdtemp()")
         assert len(msgs) == 2
 
     def test_checker_given_mkdtemp_with_args_then_flagged_with_args(self) -> None:
-        msgs = _walk_and_release(
-            'import tempfile\n\nd = tempfile.mkdtemp(prefix="t15-test-")'
-        )
+        msgs = _walk_and_release('import tempfile\n\nd = tempfile.mkdtemp(prefix="t15-test-")')
         assert len(msgs) == 1
         assert msgs[0].args == ("tempfile.mkdtemp",)
 
@@ -115,16 +110,12 @@ class TestSkipsContextManagerNamedTemp:
     """NamedTemporaryFile used as context manager is OK."""
 
     def test_checker_given_named_temporary_file_with_statement_then_flagged(self) -> None:
-        msgs = _walk_and_release(
-            "import tempfile\n\nwith tempfile.NamedTemporaryFile() as f:\n    f.write(b'x')"
-        )
+        msgs = _walk_and_release("import tempfile\n\nwith tempfile.NamedTemporaryFile() as f:\n    f.write(b'x')")
         assert len(msgs) == 0
 
     def test_checker_given_mkdtemp_not_context_manager_then_flagged(self) -> None:
         """mkdtemp is never a context manager — always flagged."""
-        msgs = _walk_and_release(
-            "import tempfile\n\nwith tempfile.mkdtemp() as d: pass"
-        )
+        msgs = _walk_and_release("import tempfile\n\nwith tempfile.mkdtemp() as d: pass")
         assert len(msgs) == 1
 
 
@@ -186,9 +177,7 @@ class TestEdgeCases:
         """_is_test_file returns False when node.root().file is None."""
         tc = _make_tc()
         tc.checker.open()
-        module = __import__("astroid").parse(
-            "import tempfile\n\nd = tempfile.mkdtemp()"
-        )
+        module = __import__("astroid").parse("import tempfile\n\nd = tempfile.mkdtemp()")
         module.file = None
         tc.walk(module)
         msgs = tc.linter.release_messages()
@@ -211,9 +200,7 @@ class TestEdgeCases:
 
     def test_checker_given_named_temporary_in_with_multi_expr_then_flagged(self) -> None:
         """NamedTemporaryFile in a with-statement with multiple expressions is exempt."""
-        msgs = _walk_and_release(
-            "import tempfile\n\nwith tempfile.NamedTemporaryFile() as f, open('x') as g:\n    pass"
-        )
+        msgs = _walk_and_release("import tempfile\n\nwith tempfile.NamedTemporaryFile() as f, open('x') as g:\n    pass")
         assert len(msgs) == 0
 
     def test_matches_path_given_non_test_path_then_not_matched(self) -> None:

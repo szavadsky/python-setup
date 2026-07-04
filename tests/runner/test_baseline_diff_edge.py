@@ -1,4 +1,5 @@
 """Edge-case and integration tests for baseline diff."""
+
 from __future__ import annotations
 
 import json
@@ -33,6 +34,7 @@ class TestMixedSchemaLoad:
         assert reloaded == [
             {"col": 1, "file": "src/a.py", "line": 1, "msg": "x", "rule": "unused-import", "tool": "pylint"},
         ]
+
     def test_mixed_schema_given_unknown_tool_then_baseline_shrinks(self, tmp_path: Path) -> None:
         saved = [
             {"tool": "strange-tool", "file": "src/a.py", "line": 1, "col": 1, "rule": "E001", "msg": "old violation"},
@@ -44,15 +46,24 @@ class TestMixedSchemaLoad:
 
     def test_mixed_schema_given_empty_baseline_then_ok_for_all_tools(self, tmp_path: Path) -> None:
         tool_names = [
-            "tach check", "ruff check", "rumdl check", "mypy", "yamllint",
-            "ty check", "pyright verify types", "pylint", "detect-secrets",
+            "tach check",
+            "ruff check",
+            "rumdl check",
+            "mypy",
+            "yamllint",
+            "ty check",
+            "pyright verify types",
+            "pylint",
+            "detect-secrets",
         ]
         saved: list[dict[str, object]] = []
         current = [make_lint_result(tool_name=t, exit_code=0, stdout="") for t in tool_names]
-        current.append(make_lint_result(
-            tool_name="pyright check",
-            stdout=json.dumps({"summary": {"errorCount": 0, "warningCount": 0}}),
-        ))
+        current.append(
+            make_lint_result(
+                tool_name="pyright check",
+                stdout=json.dumps({"summary": {"errorCount": 0, "warningCount": 0}}),
+            )
+        )
         violations, _ = diff_baseline_with(tmp_path, saved, current)
         assert violations == []
 
@@ -64,18 +75,10 @@ class TestMixedSchemaLoad:
 class TestPerfBenchmark:
     def test_50k_line_baseline_compares_under_200ms(self) -> None:
         records_saved: list[Record] = [
-            Record(f"src/file_{f:04d}.py", line, 1, "E001", "m")
-            for f in range(1000)
-            for line in range(1, 51)
+            Record(f"src/file_{f:04d}.py", line, 1, "E001", "m") for f in range(1000) for line in range(1, 51)
         ]
-        records_current = [
-            r for r in records_saved
-            if not (r.file == "src/file_0999.py" and r.line and r.line > 5)
-        ]
-        records_current.extend(
-            Record(f"src/new_{f:04d}.py", 1, 1, "E001", "m")
-            for f in range(5000, 5500)
-        )
+        records_current = [r for r in records_saved if not (r.file == "src/file_0999.py" and r.line and r.line > 5)]
+        records_current.extend(Record(f"src/new_{f:04d}.py", 1, 1, "E001", "m") for f in range(5000, 5500))
         records_saved.sort(key=_compare_records_key)
         records_current.sort(key=_compare_records_key)
         t0 = time.perf_counter()
@@ -86,17 +89,16 @@ class TestPerfBenchmark:
         assert elapsed_ms < 200.0, f"_compare_sorted took {elapsed_ms:.1f}ms (>200ms ceiling)"
 
     def test_diff_baseline_50k_end_to_end_under_1s(self, tmp_path: Path) -> None:
-        records: list[dict[str, Any]] = [  # dict shape: {"tool": str, "file": str, "line": int, "col": int, "rule": str, "msg": str}
+        records: list[
+            dict[str, Any]
+        ] = [  # dict shape: {"tool": str, "file": str, "line": int, "col": int, "rule": str, "msg": str}
             {"tool": "ruff check", "file": f"src/file_{f:04d}.py", "line": line, "col": 1, "rule": "E001", "msg": "m"}
             for f in range(1000)
             for line in range(1, 51)
         ]
         baseline_path = tmp_path / "big.json"
         baseline_path.write_text(json.dumps(records))
-        stdout = "\n".join(
-            f"src/file_{f:04d}.py:{line}:1: E001 m"
-            for f in range(1000) for line in range(1, 51)
-        )
+        stdout = "\n".join(f"src/file_{f:04d}.py:{line}:1: E001 m" for f in range(1000) for line in range(1, 51))
         current = [make_lint_result(tool_name="ruff check", stdout=stdout)]
         t0 = time.perf_counter()
         violations = _diff_baseline(current, baseline_path)
@@ -138,13 +140,30 @@ class TestDiffBaselineErrors:
             ),
             pytest.param(
                 [{"tool": "pyright check", "file": "src/a.py", "line": 1, "col": 1, "rule": "rule", "msg": "msg1"}],
-                [make_lint_result(tool_name="pyright check", stdout=json.dumps({
-                    "summary": {"errorCount": 2, "warningCount": 0},
-                    "generalDiagnostics": [
-                        {"file": "src/a.py", "rule": "rule", "message": "msg1", "range": {"start": {"line": 0, "character": 0}}},
-                        {"file": "src/b.py", "rule": "rule", "message": "msg2", "range": {"start": {"line": 1, "character": 0}}},
-                    ],
-                }))],
+                [
+                    make_lint_result(
+                        tool_name="pyright check",
+                        stdout=json.dumps(
+                            {
+                                "summary": {"errorCount": 2, "warningCount": 0},
+                                "generalDiagnostics": [
+                                    {
+                                        "file": "src/a.py",
+                                        "rule": "rule",
+                                        "message": "msg1",
+                                        "range": {"start": {"line": 0, "character": 0}},
+                                    },
+                                    {
+                                        "file": "src/b.py",
+                                        "rule": "rule",
+                                        "message": "msg2",
+                                        "range": {"start": {"line": 1, "character": 0}},
+                                    },
+                                ],
+                            }
+                        ),
+                    )
+                ],
                 lambda v, _: any("msg2 @ src/b.py:2" in x for x in v),
                 id="diagnostics_errors_increase_flagged",
             ),
@@ -153,12 +172,24 @@ class TestDiffBaselineErrors:
                     {"tool": "pyright check", "file": "src/a.py", "line": 1, "col": 1, "rule": "rule", "msg": "msg1"},
                     {"tool": "pyright check", "file": "src/b.py", "line": 2, "col": 2, "rule": "rule", "msg": "msg2"},
                 ],
-                [make_lint_result(tool_name="pyright check", stdout=json.dumps({
-                    "summary": {"errorCount": 1, "warningCount": 0},
-                    "generalDiagnostics": [
-                        {"file": "src/a.py", "rule": "rule", "message": "msg1", "range": {"start": {"line": 0, "character": 0}}},
-                    ],
-                }))],
+                [
+                    make_lint_result(
+                        tool_name="pyright check",
+                        stdout=json.dumps(
+                            {
+                                "summary": {"errorCount": 1, "warningCount": 0},
+                                "generalDiagnostics": [
+                                    {
+                                        "file": "src/a.py",
+                                        "rule": "rule",
+                                        "message": "msg1",
+                                        "range": {"start": {"line": 0, "character": 0}},
+                                    },
+                                ],
+                            }
+                        ),
+                    )
+                ],
                 lambda v, r: v == [] and len(r) == 1 and r[0]["file"] == "src/a.py",
                 id="diagnostics_errors_decrease_shrinkage",
             ),
@@ -174,7 +205,11 @@ class TestDiffBaselineErrors:
         ],
     )
     def test_diff_baseline_given_error_paths_then_expected_violations(
-        self, tmp_path: Path, saved: Any, current: list[Any], check: Any,
+        self,
+        tmp_path: Path,
+        saved: Any,
+        current: list[Any],
+        check: Any,
     ) -> None:
         baseline_path = tmp_path / "baseline.json"
         if saved is not None:
@@ -185,6 +220,7 @@ class TestDiffBaselineErrors:
         except json.JSONDecodeError:  # pylint: disable=silent-except  # test helper; exception expected
             reloaded = None
         assert check(violations, reloaded)
+
 
 # ── T2-1 review-fix additions: gaps D1–D6 ────────────────────────
 
@@ -212,6 +248,7 @@ class TestFallbackTracking:
         assert len(reloaded) == 1
         assert reloaded[0] == {"tool": "pylint", "file": "src/a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"}
 
+
 class TestMultiSavedToolDedup:
     def test_multi_saved_tool_dedup_given_duplicate_entries_then_removed_on_absence(self, tmp_path: Path) -> None:
         # Flat records: duplicate pylint violations for the same violation; current has no pylint
@@ -231,6 +268,7 @@ class TestMultiSavedToolDedup:
         assert reloaded[0]["tool"] == "ruff check"
         assert all(e["tool"] != "pylint" for e in reloaded)
 
+
 class TestMixedShapeLegacyOutput:
     # Legacy output handling was removed in WS-6. These tests verify
     # that the flat-record baseline correctly handles pylint output.
@@ -244,11 +282,7 @@ class TestMixedShapeLegacyOutput:
 
 class TestCaptureBaselineOnDisk:
     def test_capture_baseline_given_records_then_emitted_in_sorted_order(self) -> None:
-        stdout = (
-            "src/z.py:9:1: E501 zeta\n"
-            "src/a.py:1:3: E501 alpha\n"
-            "src/a.py:1: E501 alpha-no-col\n"
-        )
+        stdout = "src/z.py:9:1: E501 zeta\nsrc/a.py:1:3: E501 alpha\nsrc/a.py:1: E501 alpha-no-col\n"
         records = _capture_baseline([make_lint_result(tool_name="ruff check", stdout=stdout)])
         # _capture_baseline returns a flat list of violation dicts (no nested "records" key).
         keys = [

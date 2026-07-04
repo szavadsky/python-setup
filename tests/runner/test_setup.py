@@ -1,4 +1,5 @@
 """Unit tests for ``python_setup_lint.setup``."""
+
 from __future__ import annotations
 
 import inspect
@@ -74,9 +75,7 @@ HAS_DEP_CASES = [
     pytest.param(["ruff", "python-setup>=0.1.0"], True, id="with_version"),
     pytest.param(["python-setup[extra]"], True, id="with_extra"),
     pytest.param(["python-setup@git+https://..."], True, id="git_url"),
-    pytest.param(
-        ["ruff", "python-setup @ git+https://..."], True, id="git_url_with_sep"
-    ),
+    pytest.param(["ruff", "python-setup @ git+https://..."], True, id="git_url_with_sep"),
     pytest.param(["python-setup @ file:///path"], True, id="path_dep"),
     pytest.param(["python-setup~=0.1"], True, id="tilde_eq"),
     pytest.param(["ruff", "mypy"], False, id="not_present"),
@@ -93,25 +92,17 @@ TEMPLATE_CASES = [
         id="precommit",
     ),
     pytest.param(
-        _AGENTS_SNIPPET.format(
-            open_sentinel=_AGENTS_SENTINEL, close_sentinel=_AGENTS_SENTINEL_END
-        ),
+        _AGENTS_SNIPPET.format(open_sentinel=_AGENTS_SENTINEL, close_sentinel=_AGENTS_SENTINEL_END),
         [_AGENTS_SENTINEL, _AGENTS_SENTINEL_END, "pre-commit"],
         [],
         id="agents",
     ),
 ]
 TOML_TYPE_CASES = [
-    pytest.param(
-        "_get_dev_deps", {"dependency-groups": "not_a_dict"}, [], id="gdeps_nd"
-    ),
-    pytest.param(
-        "_get_dev_deps", {"dependency-groups": {"dev": "not_a_list"}}, [], id="gdeps_nl"
-    ),
+    pytest.param("_get_dev_deps", {"dependency-groups": "not_a_dict"}, [], id="gdeps_nd"),
+    pytest.param("_get_dev_deps", {"dependency-groups": {"dev": "not_a_list"}}, [], id="gdeps_nl"),
     pytest.param("_get_pylint_load_plugins", {"tool": "not_a_dict"}, [], id="gpp_nd"),
-    pytest.param(
-        "_get_pylint_load_plugins", {"tool": {"pylint": "not_a_dict"}}, [], id="gpp_nd2"
-    ),
+    pytest.param("_get_pylint_load_plugins", {"tool": {"pylint": "not_a_dict"}}, [], id="gpp_nd2"),
     pytest.param(
         "_get_pylint_load_plugins",
         {"tool": {"pylint": {"main": "not_a_dict"}}},
@@ -120,9 +111,7 @@ TOML_TYPE_CASES = [
     ),
 ]
 SET_PLUGINS_CASES = [
-    pytest.param(
-        ["a.b", "c.d"], ["a.b", "c.d", "e.f"], ["a.b", "c.d", "e.f"], id="no_dup"
-    ),
+    pytest.param(["a.b", "c.d"], ["a.b", "c.d", "e.f"], ["a.b", "c.d", "e.f"], id="no_dup"),
     pytest.param("not_a_list", ["a.b"], ["a.b"], id="non_list"),
 ]
 
@@ -132,9 +121,7 @@ SET_PLUGINS_CASES = [
 
 class TestAtomicWrite:
     @pytest.mark.parametrize(("content", "existing"), ATOMIC_WRITE_CASES)
-    def test_cases(
-        self, tmp_path: Path, content: str, existing: str | None
-    ) -> None:
+    def test_cases(self, tmp_path: Path, content: str, existing: str | None) -> None:
         d, p = tmp_path, tmp_path / "test.txt"
         if existing is not None:
             p.write_text(existing)
@@ -212,12 +199,12 @@ class TestPyprojectTomlHelpers:
         assert _get_pylint_load_plugins({"project": {"name": "x"}}) == []
 
     def test_pyproject_toml_helpers_given_present_pylint_then_returns(self) -> None:
-        assert _get_pylint_load_plugins(
-            {"tool": {"pylint": {"main": {"load-plugins": ["a.b"]}}}}
-        ) == ["a.b"]
+        assert _get_pylint_load_plugins({"tool": {"pylint": {"main": {"load-plugins": ["a.b"]}}}}) == ["a.b"]
 
     def test_set_pylint_creates(self) -> None:
-        d: dict[str, Any] = {"project": {"name": "x"}}  # Any needed for nested mutation; _set_pylint_load_plugins expects dict[str, object]
+        d: dict[str, Any] = {
+            "project": {"name": "x"}
+        }  # Any needed for nested mutation; _set_pylint_load_plugins expects dict[str, object]
         _set_pylint_load_plugins(d, ["p.q"])
         assert _get_pylint_load_plugins(d) == ["p.q"]
 
@@ -247,9 +234,7 @@ class TestUpdate:
         assert any(c == ["sync"] for c in r.calls)
         assert any(c == ["add", "python-setup", "--refresh-package", "python-setup"] for c in r.calls)
 
-    def test_update_given_no_drift_then_missing_state(
-        self, configured_project: Path, empty_project: Path
-    ) -> None:
+    def test_update_given_no_drift_then_missing_state(self, configured_project: Path, empty_project: Path) -> None:
         with _UvCallRecorder():
             assert update(configured_project) == 0
             assert update(empty_project) == 0
@@ -394,9 +379,7 @@ class TestConfigDrift:
         d = _read_pyproject_toml(configured_project)
         assert d is not None
         _save_state(configured_project)
-        (configured_project / "pyproject.toml").write_text(
-            (configured_project / "pyproject.toml").read_text() + "\n# drift\n"
-        )
+        (configured_project / "pyproject.toml").write_text((configured_project / "pyproject.toml").read_text() + "\n# drift\n")
         with _UvCallRecorder() as r:
             assert update(configured_project) == 0
         assert any("sync" in c for c in r.calls)

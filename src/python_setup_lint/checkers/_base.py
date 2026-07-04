@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 
 
 class MessageDef(NamedTuple):
-
     message: str
     symbol: str
     description: str
@@ -47,9 +46,7 @@ def _matches_path(str_path: str, patterns: list[str]) -> bool:
             # Directory prefix pattern
             if str_path.startswith(pattern) or f"/{pattern.lstrip('/')}" in str_path:
                 return True
-        elif fnmatch.fnmatch(str_path, pattern) or fnmatch.fnmatch(
-            Path(str_path).name, pattern
-        ):
+        elif fnmatch.fnmatch(str_path, pattern) or fnmatch.fnmatch(Path(str_path).name, pattern):
             return True
     return False
 
@@ -71,8 +68,9 @@ def _get_file_path(node: nodes.NodeNG) -> Path | None:
         if file_val is None:
             return None
         return Path(file_val)
-    except (AttributeError, TypeError):  # pylint: disable=W9740  # best-effort file path extraction fallback; logging would noise unavoidable attribute/type degrade
+    except AttributeError, TypeError:  # pylint: disable=W9740  # best-effort file path extraction fallback; logging would noise unavoidable attribute/type degrade
         return None
+
 
 def _get_except_str(node: nodes.ExceptHandler) -> str:
     """Get the string representation of the except clause.
@@ -96,7 +94,6 @@ def _get_except_str(node: nodes.ExceptHandler) -> str:
 
 
 class SourceRootMixin:
-
     _source_roots: list[Path] = []
 
     options: tuple[tuple[str, dict[str, object]], ...] = (
@@ -119,11 +116,7 @@ class SourceRootMixin:
     def open(self) -> None:  # type: ignore[reportAttributeAccessIssue]  # mixin: self.linter exists when mixed with BaseChecker
         config = self.linter.config  # type: ignore[reportAttributeAccessIssue]  # mixin: linter attr from BaseChecker
         raw_roots = getattr(config, "source_roots", None)
-        self._source_roots = (
-            [Path(r).resolve() for r in raw_roots if r]
-            if raw_roots
-            else [Path("src").resolve()]
-        )
+        self._source_roots = [Path(r).resolve() for r in raw_roots if r] if raw_roots else [Path("src").resolve()]
 
     def _skip_if_outside_source_roots(self, node: nodes.NodeNG) -> bool:  # pylint: disable=missing-beartype  # mixin: _source_roots resolved at runtime via MRO; @beartype cannot resolve forward ref
         """Check if *node* is outside configured source roots.
@@ -132,10 +125,7 @@ class SourceRootMixin:
             True if the node's file is outside all source roots (should be skipped).
         """
         file_path = _get_file_path(node)
-        return file_path is None or not _is_under_source_root(
-            file_path, self._source_roots
-        )
-
+        return file_path is None or not _is_under_source_root(file_path, self._source_roots)
 
 
 class FunctionVisitMixin(SourceRootMixin):
@@ -163,9 +153,7 @@ def check_if_meaningful(
             semantic_check_if_meaningful as _semantic_check,
         )
 
-        result = _semantic_check(
-            text, rule=rule, code_context=code_context, comment=comment
-        )
+        result = _semantic_check(text, rule=rule, code_context=code_context, comment=comment)
         if result is not None:
             return result
 

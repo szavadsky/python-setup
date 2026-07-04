@@ -14,6 +14,7 @@ Coverage mapping (envelope ``T5.envelope.md``):
   pyright override overwrites ``config_paths["pyright check"]`` (verified
   via the dispatched command captured by a fake ``_run_cmd``).
 """
+
 from __future__ import annotations
 
 import time
@@ -71,9 +72,7 @@ def _write_pyproject_with_overrides(
     if banned_api or per_file_ignores:
         parts.append("[tool.ruff.lint]")
         if per_file_ignores:
-            cells = ", ".join(
-                f'"{pat}" = {codes}' for pat, codes in per_file_ignores.items()
-            )
+            cells = ", ".join(f'"{pat}" = {codes}' for pat, codes in per_file_ignores.items())
             parts.append(f"per-file-ignores = {{{cells}}}")
         if banned_api:
             parts.append("[tool.ruff.lint.flake8-tidy-imports]")
@@ -96,9 +95,7 @@ class TestComposeRuffConfigNoOverride:
         pp.write_text("[project]\nname = 'no-ruff'\n")
         assert _compose_ruff_config(tmp_path, shared) == shared
 
-    def test_compose_ruff_config_given_ruff_table_no_overrides_then_returns_shared(
-        self, tmp_path: Path
-    ) -> None:
+    def test_compose_ruff_config_given_ruff_table_no_overrides_then_returns_shared(self, tmp_path: Path) -> None:
         """Empty ``banned-api`` + empty ``per-file-ignores`` ⇒ no-override."""
         shared = tmp_path / "shared_ruff.toml"
         shared.write_text("line-length = 130\n")
@@ -328,9 +325,7 @@ class TestRunLintConsumesOverrides:
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config)
         ruff_rec = next((r for r in fake.calls if r.cmd[:2] == ["ruff", "check"]), None)
-        assert ruff_rec is not None, (
-            f"ruff check was not dispatched; calls={[r.cmd[:2] for r in fake.calls[:3]]}"
-        )
+        assert ruff_rec is not None, f"ruff check was not dispatched; calls={[r.cmd[:2] for r in fake.calls[:3]]}"
         cfg_idx = ruff_rec.cmd.index("--config")
         assert "python_setup_lint_ruff_" in ruff_rec.cmd[cfg_idx + 1]
 
@@ -343,9 +338,7 @@ class TestRunLintConsumesOverrides:
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=config)
         pyright_rec = next((r for r in fake.calls if r.cmd[:1] == ["pyright"]), None)
-        assert pyright_rec is not None, (
-            f"pyright not dispatched; calls={[r.cmd[:2] for r in fake.calls[:3]]}"
-        )
+        assert pyright_rec is not None, f"pyright not dispatched; calls={[r.cmd[:2] for r in fake.calls[:3]]}"
         # ``pyright check`` (generic ``_build_command``) lands ``--project``
         # after ``--outputjson``; the override replaced the shipped
         # ``config_paths["pyright check"]`` value.

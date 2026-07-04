@@ -133,25 +133,28 @@ class TestRuffParseabilityErrors:
         assert _ruff_parseability_errors(tmp_path, [], fake_run) == set()
         assert run_called == []  # short-circuit verified
 
-    @pytest.mark.parametrize(("stdout", "expected_files"), [
-        ("src/a.py:1:1: E999 SyntaxError\n", {"src/a.py"}),
-        (
-            "src/a.py:1:1: E999 first\nsrc/b.py:2:2: E999 second\n",
-            {"src/a.py", "src/b.py"},
-        ),
-        ("src/a.py:1:1: F401 unused import\n", set()),
-        ("", set()),
-        ("src/a.py:1:1: F401 unused\nsrc/b.py:2:2: E999 broken\n", {"src/b.py"}),
-        ("src/no-colon: line\n", set()),
-    ],
-    ids=[
-        "one_e999",
-        "two_e999",
-        "non_e999_only",
-        "empty",
-        "mixed_e999_and_other",
-        "no_colon",
-    ],)
+    @pytest.mark.parametrize(
+        ("stdout", "expected_files"),
+        [
+            ("src/a.py:1:1: E999 SyntaxError\n", {"src/a.py"}),
+            (
+                "src/a.py:1:1: E999 first\nsrc/b.py:2:2: E999 second\n",
+                {"src/a.py", "src/b.py"},
+            ),
+            ("src/a.py:1:1: F401 unused import\n", set()),
+            ("", set()),
+            ("src/a.py:1:1: F401 unused\nsrc/b.py:2:2: E999 broken\n", {"src/b.py"}),
+            ("src/no-colon: line\n", set()),
+        ],
+        ids=[
+            "one_e999",
+            "two_e999",
+            "non_e999_only",
+            "empty",
+            "mixed_e999_and_other",
+            "no_colon",
+        ],
+    )
     def test_parses_e999_lines(
         self,
         tmp_path: Path,
@@ -191,17 +194,13 @@ class TestAutofixTargetPaths:
             supports_path=True,
             default_paths=["src/", "tests/"],
         )
-        assert _autofix_target_paths(
-            spec, config=tmp_config(tmp_path), path="src/main.py"
-        ) == ["src/main.py"]
+        assert _autofix_target_paths(spec, config=tmp_config(tmp_path), path="src/main.py") == ["src/main.py"]
 
     def test_autofix_target_paths_given_no_path_then_uses_default(self, tmp_path: Path) -> None:
         """No ``--path`` → ``spec.default_paths`` is the seed."""
         _write_file(tmp_path, "src/a.py", "x = 1\n")
         _write_file(tmp_path, "src/b.py", "y = 2\n")
-        spec = ToolSpec(
-            "ruff check", ["ruff", "check"], supports_path=True, default_paths=["src/"]
-        )
+        spec = ToolSpec("ruff check", ["ruff", "check"], supports_path=True, default_paths=["src/"])
         result = _autofix_target_paths(spec, config=tmp_config(tmp_path), path=None)
         assert set(result) >= {"src/a.py", "src/b.py"}
 
@@ -214,12 +213,9 @@ class TestAutofixTargetPaths:
         """``config/*.py`` glob expands to all matching python files."""
         _write_file(tmp_path, "config/a.py", "")
         _write_file(tmp_path, "config/b.py", "")
-        spec = ToolSpec(
-            "test", ["t"], supports_path=True, default_paths=["config/*.py"]
-        )
+        spec = ToolSpec("test", ["t"], supports_path=True, default_paths=["config/*.py"])
         result = _autofix_target_paths(spec, config=tmp_config(tmp_path), path=None)
         assert sorted(result) == ["config/a.py", "config/b.py"]
-
 
 
 # ── Surface-unit: env-var opt-out (PYTHON_SETUP_LINT_NO_AUTOFIX=1) ─
@@ -246,19 +242,14 @@ class TestEnvVarAutofixOptOut:
         # parser (T6 / hooks) can match it deterministically AND a future
         # format regression (e.g. dropping "set —" or changing "for this
         # run" to "this run") breaks the test rather than passing silently.
-        expected_notice = (
-            f"[autofix] {_AUTOFIX_ENV_VAR}=1 set — disabling autofix for this run"
-        )
+        expected_notice = f"[autofix] {_AUTOFIX_ENV_VAR}=1 set — disabling autofix for this run"
         assert expected_notice in captured.err, (
-            f"override notice mismatch:\nexpected: {expected_notice!r}\n"
-            f"got stderr: {captured.err!r}"
+            f"override notice mismatch:\nexpected: {expected_notice!r}\ngot stderr: {captured.err!r}"
         )
         # The fix tools did NOT receive ``--fix`` in their commands.
         for record in fake.calls:
             if record.label in _FIX_TOOL_NAMES:
-                assert "--fix" not in record.cmd, (
-                    f"--fix leaked to {record.label}: {record.cmd!r}"
-                )
+                assert "--fix" not in record.cmd, f"--fix leaked to {record.label}: {record.cmd!r}"
 
     def test_env_var_opt_out_given_no_env_var_then_keeps_fix(
         self,
@@ -276,9 +267,7 @@ class TestEnvVarAutofixOptOut:
         assert "disabling autofix" not in captured.err
         for record in fake.calls:
             if record.label in _FIX_TOOL_NAMES:
-                assert "--fix" in record.cmd, (
-                    f"--fix missing from {record.label}: {record.cmd!r}"
-                )
+                assert "--fix" in record.cmd, f"--fix missing from {record.label}: {record.cmd!r}"
             # The canary is NOT called when fix is on — but only the
             # fix-route uses the canary; the env-var opt-out route skips
             # the autofix helper entirely (the loop falls back to the
@@ -326,10 +315,7 @@ class TestAutofixObservability:
         )
         captured = capsys.readouterr()
         # Stable format pinned so a downstream parser (T6 / hooks) can match.
-        assert (
-            "[ruff check] autofix skipped for f.py: staged+unstaged conflict"
-            in captured.err
-        )
+        assert "[ruff check] autofix skipped for f.py: staged+unstaged conflict" in captured.err
 
     def test_autofix_observability_given_revert_then_stderr_format(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
@@ -356,9 +342,7 @@ class TestAutofixObservability:
             run_cmd=wrapped,
         )
         captured = capsys.readouterr()
-        assert (
-            "[rumdl check] autofix reverted src/main.py: E999 after fix" in captured.err
-        )
+        assert "[rumdl check] autofix reverted src/main.py: E999 after fix" in captured.err
 
 
 # ── Canary label observability: distinct from "ruff check" ────────
@@ -389,16 +373,12 @@ class TestCanaryLabelObservability:
             seen_labels.append(label)
             # Canary stdout carries no E999 — no revert; the test only
             # probes the label that was used.
-            assert label == _CANARY_LABEL, (
-                f"canary call reused a non-canary label: {label!r}"
-            )
+            assert label == _CANARY_LABEL, f"canary call reused a non-canary label: {label!r}"
             return make_lint_result(tool_name=label, stdout="")
 
         result = _ruff_parseability_errors(tmp_path, ["src/a.py", "src/b.py"], fake_run)
         assert result == set()  # no E999 in canary output
-        assert seen_labels == [_CANARY_LABEL], (
-            f"expected exactly one canary call; got labels {seen_labels!r}"
-        )
+        assert seen_labels == [_CANARY_LABEL], f"expected exactly one canary call; got labels {seen_labels!r}"
 
 
 # ── Windows-path safety for _ruff_parseability_errors (D7) ────────
@@ -425,39 +405,29 @@ class TestWindowsPathSafety:
             return make_lint_result(tool_name=label, stdout=stdout)
 
         result = _ruff_parseability_errors(tmp_path, ["C:\\foo\\bar.py"], fake_run)
-        assert result == {"C:\\foo\\bar.py"}, (
-            f"Windows E999 path not parsed whole: got {result!r}"
-        )
+        assert result == {"C:\\foo\\bar.py"}, f"Windows E999 path not parsed whole: got {result!r}"
 
-    def test_ruff_parseability_errors_given_drive_letter_then_no_garbage(
-        self, tmp_path: Path
-    ) -> None:
+    def test_ruff_parseability_errors_given_drive_letter_then_no_garbage(self, tmp_path: Path) -> None:
         """The drive-letter colon must NOT yield ``C`` as a separate path entry."""
         stdout = "D:\\repo\\src\\mod.py:12:3: E999 invalid syntax\n"
 
         def fake_run(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
             return make_lint_result(tool_name=label, stdout=stdout)
 
-        result = _ruff_parseability_errors(
-            tmp_path, ["D:\\repo\\src\\mod.py"], fake_run
-        )
+        result = _ruff_parseability_errors(tmp_path, ["D:\\repo\\src\\mod.py"], fake_run)
         # The garbage short-path outcome under the OLD parser would be
         # ``{"D"}``; assert the full path is the only entry.
         assert "D" not in result, f"garbage short-path 'D' landed in result: {result!r}"
         assert result == {"D:\\repo\\src\\mod.py"}
 
-    def test_ruff_parseability_errors_given_drive_letter_with_message_then_parses_cleanly(
-        self, tmp_path: Path
-    ) -> None:
+    def test_ruff_parseability_errors_given_drive_letter_with_message_then_parses_cleanly(self, tmp_path: Path) -> None:
         """Drive-letter path with a multi-word message still parses whole."""
         stdout = "C:\\dev\\proj\\pkg\\a.py:1:1: E999 SyntaxError: unexpected EOF\n"
 
         def fake_run(cmd: list[str], *, cwd: Path, label: str) -> LintResult:
             return make_lint_result(tool_name=label, stdout=stdout)
 
-        result = _ruff_parseability_errors(
-            tmp_path, ["C:\\dev\\proj\\pkg\\a.py"], fake_run
-        )
+        result = _ruff_parseability_errors(tmp_path, ["C:\\dev\\proj\\pkg\\a.py"], fake_run)
         assert result == {"C:\\dev\\proj\\pkg\\a.py"}
 
     def test_ruff_parseability_errors_given_posix_path_then_parses_unchanged(self, tmp_path: Path) -> None:
@@ -469,13 +439,3 @@ class TestWindowsPathSafety:
 
         result = _ruff_parseability_errors(tmp_path, ["src/a.py"], fake_run)
         assert result == {"src/a.py"}
-
-
-
-
-
-
-
-
-
-

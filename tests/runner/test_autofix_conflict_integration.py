@@ -1,4 +1,5 @@
 """T4 — conflict-tolerant autofix: integration tests for ``--fix`` route."""
+
 from __future__ import annotations
 
 import textwrap
@@ -79,17 +80,13 @@ class TestRunLintFixDownstream:
         # runner completed the tool loop AND reached the baseline-save
         # branch (which only fires after all tools ran).
         assert baseline.exists(), "baseline file not created — runner did not finish"
-        assert baseline.stat().st_size > 0, (
-            f"baseline file empty: {baseline.read_text()!r}"
-        )
+        assert baseline.stat().st_size > 0, f"baseline file empty: {baseline.read_text()!r}"
         # (b) The baseline JSON parses to a list (violations list; empty on a
         # clean repo — the runner completed the full tool loop).
         import json as _json
 
         entries = _json.loads(baseline.read_text(encoding="utf-8"))
-        assert isinstance(entries, list), (
-            f"baseline not a JSON list: {type(entries).__name__}"
-        )
+        assert isinstance(entries, list), f"baseline not a JSON list: {type(entries).__name__}"
         # (c) The autofix route was exercised: run_lint was called with
         # fix=True, completed (rc is int, baseline exists and parses), and
         # the runner iterated over all tools including supports_fix tools.
@@ -97,9 +94,7 @@ class TestRunLintFixDownstream:
         # violations — assert that invariant to prove they ran cleanly.
         baseline_labels = {e.get("tool") for e in entries}
         fix_labels_seen = baseline_labels & _FIX_TOOL_NAMES
-        assert not fix_labels_seen, (
-            f"fix-capable tools unexpectedly produced violations: {fix_labels_seen!r}"
-        )
+        assert not fix_labels_seen, f"fix-capable tools unexpectedly produced violations: {fix_labels_seen!r}"
 
 
 # ── Surface-unit: pre-commit template carries --fix (T4 contract)  ─
@@ -121,9 +116,7 @@ class TestPrecommitTemplateHasFix:
         """Template never carries the ``timeout`` key — avoiding the schema warning (D5)."""
         from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
 
-        assert "timeout" not in _PRECOMMIT_TEMPLATE.lower(), (
-            "timeout key present in template — pre-commit would warn"
-        )
+        assert "timeout" not in _PRECOMMIT_TEMPLATE.lower(), "timeout key present in template — pre-commit would warn"
 
     def test_precommit_template_given_lint_entry_then_no_pre_push(self) -> None:
         """The hook stage name ``pre-push`` is NOT in the template — fast hooks
@@ -148,9 +141,7 @@ class TestPrecommitTemplateHasFix:
             _AGENTS_SNIPPET,
         )
 
-        rendered = _AGENTS_SNIPPET.format(
-            open_sentinel=_AGENTS_SENTINEL, close_sentinel=_AGENTS_SENTINEL_END
-        )
+        rendered = _AGENTS_SNIPPET.format(open_sentinel=_AGENTS_SENTINEL, close_sentinel=_AGENTS_SENTINEL_END)
         assert "autofix" in rendered.lower()
         assert _AUTOFIX_ENV_VAR in rendered, "env-var opt-out name not documented"
         assert "courtesy" in rendered.lower()
@@ -217,9 +208,7 @@ class TestRunLintFixDispatch:
         run_lint(config=tmp_config(tmp_path), fix=True)
         labels = [c.label for c in fake.calls]
         # ruff has default_paths=["src/", "tests/"] → canary fires once.
-        assert _CANARY_LABEL in labels, (
-            f"canary label never appeared in fix=True labels: {labels!r}"
-        )
+        assert _CANARY_LABEL in labels, f"canary label never appeared in fix=True labels: {labels!r}"
 
     def test_run_lint_fix_dispatch_given_path_then_triggers_canary(
         self,
@@ -244,9 +233,7 @@ class TestRunLintFixDispatch:
         )
         labels = [c.label for c in fake.calls]
         # All three supports_fix tools receive the --path → canary fires once each.
-        assert labels.count(_CANARY_LABEL) == 3, (
-            f"canary call count mismatch with --path: {labels!r}"
-        )
+        assert labels.count(_CANARY_LABEL) == 3, f"canary call count mismatch with --path: {labels!r}"
 
     def test_run_lint_fix_dispatch_given_no_fix_then_no_canary(
         self,
@@ -280,16 +267,10 @@ class TestAutofixRealGitIntegration:
     def _make_spec(self) -> ToolSpec:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
         return next(t for t in LINT_TOOLS if t.name == "ruff check")
 
-    def _make_canned(
-        self, *, canary_e999_files: tuple[str, ...] = ()
-    ) -> dict[str, LintResult]:  # pylint: disable=generic-key-dict  # dict[str, LintResult] is a test helper; string keys are fixture labels
+    def _make_canned(self, *, canary_e999_files: tuple[str, ...] = ()) -> dict[str, LintResult]:  # pylint: disable=generic-key-dict  # dict[str, LintResult] is a test helper; string keys are fixture labels
         base = canned_results_all_tools(exit_code=0, stdout="")
-        canary_stdout = "\n".join(
-            f"{f}:1:1: E999 SyntaxError" for f in canary_e999_files
-        ) if canary_e999_files else ""
-        base[self._CANARY_LABEL] = make_lint_result(
-            tool_name=self._CANARY_LABEL, exit_code=1, stdout=canary_stdout
-        )
+        canary_stdout = "\n".join(f"{f}:1:1: E999 SyntaxError" for f in canary_e999_files) if canary_e999_files else ""
+        base[self._CANARY_LABEL] = make_lint_result(tool_name=self._CANARY_LABEL, exit_code=1, stdout=canary_stdout)
         return base
 
     # ── Case 1: staged+unstaged same file → skipped ──────────────
@@ -334,9 +315,7 @@ class TestAutofixRealGitIntegration:
             text=True,
             check=True,
         ).stdout
-        assert post_staged_blob == staged_blob, (
-            f"staged blob changed: was {staged_blob!r}, now {post_staged_blob!r}"
-        )
+        assert post_staged_blob == staged_blob, f"staged blob changed: was {staged_blob!r}, now {post_staged_blob!r}"
         # The unstaged content is also unchanged (the fix tool never wrote).
         assert (tmp_path / "f.py").read_text() == "z = 3\n"
 

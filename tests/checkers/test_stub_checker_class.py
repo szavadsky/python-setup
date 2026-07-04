@@ -6,6 +6,7 @@ impl), and E97B2 (kind mismatch).
 
 Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -83,6 +84,7 @@ def test_class_comparison_ctx_given_fields_then_constructs_correctly() -> None:
         stub_class=stub_class,
         impl_class=impl_class,
     )
+
 
 # ── Checker message codes registered ──────────────────────────────
 

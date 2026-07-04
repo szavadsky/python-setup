@@ -4,6 +4,7 @@ Ensures that ``python_setup_lint.runner`` does not re-export any private
 symbols (names starting with ``_``) in its ``__all__`` or module-level
 namespace accessible via ``from python_setup_lint.runner import ...``.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -13,7 +14,6 @@ import pytest
 
 pytestmark = pytest.mark.no_external_api
 _RUNNER_PKG = "python_setup_lint.runner"
-
 
 
 def _get_public_names(module: Any) -> set[str]:
@@ -31,9 +31,7 @@ def test_runner_imports_given_runner_all_then_no_private_symbols() -> None:
         pytest.skip("runner package has no __all__")
 
     private_in_all = [n for n in runner_pkg.__all__ if n.startswith("_")]
-    assert not private_in_all, (
-        f"runner.__all__ contains private symbol(s): {private_in_all}"
-    )
+    assert not private_in_all, f"runner.__all__ contains private symbol(s): {private_in_all}"
 
 
 def test_runner_imports_given_runner_namespace_then_no_private_symbols() -> None:
@@ -42,9 +40,7 @@ def test_runner_imports_given_runner_namespace_then_no_private_symbols() -> None
 
     public = _get_public_names(runner_pkg)
     private = {n for n in public if n.startswith("_")}
-    assert not private, (
-        f"runner package exposes private symbol(s): {private}"
-    )
+    assert not private, f"runner package exposes private symbol(s): {private}"
 
 
 def test_runner_imports_given_init_then_no_private_submodule() -> None:
@@ -67,10 +63,7 @@ def test_runner_imports_given_init_then_no_private_submodule() -> None:
         init_text,
         re.MULTILINE,
     )
-    assert not private_imports, (
-        f"runner __init__ imports private submodule(s): {private_imports}"
-    )
-
+    assert not private_imports, f"runner __init__ imports private submodule(s): {private_imports}"
 
 
 def test_tests_import_privates_only_from_defining_submodule() -> None:
@@ -95,11 +88,8 @@ def test_tests_import_privates_only_from_defining_submodule() -> None:
                 for alias in node.names:
                     if alias.name.startswith("_"):
                         rel = pyfile.relative_to(tests_dir)
-                        violations.append(
-                            f"{rel}: from python_setup_lint.runner import {alias.name}"
-                        )
+                        violations.append(f"{rel}: from python_setup_lint.runner import {alias.name}")
 
-    assert not violations, (
-        "Tests import _-prefixed symbols from runner package root, "
-        "not the defining submodule:\n" + "\n".join(violations)
+    assert not violations, "Tests import _-prefixed symbols from runner package root, not the defining submodule:\n" + "\n".join(
+        violations
     )

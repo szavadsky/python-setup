@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -37,7 +36,6 @@ log = structlog.get_logger(__name__)
 
 
 class StubChecker(BaseChecker):
-
     name = "stub-checker"
     msgs = _msgs(
         E97A0=MessageDef(
@@ -161,11 +159,7 @@ class StubChecker(BaseChecker):
         c = self._coverage
         config = self.linter.config
         raw_roots = getattr(config, "source_roots", None)
-        c.patterns.source_roots = (
-            [Path(r).resolve() for r in raw_roots if r]
-            if raw_roots
-            else [Path("src").resolve()]
-        )
+        c.patterns.source_roots = [Path(r).resolve() for r in raw_roots if r] if raw_roots else [Path("src").resolve()]
         raw_patterns = getattr(config, "test_patterns", None)
         c.patterns.test_patterns = (
             list(raw_patterns)
@@ -180,9 +174,7 @@ class StubChecker(BaseChecker):
         raw_opt_out = getattr(config, "stub_opt_out", None)
         c.patterns.opt_out_patterns = list(raw_opt_out) if raw_opt_out else []
         raw_stub_roots = getattr(config, "stub_roots", None)
-        c.patterns.stub_roots = (
-            [Path(r) for r in raw_stub_roots if r] if raw_stub_roots else []
-        )
+        c.patterns.stub_roots = [Path(r) for r in raw_stub_roots if r] if raw_stub_roots else []
         raw_star = getattr(config, "star_import_policy", None) or "error"
         c.star_import_policy = str(raw_star)
         raw_missing = getattr(config, "impl_missing_annotation", None) or "warn"
@@ -242,9 +234,7 @@ class StubChecker(BaseChecker):
 
         # ── __init__.py exemption ─────────────────────────────────────────
         if py_path.name == "__init__.py" and _is_init_exempt(node):
-            log.info(
-                "Exempt __init__.py", module=module_name, reason="imports/__all__ only"
-            )
+            log.info("Exempt __init__.py", module=module_name, reason="imports/__all__ only")
             return True
 
         return False
@@ -280,9 +270,7 @@ class StubChecker(BaseChecker):
         if _in_type_checking_block(node):
             return
         for alias in node.names:
-            name, asname = (
-                alias if isinstance(alias, tuple) else (alias.name, alias.asname)
-            )
+            name, asname = alias if isinstance(alias, tuple) else (alias.name, alias.asname)
             c.import_usages.append(
                 ImportUsage(
                     importer_module=c.current_module_name,
@@ -301,10 +289,7 @@ class StubChecker(BaseChecker):
             return
         if _in_type_checking_block(node):
             return
-        is_package = (
-            c.current_file_path is not None
-            and c.current_file_path.name == "__init__.py"
-        )
+        is_package = c.current_file_path is not None and c.current_file_path.name == "__init__.py"
         level = node.level or 0
         target_module = _resolve_relative(
             c.current_module_name,
@@ -313,9 +298,7 @@ class StubChecker(BaseChecker):
             is_package=is_package,
         )
         for alias in node.names:
-            name, asname = (
-                alias if isinstance(alias, tuple) else (alias.name, alias.asname)
-            )
+            name, asname = alias if isinstance(alias, tuple) else (alias.name, alias.asname)
             is_star = name == "*"
             c.import_usages.append(
                 ImportUsage(
@@ -369,9 +352,7 @@ class StubChecker(BaseChecker):
         impl_names: set[str] = set()
 
         for child in py_node.body:
-            if isinstance(child, nodes.AnnAssign) and isinstance(
-                child.target, nodes.AssignName
-            ):
+            if isinstance(child, nodes.AnnAssign) and isinstance(child.target, nodes.AssignName):
                 impl_ann[child.target.name] = (child.annotation, child)
                 impl_names.add(child.target.name)
             elif isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):

@@ -25,5 +25,3 @@ def semantic_check_if_meaningful(
         ``False`` otherwise, or ``None`` if the NLP pipeline is unavailable
         (sentence-transformers not installed or model download failed).
     """
-
-

@@ -3,6 +3,7 @@
 Verifies the AST checker detects (and does not detect) the correct
 asyncio.timeout() / anyio.fail_after() wrapping patterns.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -82,19 +83,14 @@ def test_checker_given_await_without_timeout_then_flags_missing(code: str, expec
     msgs = _walk_and_release(code, AsyncTimeoutChecker)
     assert len(msgs) >= 1, f"Expected ≥1 message, got 0 for:\n{code}"
     assert msgs[0].msg_id == "asyncio-timeout"
-    assert msgs[0].args[0] == expected_first_arg, (
-        f"Expected args[0]={expected_first_arg!r}, got {msgs[0].args[0]!r}"
-    )
+    assert msgs[0].args[0] == expected_first_arg, f"Expected args[0]={expected_first_arg!r}, got {msgs[0].args[0]!r}"
 
 
 @pytest.mark.parametrize("code", _DO_NOT_DETECT_CASES)
 def test_does_not_detect(code: str) -> None:
     """Checker must NOT flag code with proper timeout wrapping."""
     msgs = _walk_and_release(code, AsyncTimeoutChecker)
-    assert len(msgs) == 0, (
-        f"Expected 0 messages, got {len(msgs)} for:\n{code}\n"
-        f"Messages: {[(m.msg_id, m.args) for m in msgs]}"
-    )
+    assert len(msgs) == 0, f"Expected 0 messages, got {len(msgs)} for:\n{code}\nMessages: {[(m.msg_id, m.args) for m in msgs]}"
 
 
 def test_checker_given_mixed_timeout_and_bare_await_then_flags_only_bare() -> None:

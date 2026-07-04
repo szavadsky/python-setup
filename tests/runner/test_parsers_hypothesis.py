@@ -6,6 +6,7 @@ Tests invariants:
 3. Empty/garbage safety: empty string, whitespace, random garbage never raises
 4. Statistics parsers: all counts >= 0
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -207,7 +208,15 @@ class TestRumdlRecords:
 
 
 class TestPyrightRecords:
-    @given(data=st.none() | st.booleans() | st.floats(allow_nan=False, allow_infinity=False) | st.integers() | st.text(max_size=50) | st.lists(_json_value, max_size=5) | st.dictionaries(st.text(max_size=20), _json_value, max_size=5))
+    @given(
+        data=st.none()
+        | st.booleans()
+        | st.floats(allow_nan=False, allow_infinity=False)
+        | st.integers()
+        | st.text(max_size=50)
+        | st.lists(_json_value, max_size=5)
+        | st.dictionaries(st.text(max_size=20), _json_value, max_size=5)
+    )
     def test_pyright_records_given_any_input_then_never_raises(self, data: object) -> None:  # pylint: disable=trivial-wrapper  # hypothesis test wrapper; delegation pattern required by framework
         _parse_pyright_records(data)
 
@@ -235,7 +244,9 @@ class TestPyrightRecords:
 # ── Statistics parsers ──────────────────────────────────────────────
 
 
-def _check_statistics_invariants(result: list[tuple[str, int]], parser: Callable[[str, str], list[tuple[str, int]]], stdout: str, stderr: str = "") -> None:
+def _check_statistics_invariants(
+    result: list[tuple[str, int]], parser: Callable[[str, str], list[tuple[str, int]]], stdout: str, stderr: str = ""
+) -> None:
     """Check common invariants for statistics parsers."""
     # 1. Idempotency
     result2 = parser(stdout, stderr)

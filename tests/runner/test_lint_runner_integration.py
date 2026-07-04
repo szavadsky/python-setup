@@ -3,6 +3,7 @@
 
 Splitting would lose context.
 """
+
 # pylint: disable=too-many-positional-arguments  # parametrized test with 6 args; pylint default is 5
 from __future__ import annotations
 
@@ -55,11 +56,10 @@ class TestCaptureBaseline:
         """ruff check with no issues produces 0 records; mypy with error produces 1 record."""
         baseline = _capture_baseline(
             [
+                make_lint_result(tool_name="ruff check", exit_code=0, stdout="no issues"),
                 make_lint_result(
-                    tool_name="ruff check", exit_code=0, stdout="no issues"
-                ),
-                make_lint_result(
-                    tool_name="mypy", exit_code=1,
+                    tool_name="mypy",
+                    exit_code=1,
                     stdout="src/a.py:1: error: x [some-code]",
                 ),
             ]
@@ -76,7 +76,10 @@ class TestCaptureBaseline:
 # ── _diff_baseline parametrised shrinkage/addition/mixed matrix ───
 
 
-@pytest.mark.parametrize(("saved", "current", "want_kind", "post_assert_id"), DIFF_BASELINE_CASES,)
+@pytest.mark.parametrize(
+    ("saved", "current", "want_kind", "post_assert_id"),
+    DIFF_BASELINE_CASES,
+)
 def test_diff_baseline_matrix(
     tmp_path: Path,
     saved: dict[str, Any] | list[dict[str, Any]],
@@ -137,9 +140,7 @@ class TestDiffBaselineEdgeCases:
     ) -> None:
         """Missing baseline -> 'not found'; invalid JSON -> 'Cannot read'; empty + empty -> no violation."""
         if kind == "missing":
-            violations = _diff_baseline(
-                [make_lint_result()], Path("/nonexistent/baseline.json")
-            )
+            violations = _diff_baseline([make_lint_result()], Path("/nonexistent/baseline.json"))
             assert len(violations) == 1 and want_substr in violations[0]
         elif kind == "invalid":
             baseline_path = tmp_path / "baseline.json"
@@ -179,21 +180,15 @@ class TestOverwriteBaseline:
             config=cfg,
         )
         assert "Overwriting baseline" in capsys.readouterr().out
-        baseline_file2 = (
-            tmp_path / "overwrite2.json"
-        )
+        baseline_file2 = tmp_path / "overwrite2.json"
         install_fake_runner(monkeypatch)
         run_lint(path="src/main.py", baseline=str(baseline_file2))
         install_fake_runner(monkeypatch)
-        run_lint(
-            path="src/main.py", baseline=str(baseline_file2), overwrite_baseline=True
-        )
+        run_lint(path="src/main.py", baseline=str(baseline_file2), overwrite_baseline=True)
         assert json.loads(baseline_file2.read_text()) is not None
         assert json.loads(baseline_file.read_text()) is not None
 
-    def test_overwrite_baseline_given_no_flag_then_no_overwrite(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_overwrite_baseline_given_no_flag_then_no_overwrite(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Without ``--overwrite-baseline``, an existing baseline is diffed, not rewritten."""
         baseline_file = tmp_path / "no_overwrite.json"
 
@@ -213,7 +208,8 @@ class TestOverwriteBaseline:
         fake = fake_run_cmd_factory(
             {
                 "ruff check": make_lint_result(
-                    tool_name="ruff check", exit_code=0,
+                    tool_name="ruff check",
+                    exit_code=0,
                     stdout=recorded_stdout,
                 ),
             }
@@ -246,9 +242,7 @@ class TestRunLintOrchestration:
     ) -> None:
         fake, _ = install_fake_runner(monkeypatch)
         baseline_file = tmp_path / "noff.json"
-        rc = run_lint(
-            config=tmp_config(tmp_path), baseline=str(baseline_file)
-        )
+        rc = run_lint(config=tmp_config(tmp_path), baseline=str(baseline_file))
         assert isinstance(rc, int)
         assert {c.label for c in fake.calls} == {t.name for t in LINT_TOOLS}
 
@@ -329,11 +323,7 @@ class TestRunLintIntegration:
     ) -> None:
         """Baseline capture path: optional --fix; ruff check entry present in baseline JSON."""
         ruff_result = (
-            None
-            if override_stdout is None
-            else make_lint_result(
-                tool_name="ruff check", exit_code=0, stdout=override_stdout
-            )
+            None if override_stdout is None else make_lint_result(tool_name="ruff check", exit_code=0, stdout=override_stdout)
         )
         if ruff_result is not None:
             fake = fake_run_cmd_factory({"ruff check": ruff_result})
@@ -354,24 +344,24 @@ class TestRunLintIntegration:
     ) -> None:
         """Baseline create -> diff round-trip: entries have flat-record keys; second run matches -> exit 0."""
         # Use stdout that produces at least some records so baseline is non-empty.
-        install_fake_runner(monkeypatch, overrides={
-            "ruff check": make_lint_result(
-                tool_name="ruff check", exit_code=0,
-                stdout="src/main.py:1:1: F001 error msg",
-            ),
-        })
+        install_fake_runner(
+            monkeypatch,
+            overrides={
+                "ruff check": make_lint_result(
+                    tool_name="ruff check",
+                    exit_code=0,
+                    stdout="src/main.py:1:1: F001 error msg",
+                ),
+            },
+        )
         baseline_file = tmp_path / "test_baseline.json"
         run_lint(config=tmp_config(tmp_path), baseline=str(baseline_file))  # create
         data = json.loads(baseline_file.read_text())
         assert isinstance(data, list)
-        assert all(
-            "tool" in e and "file" in e and "line" in e and "col" in e
-            and "rule" in e and "msg" in e
-            for e in data
-        ), f"Flat record keys missing: {data!r}"
-        assert (
-            run_lint(config=tmp_config(tmp_path), baseline=str(baseline_file)) == 0
-        )  # re-diff matches
+        assert all("tool" in e and "file" in e and "line" in e and "col" in e and "rule" in e and "msg" in e for e in data), (
+            f"Flat record keys missing: {data!r}"
+        )
+        assert run_lint(config=tmp_config(tmp_path), baseline=str(baseline_file)) == 0  # re-diff matches
 
     def test_run_lint_integration_given_new_violation_then_exits_nonzero(self, tmp_path: Path) -> None:
         """Stored baseline with no issues + current new ruff issue -> ``_diff_baseline`` returns truthy."""
@@ -379,7 +369,8 @@ class TestRunLintIntegration:
         baseline_file.write_text("[]")
         results = [
             make_lint_result(
-                tool_name="ruff check", exit_code=1,
+                tool_name="ruff check",
+                exit_code=1,
                 stdout="src/main.py:1:1: F401 unused-import",
             )
         ]

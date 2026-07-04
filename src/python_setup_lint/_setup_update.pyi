@@ -12,14 +12,12 @@ def _check_config_drift(project_dir: Path, /) -> list[str]:
         List of drift descriptions (empty if none).
     """
 
-
 def _run_update_steps(project_dir: Path) -> list[str]:
     """Run uv sync, uv add --refresh-package python-setup, and re-verify config symlinks.
 
     Returns:
         List of error messages (empty on success).
     """
-
 
 def update(project_dir: Path) -> int:
     """Update an existing python-setup installation.

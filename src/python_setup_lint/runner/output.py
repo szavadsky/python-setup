@@ -172,12 +172,15 @@ def _run_cmd(
     preexec_fn = None
     if memory_limit_mb > 0:
         limit_bytes = memory_limit_mb * 1024 * 1024
+
         def _set_rlimit() -> None:
             try:
                 import resource  # pylint: disable=import-outside-toplevel  # only imported when memory limit is active
+
                 resource.setrlimit(resource.RLIMIT_AS, (limit_bytes, limit_bytes))
-            except (ImportError, OSError):  # pylint: disable=W9001,W9740  # non-POSIX or rlimit unavailable; rely on timeout alone
+            except ImportError, OSError:  # pylint: disable=W9001,W9740  # non-POSIX or rlimit unavailable; rely on timeout alone
                 pass  # non-POSIX or rlimit unavailable; rely on timeout alone
+
         preexec_fn = _set_rlimit
     try:
         proc = subprocess.run(  # noqa: S603  # cmd is constructed internally from ToolSpec; cwd is lint scope
@@ -225,6 +228,7 @@ def _summarize_pyright_verify_types(stdout: str) -> str | None:
         A one-line summary string, or None if the output cannot be parsed.
     """
     import json
+
     try:
         data = json.loads(stdout)
     except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
