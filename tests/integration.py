@@ -9,6 +9,7 @@ programmatically (not subprocess), mock ``uv`` calls, and skip pre-commit if
 the binary is unavailable.
 """
 
+# pylint: disable=too-many-lines  # integration tests need 626 lines for full pipeline coverage
 from __future__ import annotations
 
 import json
@@ -164,7 +165,7 @@ class TestMinimalSampleProject:
             f"Expected W9705 (generic-return-requires-returns) in lint output.\nOutput excerpt:\n{output[:3000]}"
         )
 
-    def test_config_overlay(
+    def test_config_overlay(  # pylint: disable=too-many-locals  # test method uses several locals for config file manipulation
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -500,6 +501,7 @@ class TestMinimalSampleProject:
             capture_output=True,
             text=True,
             cwd=project,
+            check=False,
         )
 
         direct_output = result.stdout + result.stderr
