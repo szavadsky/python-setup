@@ -16,6 +16,7 @@ _PACKAGE_NAME: str
 _GIT_URL: str
 _STATE_FILE: str
 _BUNDLED_CONFIGS: tuple[str, ...]
+_SKIP_SYMLINK_IF_EXISTS: frozenset[str]
 
 # ── Data structures ─────────────────────────────────────────────────
 

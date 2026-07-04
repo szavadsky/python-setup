@@ -9,7 +9,6 @@ import pytest
 from python_setup_lint.setup import (
     SetupState,
     _BUNDLED_CONFIGS,
-    _SKIP_SYMLINK_IF_EXISTS,
     _step_config_symlinks,
 )
 
