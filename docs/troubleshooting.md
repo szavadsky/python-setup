@@ -28,6 +28,8 @@ Running a tool directly (`uv run pylint src/`) may produce different results tha
    ```
 
    These symlinks are gitignored (listed in `.gitignore`) and created locally by the installer — they are never committed to the repository.
+ 
+   Note: `ls -la` shows the resolved absolute target path. The symlink itself is relative — use `readlink <symlink>` to see the stored relative link.
 
    Missing symlinks? Re-run the installer:
 

@@ -72,6 +72,19 @@ When lint rules or checkers change in `python-setup`:
 1. Update the dependency: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v1.1.0"`
 2. Re-run the installer: `uv run python-setup install`
 3. Commit the updated config in the consuming project.
+ 
+ ### Release & deploy
+ 
+ 1. Bump version in `pyproject.toml` and update `CHANGELOG.md`.
+ 2. Commit: `git add -A && git commit -m "v<VERSION>"`
+ 3. Tag: `git tag v<VERSION>`
+ 4. Push: `git push origin main --tags`
+ 5. In the consuming project: `uv add "python-setup @ git+https://github.com/szavadsky/python-setup.git@v<VERSION>"`
+ 6. Re-run the installer: `uv run python-setup install`
+ 7. Regenerate the lint baseline: `uv run lint --overwrite-baseline --baseline lint.baseline`
+ 8. Commit the consumer changes: `git add -A && git commit -m "sync python-setup v<VERSION>"`
+ 9. Tag the consumer: `git tag v<CONSUMER_VERSION>`
+ 10. Push the consumer: `git push origin main --tags`
 
 ## Configuration
 

@@ -9,7 +9,7 @@ uv add python-setup
 uv run python-setup install
 ```
 
-The installer writes config symlinks, registers custom pylint checkers, and creates the `lint.baseline` file. For the optional semantic justification reranker:
+The installer writes relative config symlinks (portable across git checkouts and worktrees), registers custom pylint checkers, and creates the `lint.baseline` file. For the optional semantic justification rerunner:
 
 ```bash
 uv add "python-setup[semantic]"
