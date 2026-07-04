@@ -39,7 +39,7 @@ TOOLS: list[ToolSpec] = [
     ToolSpec("tach check", ["tach", "check"], supports_exclude=True, exclude_flag="-e"),
     ToolSpec(
         "ruff check",
-        ["ruff", "check"],
+        ["ruff", "check", "--output-format", "concise"],
         supports_fix=True,
         supports_path=True,
         supports_exclude=True,
