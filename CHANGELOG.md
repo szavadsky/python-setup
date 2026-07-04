@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.3 (2026-07-04)
+
+- Self-lint fixes: SIM102×2 (collapsible nested-if), MD009 (trailing whitespace), W9728 (trivial-wrapper suppression)
+- Integration-test alignment with the `lint` pre-commit entry
+- Stale W9705 CHANGELOG correction (W9705 is enabled, not disabled)
+- Removal of dead pyright verifytypes parser (`_parse_pyright_verify_types_records`) and `_strip_pyright_volatile` helper
+
 ## v1.2.2 (2026-07-04)
 
 - pre-commit fix, violations.txt fix, yamllint ignore fix, doc alignment
