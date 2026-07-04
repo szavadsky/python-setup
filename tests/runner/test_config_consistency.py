@@ -1,4 +1,5 @@
 """Tests enforcing config consistency across pylintrc files (single source of truth)."""
+
 from __future__ import annotations
 
 import configparser
@@ -40,9 +41,7 @@ class TestDesignSectionConsistency:
             other = _parse(path)
             assert ref.has_section("DESIGN")
             assert other.has_section("DESIGN")
-            assert dict(ref["DESIGN"]) == dict(other["DESIGN"]), (
-                f"[DESIGN] in {path.name} differs from .pylintrc"
-            )
+            assert dict(ref["DESIGN"]) == dict(other["DESIGN"]), f"[DESIGN] in {path.name} differs from .pylintrc"
 
 
 # ── [STUB-CHECKER] — .pylintrc and .pylintrc-pyi match ────────────────

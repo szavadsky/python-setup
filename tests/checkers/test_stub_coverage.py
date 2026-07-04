@@ -7,6 +7,7 @@ Exercises the private helpers directly (private-complex-unit category):
 
 Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -70,9 +71,7 @@ def test_is_test_file(path: str, test_patterns: list[str], expected: bool) -> No
     assert _is_test_file(checker, Path(path)) is expected
 
 
-@pytest.mark.parametrize(
-    ("path", "test_patterns", "expected"), _IS_TEST_FILE_CUSTOM_CASES
-)
+@pytest.mark.parametrize(("path", "test_patterns", "expected"), _IS_TEST_FILE_CUSTOM_CASES)
 def test_is_test_file_given_custom_patterns_then_expected_bool(
     path: str,
     test_patterns: list[str],
@@ -119,9 +118,7 @@ def test_has_main_block_given_code_then_expected_bool(code: str, expected: bool)
 # ── _is_under_source_root ──────────────────────────────────────────
 
 
-@pytest.mark.parametrize(
-    ("path", "source_roots", "expected"), _IS_UNDER_SOURCE_ROOT_CASES
-)
+@pytest.mark.parametrize(("path", "source_roots", "expected"), _IS_UNDER_SOURCE_ROOT_CASES)
 def test_is_under_source_root_given_path_and_roots_then_expected_bool(
     path: str,
     source_roots: list[str],
@@ -144,9 +141,7 @@ def test_resolve_stub_given_module_path_then_resolves_correctly(
     rows assert the resolved path equals the .pyi path; ``returns_none`` rows
     assert ``None`` is returned (no companion).
     """
-    checker, py_path, expected_pyi = materialize_resolve_stub_layout(
-        tmp_path, layout_kind
-    )
+    checker, py_path, expected_pyi = materialize_resolve_stub_layout(tmp_path, layout_kind)
     result = _resolve_stub(checker, py_path)
     if expected_kind == "returns_pyi":
         assert result == expected_pyi

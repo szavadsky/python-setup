@@ -2,6 +2,7 @@
 
 Exercises the full lint pipeline end-to-end on a minimal synthetic project.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -25,13 +26,9 @@ def test_consolidated_real_pipeline_smoke(
     src = tmp_path / "src"
     src.mkdir()
     (src / "__init__.py").write_text("")
-    (src / "main.py").write_text(
-        "def greet(name: str) -> str:\n    return f'hello {name}'\n"
-    )
+    (src / "main.py").write_text("def greet(name: str) -> str:\n    return f'hello {name}'\n")
 
-    (tmp_path / "pyproject.toml").write_text(
-        "[project]\nname = 'smoke-test'\nversion = '0.1.0'\n"
-    )
+    (tmp_path / "pyproject.toml").write_text("[project]\nname = 'smoke-test'\nversion = '0.1.0'\n")
     (tmp_path / ".secrets.baseline").write_text("{}")
 
     config = RunnerConfig(cwd=tmp_path, package_name="smoke_test")
@@ -42,7 +39,4 @@ def test_consolidated_real_pipeline_smoke(
     captured = capsys.readouterr()
     tool_names = {t.name for t in TOOLS}
     for name in tool_names:
-        assert f"[{name}]" in captured.out, (
-            f"Expected tool '{name}' output in lint output. "
-            f"Missing from: {captured.out[:2000]}"
-        )
+        assert f"[{name}]" in captured.out, f"Expected tool '{name}' output in lint output. Missing from: {captured.out[:2000]}"

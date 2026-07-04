@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -69,9 +68,7 @@ def _check_missing_symbols(
     impl_node = checker._coverage.module_index.get(module_name, (None, None))[1]
     for sym_name, stub_kind in stub_kinds.items():
         if sym_name not in impl_all:
-            log.debug(
-                "Stub symbol has no implementation", symbol=sym_name, module=module_name
-            )
+            log.debug("Stub symbol has no implementation", symbol=sym_name, module=module_name)
             checker.add_message(
                 "stub-symbol-missing",
                 node=impl_node,

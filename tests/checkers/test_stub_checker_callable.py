@@ -5,6 +5,7 @@ pylint runs for signature mismatch detection.
 
 Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 """
+
 from __future__ import annotations
 
 import inspect
@@ -65,12 +66,7 @@ def _p(name: str, ann: str | None = None) -> ParamDescriptor:
 
 def _build_descs(rows: list[tuple[str, Any, bool]]) -> list[ParamDescriptor]:
     """Build a list of ``ParamDescriptor`` from a row-tuple list."""
-    return [
-        ParamDescriptor(
-            name=r[0], kind=r[1], has_default=r[2], annotation_normalized=None
-        )
-        for r in rows
-    ]
+    return [ParamDescriptor(name=r[0], kind=r[1], has_default=r[2], annotation_normalized=None) for r in rows]
 
 
 def _returns_from_src(return_src: str | None) -> Any:
@@ -110,9 +106,7 @@ def test_param_descriptor_given_no_annotation_then_annotation_is_none() -> None:
 # ── _extract_param_descriptors ─────────────────────────────────────
 
 
-@pytest.mark.parametrize(
-    ("func_src", "expected_names", "expected_kinds"), _EXTRACT_PARAM_CASES
-)
+@pytest.mark.parametrize(("func_src", "expected_names", "expected_kinds"), _EXTRACT_PARAM_CASES)
 def test_extract_param_descriptors_given_callable_then_returns_descriptors(
     func_src: str,
     expected_names: list[str],
@@ -203,9 +197,7 @@ def test_compare_callable_annotations(
     a = [_p(name, ann) for name, ann in zip(["x", "y", "x"], a_anns, strict=False)]
     b = [_p(name, ann) for name, ann in zip(["x", "y", "x"], b_anns, strict=False)]
     result = _compare_callable_annotations(a, b)
-    assert len(result) == expected_count, (
-        f"a={a_anns!r} b={b_anns!r} → {len(result)} mismatches (expected {expected_count})"
-    )
+    assert len(result) == expected_count, f"a={a_anns!r} b={b_anns!r} → {len(result)} mismatches (expected {expected_count})"
     if expected_first_arg_name is not None and result:
         assert result[0][0] == expected_first_arg_name
 

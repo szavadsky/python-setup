@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import re
@@ -17,17 +16,11 @@ from .types import LintResult, RunnerConfig, ToolSpec  # TYPE_CHECKING-only impo
 
 _AUTOFIX_ENV_VAR: str = "PYTHON_SETUP_LINT_NO_AUTOFIX"
 _E999_RULE: str = "E999"
-_E999_LINE_RE: re.Pattern[str] = re.compile(
-    r"^(?P<path>.+?):(?P<line>\d+):(?P<col>\d+):\s*" + _E999_RULE + r"\b"
-)
+_E999_LINE_RE: re.Pattern[str] = re.compile(r"^(?P<path>.+?):(?P<line>\d+):(?P<col>\d+):\s*" + _E999_RULE + r"\b")
 
 
 def _git_changed_files(cwd: Path, *, staged: bool) -> set[str]:
-    cmd = (
-        ["git", "diff", "--name-only", "--cached"]
-        if staged
-        else ["git", "diff", "--name-only"]
-    )
+    cmd = ["git", "diff", "--name-only", "--cached"] if staged else ["git", "diff", "--name-only"]
     try:
         proc = subprocess.run(  # noqa: S603  # argv is constructed internally; cwd is lint scope
             cmd,
@@ -45,9 +38,7 @@ def _git_changed_files(cwd: Path, *, staged: bool) -> set[str]:
 
 
 @beartype.beartype
-def _ruff_parseability_errors(
-    cwd: Path, paths: list[str], run_cmd: Callable[..., LintResult]
-) -> set[str]:
+def _ruff_parseability_errors(cwd: Path, paths: list[str], run_cmd: Callable[..., LintResult]) -> set[str]:
     if not paths:
         return set()
     cmd = ["ruff", "check", "--no-fix", *paths]
@@ -92,7 +83,7 @@ def _apply_autofix_conflict_aware(
         candidate = config.cwd / rel
         try:
             snapshot[candidate] = candidate.read_bytes()
-        except (FileNotFoundError, IsADirectoryError):  # pylint: disable=W9740  # best-effort snapshot read fallback; logging would noise unavoidable file-not-found/dir degrade
+        except FileNotFoundError, IsADirectoryError:  # pylint: disable=W9740  # best-effort snapshot read fallback; logging would noise unavoidable file-not-found/dir degrade
             continue
 
     strategy = _strategy_for(spec.name, spec)
@@ -116,9 +107,7 @@ def _apply_autofix_conflict_aware(
     return result
 
 
-def _autofix_target_paths(
-    spec: ToolSpec, *, config: RunnerConfig, path: str | None
-) -> list[str]:
+def _autofix_target_paths(spec: ToolSpec, *, config: RunnerConfig, path: str | None) -> list[str]:
     if path is not None and spec.supports_path:
         paths = [path]
     elif spec.default_paths:

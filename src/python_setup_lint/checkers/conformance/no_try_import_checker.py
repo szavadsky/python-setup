@@ -29,7 +29,6 @@ def _all_imports_optional(stmts: list[nodes.NodeNG]) -> bool:
 
 
 class NoTryImportChecker(BaseChecker):
-
     name: str = "no-try-import"
     msgs = _msgs(
         W9001=MessageDef(

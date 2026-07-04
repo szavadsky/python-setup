@@ -39,7 +39,7 @@ def _walk_and_release(
     *,
     file_path: str | None = None,
     module_name: str = "",
-    ) -> list[Any]:  # released pylint messages are dynamically typed; Any is the accurate contract
+) -> list[Any]:  # released pylint messages are dynamically typed; Any is the accurate contract
     """Parse *code*, walk *checker_class* over it, return released messages.
 
     Optionally set *file_path* for path-dependent logic (source-roots,
@@ -90,8 +90,13 @@ class FakeRunCmd:
     calls: list[_FakeRunCmdRecord] = ...
 
     def __call__(
-        self, cmd: list[str], *, cwd: Path = ..., label: str = "",
-        timeout: int = 120, memory_limit_mb: int = 2048,
+        self,
+        cmd: list[str],
+        *,
+        cwd: Path = ...,
+        label: str = "",
+        timeout: int = 120,
+        memory_limit_mb: int = 2048,
     ) -> LintResult:
         """Match ``_run_cmd(cmd, *, cwd, label, timeout, memory_limit_mb) -> LintResult``."""
 

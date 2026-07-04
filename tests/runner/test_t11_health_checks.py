@@ -19,6 +19,7 @@ Coverage mapping (envelope ``T11.envelope.md``):
   embed the failing returncode + captured stdout/stderr so a CI failure
   reconstructs what ``pre-commit validate-config`` reported.
 """
+
 from __future__ import annotations
 
 import textwrap
@@ -72,9 +73,7 @@ repos:
 class TestTestCheckedMainArgv:
     """``test_checked_main`` builds the consumer-agnostic typeguard argv."""
 
-    def test_checked_main_given_typeguard_then_assembles_argv(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_checked_main_given_typeguard_then_assembles_argv(self, monkeypatch: pytest.MonkeyPatch) -> None:
         captured: dict[str, Any] = {}  # dict[str, Any] is a test helper; dict shape varies by test case
 
         def _fake_pytest_main(args: list[str]) -> int:
@@ -246,7 +245,6 @@ repos:
         )
         with pytest.raises(AssertionError, match="language: system"):
             assert_precommit_hooks_shape(tmp_path)
-
 
     def test_assert_precommit_hooks_shape_given_wrong_baseline_filename_then_raises(self, tmp_path: Path) -> None:
         _write_precommit(

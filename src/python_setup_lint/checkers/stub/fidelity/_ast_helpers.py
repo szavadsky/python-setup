@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -21,20 +20,13 @@ __all__ = [
 
 @dataclass
 class _FidelityState:
-
-    stub_variable_nodes: dict[str, dict[str, nodes.AnnAssign]] = field(
-        default_factory=dict
-    )
+    stub_variable_nodes: dict[str, dict[str, nodes.AnnAssign]] = field(default_factory=dict)
     impl_annotations: dict[
         str,
         dict[str, tuple[nodes.NodeNG | None, nodes.AnnAssign | nodes.Assign | None]],
     ] = field(default_factory=dict)
-    stub_callable_nodes: dict[
-        str, dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef]
-    ] = field(default_factory=dict)
-    impl_callable_nodes: dict[
-        str, dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef]
-    ] = field(default_factory=dict)
+    stub_callable_nodes: dict[str, dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef]] = field(default_factory=dict)
+    impl_callable_nodes: dict[str, dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef]] = field(default_factory=dict)
     stub_class_nodes: dict[str, dict[str, nodes.ClassDef]] = field(default_factory=dict)
     impl_class_nodes: dict[str, dict[str, nodes.ClassDef]] = field(default_factory=dict)
     impl_all_names: dict[str, set[str]] = field(default_factory=dict)
@@ -42,7 +34,6 @@ class _FidelityState:
 
 @dataclass
 class ParamDescriptor:
-
     name: str
     kind: inspect._ParameterKind
     has_default: bool
@@ -51,7 +42,6 @@ class ParamDescriptor:
 
 @dataclass
 class ClassComparisonCtx:
-
     checker: StubChecker
     module_name: str
     class_name: str
@@ -62,7 +52,6 @@ class ClassComparisonCtx:
 
 @dataclass
 class CallableComparisonCtx:
-
     checker: StubChecker
     module_name: str
     func_name: str

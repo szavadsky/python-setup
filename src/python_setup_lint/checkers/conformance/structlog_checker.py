@@ -52,9 +52,7 @@ class StructlogChecker(SourceRootMixin, BaseChecker):  # type: ignore[misc]  # S
     @beartype
     def open(self) -> None:
         config = self.linter.config
-        self._source_roots = [
-            Path(p).resolve() for p in getattr(config, "source_roots", ["src"])
-        ]
+        self._source_roots = [Path(p).resolve() for p in getattr(config, "source_roots", ["src"])]
 
     @beartype
     def visit_module(self, _node: nodes.Module) -> None:

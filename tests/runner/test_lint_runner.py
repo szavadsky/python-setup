@@ -3,6 +3,7 @@
 Per-tool / per-flag rows are parametrised via shared tables in
 ``tests/runner/_factories.py`` (T12 consolidation).
 """
+
 # pylint: disable=too-many-lines  # test file with many parametrised classes; splitting would hurt readability
 from __future__ import annotations
 
@@ -77,16 +78,12 @@ class TestToolSpec:
     def test_tool_spec_given_yamllint_then_default_paths_is_dot(self) -> None:
         """yamllint default_paths changed from config/*.yaml to . (T5 fix)."""
         yamllint_spec = TOOLS_BY_NAME["yamllint"]
-        assert yamllint_spec.default_paths == ["."], (
-            f"Expected ['.'], got {yamllint_spec.default_paths!r}"
-        )
+        assert yamllint_spec.default_paths == ["."], f"Expected ['.'], got {yamllint_spec.default_paths!r}"
 
     def test_rumdl_default_paths_is_dot(self) -> None:
         """rumdl default_paths is '.' — lints all project .md files including root."""
         rumdl_spec = TOOLS_BY_NAME["rumdl check"]
-        assert rumdl_spec.default_paths == ["."], (
-            f"rumdl default_paths drifted: {rumdl_spec.default_paths!r}"
-        )
+        assert rumdl_spec.default_paths == ["."], f"rumdl default_paths drifted: {rumdl_spec.default_paths!r}"
 
 
 # ── register_lint_tool identity ────────────────────────────────────
@@ -101,26 +98,21 @@ class TestRegisterLintToolIdentity:
         from python_setup_lint.runner.extra_tools import register_lint_tool as extra_reg
 
         assert dispatch_reg is extra_reg, (
-            "extra_tools.register_lint_tool must be the same function object "
-            "as dispatch.register_lint_tool"
+            "extra_tools.register_lint_tool must be the same function object as dispatch.register_lint_tool"
         )
 
     def test_register_lint_tool_given_runner_init_then_exports_register(self) -> None:
         """``python_setup_lint.runner.register_lint_tool`` is dispatch.register_lint_tool."""
         from python_setup_lint.runner.dispatch import register_lint_tool as dispatch_reg
 
-        assert register_lint_tool is dispatch_reg, (
-            "runner.__init__ must re-export dispatch.register_lint_tool"
-        )
+        assert register_lint_tool is dispatch_reg, "runner.__init__ must re-export dispatch.register_lint_tool"
 
 
 # ── _build_command (parametrised via shared table) ────────────────
 
 
 @pytest.mark.parametrize(("spec_kwargs", "build_kwargs", "expected"), BUILD_COMMAND_CASES)
-def test_build_command(
-    spec_kwargs: dict[str, Any], build_kwargs: dict[str, Any], expected: list[str]
-) -> None:
+def test_build_command(spec_kwargs: dict[str, Any], build_kwargs: dict[str, Any], expected: list[str]) -> None:
     """Covers path/fix/exclude/override-defaults — one row per (spec, kwargs, cmd)."""
     spec = ToolSpec(**spec_kwargs)
     assert _build_command(spec, config=_CONFIG, **build_kwargs) == expected
@@ -134,9 +126,9 @@ class TestStrategyBuildCommand:
             _PylintLintTool,
         )
 
-        cmd = _PylintLintTool(
-            ToolSpec("pylint", ["pylint"], supports_path=True)
-        ).build_command(config=_CONFIG, _path="src/python_setup_lint")
+        cmd = _PylintLintTool(ToolSpec("pylint", ["pylint"], supports_path=True)).build_command(
+            config=_CONFIG, _path="src/python_setup_lint"
+        )
         assert cmd[0] == "pylint"
         # Auto-discovery may inject --rcfile <path> before .py files; skip those.
         py_files = [a for a in cmd[1:] if a.endswith(".py")]
@@ -197,9 +189,9 @@ class TestStrategyBuildCommand:
             _PylintLintTool,
         )
 
-        cmd = _PylintLintTool(
-            ToolSpec("pylint", ["pylint"], supports_path=True)
-        ).build_command(config=_CONFIG, _path="src/python_setup_lint")
+        cmd = _PylintLintTool(ToolSpec("pylint", ["pylint"], supports_path=True)).build_command(
+            config=_CONFIG, _path="src/python_setup_lint"
+        )
         assert "--rcfile" in cmd, f"Expected --rcfile in {cmd!r}"
         rcfile_idx = cmd.index("--rcfile")
         assert rcfile_idx + 1 < len(cmd)
@@ -216,13 +208,12 @@ class TestStrategyBuildCommand:
             ),
             config=_CONFIG,
         )
-        assert (
-            cmd[0] == "yamllint"
-            and len(cmd) > 1
-            and all(a.endswith(".py") for a in cmd[1:])
-        )
+        assert cmd[0] == "yamllint" and len(cmd) > 1 and all(a.endswith(".py") for a in cmd[1:])
 
-    @pytest.mark.parametrize(("strategy_name", "package_name", "expected_tokens"), STRATEGY_TOKENS_CASES,)
+    @pytest.mark.parametrize(
+        ("strategy_name", "package_name", "expected_tokens"),
+        STRATEGY_TOKENS_CASES,
+    )
     def test_stubtest_and_verifytypes_strategy_with_package_name(
         self,
         strategy_name: str,
@@ -235,9 +226,7 @@ class TestStrategyBuildCommand:
             assert tok in cmd, f"expected {tok!r} in {cmd!r}"
 
     def test_strategy_build_command_given_detect_secrets_then_bash_pipeline(self) -> None:
-        cmd = STRATEGIES["detect-secrets"].build_command(
-            config=RunnerConfig(cwd=Path.cwd())
-        )
+        cmd = STRATEGIES["detect-secrets"].build_command(config=RunnerConfig(cwd=Path.cwd()))
         assert cmd[:2] == ["bash", "-c"]
         assert "detect-secrets-hook" in cmd[2] and "--baseline" in cmd[2]
 
@@ -250,30 +239,19 @@ class TestPathHelpers:
 
     def test_path_helpers_given_dir_then_finds_py_files(self) -> None:
         files = _find_py_files(["src/python_setup_lint"], cwd=Path.cwd())
-        assert (
-            files
-            and all(f.endswith(".py") for f in files)
-            and all(not Path(f).is_absolute() for f in files)
-        )
+        assert files and all(f.endswith(".py") for f in files) and all(not Path(f).is_absolute() for f in files)
 
     def test_path_helpers_given_py_files_then_sorted_and_deduped(self) -> None:
-        files = _find_py_files(
-            ["src/python_setup_lint", "src/python_setup_lint"], cwd=Path.cwd()
-        )
+        files = _find_py_files(["src/python_setup_lint", "src/python_setup_lint"], cwd=Path.cwd())
         assert files == sorted(files) and len(files) == len(set(files))
 
     @pytest.mark.parametrize(("paths", "expected"), FIND_PY_FILES_BOUNDARY_CASES)
-    def test_find_py_files_boundary(
-        self, paths: list[str], expected: list[str]
-    ) -> None:
+    def test_find_py_files_boundary(self, paths: list[str], expected: list[str]) -> None:
         assert _find_py_files(paths, cwd=Path.cwd()) == expected
 
     def test_path_helpers_given_non_py_files_then_ignores(self) -> None:
         # ``src/python_setup_lint`` has both .py and .pyi — only .py kept.
-        assert all(
-            f.endswith(".py")
-            for f in _find_py_files(["src/python_setup_lint"], cwd=Path.cwd())
-        )
+        assert all(f.endswith(".py") for f in _find_py_files(["src/python_setup_lint"], cwd=Path.cwd()))
 
     @pytest.mark.parametrize(("paths", "check"), EXPAND_GLOBS_CASES)
     def test_expand_globs(self, paths: list[str], check) -> None:  # type: ignore[no-untyped-def]  # test function; signature varies by parametrize
@@ -309,9 +287,7 @@ class TestDetectSecretsBootstrap:
         )
 
         config = RunnerConfig(cwd=tmp_path)
-        cmd = _DetectSecretsLintTool(
-            ToolSpec("detect-secrets", ["detect-secrets-hook"])
-        ).build_command(config=config)
+        cmd = _DetectSecretsLintTool(ToolSpec("detect-secrets", ["detect-secrets-hook"])).build_command(config=config)
         assert cmd[:2] == ["bash", "-c"]
         assert "detect-secrets scan" in cmd[2]
         assert ".secrets.baseline" in cmd[2]
@@ -324,9 +300,7 @@ class TestDetectSecretsBootstrap:
 
         (tmp_path / ".secrets.baseline").write_text("{}")
         config = RunnerConfig(cwd=tmp_path)
-        cmd = _DetectSecretsLintTool(
-            ToolSpec("detect-secrets", ["detect-secrets-hook"])
-        ).build_command(config=config)
+        cmd = _DetectSecretsLintTool(ToolSpec("detect-secrets", ["detect-secrets-hook"])).build_command(config=config)
         assert cmd[:2] == ["bash", "-c"]
         assert "git ls-files" in cmd[2]
         assert "detect-secrets-hook" in cmd[2]
@@ -339,9 +313,7 @@ class TestDetectSecretsBootstrap:
         )
 
         config = RunnerConfig(cwd=tmp_path, secrets_baseline="config/secrets.baseline")
-        cmd = _DetectSecretsLintTool(
-            ToolSpec("detect-secrets", ["detect-secrets-hook"])
-        ).build_command(config=config)
+        cmd = _DetectSecretsLintTool(ToolSpec("detect-secrets", ["detect-secrets-hook"])).build_command(config=config)
         assert "config/secrets.baseline" in cmd[2]
 
 
@@ -380,9 +352,7 @@ class TestPylintrcNoMaxComplexity:
         pylintrc = project_root / "config" / ".pylintrc"
         assert pylintrc.is_file(), f"Expected {pylintrc} to exist"
         text = pylintrc.read_text()
-        assert "max-complexity" not in text, (
-            "max-complexity should be absent from .pylintrc (removed in T1)"
-        )
+        assert "max-complexity" not in text, "max-complexity should be absent from .pylintrc (removed in T1)"
 
 
 # ── T1: observability — stderr skip lines ────────────────────────
@@ -465,9 +435,7 @@ class TestPrintResult:
         for tok in want_tokens:
             assert tok in out, f"expected {tok!r} in output: {out!r}"
 
-    def test_print_result_given_stderr_and_stdout_then_stderr_before_stdout(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_print_result_given_stderr_and_stdout_then_stderr_before_stdout(self, capsys: pytest.CaptureFixture[str]) -> None:
         """stderr line always renders before stdout line in ``_print_result`` output."""
         _print_result(
             make_lint_result(

@@ -71,9 +71,7 @@ def _check_one_variable(
     var_name: str,
     stub_ann_node: nodes.AnnAssign,
     *,
-    impl_vars: Mapping[
-        str, tuple[nodes.NodeNG | None, nodes.NodeNG | None]
-    ],
+    impl_vars: Mapping[str, tuple[nodes.NodeNG | None, nodes.NodeNG | None]],
     impl_node: nodes.Module,
     impl_missing_policy: str,
 ) -> None:

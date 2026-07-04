@@ -32,7 +32,6 @@ class _CoveragePatterns:
     opt_out_patterns: list[str] = ...
     stub_roots: list[Path] = ...
 
-
 @dataclass
 class _CoverageState:
     """Phase 1 and shared state aggregated for StubChecker."""
@@ -50,7 +49,6 @@ class _CoverageState:
     current_file_path: Path | None = None
     current_module_name: str | None = None
     main_module_candidates: set[str] = ...
-
 
 def _is_test_file(checker: StubChecker, path: Path) -> bool:
     """Check if *path* matches any configured test pattern."""
@@ -96,9 +94,7 @@ def _collect_declarations(stub_module: nodes.Module) -> set[str]:
 def _add_declaration(child: nodes.NodeNG, declarations: set[str]) -> None:
     """Add a single child's declarations to the set."""
 
-def _index_stub_declarations(
-    checker: StubChecker, module_name: str, stub_path: Path
-) -> None:
+def _index_stub_declarations(checker: StubChecker, module_name: str, stub_path: Path) -> None:
     """Parse a .pyi stub file and index its top-level declarations."""
 
 def emit_coverage_violations(checker: StubChecker) -> None:

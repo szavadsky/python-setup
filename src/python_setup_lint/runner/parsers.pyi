@@ -7,7 +7,6 @@ dataclass plus per-tool ``_parse_<tool>_records`` line→record parsers
 feeding the drift-resistant baseline.
 """
 
-
 from collections.abc import Callable
 
 from ._record_types import Record

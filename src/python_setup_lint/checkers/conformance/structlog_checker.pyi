@@ -25,6 +25,7 @@ from python_setup_lint.checkers._base import SourceRootMixin
 
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
+
 class StructlogChecker(BaseChecker, SourceRootMixin):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
     """AST visitor that enforces structlog usage over stdlib logging."""
 

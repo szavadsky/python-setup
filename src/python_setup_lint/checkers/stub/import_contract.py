@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,7 +16,6 @@ log = structlog.get_logger(__name__)
 
 @dataclass
 class ImportUsage:
-
     importer_module: str
     lineno: int
     target_module: str

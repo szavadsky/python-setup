@@ -1,4 +1,5 @@
 """Parser and capture unit tests for baseline diff."""
+
 from __future__ import annotations
 
 import json
@@ -59,9 +60,7 @@ class TestRecordParsers:
             ),
             pytest.param(
                 _parse_mypy_records,
-                "src/a.py:1: error: Bad type [arg-type]\n"
-                "src/a.py:2: note: see docs\n"
-                "src/a.py:3: error: No code here\n",
+                "src/a.py:1: error: Bad type [arg-type]\nsrc/a.py:2: note: see docs\nsrc/a.py:3: error: No code here\n",
                 [Record("src/a.py", 1, None, "arg-type", "Bad type")],
                 id="mypy_skips_notes_and_codeless_lines",
             ),
@@ -115,10 +114,7 @@ class TestRecordParsers:
             ),
             pytest.param(
                 _parse_ty_records,
-                "error[invalid-argument-type]: Bad arg\n"
-                "  --> src/a.py:1:3\n"
-                "   |\n"
-                " 1 | code\n",
+                "error[invalid-argument-type]: Bad arg\n  --> src/a.py:1:3\n   |\n 1 | code\n",
                 [Record("src/a.py", 1, 3, "invalid-argument-type", "Bad arg")],
                 id="ty_multiline_arrow_form",
             ),
@@ -134,8 +130,10 @@ class TestRecordParsers:
                 "README.md:73:1: [MD032] List should be preceded by blank line [*]\n"
                 "\nIssues: Found 2 issues in 1 file (XXXms)\n"
                 "Run `rumdl fmt` to automatically fix 1 of the 2 issues\n",
-                [Record("README.md", 8, 1, "MD013", "Line length 200 exceeds 80 characters"),
-                 Record("README.md", 73, 1, "MD032", "List should be preceded by blank line [*]")],
+                [
+                    Record("README.md", 8, 1, "MD013", "Line length 200 exceeds 80 characters"),
+                    Record("README.md", 73, 1, "MD032", "List should be preceded by blank line [*]"),
+                ],
                 id="rumdl_text_strips_footer",
             ),
             pytest.param(
@@ -194,7 +192,9 @@ class TestRecordParsers:
             ),
         ],
     )
-    def test_record_parsers_given_tool_output_then_parses_records(self, tool: Any, output_lines: Any, expected: Any, request: Any) -> None:
+    def test_record_parsers_given_tool_output_then_parses_records(
+        self, tool: Any, output_lines: Any, expected: Any, request: Any
+    ) -> None:
         if expected is None:
             recs = tool(output_lines)
             rules = [r.rule for r in recs]
@@ -203,12 +203,8 @@ class TestRecordParsers:
                 assert "unused-import" in rules
                 assert len(recs) == 2
             elif "r0801_reorder" in request.node.callspec.id:
-                a = _parse_pylint_records(
-                    "Similar lines in 2 files\n==src/a.py:[1:5]\n==src/b.py:[10:15]\n"
-                )
-                b = _parse_pylint_records(
-                    "Similar lines in 2 files\n==src/b.py:[10:15]\n==src/a.py:[1:5]\n"
-                )
+                a = _parse_pylint_records("Similar lines in 2 files\n==src/a.py:[1:5]\n==src/b.py:[10:15]\n")
+                b = _parse_pylint_records("Similar lines in 2 files\n==src/b.py:[10:15]\n==src/a.py:[1:5]\n")
                 assert a == b
                 assert a[0].rule == "R0801:src/a.py:1-5<->src/b.py:10-15"
         else:
@@ -226,17 +222,23 @@ class TestCaptureSchemaV2:
             pytest.param(
                 "pylint",
                 "src/a.py:1:1: W0611: x (unused-import)\n",
-                lambda cap: cap == [
-                    {"tool": "pylint", "file": "src/a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
-                ],
+                lambda cap: (
+                    cap
+                    == [
+                        {"tool": "pylint", "file": "src/a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
+                    ]
+                ),
                 id="pylint_captured_as_schema_v2_records",
             ),
             pytest.param(
                 "ruff check",
                 "src/a.py:1:3: E501 msg\n",
-                lambda cap: cap == [
-                    {"tool": "ruff check", "file": "src/a.py", "line": 1, "col": 3, "rule": "E501", "msg": "msg"},
-                ],
+                lambda cap: (
+                    cap
+                    == [
+                        {"tool": "ruff check", "file": "src/a.py", "line": 1, "col": 3, "rule": "E501", "msg": "msg"},
+                    ]
+                ),
                 id="ruff_captured_as_schema_v2_records",
             ),
             pytest.param(
@@ -279,7 +281,9 @@ class TestCaptureOneEdgeCases:
             ),
             pytest.param(
                 "pyright check",
-                json.dumps({"time": "2024-01-01", "version": "1.0", "summary": {"errorCount": 0, "warningCount": 0, "timeInSec": 1.5}}),
+                json.dumps(
+                    {"time": "2024-01-01", "version": "1.0", "summary": {"errorCount": 0, "warningCount": 0, "timeInSec": 1.5}}
+                ),
                 lambda cap: cap == [],
                 id="pyright_volatile_fields_stripped",
             ),
@@ -292,9 +296,19 @@ class TestCaptureOneEdgeCases:
             pytest.param(
                 "rumdl check",
                 "README.md:8:1: [MD013] Line too long\n",
-                lambda cap: cap == [
-                    {"tool": "rumdl check", "file": "README.md", "line": 8, "col": 1, "rule": "MD013", "msg": "Line too long"},
-                ],
+                lambda cap: (
+                    cap
+                    == [
+                        {
+                            "tool": "rumdl check",
+                            "file": "README.md",
+                            "line": 8,
+                            "col": 1,
+                            "rule": "MD013",
+                            "msg": "Line too long",
+                        },
+                    ]
+                ),
                 id="rumdl_text_captured_as_records",
             ),
             pytest.param(
@@ -306,9 +320,19 @@ class TestCaptureOneEdgeCases:
             pytest.param(
                 "rumdl check",
                 "README.md:8:1: [MD013] Line too long\nIssues: Found 1 issue (123ms)\n",
-                lambda cap: cap == [
-                    {"tool": "rumdl check", "file": "README.md", "line": 8, "col": 1, "rule": "MD013", "msg": "Line too long"},
-                ],
+                lambda cap: (
+                    cap
+                    == [
+                        {
+                            "tool": "rumdl check",
+                            "file": "README.md",
+                            "line": 8,
+                            "col": 1,
+                            "rule": "MD013",
+                            "msg": "Line too long",
+                        },
+                    ]
+                ),
                 id="rumdl_timing_normalised_in_output",
             ),
         ],
@@ -321,9 +345,14 @@ class TestCaptureOneEdgeCases:
         baseline_path = tmp_path / "baseline.json"
         saved: list[dict[str, object]] = []
         baseline_path.write_text(json.dumps(saved))
-        current = [make_lint_result(tool_name="pyright verify types", stdout=json.dumps(
-            {"version": "1.1.411", "time": "1782394247000", "timeInSec": 0.72, "diagnostics": []},
-        ))]
+        current = [
+            make_lint_result(
+                tool_name="pyright verify types",
+                stdout=json.dumps(
+                    {"version": "1.1.411", "time": "1782394247000", "timeInSec": 0.72, "diagnostics": []},
+                ),
+            )
+        ]
         violations = _diff_baseline(current, baseline_path)
         assert violations == []
 
@@ -339,32 +368,39 @@ class TestCompareSortedEdgeCases:
             pytest.param(
                 [],
                 _sorted([Record("a.py", 1, 1, "E1", "m")]),
-                0, 1,
+                0,
+                1,
                 id="current_empty_saved_has_records",
             ),
             pytest.param(
                 _sorted([Record("a.py", 1, 1, "E1", "m")]),
                 [],
-                1, 0,
+                1,
+                0,
                 id="current_has_records_saved_empty",
             ),
             pytest.param(
                 _sorted([Record(None, None, None, "R0801:x<->y", "dup")]),
                 _sorted([Record(None, None, None, "R0801:x<->y", "dup")]),
-                0, 0,
+                0,
+                0,
                 id="none_file_on_both_sides",
             ),
             pytest.param(
                 _sorted([Record(None, None, None, "R0801:x<->y", "dup"), Record("a.py", 1, 1, "E1", "m")]),
                 _sorted([Record("a.py", 1, 1, "E1", "m")]),
-                1, 0,
+                1,
+                0,
                 id="none_file_added",
             ),
         ],
     )
     def test_compare_sorted_given_edge_cases_then_expected_additions_and_removals(
-        self, current: list[Record], saved: list[Record],
-        exp_additions: int, exp_removals: int,
+        self,
+        current: list[Record],
+        saved: list[Record],
+        exp_additions: int,
+        exp_removals: int,
     ) -> None:
         added, removed = _compare_sorted(current, saved)
         assert len(added) == exp_additions
@@ -406,8 +442,10 @@ class TestParserEdgeCases:
                 _parse_ty_records,
                 "error[invalid-argument-type]: Bad arg\n  --> src/a.py:1:3\n"
                 "error[missing-return-type]: No return\n  --> src/b.py:5:1\n",
-                [Record("src/a.py", 1, 3, "invalid-argument-type", "Bad arg"),
-                 Record("src/b.py", 5, 1, "missing-return-type", "No return")],
+                [
+                    Record("src/a.py", 1, 3, "invalid-argument-type", "Bad arg"),
+                    Record("src/b.py", 5, 1, "missing-return-type", "No return"),
+                ],
                 id="ty_arrow_form_multiple_errors",
             ),
             pytest.param(

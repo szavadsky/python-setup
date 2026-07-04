@@ -1,4 +1,5 @@
 """Unit tests for ``_step_config_symlinks`` in ``python_setup_lint.setup``."""
+
 from __future__ import annotations
 
 import os
@@ -56,17 +57,13 @@ class TestConfigSymlinks:
             target = tmp_path / fname
             assert target.is_symlink(), f"{fname} should be a symlink"
             source = tmp_path / "fake-pkg" / "config" / fname
-            assert target.resolve() == source.resolve(), (
-                f"{fname} should point to {source}"
-            )
+            assert target.resolve() == source.resolve(), f"{fname} should point to {source}"
             # Symlink target must be relative (not an absolute path)
             assert not os.readlink(target).startswith("/"), (
                 f"{fname} symlink target should be relative, got: {os.readlink(target)}"
             )
 
-    def test_skip_if_symlink_exists_and_matches(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_skip_if_symlink_exists_and_matches(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """If a symlink already exists pointing to the right source, it should be skipped."""
         _s_fake_pkg(tmp_path, monkeypatch)
         state = SetupState()
@@ -82,9 +79,7 @@ class TestConfigSymlinks:
         assert state.config_symlinks_skipped >= 1
         assert state.config_symlinks_created == len(_BUNDLED_CONFIGS) - 1
 
-    def test_skip_if_content_matches(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_skip_if_content_matches(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """If a regular file exists with matching content, it should be skipped."""
         _s_fake_pkg(tmp_path, monkeypatch)
         state = SetupState()
@@ -102,9 +97,7 @@ class TestConfigSymlinks:
         # Should remain a regular file, not a symlink
         assert not target.is_symlink()
 
-    def test_skip_tach_toml_if_exists(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_skip_tach_toml_if_exists(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """tach.toml should be skipped if it already exists (even if content differs)."""
         _s_fake_pkg(tmp_path, monkeypatch)
         state = SetupState()
@@ -121,9 +114,7 @@ class TestConfigSymlinks:
         # Content should remain unchanged
         assert target.read_text() == "different content"
 
-    def test_fallback_to_copy_on_symlink_failure(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_fallback_to_copy_on_symlink_failure(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """If os.symlink raises OSError, it should fall back to shutil.copy2."""
         _s_fake_pkg(tmp_path, monkeypatch)
         state = SetupState()
@@ -145,13 +136,9 @@ class TestConfigSymlinks:
             # Should be a regular file (copy), not a symlink
             assert not target.is_symlink(), f"{fname} should be a copy, not a symlink"
             source = tmp_path / "fake-pkg" / "config" / fname
-            assert target.read_bytes() == source.read_bytes(), (
-                f"{fname} content should match"
-            )
+            assert target.read_bytes() == source.read_bytes(), f"{fname} content should match"
 
-    def test_s_fake_pkg_creates_config_files(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_s_fake_pkg_creates_config_files(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """_s_fake_pkg must create a config/ subdir with bundled config files
         so the step doesn't silently produce 0/0.
         """
@@ -159,13 +146,9 @@ class TestConfigSymlinks:
         config_dir = tmp_path / "fake-pkg" / "config"
         assert config_dir.is_dir()
         for fname in _BUNDLED_CONFIGS:
-            assert (config_dir / fname).is_file(), (
-                f"{fname} should exist in config/"
-            )
+            assert (config_dir / fname).is_file(), f"{fname} should exist in config/"
 
-    def test_works_with_real_bundled_configs(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_works_with_real_bundled_configs(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """The step should work with the real bundled configs
         (not _BUNDLED_CONFIGS=()).
         """
@@ -175,7 +158,5 @@ class TestConfigSymlinks:
         _step_config_symlinks(state, tmp_path)
 
         # Must create symlinks with the real bundled configs, not an empty tuple
-        assert state.config_symlinks_created > 0, (
-            "Should create symlinks with real bundled configs"
-        )
+        assert state.config_symlinks_created > 0, "Should create symlinks with real bundled configs"
         assert state.config_symlinks_created == len(_BUNDLED_CONFIGS)

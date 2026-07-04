@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -18,5 +17,3 @@ def _compare_records_key(rec: Record) -> tuple[tuple[str, ...], tuple[int, ...],
     line_k: tuple[int, ...] = (rec.line,) if rec.line is not None else (-1,)
     col_k: tuple[int, ...] = (rec.col,) if rec.col is not None else (-1,)
     return (file_k, line_k, col_k, rec.rule)
-
-

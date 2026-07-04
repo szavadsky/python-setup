@@ -52,10 +52,7 @@ def canned_results_all_tools(
     # Late import to avoid any conftest-collection ordering surprise.
     from python_setup_lint.testing import make_lint_result
 
-    base = {
-        name: make_lint_result(tool_name=name, exit_code=exit_code, stdout=stdout)
-        for name in ALL_TOOL_NAMES
-    }
+    base = {name: make_lint_result(tool_name=name, exit_code=exit_code, stdout=stdout) for name in ALL_TOOL_NAMES}
     if overrides:
         base.update(overrides)
     return base
@@ -83,9 +80,7 @@ def install_fake_runner(
     cfg = RunnerConfig(
         cwd=Path.cwd(),
         package_name=package_name,
-        default_py_dirs=default_py_dirs
-        if default_py_dirs is not None
-        else ["src", "scripts", "tests"],
+        default_py_dirs=default_py_dirs if default_py_dirs is not None else ["src", "scripts", "tests"],
     )
     return fake, cfg
 
@@ -101,9 +96,7 @@ def tmp_config(tmp_path: Path, **overrides: Any) -> RunnerConfig:
     return RunnerConfig(**defaults)
 
 
-def write_baseline(
-    tmp_path: Path, /, entries: list[dict[str, Any]], name: str = "baseline.json"
-) -> Path:
+def write_baseline(tmp_path: Path, /, entries: list[dict[str, Any]], name: str = "baseline.json") -> Path:
     """Write a JSON baseline file under *tmp_path* and return its path."""
     path = tmp_path / name
     path.write_text(json.dumps(entries))
@@ -139,16 +132,12 @@ def assert_violation_contains_any(violations: list[str], *needles: str) -> None:
     """Assert at least one violation mentions at least one *needle* (case-insensitive)."""
     lowered = [v.lower() for v in violations]
     found = any(any(n in v for v in lowered) for n in needles)
-    assert found, (
-        f"Expected a violation mentioning any of {needles!r}; got {violations!r}"
-    )
+    assert found, f"Expected a violation mentioning any of {needles!r}; got {violations!r}"
 
 
 def extra_block(entries: str) -> str:
     """Wrap one-or-more ``[[tool.python-setup-lint.extra-tools]]`` body lines."""
-    return (
-        f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{entries}"
-    )
+    return f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{entries}"
 
 
 def write_pyproject(tmp_path: Path, body: str) -> Path:
@@ -169,26 +158,16 @@ def lint_config(
     tools_override: list[str] | None = None,
 ) -> RunnerConfig:
     """Build a test RunnerConfig rooted at *cwd* with optional tools override."""
-    return RunnerConfig(
-        cwd=cwd, package_name=package_name, tools_override=tools_override
-    )
+    return RunnerConfig(cwd=cwd, package_name=package_name, tools_override=tools_override)
 
 
-def assert_r4_reason(
-    err: ExtraToolsConfigError, /, pyproject: Path, reason_want: str, want_kind: str
-) -> None:
+def assert_r4_reason(err: ExtraToolsConfigError, /, pyproject: Path, reason_want: str, want_kind: str) -> None:
     """Assert ``ExtraToolsConfigError.location`` matches *pyproject* + reason by kind."""
-    assert err.location == str(pyproject), (
-        f"location mismatch: got {err.location!r}, want {str(pyproject)!r}"
-    )
+    assert err.location == str(pyproject), f"location mismatch: got {err.location!r}, want {str(pyproject)!r}"
     if want_kind == "exact":
-        assert err.reason == reason_want, (
-            f"reason mismatch: got {err.reason!r}, want {reason_want!r}"
-        )
+        assert err.reason == reason_want, f"reason mismatch: got {err.reason!r}, want {reason_want!r}"
     else:  # starts_with
-        assert err.reason.startswith(reason_want), (
-            f"reason mismatch: got {err.reason!r}, want prefix {reason_want!r}"
-        )
+        assert err.reason.startswith(reason_want), f"reason mismatch: got {err.reason!r}, want prefix {reason_want!r}"
 
 
 # ── Re-exports from split files ─────────────────────────────────────

@@ -13,7 +13,6 @@ from astroid import nodes
 if TYPE_CHECKING:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
-
 @dataclass
 class ParamDescriptor:
     """Canonical parameter form for stub-vs-impl comparison."""
@@ -44,6 +43,7 @@ class CallableComparisonCtx:
     msg_node: nodes.NodeNG
     stub_func: nodes.FunctionDef | nodes.AsyncFunctionDef
     impl_func: nodes.FunctionDef | nodes.AsyncFunctionDef | None
+
 @dataclass
 class _FidelityState:
     """Per-module state for stub-fidelity comparison."""

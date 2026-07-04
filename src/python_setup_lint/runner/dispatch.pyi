@@ -62,7 +62,6 @@ class LintTool:
     def statistics_flags(self) -> list[str]: ...
     def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]: ...
 
-
 class GenericLintTool(LintTool):
     """Minimal strategy for extras registered via :func:`register_lint_tool`.
 
@@ -80,7 +79,6 @@ class GenericLintTool(LintTool):
         parser: Callable[..., list[tuple[str, int]]] | None = None,
         config_flag: list[str] | None = None,
     ) -> None: ...
-
 
 def register_lint_tool(
     tool: ToolSpec,
@@ -100,5 +98,6 @@ def register_lint_tool(
     Idempotent per ``tool.name`` — a re-call with the same name is an
     update-in-place (no duplicate append).
     """
+
 def _strategy_for(name: str, spec: ToolSpec) -> LintTool:
     """Return a cached or new strategy for *spec*."""

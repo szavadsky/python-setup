@@ -54,9 +54,7 @@ class TestLiveSmokePyrightConfigCollapse:
             str(composed),
             ".",
         ]
-        (artifact / f"{label}.cmd.txt").write_text(
-            " ".join(f'"{c}"' if " " in c else c for c in cmd) + "\n"
-        )
+        (artifact / f"{label}.cmd.txt").write_text(" ".join(f'"{c}"' if " " in c else c for c in cmd) + "\n")
         r = subprocess.run(
             cmd,
             cwd=cwd,
@@ -127,9 +125,7 @@ class TestLiveSmokePyrightConfigCollapse:
         )
         # AFTER: compose + run live.
         composed = _compose_pyright_config(_PS_ROOT, shipped)
-        assert composed == _PS_ROOT / ".pyrightconfig-composed.json", (
-            f"composed should be in cwd, got {composed}"
-        )
+        assert composed == _PS_ROOT / ".pyrightconfig-composed.json", f"composed should be in cwd, got {composed}"
         assert (_PS_ROOT / ".pyrightconfig-composed.json").exists()
         after = self._run(composed, _PS_ROOT, artifact=artifact, label="AFTER")
         try:
@@ -146,9 +142,7 @@ class TestLiveSmokePyrightConfigCollapse:
         artifact.mkdir()
         shipped = _PS_ROOT / "config" / "pyrightconfig.json"
         composed = _compose_pyright_config(_PS_ROOT, shipped)
-        assert composed == _PS_ROOT / ".pyrightconfig-composed.json", (
-            f"composed should be in cwd, got {composed}"
-        )
+        assert composed == _PS_ROOT / ".pyrightconfig-composed.json", f"composed should be in cwd, got {composed}"
         assert (_PS_ROOT / ".pyrightconfig-composed.json").exists()
         # Re-run via the runner-built command shape too — verifies the
         # dispatched shape reproduces the helper collapse.
@@ -158,16 +152,12 @@ class TestLiveSmokePyrightConfigCollapse:
         config = RunnerConfig(cwd=_PS_ROOT)
         config.config_paths = _default_config_paths(_PS_ROOT)
         # Runner-built command shape (as dispatched by run_lint's compose wire).
-        cmd_built = STRATEGIES["pyright check"].build_command(
-            config=config, _exclude=None, _path=".", _fix=False
-        )
+        cmd_built = STRATEGIES["pyright check"].build_command(config=config, _exclude=None, _path=".", _fix=False)
         # After run_lint-style composition, swap the --project arg to the
         # composed path — the runner's wire does exactly this in-place swap.
         proj_idx = cmd_built.index("--project")
         cmd_built[proj_idx + 1] = str(composed)
-        (artifact / "AFTER.cmd.txt").write_text(
-            " ".join(f'"{c}"' if " " in c else c for c in cmd_built) + "\n"
-        )
+        (artifact / "AFTER.cmd.txt").write_text(" ".join(f'"{c}"' if " " in c else c for c in cmd_built) + "\n")
         # And execute the command.
         r = subprocess.run(
             cmd_built,

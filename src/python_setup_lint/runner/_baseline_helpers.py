@@ -1,12 +1,9 @@
-
 from __future__ import annotations
 
 from ._record_types import Record, _compare_records_key
 
 
-def _compare_sorted(
-    a: list[Record], b: list[Record]
-) -> tuple[list[Record], list[Record]]:
+def _compare_sorted(a: list[Record], b: list[Record]) -> tuple[list[Record], list[Record]]:
     added: list[Record] = []
     removed: list[Record] = []
     i = j = 0
@@ -75,8 +72,6 @@ def _dicts_to_records(payload: object) -> list[Record]:
             out.append(rec)
     out.sort(key=_compare_records_key)
     return out
-
-
 
 
 def _diag_error_count(d: object) -> int:

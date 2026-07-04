@@ -272,9 +272,7 @@ PARSER_STATISTICS_CASES: list[ParameterSet] = [
         [("unused-import", 1), ("too-complex", 1)],
         id="pylint_json2_dict_shape",
     ),
-    pytest.param(
-        "pylint", '{"messages":[],"status":0}', "", [], id="pylint_json2_dict_empty"
-    ),
+    pytest.param("pylint", '{"messages":[],"status":0}', "", [], id="pylint_json2_dict_empty"),
     pytest.param(
         "pylint",
         '{"messages":[{"symbol":"unused-import"},{"symbol":"unused-import"}],"status":1}',
@@ -315,9 +313,7 @@ PARSER_STATISTICS_CASES: list[ParameterSet] = [
         id="verifytypes_all_complete",
     ),
     pytest.param("pyright verify types", "bad", "", [], id="verifytypes_invalid_json"),
-    pytest.param(
-        "pyright verify types", "{}", "", [], id="verifytypes_missing_type_completeness"
-    ),
+    pytest.param("pyright verify types", "{}", "", [], id="verifytypes_missing_type_completeness"),
     # mypy stderr
     pytest.param(
         "mypy",
@@ -384,9 +380,7 @@ PARSER_STATISTICS_CASES: list[ParameterSet] = [
         [("X001", 2), ("X002", 1)],
         id="stubtest_typical",
     ),
-    pytest.param(
-        "mypy.stubtest", "info: something\n", "", [], id="stubtest_no_error_prefix"
-    ),
+    pytest.param("mypy.stubtest", "info: something\n", "", [], id="stubtest_no_error_prefix"),
     # detect-secrets json
     pytest.param(
         "detect-secrets",

@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import argparse  # TYPE_CHECKING-only import; not available at runtime
@@ -99,9 +98,7 @@ def _handle_config_status(
     if config is not None and config.config_paths is not None:
         caller_config_paths = config.config_paths.copy()
     shipped_paths = _default_config_paths(cwd)
-    ruff_composed = (
-        config is not None and config.ruff_project_overrides
-    ) and "ruff check" in shipped_paths
+    ruff_composed = (config is not None and config.ruff_project_overrides) and "ruff check" in shipped_paths
     _print_config_status(
         config_paths=config_paths,
         cli_overridden=frozenset(cli_overridden),
@@ -127,9 +124,7 @@ def _build_runner_config(
         else (base_config.tools_override if base_config is not None else None)
     )
     package_name = (
-        args.package_name
-        if args.package_name is not None
-        else (base_config.package_name if base_config is not None else None)
+        args.package_name if args.package_name is not None else (base_config.package_name if base_config is not None else None)
     )
     default_py_dirs = (
         args.default_py_dirs.split(",")
@@ -153,13 +148,7 @@ def _build_runner_config(
         default_py_dirs=default_py_dirs,
         tools_override=tools_override,
         config_paths=config_paths,
-        secrets_baseline=base_config.secrets_baseline
-        if base_config is not None
-        else ".secrets.baseline",
-        ruff_project_overrides=base_config.ruff_project_overrides
-        if base_config is not None
-        else False,
-        pyright_project_override=base_config.pyright_project_override
-        if base_config is not None
-        else None,
+        secrets_baseline=base_config.secrets_baseline if base_config is not None else ".secrets.baseline",
+        ruff_project_overrides=base_config.ruff_project_overrides if base_config is not None else False,
+        pyright_project_override=base_config.pyright_project_override if base_config is not None else None,
     )

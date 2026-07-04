@@ -1,4 +1,5 @@
 """T2 — drift-resistant baseline diff tests."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -152,9 +153,12 @@ class TestDriftResistantDiff:
                 ],
                 "a.py:1:1: W0611: x (unused-import)\n",
                 False,
-                lambda r: r == [
-                    {"tool": "pylint", "file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
-                ],
+                lambda r: (
+                    r
+                    == [
+                        {"tool": "pylint", "file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
+                    ]
+                ),
                 0,
                 id="pure_deletion_shrinkage_silently_recorded",
             ),
@@ -165,12 +169,23 @@ class TestDriftResistantDiff:
                 ],
                 "b.py:2:2: C0114: y (missing-module-docstring)\na.py:1:1: W0611: x (unused-import)\n",
                 False,
-                lambda r: {tuple(sorted(d.items())) for d in r} == {
-                    tuple(sorted(d.items())) for d in [
-                        {"tool": "pylint", "file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
-                        {"tool": "pylint", "file": "b.py", "line": 2, "col": 2, "rule": "missing-module-docstring", "msg": "y"},
-                    ]
-                },
+                lambda r: (
+                    {tuple(sorted(d.items())) for d in r}
+                    == {
+                        tuple(sorted(d.items()))
+                        for d in [
+                            {"tool": "pylint", "file": "a.py", "line": 1, "col": 1, "rule": "unused-import", "msg": "x"},
+                            {
+                                "tool": "pylint",
+                                "file": "b.py",
+                                "line": 2,
+                                "col": 2,
+                                "rule": "missing-module-docstring",
+                                "msg": "y",
+                            },
+                        ]
+                    }
+                ),
                 0,
                 id="reorder_only_no_spurious_diff",
             ),
@@ -186,7 +201,14 @@ class TestDriftResistantDiff:
             ),
             pytest.param(
                 [
-                    {"tool": "pylint", "file": None, "line": None, "col": None, "rule": "R0801:src/a.py:1-5<->src/b.py:10-15", "msg": "Similar lines (R0801)"},
+                    {
+                        "tool": "pylint",
+                        "file": None,
+                        "line": None,
+                        "col": None,
+                        "rule": "R0801:src/a.py:1-5<->src/b.py:10-15",
+                        "msg": "Similar lines (R0801)",
+                    },
                 ],
                 "Similar lines in 2 files\n==src/b.py:[10:15]\n==src/a.py:[1:5]\n",
                 False,
@@ -205,8 +227,13 @@ class TestDriftResistantDiff:
         ],
     )
     def test_diff_baseline_given_drift_resistant_then_expected_violations(
-        self, tmp_path: Path, saved: list[dict[str, Any]], current_stdout: str,
-        expect_violation: bool, check_reloaded: Any, exit_code: int,
+        self,
+        tmp_path: Path,
+        saved: list[dict[str, Any]],
+        current_stdout: str,
+        expect_violation: bool,
+        check_reloaded: Any,
+        exit_code: int,
     ) -> None:
         tool_name = saved[0]["tool"] if saved else "mypy"
         current = [make_lint_result(tool_name=tool_name, stdout=current_stdout, exit_code=exit_code)]

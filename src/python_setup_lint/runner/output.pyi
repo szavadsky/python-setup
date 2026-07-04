@@ -36,14 +36,12 @@ def _sort_counts(
     count descending.
     """
 
-
 def _print_grouped_by_tool(
     counts: list[ViolationCount],
     *,
     sort_by_rule: bool = False,
 ) -> None:
     """Print violation counts grouped by tool."""
-
 
 def _print_grouped_by_rule(
     counts: list[ViolationCount],
@@ -92,7 +90,6 @@ def _summarize_pyright_verify_types(stdout: str) -> str | None:
     Returns:
         A one-line summary string, or None if the output cannot be parsed.
     """
-
 
 def _print_result(result: LintResult) -> None:
     """Print a formatted result block (status + stderr + stdout) to stdout."""

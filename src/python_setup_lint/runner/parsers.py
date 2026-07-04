@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import json
@@ -138,10 +137,7 @@ def _parse_pyright_verify_types(stdout: str, stderr: str) -> list[tuple[str, int
     if not isinstance(symbols, list):
         return []
     incomplete = sum(
-        1 for s in symbols
-        if isinstance(s, dict)
-        and isinstance(c := s.get("completeness", 1.0), (int, float))
-        and c < 1.0
+        1 for s in symbols if isinstance(s, dict) and isinstance(c := s.get("completeness", 1.0), (int, float)) and c < 1.0
     )
     return [("verifytypes:incomplete", incomplete)] if incomplete else []
 

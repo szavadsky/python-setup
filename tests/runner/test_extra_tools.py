@@ -4,6 +4,7 @@ synthetic ``tmp_path`` TOML — NO subprocess, NO real shell-out.
 
 Reason strings LOCKED per DESIGN-8 D6 — production code is source-of-truth.
 """
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -85,7 +86,9 @@ def test_load_extras_valid_entry_returns_spec(tmp_path: Path) -> None:
 # ── R4 failure table: per-shape ExtraToolsConfigError ─────────────
 
 
-def _expect_error(tmp_path: Path, body: str, *, reason_starts: str | None = None, reason_eq: str | None = None) -> ExtraToolsConfigError:
+def _expect_error(
+    tmp_path: Path, body: str, *, reason_starts: str | None = None, reason_eq: str | None = None
+) -> ExtraToolsConfigError:
     """Write *body*, call ``_load_extra_tools``, assert ExtraToolsConfigError; return err."""
     pyproject = write_pyproject(tmp_path, body)
     with pytest.raises(ExtraToolsConfigError) as exc_info:
@@ -125,18 +128,14 @@ def test_validate_regex_count_invalid_raises(tmp_path: Path, regex: str) -> None
     """Zero groups / two groups / unparseable regex → locked R4 reason prefix."""
     _expect_error(
         tmp_path,
-        extra_block(
-            f'name = "x"\ncommand = ["x"]\nparse_strategy = "regex_count"\nparse_regex = "{regex}"\n'
-        ),
+        extra_block(f'name = "x"\ncommand = ["x"]\nparse_strategy = "regex_count"\nparse_regex = "{regex}"\n'),
         reason_starts="regex missing or != 1 capture group",
     )
 
 
 def test_validate_config_flag_str_wraps_to_single_element(tmp_path: Path) -> None:
     """A string ``config_flag`` is accepted (wrapped to ``[value]``); no error."""
-    write_pyproject(
-        tmp_path, extra_block('name = "x"\ncommand = ["x"]\nconfig_flag = "--config"\n')
-    )
+    write_pyproject(tmp_path, extra_block('name = "x"\ncommand = ["x"]\nconfig_flag = "--config"\n'))
     [reg] = _load_extra_tools(tmp_path)
     assert reg.config_flag == ["--config"]
 
@@ -144,6 +143,7 @@ def test_validate_config_flag_str_wraps_to_single_element(tmp_path: Path) -> Non
 def test_parse_strategies_includes_all_keys() -> None:
     """``PARSE_STRATEGIES`` includes T11 generic + ``none`` sentinel + built-ins from the parser map."""
     from python_setup_lint.runner.parsers import _BUILTIN_PARSE_STRATEGY_TO_PARSER
+
     builtin_names = set(_BUILTIN_PARSE_STRATEGY_TO_PARSER)
     assert {"regex_count", "raw_lines", "none"} <= set(PARSE_STRATEGIES)
     assert builtin_names <= set(PARSE_STRATEGIES)
@@ -158,17 +158,20 @@ def test_load_extras_pyproject_unreadable_raises(tmp_path: Path) -> None:
     assert exc_info.value.reason.startswith("pyproject unreadable:")
 
 
-@pytest.mark.parametrize(("body", "reason"), [
-    (
-        '[tool.python-setup-lint]\nextra-tools = "not-a-list"\n',
-        "wrong type: extra-tools must be a list of tables",
-    ),
-    (
-        '[tool.python-setup-lint]\nextra-tools = ["scalar"]\n',
-        "wrong type: extra-tools entry must be a table",
-    ),
-],
-ids=["not_a_list", "entry_not_a_table"],)
+@pytest.mark.parametrize(
+    ("body", "reason"),
+    [
+        (
+            '[tool.python-setup-lint]\nextra-tools = "not-a-list"\n',
+            "wrong type: extra-tools must be a list of tables",
+        ),
+        (
+            '[tool.python-setup-lint]\nextra-tools = ["scalar"]\n',
+            "wrong type: extra-tools entry must be a table",
+        ),
+    ],
+    ids=["not_a_list", "entry_not_a_table"],
+)
 def test_load_extras_array_shape_raises(tmp_path: Path, body: str, reason: str) -> None:  # pylint: disable=trivial-wrapper  # test function delegates to _expect_error
     """``extra-tools`` not a list OR an entry that's not a table → wrong-type reason."""
     _expect_error(tmp_path, body, reason_eq=reason)
@@ -291,9 +294,7 @@ class TestExtraBuildCommand:
         _register_extra("extra1", config_flag=["--config"], default_paths=["src/"])
         cfg = tmp_path / "cfg.toml"
         cfg.write_text("x = 1\n")
-        cmd = STRATEGIES["extra1"].build_command(
-            config=_ctx(tmp_path, config_paths={"extra1": cfg})
-        )
+        cmd = STRATEGIES["extra1"].build_command(config=_ctx(tmp_path, config_paths={"extra1": cfg}))
         assert cmd[:3] == ["mytool", "--config", str(cfg)]
         assert cmd[3:] == ["src/"]
 
@@ -304,15 +305,11 @@ class TestExtraBuildCommand:
             "mytool",
             "--fix",
         ]
-        assert STRATEGIES["extra1"].build_command(config=ctx) == [
-            "mytool"
-        ]  # fix=False: no flag
+        assert STRATEGIES["extra1"].build_command(config=ctx) == ["mytool"]  # fix=False: no flag
 
     def test_extra_build_command_given_exclude_then_appends_flag(self, tmp_path: Path) -> None:
         _register_extra("extra1", supports_exclude=True, supports_path=False)
-        assert STRATEGIES["extra1"].build_command(
-            config=_ctx(tmp_path), _exclude="bad.py"
-        ) == ["mytool", "--exclude", "bad.py"]
+        assert STRATEGIES["extra1"].build_command(config=_ctx(tmp_path), _exclude="bad.py") == ["mytool", "--exclude", "bad.py"]
 
     def test_extra_build_command_given_glob_then_expands(self, tmp_path: Path) -> None:
         (tmp_path / "data").mkdir()
@@ -321,15 +318,16 @@ class TestExtraBuildCommand:
         _register_extra("extra1", supports_path=True, default_paths=["data/*.txt"])
         cmd = STRATEGIES["extra1"].build_command(config=_ctx(tmp_path))
         assert cmd[0] == "mytool"
-        assert cmd[1:] == sorted(
-            ["data/file1.txt", "data/file2.txt"]
-        )  # sorted relative paths
+        assert cmd[1:] == sorted(["data/file1.txt", "data/file2.txt"])  # sorted relative paths
 
-    @pytest.mark.parametrize(("config_flag", "expected"), [
-        (None, ["mytool", "src/"]),  # no_flag → flag dropped
-        (["--config"], ["mytool", "src/"]),  # flag set but no path → dropped
-    ],
-    ids=["no_config_flag", "config_flag_with_no_path"],)
+    @pytest.mark.parametrize(
+        ("config_flag", "expected"),
+        [
+            (None, ["mytool", "src/"]),  # no_flag → flag dropped
+            (["--config"], ["mytool", "src/"]),  # flag set but no path → dropped
+        ],
+        ids=["no_config_flag", "config_flag_with_no_path"],
+    )
     def test_build_command_config_flag_boundaries(
         self: object,
         tmp_path: Path,
@@ -346,5 +344,3 @@ class TestExtraBuildCommand:
         """GenericLintTool with no parser → ``parse_statistics`` returns ``[]``."""
         _register_extra("extra1")
         assert STRATEGIES["extra1"].parse_statistics("noise\nwarn!\n", "") == []
-
-

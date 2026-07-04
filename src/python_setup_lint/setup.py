@@ -1,5 +1,3 @@
-
-
 from __future__ import annotations
 
 import argparse
@@ -59,7 +57,6 @@ _SKIP_SYMLINK_IF_EXISTS: frozenset[str] = frozenset({"tach.toml"})
 
 @dataclass
 class SetupState:
-
     dep_added: bool = False
     dep_skipped: bool = False
     pylint_plugins_added: bool = False
@@ -119,7 +116,6 @@ def _discover_checkers() -> list[str]:
     return sorted(result)
 
 
-
 def _run_uv(args: list[str], *, cwd: Path) -> tuple[int, str, str]:
     try:
         # uv is a trusted project tool; subprocess.run is the standard interface for running external commands
@@ -169,11 +165,7 @@ def _step_add_dep(
         return
 
     # Add the dependency — path is the package argument itself
-    args = (
-        ["add", "--dev", dev_path]
-        if dev_path
-        else ["add", "--dev", f"python-setup @ {_GIT_URL}"]
-    )
+    args = ["add", "--dev", dev_path] if dev_path else ["add", "--dev", f"python-setup @ {_GIT_URL}"]
 
     rc, stdout, stderr = _run_uv(args, cwd=project_dir)
     if rc != 0:
@@ -367,7 +359,6 @@ def install(  # pylint: disable=docstring-in-impl  # usage docs in .pyi
     return 0
 
 
-
 # ── CLI entry point ──────────────────────────────────────────────────
 
 
@@ -379,9 +370,7 @@ def _build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     # install
-    install_p = sub.add_parser(
-        "install", help="Idempotently install python-setup tooling"
-    )
+    install_p = sub.add_parser("install", help="Idempotently install python-setup tooling")
     install_p.add_argument(
         "--path",
         type=Path,
@@ -394,9 +383,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
 
     # update
-    update_p = sub.add_parser(
-        "update", help="Update python-setup and check config drift"
-    )
+    update_p = sub.add_parser("update", help="Update python-setup and check config drift")
     update_p.add_argument(
         "--path",
         type=Path,

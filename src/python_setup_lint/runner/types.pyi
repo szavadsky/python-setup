@@ -35,7 +35,6 @@ class ToolSpec(NamedTuple):
     timeout: int = 120
     memory_limit_mb: int = 2048
 
-
 @dataclass
 class LintResult:
     """Result of running a single lint tool.

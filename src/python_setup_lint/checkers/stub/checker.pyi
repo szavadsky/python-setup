@@ -32,15 +32,10 @@ class StubChecker(BaseChecker):
     def visit_module(self, node: nodes.Module) -> None:
         """Classify and index each .py file."""
 
-
-    def _is_module_exempt(
-        self, node: nodes.Module, py_path: Path, module_name: str
-    ) -> bool:
+    def _is_module_exempt(self, node: nodes.Module, py_path: Path, module_name: str) -> bool:
         """Check if a module is exempt from stub requirements."""
 
-    def _index_module(
-        self, node: nodes.Module, py_path: Path, module_name: str
-    ) -> None:
+    def _index_module(self, node: nodes.Module, py_path: Path, module_name: str) -> None:
         """Index a module's stub and track coverage."""
 
     def visit_import(self, node: nodes.Import) -> None:

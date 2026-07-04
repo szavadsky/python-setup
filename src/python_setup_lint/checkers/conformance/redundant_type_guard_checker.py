@@ -9,7 +9,6 @@ from python_setup_lint.checkers._base import MessageDef, _msgs
 
 
 class RedundantTypeGuardChecker(BaseChecker):
-
     name: str = "redundant-type-guard"
     msgs = _msgs(
         W9729=MessageDef(

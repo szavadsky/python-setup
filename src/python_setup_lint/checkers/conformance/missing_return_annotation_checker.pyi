@@ -26,7 +26,6 @@ from python_setup_lint.checkers._base import FunctionVisitMixin
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
 
-
 class MissingReturnAnnotationChecker(BaseChecker, FunctionVisitMixin):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
     """AST visitor that flags _-prefixed functions missing return annotations."""
 
@@ -36,6 +35,5 @@ class MissingReturnAnnotationChecker(BaseChecker, FunctionVisitMixin):  # type: 
     def open(self) -> None: ...
     def visit_functiondef(self, node: nodes.FunctionDef) -> None: ...
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None: ...
-
 
 def register(linter: PyLinter) -> None: ...

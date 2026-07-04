@@ -127,9 +127,7 @@ _NO_TRY_DO_NOT_DETECT_CASES: list[Any] = [  # list[Any] is a test factory return
 _BEARTYPE_MISS_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("def foo(): pass", 1, None, id="plain_def"),
     _p("async def foo(): pass", 1, None, id="async_def"),
-    _p(
-        "class X:\n    def method(self): pass", 1, "method", id="public_method_in_class"
-    ),
+    _p("class X:\n    def method(self): pass", 1, "method", id="public_method_in_class"),
     _p("def foo(): pass\ndef bar(): pass\n", 2, None, id="multiple_public_functions"),
 ]
 
@@ -223,7 +221,9 @@ _IS_TYPE_CHECKING_GUARD_CASES: list[Any] = [  # list[Any] is a test factory retu
     _p("os.name", False, id="other_attribute"),
 ]
 
-_IN_TYPE_CHECKING_BLOCK_POSITIVE_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
+_IN_TYPE_CHECKING_BLOCK_POSITIVE_CASES: list[
+    Any
+] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "if TYPE_CHECKING:\n    from foo import Bar\n",
         lambda m: m.body[0].body[0],
@@ -236,7 +236,9 @@ _IN_TYPE_CHECKING_BLOCK_POSITIVE_CASES: list[Any] = [  # list[Any] is a test fac
     ),
 ]
 
-_IN_TYPE_CHECKING_BLOCK_NEGATIVE_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
+_IN_TYPE_CHECKING_BLOCK_NEGATIVE_CASES: list[
+    Any
+] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("from foo import Bar\n", lambda m: m.body[0], id="not_under_type_checking"),
 ]
 
@@ -609,7 +611,9 @@ _DOCSTRING_NO_COMPANION_CASES: list[Any] = [  # list[Any] is a test factory retu
     ),
 ]
 
-_DOCSTRING_DOES_NOT_DETECT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
+_DOCSTRING_DOES_NOT_DETECT_CASES: list[
+    Any
+] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p("def foo():\n    pass\n", id="no_docstring_no_message"),
     _p("def foo():\n    ...\n", id="empty_body_no_message"),
     _p(
@@ -674,7 +678,9 @@ _DOCSTRING_RETURNS_DETECT_CASES: list[Any] = [  # list[Any] is a test factory re
     ),
 ]
 
-_DOCSTRING_RETURNS_DO_NOT_DETECT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
+_DOCSTRING_RETURNS_DO_NOT_DETECT_CASES: list[
+    Any
+] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         'def f() -> UserId:\n    """Do something."""\n    return UserId(1)\n',
         id="named_alias_skips",
@@ -688,7 +694,7 @@ _DOCSTRING_RETURNS_DO_NOT_DETECT_CASES: list[Any] = [  # list[Any] is a test fac
         id="none_return_skips",
     ),
     _p(
-        'def f() -> int:\n    pass\n',
+        "def f() -> int:\n    pass\n",
         id="no_docstring_skips",
     ),
     _p(
@@ -1049,9 +1055,7 @@ def materialize_pyi_exempt_layout(
 # ── stub_checker: import-contract / star-policy state builders ──
 
 
-def _build_star_import_policy_state(
-    star_policy: str, import_usage_factory: Any, /
-) -> tuple[CheckerTestCase, StubChecker]:
+def _build_star_import_policy_state(star_policy: str, import_usage_factory: Any, /) -> tuple[CheckerTestCase, StubChecker]:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
     mock_b = MagicMock()
@@ -1140,9 +1144,7 @@ _RESOLVE_STUB_CASES: list[Any] = [  # list[Any] is a test factory return type; A
 ]
 
 
-def materialize_resolve_stub_layout(
-    tmp_path: Path, layout_kind: str, /
-) -> tuple[StubChecker, Path, Path | None]:
+def materialize_resolve_stub_layout(tmp_path: Path, layout_kind: str, /) -> tuple[StubChecker, Path, Path | None]:
     if layout_kind == "inline":
         py_path = tmp_path / "mod.py"
         py_path.write_text("x = 1\n")
@@ -1172,9 +1174,7 @@ def materialize_resolve_stub_layout(
     stub_root.mkdir()
     stub_path = stub_root / "mod.pyi"
     stub_path.write_text("x: int\n")
-    checker, _tc = make_coverage_checker(
-        source_roots=[str(src)], stub_roots=[str(stub_root)]
-    )
+    checker, _tc = make_coverage_checker(source_roots=[str(src)], stub_roots=[str(stub_root)])
     return checker, py_path, stub_path
 
 
@@ -1187,9 +1187,7 @@ _EMIT_COVERAGE_CASES: list[Any] = [  # list[Any] is a test factory return type; 
 ]
 
 
-def make_emit_coverage_state(
-    tmp_path: Path, setup_kind: str, stub_missing_module: str, /
-) -> tuple[CheckerTestCase, MagicMock]:
+def make_emit_coverage_state(tmp_path: Path, setup_kind: str, stub_missing_module: str, /) -> tuple[CheckerTestCase, MagicMock]:
     from python_setup_lint.checkers.stub.checker import StubChecker
 
     tc = CheckerTestCase()
@@ -1262,7 +1260,9 @@ source-roots = ["{src}"]
 
 # ── class-fidelity end-to-end rows ──
 
-_CLASS_FIDELITY_INTEGRATION_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
+_CLASS_FIDELITY_INTEGRATION_CASES: list[
+    Any
+] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "x: int = 1\n",
         "\nx: int\nclass Foo: ...\n",
@@ -1300,7 +1300,9 @@ _CLASS_FIDELITY_INTEGRATION_CASES: list[Any] = [  # list[Any] is a test factory 
     ),
 ]
 
-_CALLABLE_FIDELITY_INTEGRATION_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
+_CALLABLE_FIDELITY_INTEGRATION_CASES: list[
+    Any
+] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
     _p(
         "\ndef foo(x: int, y: str) -> None: ...\n",
         "\ndef foo(x: int) -> None: ...\n",
@@ -1366,12 +1368,8 @@ def setup_and_emit_import_contract(
     target_node = MagicMock()
     target_node.name = target_module
     module_index = {target_module: (Path(target_path_str), target_node)}
-    stub_index = (
-        {target_module: Path(f"/workspace/src/{target_module}.pyi")} if has_stub else {}
-    )
-    declaration_index = (
-        {target_module: declared_symbols} if declared_symbols is not None else {}
-    )
+    stub_index = {target_module: Path(f"/workspace/src/{target_module}.pyi")} if has_stub else {}
+    declaration_index = {target_module: declared_symbols} if declared_symbols is not None else {}
     import_usages = [ImportUsage(importer, 1, target_module, symbol, None, is_star)]
     checker, _tc = build_import_contract_state(
         module_index=module_index,

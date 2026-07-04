@@ -7,6 +7,7 @@ proven invariants per ``/memories/repo/T1-pyi-exemptions.md``).
 
 Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -25,11 +26,13 @@ def _restore_structlog_wrapper() -> None:  # type: ignore[misc]  # fixture uses 
     _base.py sets a filtering wrapper_class that drops debug/info events
     before they reach the processor chain, which breaks capture_logs()."""
     import structlog
+
     old_wrapper = structlog.get_config().get("wrapper_class")
     structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(0))  # 0 = NOTSET = all levels pass
     yield
     if old_wrapper is not None:
         structlog.configure(wrapper_class=old_wrapper)
+
 
 from python_setup_lint.checkers.stub.checker import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
     StubChecker,
@@ -203,10 +206,7 @@ def test_checker_given_stub_resolution_layout_then_resolves_correctly(
     expected_e97a0_count: int,
 ) -> None:
     msgs = walk_stub_resolution_layout(tmp_path, layout_kind, code, module_name)
-    assert (
-        len([m for m in msgs if m.msg_id == "missing-module-stub"])
-        == expected_e97a0_count
-    )
+    assert len([m for m in msgs if m.msg_id == "missing-module-stub"]) == expected_e97a0_count
 
 
 # ── TestObservability — close produces log records ─────────────────
@@ -283,9 +283,7 @@ def test_checker_given_pyi_exemption_then_logs_record(
 # ── TestImportUsage ────────────────────────────────────────────────
 
 
-@pytest.mark.parametrize(
-    ("field_overrides", "expected_attr_checks"), _IMPORT_USAGE_FIELD_CASES
-)
+@pytest.mark.parametrize(("field_overrides", "expected_attr_checks"), _IMPORT_USAGE_FIELD_CASES)
 def test_import_usage_fields(
     field_overrides: dict[str, Any],
     expected_attr_checks: dict[str, Any],

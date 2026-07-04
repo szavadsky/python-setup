@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -19,7 +18,6 @@ log = structlog.get_logger(__name__)
 
 @dataclass
 class _CoveragePatterns:
-
     source_roots: list[Path] = field(default_factory=list)
     test_patterns: list[str] = field(default_factory=list)
     opt_out_patterns: list[str] = field(default_factory=list)
@@ -28,7 +26,6 @@ class _CoveragePatterns:
 
 @dataclass
 class _CoverageState:
-
     module_index: dict[str, tuple[Path, nodes.Module]] = field(default_factory=dict)
     stub_missing: set[str] = field(default_factory=set)
     stub_index: dict[str, Path] = field(default_factory=dict)
@@ -83,10 +80,7 @@ def _is_logic_node(child: nodes.NodeNG) -> bool:
     if isinstance(child, nodes.AnnAssign):
         # __version__/__all__ annotated assignments are package metadata, not logic —
         # __init__.py carrying only these (plus docs/imports) needs no .pyi (CodingRules.md:37).
-        return not (
-            isinstance(child.target, nodes.AssignName)
-            and child.target.name in {"__version__", "__all__"}
-        )
+        return not (isinstance(child.target, nodes.AssignName) and child.target.name in {"__version__", "__all__"})
     return bool(isinstance(child, _LOGIC_NODE_TYPES))
 
 
@@ -96,9 +90,7 @@ def _is_init_exempt(node: nodes.Module) -> bool:
 
 def _is_trivial_test_data(node: nodes.Module) -> bool:
     for child in node.body:
-        if isinstance(
-            child, (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef)
-        ):
+        if isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef, nodes.ClassDef)):
             return False
         if isinstance(child, (nodes.Import, nodes.ImportFrom)):
             return False
@@ -120,11 +112,7 @@ def _has_main_block(node: nodes.Module) -> bool:
         if isinstance(child, nodes.If):
             test = child.test
             # __name__ == '__main__' or __name__ == "__main__"
-            if (
-                isinstance(test, nodes.Compare)
-                and len(test.ops) >= 1
-                and test.ops[0][0] == "=="
-            ):
+            if isinstance(test, nodes.Compare) and len(test.ops) >= 1 and test.ops[0][0] == "==":
                 left = test.left
                 right = test.ops[0][1]
                 if (
@@ -207,18 +195,14 @@ def _add_declaration(child: nodes.NodeNG, declarations: set[str]) -> None:
             declarations.add(name)
 
 
-def _index_stub_declarations(
-    checker: StubChecker, module_name: str, stub_path: Path
-) -> None:
+def _index_stub_declarations(checker: StubChecker, module_name: str, stub_path: Path) -> None:
     try:
         stub_module = astroid.parse(stub_path.read_text(), module_name=module_name)
     except SyntaxError:
         log.warning("Syntax error in stub", stub_path=str(stub_path))
         return
 
-    checker._coverage.declaration_index[module_name] = _collect_declarations(
-        stub_module
-    )
+    checker._coverage.declaration_index[module_name] = _collect_declarations(stub_module)
 
     # Also index callable and class nodes for fidelity phase
     f = checker._fidelity
@@ -226,9 +210,7 @@ def _index_stub_declarations(
     stub_callables: dict[str, nodes.FunctionDef | nodes.AsyncFunctionDef] = {}
     stub_classes: dict[str, nodes.ClassDef] = {}
     for child in stub_module.body:
-        if isinstance(child, nodes.AnnAssign) and isinstance(
-            child.target, nodes.AssignName
-        ):
+        if isinstance(child, nodes.AnnAssign) and isinstance(child.target, nodes.AssignName):
             stub_vars[child.target.name] = child
         elif isinstance(child, (nodes.FunctionDef, nodes.AsyncFunctionDef)):
             stub_callables[child.name] = child

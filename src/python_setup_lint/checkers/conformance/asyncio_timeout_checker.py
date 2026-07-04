@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from astroid import nodes
@@ -31,15 +30,12 @@ _KNOWN_TIMEOUT_FUNCS: frozenset[str] = frozenset(
 
 
 class AsyncTimeoutChecker(BaseChecker):
-
     name: str = "asyncio-timeout"
     msgs = _msgs(
         W9703=MessageDef(
-            message="External async call '%s' without enclosing"
-            " asyncio.timeout() / anyio.fail_after()",
+            message="External async call '%s' without enclosing asyncio.timeout() / anyio.fail_after()",
             symbol="asyncio-timeout",
-            description="External async calls must be wrapped in"
-            " asyncio.timeout() or anyio.fail_after().",
+            description="External async calls must be wrapped in asyncio.timeout() or anyio.fail_after().",
         ),
     )
 

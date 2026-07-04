@@ -1,4 +1,5 @@
 """Install-related tests for ``python_setup_lint.setup``."""
+
 from __future__ import annotations
 
 import json
@@ -108,6 +109,7 @@ INSTALL_ARTIFACT_CASES = [
 def _s_noop(d: Path, mp: pytest.MonkeyPatch) -> None:
     pass
 
+
 def _s_pyproject(d: Path, mp: pytest.MonkeyPatch) -> None:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
     (d / "pyproject.toml").write_text(
         textwrap.dedent("""\
@@ -124,10 +126,9 @@ def _s_pyproject(d: Path, mp: pytest.MonkeyPatch) -> None:  # pylint: disable=tr
 def _s_precommit(d: Path, mp: pytest.MonkeyPatch) -> None:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
     (d / ".pre-commit-config.yaml").write_text("# existing")
 
+
 def _s_agents_sentinel(d: Path, mp: pytest.MonkeyPatch) -> None:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
-    (d / "AGENTS.md").write_text(
-        f"# P\n\n{_AGENTS_SENTINEL}\nx\n{_AGENTS_SENTINEL_END}\n"
-    )
+    (d / "AGENTS.md").write_text(f"# P\n\n{_AGENTS_SENTINEL}\nx\n{_AGENTS_SENTINEL_END}\n")
 
 
 def _s_pyproject_plugins(d: Path, mp: pytest.MonkeyPatch) -> None:
@@ -170,9 +171,7 @@ def _s_failing_uv(d: Path, mp: pytest.MonkeyPatch) -> None:
     import python_setup_lint.setup as _m
 
     _s_pyproject(d, mp)
-    mp.setattr(
-        _m, "_run_uv", lambda args, *, cwd: (1, "", "uv add failed: network error")
-    )
+    mp.setattr(_m, "_run_uv", lambda args, *, cwd: (1, "", "uv add failed: network error"))
 
 
 def _s_empty_bundled(d: Path, mp: pytest.MonkeyPatch) -> None:
@@ -230,8 +229,7 @@ STEP_CASES = [
         lambda s, d: (
             s.pylint_plugins_added
             and "existing.plugin" in _get_pylint_load_plugins(_read_pyproject_toml(d))  # type: ignore[arg-type]  # _read_pyproject_toml returns dict|None; caller guards with assert
-            and "python_setup_lint.checkers.conformance.beartype_checker"
-            in _get_pylint_load_plugins(_read_pyproject_toml(d))  # type: ignore[arg-type]  # _read_pyproject_toml returns dict|None; caller guards with assert
+            and "python_setup_lint.checkers.conformance.beartype_checker" in _get_pylint_load_plugins(_read_pyproject_toml(d))  # type: ignore[arg-type]  # _read_pyproject_toml returns dict|None; caller guards with assert
         ),
         id="pp_mg",
     ),
@@ -244,19 +242,13 @@ STEP_CASES = [
     pytest.param(
         _step_add_dep,
         _s_failing_uv,
-        lambda s, _: (
-            len(s.errors) > 0
-            and "uv add" in s.errors[0]
-            and "network error" in s.errors[0]
-        ),
+        lambda s, _: len(s.errors) > 0 and "uv add" in s.errors[0] and "network error" in s.errors[0],
         id="ad_uvf",
     ),
     pytest.param(
         lambda s, d: _save_state(d),
         _s_empty_bundled,
-        lambda s, d: (
-            len(json.loads((d / _STATE_FILE).read_text())["config_checksums"]) == 0
-        ),
+        lambda s, d: len(json.loads((d / _STATE_FILE).read_text())["config_checksums"]) == 0,
         id="ss_efl",
     ),
 ]
@@ -279,15 +271,11 @@ class TestInstallEdgeCases:
 
     def test_second_install_skips_dep(self, configured_project: Path) -> None:
         deps_before = _get_dev_deps(_read_pyproject_toml(configured_project))  # type: ignore[arg-type]  # _read_pyproject_toml returns dict|None; fixture ensures valid project
-        assert (
-            install(configured_project, dev_path="/home/slava/aiexp/python-setup") == 0
-        )
+        assert install(configured_project, dev_path="/home/slava/aiexp/python-setup") == 0
         assert _get_dev_deps(_read_pyproject_toml(configured_project)) == deps_before  # type: ignore[arg-type]  # _read_pyproject_toml returns dict|None; fixture ensures valid project
 
     def test_install_given_second_install_then_no_dup(self, configured_project: Path) -> None:
-        assert (configured_project / "AGENTS.md").read_text().count(
-            _AGENTS_SENTINEL
-        ) == 1
+        assert (configured_project / "AGENTS.md").read_text().count(_AGENTS_SENTINEL) == 1
 
     def test_install_given_existing_precommit_then_skips(self, empty_project: Path) -> None:
         p = empty_project / ".pre-commit-config.yaml"
@@ -353,17 +341,12 @@ class TestDownstreamIntegration:
             capture_output=True,
             check=True,
         )
-        subprocess.run(
-            ["git", "config", "user.name", "t"], cwd=c, capture_output=True, check=True
-        )
+        subprocess.run(["git", "config", "user.name", "t"], cwd=c, capture_output=True, check=True)
         subprocess.run(["git", "add", "."], cwd=c, capture_output=True, check=True)
         (c / ".secrets.baseline").write_text(
-            '{"version":"1.0","plugins_used":[],"filters_used":[],'
-            '"results":{},"generated_at":"2025-01-01T00:00:00Z"}\n'
+            '{"version":"1.0","plugins_used":[],"filters_used":[],"results":{},"generated_at":"2025-01-01T00:00:00Z"}\n'
         )
-        (c / "tach.toml").write_text(
-            '[[modules]]\npath = "src/consumer"\ndepends_on = []\n'
-        )
+        (c / "tach.toml").write_text('[[modules]]\npath = "src/consumer"\ndepends_on = []\n')
         assert install(c, dev_path="/home/slava/aiexp/python-setup") == 0
         assert (c / ".pre-commit-config.yaml").exists()
         assert (c / "CodingRules.md").exists()

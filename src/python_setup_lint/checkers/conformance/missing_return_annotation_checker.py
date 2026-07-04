@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 
 
 class MissingReturnAnnotationChecker(FunctionVisitMixin, BaseChecker):  # type: ignore[misc]  # SourceRootMixin.options conflicts with BaseChecker.options; both define the same pylint options tuple
-
     name: str = "missing-return-annotation"
 
     msgs = _msgs(

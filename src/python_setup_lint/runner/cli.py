@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import argparse
@@ -48,8 +47,6 @@ __all__ = [
 ]
 
 
-
-
 def _run_tool_pipeline(
     selected: list[ToolSpec],
     *,
@@ -66,10 +63,7 @@ def _run_tool_pipeline(
     from .output import _print_result, _run_cmd
 
     for spec in selected:
-        if (
-            spec.name in ("mypy.stubtest", "pyright verify types")
-            and config.package_name is None
-        ):
+        if spec.name in ("mypy.stubtest", "pyright verify types") and config.package_name is None:
             print(f"  [{spec.name}] SKIPPED: --package-name not set", file=sys.stderr)
             continue
 
@@ -94,13 +88,10 @@ def _run_tool_pipeline(
                 ),
             )
         else:
-            cmd = strategy.build_command(
-                config=config, _fix=fix, _path=path, _exclude=exclude
-            )
+            cmd = strategy.build_command(config=config, _fix=fix, _path=path, _exclude=exclude)
             if statistics:
                 cmd.extend(strategy.statistics_flags())
-            result = _run_cmd(cmd, cwd=cwd, label=spec.name,
-                             timeout=effective_timeout, memory_limit_mb=effective_mem)
+            result = _run_cmd(cmd, cwd=cwd, label=spec.name, timeout=effective_timeout, memory_limit_mb=effective_mem)
         results.append(result)
         if not statistics:
             _print_result(result)
@@ -294,11 +285,7 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
     args = parser.parse_args(argv)
 
     # Start from caller-supplied defaults, allow CLI overrides.
-    cwd = (
-        Path(args.cwd)
-        if args.cwd
-        else (config.cwd if config is not None else Path.cwd())
-    )
+    cwd = Path(args.cwd) if args.cwd else (config.cwd if config is not None else Path.cwd())
     cli_tools_override = args.tools.split(",") if args.tools else None
 
     if cli_tools_override is not None:

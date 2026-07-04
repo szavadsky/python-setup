@@ -3,6 +3,7 @@
 Two-phase normalization: infer() → AST-string walking fallback.
 Exercises Phase 1 (inference), Phase 2 (AST walking), and rewrite rules.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -37,9 +38,7 @@ def test_normalize_infer_given_code_then_expected_result(code: str, expected: st
     if expected is None:
         assert result is not None, f"inference of {code!r} should not return None"
     else:
-        assert result == expected, (
-            f"normalize({code!r}) = {result!r} (expected {expected!r})"
-        )
+        assert result == expected, f"normalize({code!r}) = {result!r} (expected {expected!r})"
 
 
 # ── AST-string walking (Phase 2) ────────────────────────────────────
@@ -65,9 +64,7 @@ def test_ast_string_given_code_then_expected_strings(code: str, expected: list[s
         assert result is not None, f"_ast_string({code!r}) returned None"
     elif assert_mode == "equals":
         assert expected is not None
-        assert result == expected[0], (
-            f"_ast_string({code!r}) = {result!r} (expected {expected[0]!r})"
-        )
+        assert result == expected[0], f"_ast_string({code!r}) = {result!r} (expected {expected[0]!r})"
     elif assert_mode == "contains":
         assert result is not None, f"_ast_string({code!r}) returned None"
         assert expected is not None

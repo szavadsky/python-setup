@@ -29,7 +29,6 @@ _UNION_RE = re.compile(r"^typing\.Union\[(.+)\]$")
 
 
 class AnnotationNormalizer:
-
     @staticmethod
     @beartype
     def normalize(ann_node: nodes.NodeNG | None) -> str | None:
@@ -75,9 +74,7 @@ class AnnotationNormalizer:
 
     # -- AST-string dispatch ---------------------------------------------------
 
-    _AST_STRING_DISPATCH: dict[
-        type, Callable[[SuccessfulInferenceResult], str | None]
-    ] = {}
+    _AST_STRING_DISPATCH: dict[type, Callable[[SuccessfulInferenceResult], str | None]] = {}
 
     @staticmethod
     def _ast_string(node: SuccessfulInferenceResult) -> str | None:

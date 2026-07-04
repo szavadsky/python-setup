@@ -3,6 +3,7 @@
 Tests docstring detection logic and full pipeline with stub_checker.
 Fixture src rows live in ``tests/checkers/_factories.py`` (free LOC).
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -65,9 +66,7 @@ def test_does_not_detect(code: str) -> None:
 # ── Detects: companion .pyi exists → W9700 fires ────────────────────
 
 
-@pytest.mark.parametrize(
-    ("code", "expected_count", "expected_args1"), _DOCSTRING_DETECT_CASES
-)
+@pytest.mark.parametrize(("code", "expected_count", "expected_args1"), _DOCSTRING_DETECT_CASES)
 def test_checker_given_docstring_in_impl_not_stub_then_flagged(
     tmp_path: Path,
     code: str,
@@ -90,6 +89,7 @@ def test_checker_given_docstring_in_impl_not_stub_then_flagged(
     assert len(doc_msgs) == expected_count
     if expected_args1 is not None:
         assert doc_msgs[0].args[1] == expected_args1
+
 
 # ── W9705: generic-return-requires-returns ─────────────────────────
 

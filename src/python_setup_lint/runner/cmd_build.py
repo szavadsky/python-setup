@@ -45,11 +45,24 @@ def _build_statistics_flags(spec: ToolSpec) -> list[str]:
     return flags.get(spec.name, [])
 
 
-_EXCLUDE_DIRS: frozenset[str] = frozenset({
-    ".venv", "build", "__pycache__", "node_modules", ".git", ".omp",
-    ".tox", "dist", ".eggs", "htmlcov", ".mypy_cache", ".pytest_cache",
-    ".ruff_cache", "venv",
-})
+_EXCLUDE_DIRS: frozenset[str] = frozenset(
+    {
+        ".venv",
+        "build",
+        "__pycache__",
+        "node_modules",
+        ".git",
+        ".omp",
+        ".tox",
+        "dist",
+        ".eggs",
+        "htmlcov",
+        ".mypy_cache",
+        ".pytest_cache",
+        ".ruff_cache",
+        "venv",
+    }
+)
 
 
 def _find_py_files(dirs: Sequence[str], *, cwd: Path) -> list[str]:

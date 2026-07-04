@@ -46,9 +46,7 @@ EMPTY_LOADER_CASES: list[tuple[str, str | None]] = [
 
 def extra_block(entries: str) -> str:
     """Wrap one-or-more ``[[tool.python-setup-lint.extra-tools]]`` body lines."""
-    return (
-        f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{entries}"
-    )
+    return f"[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n{entries}"
 
 
 # Combined R4 reason-match table.
@@ -72,10 +70,7 @@ R4_EXACT_REASON_CASES: list[ParameterSet] = [
         id="regex_count_requires_parse_regex",
     ),
     pytest.param(
-        extra_block(
-            'name = "x"\ncommand = ["x"]\nparse_strategy = "regex_count"\n'
-            'parse_regex = "no_groups_here"\n'
-        ),
+        extra_block('name = "x"\ncommand = ["x"]\nparse_strategy = "regex_count"\nparse_regex = "no_groups_here"\n'),
         "regex missing or != 1 capture group",
         "starts_with",
         id="regex_count_bad_group_count",
@@ -186,11 +181,7 @@ REGEX_BLOCK = (
 )
 
 NONE_BLOCK = (
-    'name = "nonestattool"\n'
-    'command = ["fake-none-cli"]\n'
-    "supports_path = true\n"
-    "default_paths = []\n"
-    'parse_strategy = "none"\n'
+    'name = "nonestattool"\ncommand = ["fake-none-cli"]\nsupports_path = true\ndefault_paths = []\nparse_strategy = "none"\n'
 )
 
 DOWNSTREAM_CASES: list[ParameterSet] = [
@@ -233,8 +224,7 @@ MALFORMATION_CASES: list[ParameterSet] = [
         id="missing_required_key",
     ),
     pytest.param(
-        "[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\n"
-        'name = "my-tool"\ncommand = ["tool"]\nfoo = "bar"\n',
+        '[tool.python-setup-lint]\n[[tool.python-setup-lint.extra-tools]]\nname = "my-tool"\ncommand = ["tool"]\nfoo = "bar"\n',
         "unknown field: ['foo']; allowed:",
         False,
         id="unknown_field",
@@ -384,18 +374,12 @@ CALLS_CAPTURED_CASES: list[ParameterSet] = [
 RUN_LINT_FAKE_INVARIANT_CASES: list[ParameterSet] = [
     pytest.param(
         {"path": "src/python_setup_lint/runner.py"},
-        lambda f: (
-            len(f.calls) == 13 and all(len(c.cmd) > 0 and c.label for c in f.calls)
-        ),
+        lambda f: len(f.calls) == 13 and all(len(c.cmd) > 0 and c.label for c in f.calls),
         id="all_13_tools_dispatched",
     ),
     pytest.param(
         {"path": "src/python_setup_lint/runner.py", "fix": True},
-        lambda f: all(
-            "--fix" in c.cmd
-            for c in f.calls
-            if c.label in {"ruff check", "rumdl check", "ty check"}
-        ),
+        lambda f: all("--fix" in c.cmd for c in f.calls if c.label in {"ruff check", "rumdl check", "ty check"}),
         id="fix_flag_propagates_to_supports_fix_labels",
     ),
     pytest.param(
@@ -422,9 +406,7 @@ RUN_LINT_FAKE_INVARIANT_CASES: list[ParameterSet] = [
 
 # Print result format rows.
 PRINT_FORMAT_CASES: list[ParameterSet] = [
-    pytest.param(
-        0, "all good\n", None, ["[mytool]", "PASSED", "all good"], id="passed"
-    ),
+    pytest.param(0, "all good\n", None, ["[mytool]", "PASSED", "all good"], id="passed"),
     pytest.param(2, None, "error: x\n", ["FAILED", "exit=2", "error: x"], id="failed"),
 ]
 

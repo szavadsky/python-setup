@@ -72,7 +72,6 @@ def _compose_ruff_config(cwd: Path, shared_config: Path) -> Path:
     Ported from consultant.mcp ``_ruff_config_with_project_overrides``.
     """
 
-
 def _compose_pyright_config(cwd: Path, shared_config: Path) -> Path:
     """Write a verbatim copy of the shipped config to ``cwd/.pyrightconfig-composed.json``
     so pyright resolves ``venvPath``/``exclude`` relative to the project root.
