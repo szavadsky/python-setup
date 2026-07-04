@@ -1,22 +1,18 @@
 # Violations-only baseline: flat records sorted by (tool, file, line, col).
 from __future__ import annotations
 
+import contextlib
 import json
 import os
-from pathlib import Path
 import shutil
 import tempfile
-import contextlib
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import beartype
 
 from ._record_types import Record
 from .parsers import _RECORD_PARSERS
 from .types import LintResult
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 __all__ = ["_capture_baseline", "_diff_baseline"]
 
@@ -174,7 +170,7 @@ def _relativize_file(path: str | None, cwd: Path | None) -> str | None:
         if p.is_absolute():
             try:
                 return str(p.relative_to(cwd))
-            except ValueError:
+            except ValueError:  # pylint: disable=W9740  # path outside cwd — return original; fallback behavior
                 return path
     return path
 

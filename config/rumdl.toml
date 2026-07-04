@@ -1,6 +1,6 @@
 respect_gitignore = true
 
-exclude = ["tests/data", ".venv", ".tmpoutput", ".pytest_cache", "scratchpad", "build"]
+exclude = ["tests/data", ".venv", ".tmpoutput", ".pytest_cache", "scratchpad", "build", "Execute1"]
 
 disable = [
     "MD013",  # line-length

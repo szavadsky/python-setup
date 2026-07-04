@@ -31,9 +31,9 @@ class SetupState:
     precommit_skipped: bool = False
     coding_rules_copied: bool = False
     coding_rules_skipped: bool = False
+    agents_appended: bool = False
     config_symlinks_created: int = 0
     config_symlinks_skipped: int = 0
-    agents_appended: bool = False
     agents_skipped: bool = False
     errors: list[str] = ...
 
