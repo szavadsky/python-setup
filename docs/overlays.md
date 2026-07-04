@@ -59,7 +59,7 @@ The overlay value wins over the :class:`ToolSpec` default. A value of ``0`` disa
 
 ### Other tools
 
-Rumdl, ty, yamllint, and tach all follow the same pattern: shared config in ``config/``, consumer overrides via ``extend`` or ``--config`` flags. (detect-secrets uses its own baseline file, not a shared config.)
+Rumdl, ty, and yamllint follow the same pattern: shared config in ``config/``, consumer overrides via ``extend`` or ``--config`` flags. Tach auto-discovers ``tach.toml`` from the repo root — no ``--config`` flag is supported. The installer skips symlinking ``tach.toml`` if the consumer already has one (``_SKIP_SYMLINK_IF_EXISTS``), so the consumer's own module boundaries are preserved. (detect-secrets uses its own baseline file, not a shared config.)
 
 ## Custom checkers
 
@@ -70,7 +70,7 @@ See [docs/custom-checks.md](custom-checks.md) for writing custom pylint checkers
 To regenerate the baseline after intentional rule changes:
 
 ```bash
-uv run lint --rebaseline
+uv run lint --overwrite-baseline --baseline lint.baseline
 ```
 
 This updates `lint.baseline` with the current violation set. Commit the updated baseline alongside config changes.
