@@ -33,7 +33,7 @@ def _make_mock_run(stdout: str, returncode: int = 0) -> subprocess.CompletedProc
     )
 
 
-def _read_precommit(project_dir: Path) -> str:
+def _read_precommit(project_dir: Path) -> str:  # pylint: disable=trivial-wrapper  # test helper for readability
     """Read the written pre-commit config, stripping trailing whitespace per line."""
     return (project_dir / ".pre-commit-config.yaml").read_text()
 
@@ -50,7 +50,7 @@ def _assert_rev_in_config(content: str, expected_rev: str) -> None:
 
 
 @pytest.fixture
-def state() -> SetupState:
+def state() -> SetupState:  # pylint: disable=trivial-wrapper  # test helper for readability
     """Fresh ``SetupState`` for each test."""
     return SetupState()
 
@@ -58,7 +58,7 @@ def state() -> SetupState:
 # ── Tests ─────────────────────────────────────────────────────────────
 
 
-class TestRuffVersionResolution:  # pylint: disable=redefined-outer-name
+class TestRuffVersionResolution:  # pylint: disable=redefined-outer-name  # fixture parameter shadows module-level state fixture
     """Unit tests for the ruff version resolution in ``_step_precommit``."""
 
     def test_normal_version(
