@@ -7,3 +7,6 @@ not-iterable = "ignore"
 call-non-callable = "ignore"
 # sentence_transformers is an optional dependency (try/except ImportError); type-checker cannot resolve it
 unresolved-import = "ignore"
+
+[src]
+exclude = [".omp/", "tests/"]
