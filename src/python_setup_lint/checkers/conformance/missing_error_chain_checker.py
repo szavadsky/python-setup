@@ -47,7 +47,7 @@ class MissingErrorChainChecker(BaseChecker):
         )
 
     @staticmethod
-    def _find_enclosing_except_handler(node: nodes.Raise) -> nodes.ExceptHandler | None:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
+    def _find_enclosing_except_handler(node: nodes.Raise) -> nodes.ExceptHandler | None:
         """Walk up the AST to find the nearest enclosing ``except`` handler."""
         for ancestor in node.node_ancestors():
             if isinstance(ancestor, nodes.ExceptHandler):
@@ -55,8 +55,12 @@ class MissingErrorChainChecker(BaseChecker):
         return None
 
     @staticmethod
-    def _except_type_name(handler: nodes.ExceptHandler) -> str:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
-        """Return a human-readable name for the caught exception type."""
+    def _except_type_name(handler: nodes.ExceptHandler) -> str:
+        """Return a human-readable name for the caught exception type.
+
+        Returns:
+            ``"bare except"`` or the type's string representation.
+        """
         if handler.type is None:
             return "bare except"
         return handler.type.as_string()

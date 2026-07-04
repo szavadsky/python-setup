@@ -17,6 +17,8 @@ from tests.checkers._factories import (
     _DOCSTRING_DETECT_CASES,
     _DOCSTRING_DOES_NOT_DETECT_CASES,
     _DOCSTRING_NO_COMPANION_CASES,
+    _DOCSTRING_RETURNS_DETECT_CASES,
+    _DOCSTRING_RETURNS_DO_NOT_DETECT_CASES,
     walk_both_release_for_pyi,
 )
 
@@ -88,3 +90,56 @@ def test_checker_given_docstring_in_impl_not_stub_then_flagged(
     assert len(doc_msgs) == expected_count
     if expected_args1 is not None:
         assert doc_msgs[0].args[1] == expected_args1
+
+# ── W9705: generic-return-requires-returns ─────────────────────────
+
+
+def _returns_msg_count(msgs: list[Any]) -> int:
+    return sum(1 for m in msgs if m.msg_id == "generic-return-requires-returns")
+
+
+@pytest.mark.parametrize("code", _DOCSTRING_RETURNS_DO_NOT_DETECT_CASES)
+def test_returns_does_not_detect(code: str) -> None:
+    """W9705 must NOT fire for the listed valid cases."""
+    msgs = _walk_and_release(code, file_path="/workspace/src/mod.pyi")
+    assert _returns_msg_count(msgs) == 0
+
+
+@pytest.mark.parametrize(("code", "expected_count"), _DOCSTRING_RETURNS_DETECT_CASES)
+def test_returns_detects(code: str, expected_count: int) -> None:
+    """W9705 must fire for generic return types without Returns: clause."""
+    msgs = _walk_and_release(code, file_path="/workspace/src/mod.pyi")
+    assert _returns_msg_count(msgs) == expected_count
+
+
+def test_returns_underscore_prefixed_in_py_fires(tmp_path: Path) -> None:
+    """_prefixed helpers in .py files are canonical location — W9705 fires."""
+    code = 'def _helper() -> int:\n    """Do something."""\n    return 1\n'
+    py_path = tmp_path / "src" / "mod.py"
+    py_path.parent.mkdir(exist_ok=True)
+    msgs = walk_both_release_for_pyi(
+        code,
+        py_path=py_path,
+        source_roots=[str(tmp_path / "src")],
+    )
+    assert _returns_msg_count(msgs) == 1
+
+
+def test_returns_non_underscore_in_py_skips(tmp_path: Path) -> None:
+    """Non-_prefixed in .py — docstring is canonical in .pyi, so W9705 skips."""
+    code = 'def f() -> int:\n    """Do something."""\n    return 1\n'
+    py_path = tmp_path / "src" / "mod.py"
+    py_path.parent.mkdir(exist_ok=True)
+    msgs = walk_both_release_for_pyi(
+        code,
+        py_path=py_path,
+        source_roots=[str(tmp_path / "src")],
+    )
+    assert _returns_msg_count(msgs) == 0
+
+
+def test_returns_underscore_in_pyi_skips() -> None:
+    """_prefixed in .pyi — docstring is canonical in .py, so W9705 skips."""
+    code = 'def _helper() -> int:\n    """Do something."""\n    return 1\n'
+    msgs = _walk_and_release(code, file_path="/workspace/src/mod.pyi")
+    assert _returns_msg_count(msgs) == 0

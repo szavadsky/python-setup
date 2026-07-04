@@ -646,6 +646,73 @@ _DOCSTRING_DETECT_CASES: list[Any] = [  # list[Any] is a test factory return typ
     ),
 ]
 
+_DOCSTRING_RETURNS_DETECT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
+    _p(
+        'def f() -> int:\n    """Do something."""\n    return 1\n',
+        1,
+        id="generic_int_fires",
+    ),
+    _p(
+        'def f() -> str:\n    """Do something."""\n    return "x"\n',
+        1,
+        id="generic_str_fires",
+    ),
+    _p(
+        'def f() -> bool:\n    """Do something."""\n    return True\n',
+        1,
+        id="generic_bool_fires",
+    ),
+    _p(
+        'def f() -> dict[str, int]:\n    """Do something."""\n    return {}\n',
+        1,
+        id="generic_dict_str_fires",
+    ),
+    _p(
+        'def f() -> dict[int, str]:\n    """Do something."""\n    return {}\n',
+        1,
+        id="generic_dict_int_fires",
+    ),
+]
+
+_DOCSTRING_RETURNS_DO_NOT_DETECT_CASES: list[Any] = [  # list[Any] is a test factory return type; Any needed for heterogeneous test cases
+    _p(
+        'def f() -> UserId:\n    """Do something."""\n    return UserId(1)\n',
+        id="named_alias_skips",
+    ),
+    _p(
+        'def _helper() -> int:\n    """Do something."""\n    return 1\n',
+        id="underscore_prefixed_skips",
+    ),
+    _p(
+        'def f() -> None:\n    """Do something."""\n    pass\n',
+        id="none_return_skips",
+    ),
+    _p(
+        'def f() -> int:\n    pass\n',
+        id="no_docstring_skips",
+    ),
+    _p(
+        'def f() -> int:\n    """Do something.\n\n    Returns:\n        The answer.\n    """\n    return 42\n',
+        id="has_returns_clause_skips",
+    ),
+    _p(
+        'def f() -> int:\n    """Do something.\n\n    Yields:\n        Items.\n    """\n    yield 1\n',
+        id="has_yields_clause_skips",
+    ),
+    _p(
+        'def f() -> Self:\n    """Do something."""\n    return self\n',
+        id="self_return_skips",
+    ),
+    _p(
+        'def f() -> NoReturn:\n    """Do something."""\n    sys.exit(1)\n',
+        id="noreturn_skips",
+    ),
+    _p(
+        'def f() -> MyClass:\n    """Do something."""\n    return MyClass()\n',
+        id="custom_class_skips",
+    ),
+]
+
 
 # ── AnnotationNormalizer._apply_rewrites ──
 

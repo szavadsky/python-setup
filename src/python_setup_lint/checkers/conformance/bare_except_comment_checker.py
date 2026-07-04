@@ -52,19 +52,31 @@ class BareExceptCommentChecker(BaseChecker):
         )
 
     @staticmethod
-    def _is_bare_or_exception(node: nodes.ExceptHandler) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
-        """Return True if the handler catches bare except or Exception."""
+    def _is_bare_or_exception(node: nodes.ExceptHandler) -> bool:
+        """Return True if the handler catches bare except or Exception.
+
+        Returns:
+            True if the handler type is bare (None) or ``Exception``.
+        """
         if node.type is None:
             return True
         return isinstance(node.type, nodes.Name) and node.type.name == "Exception"
 
     @staticmethod
-    def _has_bare_raise(node: nodes.ExceptHandler) -> bool:  # pylint: disable=W9705,W9728  # private helper; return semantics evident from type + name; semantic helper: wraps any() with a specific predicate for bare-raise detection
-        """Return True if the handler body contains a bare raise (re-raise)."""
+    def _has_bare_raise(node: nodes.ExceptHandler) -> bool:  # pylint: disable=W9728  # private helper; return semantics evident from type + name; semantic helper: wraps any() with a specific predicate for bare-raise detection
+        """Return True if the handler body contains a bare raise (re-raise).
+
+        Returns:
+            True if any child node is a bare ``raise`` (no expression).
+        """
         return any(child.exc is None for child in node.nodes_of_class(nodes.Raise))
 
-    def _has_justifying_comment(self, node: nodes.ExceptHandler) -> bool:  # pylint: disable=W9705  # private helper; return semantics evident from type + name
-        """Check if the except handler has a justifying comment."""
+    def _has_justifying_comment(self, node: nodes.ExceptHandler) -> bool:
+        """Check if the except handler has a justifying comment.
+
+        Returns:
+            True if a justifying comment is found in the source.
+        """
         try:
             stream = node.root().stream()  # type: ignore[union-attr]  # ModuleNode has stream() at runtime
         except (AttributeError, OSError):  # pylint: disable=W9740  # best-effort stream access fallback; logging would noise unavoidable attribute/IO degrade

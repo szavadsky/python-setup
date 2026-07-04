@@ -71,18 +71,23 @@ class StubDocstringChecker(BaseChecker):
         super().__init__(linter)
         self._current_module_name: str | None = None
         self._enabled_for_module: bool = False
+        self._current_file_suffix: str | None = None
 
     @beartype
     def visit_module(self, node: nodes.Module) -> None:
         self._enabled_for_module = False
         self._current_module_name = None
+        self._current_file_suffix = None
 
         raw_file: str | None = getattr(node, "file", None)
         if not raw_file:
             return
         py_path = Path(raw_file).resolve()
-        if py_path.suffix != ".py":
+        suffix = py_path.suffix
+        if suffix not in (".py", ".pyi"):
             return
+        self._current_file_suffix = suffix
+
         module_name: str = getattr(node, "name", "") or ""
         self._current_module_name = module_name
 
@@ -98,16 +103,17 @@ class StubDocstringChecker(BaseChecker):
             )
             return
 
-        # Skip files without a companion .pyi
-        if not _has_companion_stub(py_path, self.linter):
-            return
-
-        # __init__.py is exempt from .pyi rules (CodingRules: "No .pyi for __init__.py")
-        if py_path.name == "__init__.py":
-            return
+        if suffix == ".py":
+            # Skip files without a companion .pyi
+            if not _has_companion_stub(py_path, self.linter):
+                return
+            # __init__.py is exempt from .pyi rules (CodingRules: "No .pyi for __init__.py")
+            if py_path.name == "__init__.py":
+                return
 
         self._enabled_for_module = True
-        self._emit_if_docstring(node)
+        if suffix == ".py":
+            self._emit_if_docstring(node)
 
     @beartype
     def visit_classdef(self, node: nodes.ClassDef) -> None:
@@ -148,12 +154,20 @@ class StubDocstringChecker(BaseChecker):
             )
 
         # Rule 2: generic-return-requires-Returns
+        # Canonical-location gate: only check when the symbol is in its canonical
+        # docstring location. For .pyi files: only non-`_`-prefixed public symbols.
+        # For .py files: only `_`-prefixed helpers.
+        suffix = self._current_file_suffix
+        if suffix == ".pyi" and func_node.name.startswith("_"):
+            return  # _-prefixed in .pyi — docstring is canonical in .py
+        if suffix == ".py" and not func_node.name.startswith("_"):
+            return  # non-_ in .py — docstring is canonical in .pyi
         self._check_returns_clause(func_node)
 
     def _check_returns_clause(
         self, func_node: nodes.FunctionDef | nodes.AsyncFunctionDef
     ) -> None:
-        """Emit W9701 if function has a non-None return type but no Returns: clause."""
+        """Emit W9705 if function has a generic return type but no Returns: clause."""
         returns = func_node.returns
         if returns is None:
             return  # No return type annotation
@@ -162,6 +176,10 @@ class StubDocstringChecker(BaseChecker):
         if isinstance(returns, nodes.Const) and returns.value is None:
             return
         if isinstance(returns, nodes.Name) and returns.name == "None":
+            return
+
+        # Only fire for generic builtin return types
+        if not self._is_generic_return_type(returns):
             return
 
         # Check if docstring has a Returns: clause
@@ -181,6 +199,37 @@ class StubDocstringChecker(BaseChecker):
                 node=func_node,
                 args=(func_node.name,),
             )
+
+    @staticmethod
+    def _is_generic_return_type(returns: nodes.NodeNG) -> bool:
+        """True only for builtin generic shapes: int, str, bool, dict[str,...], dict[int,...].
+
+        Returns False for Name nodes (named aliases like UserId), None, Self,
+        NoReturn, custom classes, and any other non-builtin type.
+
+        Returns:
+            True if the return type is a builtin generic shape.
+        """
+        # Simple builtin names: int, str, bool
+        if isinstance(returns, nodes.Name):
+            return returns.name in {"int", "str", "bool"}
+        # dict[str, X] or dict[int, X] — Subscript with Name("dict") value
+        if isinstance(returns, nodes.Subscript):
+            if isinstance(returns.value, nodes.Name) and returns.value.name == "dict":
+                # Check the first subscript argument is str or int
+                slice_node = returns.slice
+                if isinstance(slice_node, nodes.Tuple):
+                    if slice_node.elts:
+                        first = slice_node.elts[0]
+                        if isinstance(first, nodes.Name) and first.name in {"str", "int"}:
+                            return True
+                elif isinstance(slice_node, nodes.Name) and slice_node.name in {"str", "int"}:
+                    return True
+                elif isinstance(slice_node, nodes.Subscript):
+                    # dict[str, ...] where the slice itself is a Subscript
+                    if isinstance(slice_node.value, nodes.Name) and slice_node.value.name in {"str", "int"}:
+                        return True
+        return False
 
     @staticmethod
     def _has_returns_clause(doc_text: str) -> bool:
