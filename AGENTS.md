@@ -8,7 +8,7 @@ This file is the entry point for all AI agents working on python-setup. Read thi
 |---------|-------------|
  | `uv run lint` | Full 13-tool lint pipeline (baseline diffing, ~100s warm, 120s/tool cap) |
  | `uv run pytest -q` | Unit tests (1290 pass, 4 skip, 15 deselected, ~53s) |
- | `uv run pytest tests/integration.py -v` | Integration tests (6 pass, ~39s) |
+ | `uv run pytest tests/integration.py -v` | Integration tests (7 pass, ~30s) |
 | `uv run lint --rebaseline` | Regenerate `lint.baseline` after intentional rule changes |
 | `uv run python-setup install` | Install configs in consumer project |
 | `uv run python-setup update` | Update configs + drift detection |

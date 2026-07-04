@@ -62,10 +62,7 @@ star-import-unresolvable
 symbol-kind-mismatch
 
 # ── Rumdl (markdown linting) — planted markdown violations ──
-MD022
-MD009
-MD012
-MD071
+MD072
 
 # ── Pylint duplicate-code (R0801) ──
 duplicate-code

@@ -78,10 +78,23 @@ def _shipped_config_paths() -> dict[str, Path]:
 
 def _make_config(project: Path) -> RunnerConfig:
     """Build a ``RunnerConfig`` for the sample project with shipped config paths."""
+    config_paths = _shipped_config_paths()
+    # The shipped rumdl config excludes ``tests/data/``, which is where the
+    # sample project lives when copied to a temp dir.  Create a project-local
+    # override that removes that exclusion so rumdl checks the sample's
+    # AGENTS.md (which has planted MD022/MD009/MD012/MD071 violations).
+    shipped_rumdl = Path("config/rumdl.toml")
+    if shipped_rumdl.is_file():
+        local_rumdl = project / "rumdl.toml"
+        content = shipped_rumdl.read_text()
+        # Remove the ``tests/data`` entry from the exclude list.
+        content = content.replace('"tests/data", ', "")
+        local_rumdl.write_text(content)
+        config_paths["rumdl check"] = local_rumdl
     return RunnerConfig(
         cwd=project,
         package_name="minimal_sample",
-        config_paths=_shipped_config_paths(),
+        config_paths=config_paths,
     )
 
 # ── Tests ─────────────────────────────────────────────────────────────
