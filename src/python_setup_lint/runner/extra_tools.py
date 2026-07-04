@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import functools
@@ -94,9 +93,7 @@ def _compile_regex_count(pattern: str) -> re.Pattern[str]:
     return compiled
 
 
-def _parse_regex_count(
-    stdout: str, stderr: str, *, regex: str
-) -> list[tuple[str, int]]:
+def _parse_regex_count(stdout: str, stderr: str, *, regex: str) -> list[tuple[str, int]]:
     compiled = _compile_regex_count(regex)
     counts: dict[str, int] = {}
     for line in (*stdout.splitlines(), *stderr.splitlines()):
@@ -136,16 +133,12 @@ def _extra_tool_parser(
         try:
             _compile_regex_count(regex)
         except ValueError as exc:
-            raise ExtraToolsConfigError(
-                location, f"regex missing or != 1 capture group: {exc}"
-            ) from exc
+            raise ExtraToolsConfigError(location, f"regex missing or != 1 capture group: {exc}") from exc
         return functools.partial(_parse_regex_count, regex=regex)
     raise ExtraToolsConfigError(location, f"bad enum: parse_strategy {strategy!r}")
 
 
-def _validate_extra_bool_fields(
-    entry: dict[str, object], location: str
-) -> tuple[bool, bool, bool]:
+def _validate_extra_bool_fields(entry: dict[str, object], location: str) -> tuple[bool, bool, bool]:
     supports_fix = entry.get("supports_fix", False)
     if not isinstance(supports_fix, bool):
         raise ExtraToolsConfigError(location, "wrong type: supports_fix must be bool")
@@ -154,29 +147,21 @@ def _validate_extra_bool_fields(
         raise ExtraToolsConfigError(location, "wrong type: supports_path must be bool")
     supports_exclude = entry.get("supports_exclude", False)
     if not isinstance(supports_exclude, bool):
-        raise ExtraToolsConfigError(
-            location, "wrong type: supports_exclude must be bool"
-        )
+        raise ExtraToolsConfigError(location, "wrong type: supports_exclude must be bool")
     return supports_fix, supports_path, supports_exclude
 
 
-def _validate_extra_list_field(
-    entry: dict[str, object], key: str, location: str
-) -> list[str]:
+def _validate_extra_list_field(entry: dict[str, object], key: str, location: str) -> list[str]:
     raw = entry.get(key, [])
     if not isinstance(raw, list):
         raise ExtraToolsConfigError(location, f"wrong type: {key} must be list[str]")
     for part in raw:
         if not isinstance(part, str):
-            raise ExtraToolsConfigError(
-                location, f"wrong type: {key} must be list[str]"
-            )
+            raise ExtraToolsConfigError(location, f"wrong type: {key} must be list[str]")
     return list(raw)  # type: ignore[return-value]  # raw is list[object]; validated as list[str] above  # ty:ignore[invalid-return-type]
 
 
-def _validate_extra_config_flag(
-    entry: dict[str, object], location: str
-) -> list[str] | None:
+def _validate_extra_config_flag(entry: dict[str, object], location: str) -> list[str] | None:
     config_flag_raw = entry.get("config_flag")
     if config_flag_raw is None:
         return None
@@ -185,16 +170,12 @@ def _validate_extra_config_flag(
     if isinstance(config_flag_raw, list):
         for part in config_flag_raw:
             if not isinstance(part, str):
-                raise ExtraToolsConfigError(
-                    location, "wrong type: config_flag must be str | list[str]"
-                )
+                raise ExtraToolsConfigError(location, "wrong type: config_flag must be str | list[str]")
         return list(config_flag_raw)  # type: ignore[return-value]  # config_flag_raw is list[object]; validated as list[str] above  # ty:ignore[invalid-return-type]
-    raise ExtraToolsConfigError(
-        location, "wrong type: config_flag must be str | list[str]"
-    )
+    raise ExtraToolsConfigError(location, "wrong type: config_flag must be str | list[str]")
 
 
-def _validate_extra_fields(entry: dict[str, object], location: str) -> dict[str, Any]:  # validated dict, keys are known strings; return dict is built from validated fields, values are str|list[str]|None|bool by construction
+def _validate_extra_fields(entry: dict[str, object], location: str) -> dict[str, Any]:  # validated dict, keys are known strings
     unknown = set(entry) - _EXTRA_TOOL_FIELDS
     if unknown:
         allowed = ", ".join(sorted(_EXTRA_TOOL_FIELDS))
@@ -217,13 +198,9 @@ def _validate_extra_fields(entry: dict[str, object], location: str) -> dict[str,
 
     command = _validate_extra_list_field(entry, "command", location)
     if not command:
-        raise ExtraToolsConfigError(
-            location, "wrong type: command must be non-empty list[str]"
-        )
+        raise ExtraToolsConfigError(location, "wrong type: command must be non-empty list[str]")
 
-    supports_fix, supports_path, supports_exclude = _validate_extra_bool_fields(
-        entry, location
-    )
+    supports_fix, supports_path, supports_exclude = _validate_extra_bool_fields(entry, location)
     default_paths = _validate_extra_list_field(entry, "default_paths", location)
     config_flag = _validate_extra_config_flag(entry, location)
 
@@ -310,18 +287,12 @@ def _load_extra_tools(cwd: Path) -> list[_ExtraToolRegistration]:
         with open(resolved, "rb") as f:
             data = tomllib.load(f)
     except (OSError, tomllib.TOMLDecodeError) as exc:
-        raise ExtraToolsConfigError(
-            str(resolved), f"pyproject unreadable: {exc}"
-        ) from exc
+        raise ExtraToolsConfigError(str(resolved), f"pyproject unreadable: {exc}") from exc
 
     location = str(resolved)
-    extras_raw = (
-        data.get("tool", {}).get("python-setup-lint", {}).get("extra-tools", [])
-    )
+    extras_raw = data.get("tool", {}).get("python-setup-lint", {}).get("extra-tools", [])
     if not isinstance(extras_raw, list):
-        raise ExtraToolsConfigError(
-            location, "wrong type: extra-tools must be a list of tables"
-        )
+        raise ExtraToolsConfigError(location, "wrong type: extra-tools must be a list of tables")
     if not extras_raw:
         _EXTRA_TOOLS_CACHE[key] = []
         return []
@@ -329,9 +300,7 @@ def _load_extra_tools(cwd: Path) -> list[_ExtraToolRegistration]:
     extras: list[_ExtraToolRegistration] = []
     for entry in extras_raw:
         if not isinstance(entry, dict):
-            raise ExtraToolsConfigError(
-                location, "wrong type: extra-tools entry must be a table"
-            )
+            raise ExtraToolsConfigError(location, "wrong type: extra-tools entry must be a table")
         extras.append(_validate_extra(entry, location=location, seen_names=seen_names))
     _EXTRA_TOOLS_CACHE[key] = list(extras)
     return list(extras)
