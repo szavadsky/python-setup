@@ -23,9 +23,11 @@ Running a tool directly (`uv run pylint src/`) may produce different results tha
 
    ```bash
    ls -la .pylintrc .yamllint
-   # Expected: .pylintrc -> /home/.../python-setup/config/.pylintrc
-   #           .yamllint -> /home/.../python-setup/config/.yamllint
+   # Expected: .pylintrc -> .venv/lib/python3.14/site-packages/python_setup_lint/config/.pylintrc
+   #           .yamllint -> .venv/lib/python3.14/site-packages/python_setup_lint/config/.yamllint
    ```
+
+   These symlinks are gitignored (listed in `.gitignore`) and created locally by the installer — they are never committed to the repository.
 
    Missing symlinks? Re-run the installer:
 
