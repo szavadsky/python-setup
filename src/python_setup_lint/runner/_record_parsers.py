@@ -94,7 +94,7 @@ def _parse_pylint_records(stdout: str) -> list[Record]:
 # Ruff: path:line:col: CODE  msg (col optional)
 _RUFF_LINE_RE = re.compile(
     r"^(?P<file>\S+?):(?P<line>\d+):(?:(?P<col>\d+):)?\s*"
-    r"(?P<code>[A-Z]\d+)\s+(?P<msg>.*?)\s*$"
+    r"(?P<code>[A-Z]+[A-Z0-9]*\d+)\s+(?P<msg>.*?)\s*$"
 )
 
 
