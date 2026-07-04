@@ -99,7 +99,7 @@ This updates `lint.baseline` with the current violation set. Commit the updated 
 To regenerate the baseline after intentional rule changes:
 
 ```bash
-uv run lint --rebaseline
+uv run lint --overwrite-baseline --baseline lint.baseline
 ```
 
 See [overlays.md](overlays.md) for re-baselining details and [troubleshooting.md](troubleshooting.md) for baseline regression scenarios.

@@ -54,7 +54,7 @@ A pre-commit hook or CI run fails with "new violations found" — but you intent
 
 ```bash
 # Accept current violation state as the new baseline
-python-setup lint --overwrite-baseline --baseline lint.baseline
+uv run lint --overwrite-baseline --baseline lint.baseline
 ```
 
 Commit the updated `lint.baseline` alongside your changes. The `--overwrite-baseline` flag replaces the existing baseline file with the current violation set, so only future regressions are flagged.
@@ -68,7 +68,7 @@ Commit the updated `lint.baseline` alongside your changes. The `--overwrite-base
 **When NOT to re-baseline:**
 
 - You introduced a real regression — fix the code instead
-- The baseline file is missing or corrupted — re-run `uv run lint --rebaseline`
+- The baseline file is missing or corrupted — re-run `uv run lint --overwrite-baseline --baseline lint.baseline`
 
 See [AGENTS.md](../AGENTS.md#pre-commit-hooks) for the pre-commit hook workflow.
 
@@ -127,7 +127,7 @@ The integration test suite (`tests/integration.py`) validates the full lint pipe
 ```bash
 # Run integration tests
 uv run pytest tests/integration.py -v
-# Expected: 6 pass, ~39s
+# Expected: 7 pass, ~39s
 ```
 
 **What it covers:**

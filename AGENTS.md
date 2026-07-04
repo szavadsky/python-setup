@@ -9,7 +9,7 @@ This file is the entry point for all AI agents working on python-setup. Read thi
  | `uv run lint` | Full 13-tool lint pipeline (baseline diffing, ~100s warm, 120s/tool cap) |
  | `uv run pytest -q` | Unit tests (1290 pass, 4 skip, 15 deselected, ~53s) |
  | `uv run pytest tests/integration.py -v` | Integration tests (7 pass, ~30s) |
-| `uv run lint --rebaseline` | Regenerate `lint.baseline` after intentional rule changes |
+| `uv run lint --overwrite-baseline --baseline lint.baseline` | Regenerate `lint.baseline` after intentional rule changes |
 | `uv run python-setup install` | Install configs in consumer project |
 | `uv run python-setup update` | Update configs + drift detection |
 
@@ -100,7 +100,7 @@ The semantic checker (W9704) detects `Any` in function signatures, unjustified s
 2. Add `ToolSpec` to `dispatch.py`
 3. Add config to `_BUNDLED_CONFIGS` in `setup.py` (if shipped to consumers)
 4. Add test coverage in `tests/runner/`
-5. Update `lint.baseline` via `--rebaseline`
+5. Update `lint.baseline` via `--overwrite-baseline`
 
 ### Modifying a checker
 
