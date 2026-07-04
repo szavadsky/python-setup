@@ -59,7 +59,7 @@ def state() -> SetupState:
 # ── Tests ─────────────────────────────────────────────────────────────
 
 
-class TestRuffVersionResolution:
+class TestRuffVersionResolution:  # pylint: disable=redefined-outer-name
     """Unit tests for the ruff version resolution in ``_step_precommit``."""
 
     def test_normal_version(
