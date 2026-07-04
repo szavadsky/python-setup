@@ -10,3 +10,11 @@ exclude = [
 source_roots = [
     "src",
 ]
+
+[[modules]]
+path = "python_setup_lint/checkers"
+depends_on = []
+
+[[modules]]
+path = "python_setup_lint/runner"
+depends_on = []

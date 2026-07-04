@@ -161,10 +161,39 @@ def _parse_ty_concise(stdout: str, stderr: str) -> list[tuple[str, int]]:
 
 def _parse_tach_json(stdout: str, stderr: str) -> list[tuple[str, int]]:
     _ = stderr
-    data = _load_json_dict(stdout)
-    errors = data.get("errors", [])
-    if isinstance(errors, list) and errors:
-        return [("tach:error", len(errors))]
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError:  # pylint: disable=W9740  # best-effort JSON parse fallback; logging would noise unavoidable parse degrade
+        return []
+
+    # tach 0.35.0+ emits a list of {Global|Located} items
+    if isinstance(data, list):
+        errors = 0
+        warnings = 0
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            for inner in item.values():
+                if not isinstance(inner, dict):
+                    continue
+                severity = inner.get("severity")
+                if severity == "Error":
+                    errors += 1
+                elif severity == "Warning":
+                    warnings += 1
+        result: list[tuple[str, int]] = []
+        if errors:
+            result.append(("tach:error", errors))
+        if warnings:
+            result.append(("tach:warning", warnings))
+        return result
+
+    # Legacy dict format: {"errors": [...]}
+    if isinstance(data, dict):
+        errors = data.get("errors", [])
+        if isinstance(errors, list) and errors:
+            return [("tach:error", len(errors))]
+
     return []
 
 
