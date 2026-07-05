@@ -74,6 +74,26 @@ See [AGENTS.md](../AGENTS.md#pre-commit-hooks) for the pre-commit hook workflow.
 
 ---
 
+## Autofix not applied
+
+The `--fix` flag enables automatic fixing for all tools that support it (ruff, rumdl, ty). After applying fixes, the runner re-runs the baseline-gated verification pass to confirm no new regressions were introduced. Autofix is courtesy — it never blocks and reverts any file a tool's fix breaks parseability on.
+
+```bash
+uv run lint --fix --baseline lint.baseline
+```
+
+**Why autofix may not apply:**
+
+- The tool does not support `--fix` (e.g., pylint, mypy, pyright — these require manual fixes)
+- Staged and unstaged changes overlap on the same file (the hook skips conflicted files to avoid overwriting unstaged work)
+- A tool's fix breaks parseability — the runner detects the break (E999 canary) and reverts that file in-memory
+
+To disable autofix entirely, set `PYTHON_SETUP_LINT_NO_AUTOFIX=1` in your environment.
+
+See [AGENTS.md](../AGENTS.md#pre-commit-hooks) for the pre-commit hook autofix workflow.
+
+---
+
 ## Sentence-transformer download failure -> heuristic fallback
 
 The semantic justification checker downloads a cross-encoder model on first use. If the download fails (network, OOM, disk space), the pipeline falls back to the heuristic check — no crash, no error, just less accurate justification scoring.
