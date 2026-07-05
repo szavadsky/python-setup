@@ -26,7 +26,6 @@ output:
       metadata:
         description: Brief explanation of how pieces connect
       type: string
-thinkingLevel: high
 tools:
   - read
   - grep
@@ -66,6 +65,7 @@ You MUST infer the thoroughness from the task; default to medium:
 3. Run tests, lint, or type checks to verify behavior.
 4. Identify types/interfaces/key functions.
 5. Note dependencies between components.
+6. Call `yield` with comprehensive reply - that is your complete reply. Relevant, concise, comprehensive
 </procedure>
 
 <critical>
