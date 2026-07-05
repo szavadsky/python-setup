@@ -104,6 +104,16 @@ uv run lint --overwrite-baseline --baseline lint.baseline
 
 See [overlays.md](overlays.md) for re-baselining details and [troubleshooting.md](troubleshooting.md) for baseline regression scenarios.
 
+## 6. Autofix mode
+
+The `--fix` flag enables automatic fixing for all tools that support it (ruff, rumdl, ty). After applying fixes, the runner re-runs the baseline-gated verification pass to confirm no new regressions were introduced. Autofix is courtesy — it never blocks and reverts any file a tool's fix breaks parseability on.
+
+```bash
+uv run lint --fix --baseline lint.baseline
+```
+
+See [AGENTS.md](../AGENTS.md#pre-commit-hooks) for the pre-commit hook autofix workflow.
+
 ## Further reading
 
 - [Overlays guide](overlays.md) — per-tool config overrides

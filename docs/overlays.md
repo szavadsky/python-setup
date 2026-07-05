@@ -74,3 +74,13 @@ uv run lint --overwrite-baseline --baseline lint.baseline
 ```
 
 This updates `lint.baseline` with the current violation set. Commit the updated baseline alongside config changes.
+
+### Autofix
+
+The `--fix` flag enables automatic fixing for all tools that support it (ruff, rumdl, ty). After applying fixes, the runner re-runs the baseline-gated verification pass to confirm no new regressions were introduced. Autofix reverts any file a tool's fix breaks parseability on.
+
+```bash
+uv run lint --fix --baseline lint.baseline
+```
+
+See [AGENTS.md](../AGENTS.md#pre-commit-hooks) for the pre-commit hook autofix workflow.
