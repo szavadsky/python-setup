@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.9 (2026-07-05)
+
+- Close the loop: regenerate consultant.mcp stale W9705 baseline (M6), add self-lint-clean + pyright-noise-filter regression guards (M2/M3), align `--fix` docs across docs/ (M4).
+
 ## v1.2.8 (2026-07-04)
 
 - Harden integration test to guard pipeline contract (W9705 verification, non-zero exit on violations, rumdl-fmt disabled-rules guard, individual-tool parity assertion).
