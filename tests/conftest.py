@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 
 from python_setup_lint.runner import LINT_TOOLS, STRATEGIES, RunnerConfig
+from python_setup_lint.runner._config import _SHIPPED_CONFIG_FILES
 from python_setup_lint.runner.extra_tools import _reset_extra_tools_cache
 
 
@@ -161,3 +162,17 @@ def isolated_runner_registries() -> Iterable[None]:
 def sample_project() -> Path:  # pylint: disable=trivial-wrapper  # fixture returning a constant path; readability over DRY
     """Path to the minimal sample project with planted violations."""
     return Path("tests/data/minimal_sample_project")
+
+
+# ── Helpers ─────────────────────────────────────────────────────────
+
+
+def shipped_config_paths() -> dict[str, Path]:
+    """Build config_paths dict from the python-setup project root config/ dir."""
+    config_root = Path("config")
+    paths: dict[str, Path] = {}
+    for tool_label, filename in _SHIPPED_CONFIG_FILES.items():
+        candidate = config_root / filename
+        if candidate.is_file():
+            paths[tool_label] = candidate.resolve()
+    return paths

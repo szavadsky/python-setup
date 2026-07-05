@@ -12,20 +12,9 @@ from pathlib import Path
 import pytest
 
 from python_setup_lint.runner import RunnerConfig, run_lint
-from python_setup_lint.runner._config import _SHIPPED_CONFIG_FILES
+from tests.conftest import shipped_config_paths
 
 pytestmark = pytest.mark.slow
-
-
-def _shipped_config_paths() -> dict[str, Path]:
-    """Build config_paths dict from the python-setup project root config/ dir."""
-    config_root = Path("config")
-    paths: dict[str, Path] = {}
-    for tool_label, filename in _SHIPPED_CONFIG_FILES.items():
-        candidate = config_root / filename
-        if candidate.is_file():
-            paths[tool_label] = candidate.resolve()
-    return paths
 
 
 def test_pyright_noise_filter(capsys: pytest.CaptureFixture[str]) -> None:
@@ -37,7 +26,7 @@ def test_pyright_noise_filter(capsys: pytest.CaptureFixture[str]) -> None:
     runner's printed output (post-filter).
     """
     repo_root = Path(__file__).resolve().parents[2]
-    config_paths = _shipped_config_paths()
+    config_paths = shipped_config_paths()
     config = RunnerConfig(
         cwd=repo_root,
         package_name="python_setup_lint",
@@ -97,7 +86,7 @@ def test_pyright_noise_filter_bites_when_bypassed(
     monkeypatch.setattr(output_mod, "_summarize_pyright_verify_types", lambda _stdout: None)
 
     repo_root = Path(__file__).resolve().parents[2]
-    config_paths = _shipped_config_paths()
+    config_paths = shipped_config_paths()
     config = RunnerConfig(
         cwd=repo_root,
         package_name="python_setup_lint",
