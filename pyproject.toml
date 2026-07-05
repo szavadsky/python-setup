@@ -1,6 +1,6 @@
 [project]
 name = "python-setup"
-version = "1.2.8"
+version = "1.2.9"
 requires-python = ">=3.14"
 description = "Shared linting, formatting, and dev tooling for Python projects."
 readme = "README.md"
