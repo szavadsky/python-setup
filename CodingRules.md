@@ -138,14 +138,12 @@ flat = list(chain.from_iterable(nested))
 
 ## Complexity Rules (R0912 / R0915 / C0302) — enforced, not noise
 
-`too-many-branches` (R0912 ≤16), `too-many-statements` (R0915 ≤65), and `too-many-lines` (C0302 ≤500/module) enabled **on purpose** in `config/.pylintrc`. An over-threshold function has too many jobs: split into single-purpose helpers and compose in sequence — never raise global thresholds to mask a hit. Suppress only with justified `# pylint: disable=…` (W9704) when branching structurally inherent (an AST visitor over many node shapes).
+`too-many-branches` (R0912 ≤16), `too-many-statements` (R0915 ≤65), and `too-many-lines` (C0302 ≤500/module) enabled **on purpose** in `config/.pylintrc`. An over-threshold function has too many jobs: split into single-purpose helpers and compose in sequence — never raise global thresholds to mask a hit.
 
 Before — one validator doing several jobs (signatures only):
 
 ```python
 def _is_str_key_dict_annotation(self, ann: nodes.NodeNG | None) -> bool: ...   # 22 branches
-def _check_dict_str_key(self, node: nodes.Subscript) -> None: ...             # 22 branches
-def _check_logger_method_call(self, node: nodes.Call) -> None: ...           # 20 branches
 ```
 
 After — each split into single-purpose predicates composed in sequence:
@@ -156,13 +154,6 @@ def _unwrap_classvar(self, ann: nodes.NodeNG | None) -> nodes.NodeNG | None: ...
 def _is_dict_annotation(self, ann: nodes.NodeNG) -> bool: ...
 def _is_str_key(self, elts: list[nodes.NodeNG]) -> bool: ...   # reused below
 
-# _check_dict_str_key -> dict subscript + str key + domain value
-def _is_dict_subscript(self, node: nodes.Subscript) -> str | None: ...
-def _is_domain_value_type(self, value_node: nodes.NodeNG) -> str | None: ...
-
-# _check_logger_method_call -> logger call shape + printf format
-def _is_logger_call(self, node: nodes.Call) -> bool: ...
-def _is_printf_format(self, node: nodes.Call) -> bool: ...
 ```
 
 For C0302 (≤500 lines/module) split the **module**, not the logic: move a coherent slice into a sibling file (e.g. `runner/_factories_{baseline,extras,tables}.py` were extracted from `_factories.py` to stay under 500 lines).
