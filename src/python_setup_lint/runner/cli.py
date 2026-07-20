@@ -62,6 +62,41 @@ def _run_tool_pipeline(
 
     from .output import _print_result, _run_cmd
 
+    # Determinism split (M1): when --fix is active, run a fix-only pass FIRST
+    # (fix-capable tools mutate files), then a lint-only pass over ALL tools
+    # (fix-capable ones WITHOUT --fix) for violation collection.  This makes
+    # every tool — and thus the baseline — observe the same post-fix file
+    # state, eliminating the pre-fix-vs-post-fix mismatch that produced
+    # non-deterministic baselines.  Without --fix, a single lint pass runs.
+    if fix and not statistics:
+        # ── Phase 1: fix-only pass (mutates files; results discarded) ──
+        for spec in selected:
+            if not spec.supports_fix:
+                continue
+            if spec.name in ("mypy.stubtest", "pyright verify types") and config.package_name is None:
+                continue
+            _print_tool_notes(spec, fix=True, path=path, exclude=exclude)
+            timeouts = config.tool_timeouts or {}
+            mem_limits = config.tool_memory_limits or {}
+            effective_timeout = timeouts.get(spec.name, spec.timeout)
+            effective_mem = mem_limits.get(spec.name, spec.memory_limit_mb)
+            file_targets = _autofix_target_paths(spec, config=config, path=path)
+            fix_result = _apply_autofix_conflict_aware(
+                spec,
+                config=config,
+                paths_to_check=file_targets,
+                run_cmd=__import__("functools").partial(
+                    _run_cmd,
+                    timeout=effective_timeout,
+                    memory_limit_mb=effective_mem,
+                ),
+            )
+            _print_result(fix_result)
+        # ── Phase 2: lint-only pass over ALL tools (no autofix) ──
+        lint_fix = False
+    else:
+        lint_fix = fix
+
     for spec in selected:
         if spec.name in ("mypy.stubtest", "pyright verify types") and config.package_name is None:
             print(f"  [{spec.name}] SKIPPED: --package-name not set", file=sys.stderr)
@@ -75,23 +110,16 @@ def _run_tool_pipeline(
         effective_mem = mem_limits.get(spec.name, spec.memory_limit_mb)
 
         strategy = _strategy_for(spec.name, spec)
-        if fix and spec.supports_fix and not statistics:
-            file_targets = _autofix_target_paths(spec, config=config, path=path)
-            result = _apply_autofix_conflict_aware(
-                spec,
-                config=config,
-                paths_to_check=file_targets,
-                run_cmd=__import__("functools").partial(
-                    _run_cmd,
-                    timeout=effective_timeout,
-                    memory_limit_mb=effective_mem,
-                ),
-            )
-        else:
-            cmd = strategy.build_command(config=config, _fix=fix, _path=path, _exclude=exclude)
-            if statistics:
-                cmd.extend(strategy.statistics_flags())
-            result = _run_cmd(cmd, cwd=cwd, label=spec.name, timeout=effective_timeout, memory_limit_mb=effective_mem)
+        cmd = strategy.build_command(config=config, _fix=lint_fix, _path=path, _exclude=exclude)
+        if statistics:
+            cmd.extend(strategy.statistics_flags())
+        result = _run_cmd(
+            cmd,
+            cwd=cwd,
+            label=spec.name,
+            timeout=effective_timeout,
+            memory_limit_mb=effective_mem,
+        )
         results.append(result)
         if not statistics:
             _print_result(result)
