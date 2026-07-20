@@ -379,7 +379,9 @@ RUN_LINT_FAKE_INVARIANT_CASES: list[ParameterSet] = [
     ),
     pytest.param(
         {"path": "src/python_setup_lint/runner.py", "fix": True},
-        lambda f: all("--fix" in c.cmd for c in f.calls if c.label in {"ruff check", "rumdl check", "ty check"}),
+        lambda f: all(
+            any("--fix" in c.cmd for c in f.calls if c.label == name) for name in {"ruff check", "rumdl check", "ty check"}
+        ),
         id="fix_flag_propagates_to_supports_fix_labels",
     ),
     pytest.param(

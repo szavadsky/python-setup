@@ -257,7 +257,14 @@ class TestEnvVarAutofixOptOut:
         capsys: pytest.CaptureFixture[str],
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """Without the env-var, ``run_lint(fix=True)`` sends --fix to fix tools."""
+        """Without the env-var, ``run_lint(fix=True)`` sends --fix to fix tools in the fix phase.
+
+        M1 two-phase split: fix-capable tools run TWICE — once in the fix
+        phase (with --fix, via the conflict-aware helper) and once in the
+        lint phase (without --fix, for baseline measurement).  This test
+        asserts the fix-phase call carries --fix; the lint-phase call does
+        not (that's the point of the split).
+        """
         monkeypatch.delenv(_AUTOFIX_ENV_VAR, raising=False)
         canned = _make_canned_fix_results()
         fake = fake_run_cmd_factory(canned)
@@ -265,13 +272,12 @@ class TestEnvVarAutofixOptOut:
         run_lint(config=tmp_config(tmp_path), fix=True)
         captured = capsys.readouterr()
         assert "disabling autofix" not in captured.err
-        for record in fake.calls:
-            if record.label in _FIX_TOOL_NAMES:
-                assert "--fix" in record.cmd, f"--fix missing from {record.label}: {record.cmd!r}"
-            # The canary is NOT called when fix is on — but only the
-            # fix-route uses the canary; the env-var opt-out route skips
-            # the autofix helper entirely (the loop falls back to the
-            # plain ``_build_command(fix=False)`` path).
+        # Fix-capable tools appear twice: fix-phase (with --fix) and
+        # lint-phase (without --fix).  Assert at least one call per tool
+        # carries --fix (the fix phase).
+        for name in _FIX_TOOL_NAMES:
+            fix_calls = [r for r in fake.calls if r.label == name and "--fix" in r.cmd]
+            assert fix_calls, f"--fix missing from all {name} calls: {[r.cmd for r in fake.calls if r.label == name]!r}"
 
     def test_env_var_opt_out_given_env_var_zero_or_other_then_no_opt_out(
         self,
@@ -284,9 +290,9 @@ class TestEnvVarAutofixOptOut:
         fake = fake_run_cmd_factory(canned)
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
         run_lint(config=tmp_config(tmp_path), fix=True)
-        for record in fake.calls:
-            if record.label in _FIX_TOOL_NAMES:
-                assert "--fix" in record.cmd
+        for name in _FIX_TOOL_NAMES:
+            fix_calls = [r for r in fake.calls if r.label == name and "--fix" in r.cmd]
+            assert fix_calls, f"--fix missing from all {name} calls: {[r.cmd for r in fake.calls if r.label == name]!r}"
 
 
 # ── Observability: stderr skip + revert lines ─────────────────────
