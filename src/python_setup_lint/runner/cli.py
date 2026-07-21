@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import os
 import sys
@@ -70,7 +69,18 @@ def _run_tool_pipeline(
     # state, eliminating the pre-fix-vs-post-fix mismatch that produced
     # non-deterministic baselines.  Without --fix, a single lint pass runs.
     if fix and not statistics:
-        # ── Phase 1: fix-only pass (mutates files; results discarded) ──
+        # ── Phase 1a: format pass (ruff format before fix tools) ──
+        for spec in selected:
+            if spec.name != "ruff format":
+                continue
+            _print_tool_notes(spec, fix=False, path=path, exclude=exclude)
+            strategy = _strategy_for(spec.name, spec)
+            cmd = strategy.build_command(config=config, _fix=False, _path=path, _exclude=exclude)
+            result = _run_cmd(cmd, cwd=cwd, label=spec.name)
+            _print_result(result)
+            if result.exit_code != 0:
+                overall_rc = result.exit_code
+        # ── Phase 1b: fix-only pass (mutates files; results discarded) ──
         for spec in selected:
             if not spec.supports_fix:
                 continue
@@ -135,23 +145,19 @@ def _run_tool_pipeline(
 def _emit_statistics(
     results: list[LintResult],
     *,
-    statistics_format: str,
-    group: str,
-    sort_by_rule: bool,
+    statistics_format: str = "table",
+    group: str = "none",
+    sort_by_rule: bool = False,
 ) -> None:
     vcounts = _output._aggregate_statistics(results)
+    if not vcounts:
+        print("\n  No violations found.")
+        return
     if statistics_format == "json":
-        print(
-            json.dumps(
-                [{"tool": v.tool, "rule": v.rule, "count": v.count} for v in vcounts],
-                indent=2,
-            )
-        )
+        _output._print_statistics_json(vcounts)
     elif group != "none":
         _output._print_statistics_grouped(vcounts, group=group, sort_by_rule=sort_by_rule)
     else:
-        if sort_by_rule:
-            vcounts = _output._sort_counts(vcounts, sort_by_rule=True)
         _output._print_statistics_table(vcounts)
 
 
