@@ -21,5 +21,6 @@ def _apply_autofix_conflict_aware(
     config: RunnerConfig,
     paths_to_check: list[str],
     run_cmd: Callable[..., LintResult],
+    force: bool = ...,
 ) -> LintResult: ...
 def _autofix_target_paths(spec: ToolSpec, *, config: RunnerConfig, path: str | None) -> list[str]: ...
