@@ -52,6 +52,7 @@ def _run_tool_pipeline(
     *,
     config: RunnerConfig,
     fix: bool,
+    force: bool = False,
     path: str | None,
     exclude: str | None,
     statistics: bool,
@@ -90,6 +91,7 @@ def _run_tool_pipeline(
                     timeout=effective_timeout,
                     memory_limit_mb=effective_mem,
                 ),
+                force=force,
             )
             _print_result(fix_result)
         # ── Phase 2: lint-only pass over ALL tools (no autofix) ──
@@ -159,6 +161,7 @@ def run_lint(
     config: RunnerConfig | None = None,
     path: str | None = None,
     fix: bool = False,
+    force: bool = False,
     baseline: str | None = None,
     exclude: str | None = None,
     statistics: bool = False,
@@ -195,6 +198,7 @@ def run_lint(
         selected,
         config=config,
         fix=fix,
+        force=force,
         path=path,
         exclude=exclude,
         statistics=statistics,
@@ -239,6 +243,12 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
         "--fix",
         action="store_true",
         help="Apply autofixes (ruff, rumdl, ty)",
+    )
+    parser.add_argument(
+        "--force-fix",
+        action="store_true",
+        help="Force autofix on all target paths (skip staged+unstaged exclusion). "
+        "Also activated by PYTHON_SETUP_LINT_FORCE_FIX=1 env var.",
     )
     parser.add_argument(
         "--baseline",
@@ -337,11 +347,13 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
         config_paths=config_paths,
         cli_tools_override=cli_tools_override,
     )
+    force = args.force_fix or os.environ.get("PYTHON_SETUP_LINT_FORCE_FIX") == "1"
 
     return run_lint(
         config=merged_config,
         path=args.path,
         fix=args.fix,
+        force=force,
         baseline=args.baseline,
         exclude=args.exclude,
         overwrite_baseline=args.overwrite_baseline,
