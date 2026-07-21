@@ -38,6 +38,14 @@ __all__ = [
 TOOLS: list[ToolSpec] = [
     ToolSpec("tach check", ["tach", "check"], supports_exclude=True, exclude_flag="-e"),
     ToolSpec(
+        "ruff format",
+        ["ruff", "format"],
+        supports_fix=False,
+        supports_path=True,
+        supports_exclude=True,
+        default_paths=["src/", "tests/"],
+    ),
+    ToolSpec(
         "ruff check",
         ["ruff", "check", "--output-format", "concise"],
         supports_fix=True,
@@ -363,7 +371,7 @@ class _PylintTestsLintTool(LintTool):
         return cmd
 
 
-# Populate the strategy registry from the 13 built-ins.
+# Populate the strategy registry from the 14 built-ins.
 _STRATEGY_CLASSES: dict[str, type[LintTool]] = {
     "mypy.stubtest": _StubtestLintTool,
     "pyright verify types": _VerifyTypesLintTool,
@@ -424,7 +432,7 @@ class GenericLintTool(LintTool):
 
 
 # Live registry of declared ``ToolSpec`` instances.
-# At import time it mirrors the 13 built-ins from :data:`TOOLS`; extras
+# At import time it mirrors the 14 built-ins from :data:`TOOLS`; extras
 # registered via :func:`register_lint_tool` append to it.  :data:`TOOLS`
 # stays the frozen built-in list and is kept as a legacy-compat alias.
 LINT_TOOLS: list[ToolSpec] = list(TOOLS)
