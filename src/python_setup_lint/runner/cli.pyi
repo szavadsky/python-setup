@@ -10,6 +10,7 @@ def run_lint(
     config: RunnerConfig | None = None,
     path: str | None = None,
     fix: bool = False,
+    force: bool = False,
     baseline: str | None = None,
     exclude: str | None = None,
     statistics: bool = False,
@@ -27,6 +28,9 @@ def run_lint(
             ``RunnerConfig(cwd=Path.cwd())`` when ``None``.
         path: Scope to a specific file or directory.
         fix: Apply autofixes (ruff, rumdl, ty).
+        force: Force autofix on all target paths, skipping the staged+unstaged
+            exclusion.  Set via ``--force-fix`` CLI flag or
+            ``PYTHON_SETUP_LINT_FORCE_FIX=1`` env var.
         baseline: Path to a baseline JSON file. Created on first run,
             compared on subsequent runs.
         exclude: Exclude a file or directory pattern from supported tools.
