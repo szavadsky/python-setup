@@ -61,17 +61,21 @@ def _apply_autofix_conflict_aware(
     config: RunnerConfig,
     paths_to_check: list[str],
     run_cmd: Callable[..., LintResult],
+    force: bool = False,
 ) -> LintResult:
-    staged_set = _git_changed_files(config.cwd, staged=True)
-    unstaged_set = _git_changed_files(config.cwd, staged=False)
-    # Skip files that would conflict with the staged blob if autofixed.
-    conflict_files = staged_set & unstaged_set & set(paths_to_check)
-    safe_to_fix = [p for p in paths_to_check if p not in conflict_files]
-    for p in sorted(conflict_files):
-        print(
-            f"  [{spec.name}] autofix skipped for {p}: staged+unstaged conflict",
-            file=sys.stderr,
-        )
+    if force:
+        safe_to_fix = paths_to_check
+    else:
+        staged_set = _git_changed_files(config.cwd, staged=True)
+        unstaged_set = _git_changed_files(config.cwd, staged=False)
+        # Skip files that would conflict with the staged blob if autofixed.
+        conflict_files = staged_set & unstaged_set & set(paths_to_check)
+        safe_to_fix = [p for p in paths_to_check if p not in conflict_files]
+        for p in sorted(conflict_files):
+            print(
+                f"  [{spec.name}] autofix skipped for {p}: staged+unstaged conflict",
+                file=sys.stderr,
+            )
 
     # Snapshot bytes BEFORE the fix pass — used by the E999-canary revert.
     # Tolerant: a path in ``paths_to_check`` may not exist on disk (e.g. a
