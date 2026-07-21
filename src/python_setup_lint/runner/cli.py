@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import sys
@@ -145,19 +146,23 @@ def _run_tool_pipeline(
 def _emit_statistics(
     results: list[LintResult],
     *,
-    statistics_format: str = "table",
-    group: str = "none",
-    sort_by_rule: bool = False,
+    statistics_format: str,
+    group: str,
+    sort_by_rule: bool,
 ) -> None:
     vcounts = _output._aggregate_statistics(results)
-    if not vcounts:
-        print("\n  No violations found.")
-        return
     if statistics_format == "json":
-        _output._print_statistics_json(vcounts)
+        print(
+            json.dumps(
+                [{"tool": v.tool, "rule": v.rule, "count": v.count} for v in vcounts],
+                indent=2,
+            )
+        )
     elif group != "none":
         _output._print_statistics_grouped(vcounts, group=group, sort_by_rule=sort_by_rule)
     else:
+        if sort_by_rule:
+            vcounts = _output._sort_counts(vcounts, sort_by_rule=True)
         _output._print_statistics_table(vcounts)
 
 
