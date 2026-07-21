@@ -11,7 +11,7 @@ from collections.abc import Callable
 from .types import RunnerConfig, ToolSpec
 
 TOOLS: list[ToolSpec]
-"""All 13 tool specifications in execution order (built-ins)."""
+"""All 14 tool specifications in execution order (built-ins)."""
 
 TOOLS_BY_NAME: dict[str, ToolSpec]
 """Tool specs keyed by name for fast lookup (built-ins only)."""
