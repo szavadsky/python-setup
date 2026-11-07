@@ -23,3 +23,6 @@
 {"type":"step_timeout","task":"modernize","step":"infra","timeoutSec":900,"ts":"2026-11-07T18:59:57.490Z"}
 {"type":"step_finished","task":"modernize","step":"infra","attempt":1,"status":"ok","sessionId":"01a1b761-bab4-775f-a0d5-0aff214346b6","usage":{"inputTokens":57251,"outputTokens":22178,"costUsd":0.024652},"ts":"2026-11-07T19:11:42.038Z"}
 {"type":"iteration_started","iteration":1,"ts":"2026-11-07T19:11:42.142Z"}
+{"type":"step_started","task":"modernize","step":"plan-review-1-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/007-plan-review-1-1-a1","ts":"2026-11-07T19:11:42.179Z"}
+{"type":"step_timeout","task":"modernize","step":"plan-review-1-1","timeoutSec":900,"ts":"2026-11-07T19:11:42.183Z"}
+{"type":"step_transcript_size_warning","task":"modernize","step":"plan-review-1-1","attempt":1,"sizeBytes":5958199,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-07T19-11-42-426Z_01a1b76c-7b5a-709f-85f5-d821c0af9dd4.jsonl","ts":"2026-11-07T19:26:42.950Z"}
