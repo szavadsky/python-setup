@@ -11,3 +11,4 @@
 {"type":"step_started","task":"modernize","step":"architect-plan-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/003-architect-plan-1-a1","ts":"2026-11-07T16:26:57.869Z"}
 {"type":"step_timeout","task":"modernize","step":"architect-plan-1","timeoutSec":1200,"ts":"2026-11-07T16:26:57.873Z"}
 {"type":"step_transcript_size_warning","task":"modernize","step":"architect-plan-1","attempt":1,"sizeBytes":5710384,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-07T16-26-58-111Z_01a1b6d5-a8bf-70ae-8da1-73b8468340d7","ts":"2026-11-07T16:38:10.072Z"}
+{"type":"step_finished","task":"modernize","step":"architect-plan-1","attempt":1,"status":"ok","sessionId":"01a1b6d5-a8bf-70ae-8da1-73b8468340d7","usage":{"inputTokens":66,"outputTokens":72839,"costUsd":2.855433},"ts":"2026-11-07T16:38:10.215Z"}
