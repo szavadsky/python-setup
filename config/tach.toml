@@ -6,6 +6,7 @@ exclude = [
     "**/build",
     "**/.tmp*",
     "**/.omp",  # agentic orchestration, not product
+    "**/.factory",  # agentic orchestration, not product
 ]
 source_roots = [
     "src",

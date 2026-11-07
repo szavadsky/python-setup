@@ -33,3 +33,4 @@ ignore: |
   **/.tmp*/
   **/node_modules/**
   **/dist/**
+  **/.factory/**
