@@ -2,3 +2,5 @@
 {"type":"ingest_started","task":"modernize","ts":"2026-11-07T15:43:19.591Z"}
 {"type":"step_started","task":"modernize","step":"triage","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/001-triage-a1","ts":"2026-11-07T15:43:19.723Z"}
 {"type":"step_timeout","task":"modernize","step":"triage","timeoutSec":900,"ts":"2026-11-07T15:43:19.731Z"}
+{"type":"step_finished","task":"modernize","step":"triage","attempt":1,"status":"ok","sessionId":"01a1b6ad-b635-73eb-ba2c-6c0340af11a5","usage":{"inputTokens":33777,"outputTokens":11898,"costUsd":0.012956},"ts":"2026-11-07T15:45:39.224Z"}
+{"type":"citations_dropped","dropped":[{"file":"src/python_setup_lint/checkers/conformance/suppression_justification_checker.py","reason":"missing_anchor","message":"Anchor \"SuppressionJustificationChecker\" not found within lines 32-40 of \"src/python_setup_lint/checkers/conformance/suppression_justification_checker.py\"."}],"ts":"2026-11-07T15:45:39.230Z"}

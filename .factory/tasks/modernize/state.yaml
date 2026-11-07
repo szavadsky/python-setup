@@ -1,8 +1,9 @@
 task: modernize
+kind: saga
 status: active
 iteration: 1
 currentWave: 1
 items: {}
 debt: []
-budgetSpentUsd: 0
-lastUpdated: 2026-11-07T15:43:19.588Z
+budgetSpentUsd: 0.012956
+lastUpdated: 2026-11-07T15:45:39.238Z
