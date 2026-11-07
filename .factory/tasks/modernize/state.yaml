@@ -44,4 +44,4 @@ debt:
   - "ADR locations disagree: CodingRules.md requires design/ (ADR format), but
     factory ADRs are written to docs/adr."
 budgetSpentUsd: 2.868389
-lastUpdated: 2026-11-07T18:27:48.372Z
+lastUpdated: 2026-11-07T18:59:57.393Z

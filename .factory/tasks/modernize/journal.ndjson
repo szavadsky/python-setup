@@ -16,3 +16,6 @@
 {"type":"lock_takeover","task":"modernize","previousPid":3290979,"previousHost":"Slava-Yoga","newPid":3401785,"newHost":"Slava-Yoga","ts":"2026-11-07T18:27:48.355Z"}
 {"type":"task_started","task":"modernize","branch":"topic/modernize","ts":"2026-11-07T18:27:48.355Z"}
 {"type":"ingest_started","task":"modernize","ts":"2026-11-07T18:27:48.416Z"}
+{"type":"record_marked_interrupted","recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/005-infra-a1","ts":"2026-11-07T18:59:57.368Z"}
+{"type":"task_started","task":"modernize","branch":"topic/modernize","ts":"2026-11-07T18:59:57.381Z"}
+{"type":"ingest_started","task":"modernize","ts":"2026-11-07T18:59:57.422Z"}
