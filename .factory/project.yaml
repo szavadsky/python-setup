@@ -14,17 +14,17 @@ adrFolder: docs/adr
 # MUST live outside the main repository working tree (sibling directory).
 # NOTE: `../repo.factory-wt` is a literal placeholder, not a template expression:
 # replace `repo` with your repository's directory name (e.g. `../myapp.factory-wt`).
-worktreeRoot: ../repo.factory-wt
+worktreeRoot: ../python-setup.factory-wt
 
 # Script hints for the infra agent to derive automated gates and build steps.
 # These are HINTS only (free-form strings); the infra agent probes and declares
 # the real commands in infra.yaml. Uncomment the block and adjust to match your
 # toolchain, or leave commented when the repo has no such step.
-# scripts:
-#   setup: "bun install"
-#   compile: "bun run build"
-#   lint: "bun run lint"
-#   test: "bun test"
+scripts:
+  setup: "uv sync"
+  lint: "uv run lint"
+  test: "uv run pytest -q"
+  integration: "uv run pytest tests/integration.py"
 
 # File paths and globs used by mechanical checks.
 # Used by: tests-only, test-first-scope, red-test, test-diff, size,
@@ -34,9 +34,7 @@ worktreeRoot: ../repo.factory-wt
 # tests-only/test-diff enforcement. Keep both lists in sync with the repo layout.
 paths:
   tests:
-    - "test/**"
-    - "**/*.test.ts"
-    - "**/*.spec.ts"
+    - "tests/**"
   prod:
     - "src/**"
 
