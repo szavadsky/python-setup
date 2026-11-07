@@ -9,4 +9,4 @@ call-non-callable = "ignore"
 unresolved-import = "ignore"
 
 [src]
-exclude = [".omp/", "tests/"]
+exclude = [".omp/", ".factory/", "tests/"]

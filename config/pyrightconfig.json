@@ -15,6 +15,7 @@
         "build/",
         "tests/data/",
         "tests/**",
-        "**/.omp"
+        "**/.omp",
+        "**/.factory"
     ]
 }

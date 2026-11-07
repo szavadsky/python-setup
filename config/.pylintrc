@@ -1,6 +1,6 @@
 [MAIN]
 max-module-lines=500
-ignore-paths=tests/data/,\.venv,__pycache__,node_modules,build/,.tmp*,.omp  # tests/ linted by .pylintrc-tests (hybrid rcfile); tests/data/ is planted-violation sample; .omp is agentic orchestration, not product
+ignore-paths=tests/data/,\.venv,__pycache__,node_modules,build/,.tmp*,.omp,.factory  # tests/ linted by .pylintrc-tests (hybrid rcfile); tests/data/ is planted-violation sample; .omp/.factory is agentic orchestration, not product
 ignore-patterns=.*\.pyi$
 source-roots=src
 init-hook="import sys; sys.path.insert(0, '.')"
