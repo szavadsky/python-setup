@@ -21,3 +21,5 @@
 {"type":"ingest_started","task":"modernize","ts":"2026-11-07T18:59:57.422Z"}
 {"type":"step_started","task":"modernize","step":"infra","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/006-infra-a1","ts":"2026-11-07T18:59:57.487Z"}
 {"type":"step_timeout","task":"modernize","step":"infra","timeoutSec":900,"ts":"2026-11-07T18:59:57.490Z"}
+{"type":"step_finished","task":"modernize","step":"infra","attempt":1,"status":"ok","sessionId":"01a1b761-bab4-775f-a0d5-0aff214346b6","usage":{"inputTokens":57251,"outputTokens":22178,"costUsd":0.024652},"ts":"2026-11-07T19:11:42.038Z"}
+{"type":"iteration_started","iteration":1,"ts":"2026-11-07T19:11:42.142Z"}
