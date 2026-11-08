@@ -27,3 +27,7 @@
 {"type":"step_timeout","task":"modernize","step":"plan-review-1-1","timeoutSec":900,"ts":"2026-11-07T19:11:42.183Z"}
 {"type":"step_transcript_size_warning","task":"modernize","step":"plan-review-1-1","attempt":1,"sizeBytes":5958199,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-07T19-11-42-426Z_01a1b76c-7b5a-709f-85f5-d821c0af9dd4.jsonl","ts":"2026-11-07T19:26:42.950Z"}
 {"type":"step_finished","task":"modernize","step":"plan-review-1-1","attempt":1,"status":"ok","sessionId":"01a1b77a-3db4-728e-8901-52b8ca6024c3","usage":{"inputTokens":96163,"outputTokens":32803,"costUsd":0.017717},"ts":"2026-11-07T19:36:01.780Z"}
+{"type":"record_marked_interrupted","recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/008-architect-revise-1-1-a1","ts":"2026-11-08T00:27:27.493Z"}
+{"type":"lock_takeover","task":"modernize","previousPid":3583876,"previousHost":"Slava-Yoga","newPid":85390,"newHost":"Slava-Yoga","ts":"2026-11-08T00:27:27.507Z"}
+{"type":"task_started","task":"modernize","branch":"topic/modernize","ts":"2026-11-08T00:27:27.507Z"}
+{"type":"ingest_started","task":"modernize","ts":"2026-11-08T00:27:27.564Z"}
