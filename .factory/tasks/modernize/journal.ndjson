@@ -1207,3 +1207,5 @@
 {"type":"step_finished","task":"modernize","step":"pm-edits-3","attempt":1,"status":"ok","sessionId":"01a1bcb6-a9d0-7072-9a55-bf509817ab09","usage":{"inputTokens":44461,"outputTokens":21427,"costUsd":0.008731},"ts":"2026-11-08T19:53:11.183Z"}
 {"type":"step_started","task":"modernize","step":"pm-edits-3","attempt":2,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/077-pm-edits-3-a2","ts":"2026-11-08T19:53:11.269Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"pm-edits-3","timeoutSec":2700,"ts":"2026-11-08T19:53:11.274Z"}
+{"type":"step_finished","task":"modernize","step":"pm-edits-3","attempt":2,"status":"ok","sessionId":"01a1bcb6-a9d0-7072-9a55-bf509817ab09","usage":{"inputTokens":3099,"outputTokens":5293,"costUsd":0.001457},"ts":"2026-11-08T19:53:48.497Z"}
+{"type":"pm_edits_repaired","errors":[],"ts":"2026-11-08T19:53:48.497Z"}
