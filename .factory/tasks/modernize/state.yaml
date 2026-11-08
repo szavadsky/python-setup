@@ -220,6 +220,23 @@ items:
     fixRounds: 1
     spendUsd: 0
 debt:
+  - "Iteration-2 eval structural no-go: contracted accepted stratum 215/0 makes
+    95% meaningless-precision unevaluable; all 183 repo labels single-author
+    with terse borderlines all True. No model meets the bar by construction."
+  - "M4 audit report completeness + unified-map drift: reports live in
+    orchestration records; evidence lines may be stale at iteration-3 HEAD."
+  - Pylint writer/timing verdict may still be unmerged (iteration-2
+    pylint-cache-assumptions running at close-up); cache concurrency design
+    cannot be invented.
+  - detect-secrets gate red on factory journals (environmental) + MemoryError on
+    huge tracked artifacts in dirty worktrees.
+  - "Docs/ADR drift: AGENTS.md stale counts + missing ruff-format scope row;
+    CHANGELOG v1.2.9 vs pyproject 1.2.10; README v1.2.5 pin; 8 problem-statement
+    ADRs partly stale; design/ vs docs/adr location split."
+  - Over-limit modules with disables (dispatch.py 542, _factories.py 1393,
+    _factories_extras.py 511 + duplicate disables, test_semantic_check.py 506),
+    dead compat shims, duplicated test helpers, milestone-ID test names,
+    hardcoded checkout paths.
   - "RED-TEST WAIVED (gate inapplicable by design): golden-snapshot-wiring is a
     tests-only M1 contract item — probe verdict was test-side normalization
     sufficient, so the bounded src allowance was correctly NOT used and the diff
@@ -374,7 +391,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 7.2644906859999985
+budgetSpentUsd: 7.3260246859999985
 spendByRole:
   workhorse:
     costUsd: 3.0537076860000005
@@ -385,9 +402,9 @@ spendByRole:
     inputTokens: 2616311
     outputTokens: 919336
   architect:
-    costUsd: 3.6242090000000005
-    inputTokens: 7119899
-    outputTokens: 267603
+    costUsd: 3.6857430000000004
+    inputTokens: 7705895
+    outputTokens: 276431
   alt-architect:
     costUsd: 0.055505
     inputTokens: 220763
@@ -442,9 +459,9 @@ spendByItem:
     inputTokens: 334753
     outputTokens: 167691
   (orchestration):
-    costUsd: 4.205056000000001
-    inputTokens: 8866181
-    outputTokens: 930452
+    costUsd: 4.266590000000001
+    inputTokens: 9452177
+    outputTokens: 939280
   test-debloat-audit-i2:
     costUsd: 0.258385
     inputTokens: 707051
@@ -473,4 +490,4 @@ spendByItem:
     costUsd: 0.091885
     inputTokens: 206331
     outputTokens: 89105
-lastUpdated: 2026-11-08T19:08:22.700Z
+lastUpdated: 2026-11-08T19:10:13.568Z
