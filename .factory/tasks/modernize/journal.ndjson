@@ -509,3 +509,5 @@
 {"type":"step_timeout_armed","task":"modernize","step":"pm-amend-1-3","timeoutSec":900,"ts":"2026-11-08T07:18:19.933Z"}
 {"type":"step_finished","task":"modernize","step":"pm-amend-1-3","attempt":1,"status":"ok","sessionId":"01a1ba05-bb35-71a5-ba4b-9f990e4c714a","usage":{"inputTokens":40745,"outputTokens":6615,"costUsd":0.005398},"ts":"2026-11-08T07:19:12.459Z"}
 {"type":"wave_started","wave":9,"iteration":1,"ts":"2026-11-08T07:19:13.025Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-1-9","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/037-wave-close-up-1-9-a1","ts":"2026-11-08T07:23:57.947Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-1-9","timeoutSec":900,"ts":"2026-11-08T07:23:57.952Z"}
