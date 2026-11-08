@@ -1410,3 +1410,5 @@
 {"type":"empty_wave_streak","wave":2,"iteration":3,"streak":1,"blocked":[],"ts":"2026-11-08T22:47:44.831Z"}
 {"type":"step_started","task":"modernize","step":"wave-close-up-3-2","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/081-wave-close-up-3-2-a1","ts":"2026-11-08T22:50:55.490Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-3-2","timeoutSec":2700,"ts":"2026-11-08T22:50:55.494Z"}
+{"type":"step_finished","task":"modernize","step":"wave-close-up-3-2","attempt":1,"status":"ok","sessionId":"01a1bd5b-8bb3-75bd-ba84-104d845512d6","usage":{"inputTokens":22794,"outputTokens":10424,"costUsd":0.004507},"ts":"2026-11-08T22:52:41.483Z"}
+{"type":"scheduler_wait","wave":2,"iteration":3,"reason":"close-up gates + close-up turn","gapWallMs":296655,"gapActiveMs":296655,"merges":[],"ts":"2026-11-08T22:52:41.483Z"}
