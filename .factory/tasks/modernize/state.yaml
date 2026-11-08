@@ -10,6 +10,8 @@ items:
     branch: topic/modernize--golden-determinism-probe
     attempts: 1
     fixRounds: 2
+    spendUsd: 0.16489800000000002
+    currentStep: review
     mergedAt: 2026-11-07T20:57:23-05:00
   third-party-assumption-tests:
     kind: test-assumptions
@@ -17,6 +19,8 @@ items:
     branch: topic/modernize--third-party-assumption-tests
     attempts: 1
     fixRounds: 1
+    spendUsd: 0.076988
+    currentStep: review
     mergedAt: 2026-11-07T21:00:28-05:00
   golden-findings-snapshot:
     kind: dev
@@ -24,24 +28,29 @@ items:
     branch: topic/modernize--golden-findings-snapshot
     attempts: 2
     fixRounds: 1
+    spendUsd: 0.170578
+    currentStep: test-first
   consolidate-integration-helpers:
     kind: test-only
     status: pending
     branch: topic/modernize--consolidate-integration-helpers
     attempts: 1
     fixRounds: 1
+    spendUsd: 0
   coding-rules-audit:
     kind: fact-finder
     status: pending
     branch: topic/modernize--coding-rules-audit
     attempts: 1
     fixRounds: 1
+    spendUsd: 0
   test-debloat-audit:
     kind: fact-finder
     status: pending
     branch: topic/modernize--test-debloat-audit
     attempts: 1
     fixRounds: 1
+    spendUsd: 0
 debt:
   - Suppression/bare-except checkers pass their own symbol as `rule`; the
     rule-echo heuristic and model never see the actually-suppressed codes.
@@ -91,5 +100,39 @@ debt:
     fixture-scoped clearing"
   - "[third-party-assumption-tests] Assert confidence is not None before reading
     .name"
-budgetSpentUsd: 3.2886530000000014
-lastUpdated: 2026-11-08T02:45:20.655Z
+budgetSpentUsd: 3.4951090000000016
+spendByRole:
+  workhorse:
+    costUsd: 0.483592
+    inputTokens: 848479
+    outputTokens: 407953
+  alt-workhorse:
+    costUsd: 0.053765999999999994
+    inputTokens: 194627
+    outputTokens: 156415
+  architect:
+    costUsd: 2.921599
+    inputTokens: 557466
+    outputTokens: 122825
+  alt-architect:
+    costUsd: 0.036152
+    inputTokens: 137287
+    outputTokens: 101647
+spendByItem:
+  golden-determinism-probe:
+    costUsd: 0.16489800000000002
+    inputTokens: 333924
+    outputTokens: 192372
+  third-party-assumption-tests:
+    costUsd: 0.076988
+    inputTokens: 162838
+    outputTokens: 78517
+  golden-findings-snapshot:
+    costUsd: 0.170578
+    inputTokens: 226110
+    outputTokens: 148096
+  (orchestration):
+    costUsd: 3.082645000000001
+    inputTokens: 1014987
+    outputTokens: 369855
+lastUpdated: 2026-11-08T04:32:09.420Z
