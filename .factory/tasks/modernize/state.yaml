@@ -283,6 +283,20 @@ items:
     fixRounds: 1
     spendUsd: 0
 debt:
+  - No compliant model proven (215/0 unevaluable, single-author labels, Fastino
+    review open, no CPU bench).
+  - I3 M1 gate not closed per engine (map running, kickoff pending) caused 3
+    empty waves.
+  - Pylint-pyi blind spot (42/43 findings on .py, 205 latent private symbols,
+    companion stubs unenforced).
+  - Cache refresh/root/prune/secrets unresolved (Q4-7); writer-first verdict
+    must be consumed, not invented.
+  - Docs/version drift (AGENTS stale counts/scope/pipeline, CHANGELOG 1.2.9 vs
+    1.2.10, README v1.2.5 pin, ty.toml sentence_transformers).
+  - Over-limit modules/shims/duplicates/hardcoded paths (dispatch 542,
+    _factories 1393, _factories_extras 511 + dup disables, test_semantic 506,
+    baseline shims, stream blocks, mixin misc, trivial-wrapper disables,
+    /home/slava paths).
   - "RED-TEST WAIVED (gate inapplicable by design): golden-snapshot-wiring is a
     tests-only M1 contract item — probe verdict was test-side normalization
     sufficient, so the bounded src allowance was correctly NOT used and the diff
@@ -471,7 +485,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 8.489948685999995
+budgetSpentUsd: 8.517702685999994
 spendByRole:
   workhorse:
     costUsd: 3.6386346860000005
@@ -482,9 +496,9 @@ spendByRole:
     inputTokens: 4009627
     outputTokens: 1413951
   architect:
-    costUsd: 3.9407050000000003
-    inputTokens: 10048981
-    outputTokens: 337895
+    costUsd: 3.968459
+    inputTokens: 10251057
+    outputTokens: 371330
   alt-architect:
     costUsd: 0.073161
     inputTokens: 279595
@@ -571,9 +585,9 @@ spendByItem:
     inputTokens: 206331
     outputTokens: 89105
   (orchestration):
-    costUsd: 4.76482
-    inputTokens: 12333600
-    outputTokens: 1223735
+    costUsd: 4.792574
+    inputTokens: 12535676
+    outputTokens: 1257170
   adr-formalization:
     costUsd: 0.051655
     inputTokens: 168426
@@ -586,4 +600,4 @@ spendByItem:
     costUsd: 0.18856
     inputTokens: 439297
     outputTokens: 213083
-lastUpdated: 2026-11-08T23:31:38.299Z
+lastUpdated: 2026-11-08T23:35:38.888Z
