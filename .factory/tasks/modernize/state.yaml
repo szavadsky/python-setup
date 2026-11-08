@@ -4,6 +4,14 @@ status: active
 iteration: 3
 currentWave: 1
 items:
+  adr-formalization:
+    kind: no-behavior
+    status: ready
+    branch: topic/modernize--adr-formalization
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0.051655
+    currentStep: review
   consolidate-integration-helpers-i2:
     kind: test-only
     status: merged
@@ -31,6 +39,14 @@ items:
     spendUsd: 0.045265
     currentStep: review
     mergedAt: 2026-11-08T08:05:08-05:00
+  ownership-map-revalidation:
+    kind: fact-finder
+    status: running
+    branch: topic/modernize--ownership-map-revalidation
+    attempts: 1
+    fixRounds: 3
+    spendUsd: 0.19766
+    currentStep: review
   pylint-cache-assumptions:
     kind: test-assumptions
     status: running
@@ -39,6 +55,14 @@ items:
     fixRounds: 1
     spendUsd: 0.210224686
     currentStep: develop
+  pylint-cache-semantics-closure:
+    kind: test-assumptions
+    status: ready
+    branch: topic/modernize--pylint-cache-semantics-closure
+    attempts: 1
+    fixRounds: 2
+    spendUsd: 0.18856
+    currentStep: review
   runner-format-contract:
     kind: dev
     status: merged
@@ -48,6 +72,14 @@ items:
     spendUsd: 0.467148
     currentStep: review
     mergedAt: 2026-11-08T07:54:12-05:00
+  secrets-baseline-exclusion:
+    kind: no-behavior
+    status: ready
+    branch: topic/modernize--secrets-baseline-exclusion
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0.041534
+    currentStep: review
   third-party-assumption-tests:
     kind: test-assumptions
     status: merged
@@ -66,6 +98,13 @@ items:
     spendUsd: 0.06715600000000001
     currentStep: review
     mergedAt: 2026-11-08T09:50:28-05:00
+  epic-kickoff-gate:
+    kind: fact-finder
+    status: pending
+    branch: topic/modernize--epic-kickoff-gate
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
   golden-contract-hardening:
     kind: test-only
     status: merged
@@ -132,6 +171,13 @@ items:
     spendUsd: 0.016725999999999998
     currentStep: review
     mergedAt: 2026-11-08T10:47:48-05:00
+  epic-shift-report-collection:
+    kind: fact-finder
+    status: pending
+    branch: topic/modernize--epic-shift-report-collection
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
   remaining-lint-violations-fix:
     kind: no-behavior
     status: merged
@@ -148,6 +194,13 @@ items:
     attempts: 1
     fixRounds: 1
     spendUsd: 0
+  golden-regen-hatch:
+    kind: test-only
+    status: pending
+    branch: topic/modernize--golden-regen-hatch
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
   test-debloat-audit-i2:
     kind: fact-finder
     status: merged
@@ -157,6 +210,13 @@ items:
     spendUsd: 0.258385
     currentStep: review
     mergedAt: 2026-11-08T12:55:17-05:00
+  final-gate-validation:
+    kind: fact-finder
+    status: pending
+    branch: topic/modernize--final-gate-validation
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
   test-debloat-audit:
     kind: fact-finder
     status: pending
@@ -251,6 +311,9 @@ debt:
     determinism; oracle + per-tool coverage + tool-qualified brush-off/carry
     lookups prove sensitivity. QA rejected 2/2 solely on red-test; all other
     checks passed. No src follow-up required."
+  - "[adr-formalization] ADR-012 examples could include conformance/ path prefix"
+  - "[adr-formalization] H1 heading prefix inconsistent between new and legacy
+    ADRs"
   - "[consolidate-integration-helpers-i2] Parenthesize bare comma-except to
     avoid Python-2 misread"
   - "[golden-determinism-probe] Assert rumdl override fired instead of blind
@@ -279,6 +342,25 @@ debt:
     >=3.10"
   - "[model-candidate-matrix] GLIDE_DEVICE default is uncited; verified code
     shows device='cuda' parameter default"
+  - "[ownership-map-revalidation] Duplicate-cluster counts lack scope qualifier"
+  - "[ownership-map-revalidation] Test-distribution 59 modules row omits file
+    filter"
+  - "[ownership-map-revalidation] Note PEP 758 except form vs helper tuple
+    normalization"
+  - "[pylint-cache-semantics-closure] Third no-write path (empty primary)
+    omitted from timing enumeration"
+  - "[pylint-cache-semantics-closure] Sequential runner assumed but only
+    registry order pinned"
+  - "[pylint-cache-semantics-closure] Separate-processes claim true today but
+    dispatch-only pinned"
+  - "[pylint-cache-semantics-closure] Pylint stats path cited as Linux-only
+    ~/.cache/pylint"
+  - "[pylint-cache-semantics-closure] Single-caller AST scan matches only bare
+    Name calls"
+  - "[pylint-cache-semantics-closure] Prediction-failure None path not
+    enumerated in Timing bullet"
+  - "[pylint-cache-semantics-closure] open()/close() non-writer claim pinned
+    only indirectly"
   - "[runner-format-contract] Engine lint gate command omitted ruff format;
     overall pass misleading"
   - "[runner-format-contract] parsers.pyi 13s are statistics-parser counts,
@@ -310,6 +392,10 @@ debt:
   - "[runner-format-contract] AGENTS.md test counts are stale (1290/7 vs 1352/9)"
   - "[runner-format-contract] Factory helper header says 502 lines; file is now
     511"
+  - "[secrets-baseline-exclusion] M1 report cites session HEAD lacking filter;
+    cite landed commit instead"
+  - "[secrets-baseline-exclusion] Pattern matches bare gate paths only; ./
+    prefix bypasses (gate form verified, no action)"
   - "[third-party-assumption-tests] Module-global _LIFECYCLE_EVENTS could use
     fixture-scoped clearing"
   - "[third-party-assumption-tests] Assert confidence is not None before reading
@@ -393,16 +479,16 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 7.362652685999999
+budgetSpentUsd: 7.852249685999999
 spendByRole:
   workhorse:
-    costUsd: 3.0537076860000005
-    inputTokens: 6134968
-    outputTokens: 2170898
+    costUsd: 3.360946686
+    inputTokens: 6715795
+    outputTokens: 2436432
   alt-workhorse:
-    costUsd: 0.5310690000000001
-    inputTokens: 2616311
-    outputTokens: 919336
+    costUsd: 0.7134270000000007
+    inputTokens: 3364653
+    outputTokens: 1280177
   architect:
     costUsd: 3.704715
     inputTokens: 7755320
@@ -424,46 +510,6 @@ spendByItem:
     costUsd: 0.170578
     inputTokens: 226110
     outputTokens: 148096
-  golden-helpers-unit:
-    costUsd: 0.057198
-    inputTokens: 138170
-    outputTokens: 64014
-  consolidate-integration-helpers-v3:
-    costUsd: 0.19283999999999998
-    inputTokens: 341355
-    outputTokens: 174695
-  golden-snapshot-wiring:
-    costUsd: 0.13088
-    inputTokens: 218824
-    outputTokens: 95126
-  secrets-triage-spike:
-    costUsd: 0.076996
-    inputTokens: 208236
-    outputTokens: 84395
-  model-candidate-matrix:
-    costUsd: 0.045265
-    inputTokens: 116110
-    outputTokens: 59317
-  runner-format-contract:
-    costUsd: 0.467148
-    inputTokens: 1187671
-    outputTokens: 340789
-  consolidate-integration-helpers-i2:
-    costUsd: 0.07747
-    inputTokens: 139419
-    outputTokens: 80611
-  consolidate-integration-helpers-v2:
-    costUsd: 0.19363600000000003
-    inputTokens: 413243
-    outputTokens: 140910
-  pylint-cache-assumptions:
-    costUsd: 0.210224686
-    inputTokens: 334753
-    outputTokens: 167691
-  (orchestration):
-    costUsd: 4.303218000000001
-    inputTokens: 9560434
-    outputTokens: 1042885
   test-debloat-audit-i2:
     costUsd: 0.258385
     inputTokens: 707051
@@ -480,6 +526,10 @@ spendByItem:
     costUsd: 0.053628
     inputTokens: 140260
     outputTokens: 60983
+  golden-helpers-unit:
+    costUsd: 0.057198
+    inputTokens: 138170
+    outputTokens: 64014
   model-eval-poc:
     costUsd: 0.57375
     inputTokens: 1862227
@@ -488,8 +538,60 @@ spendByItem:
     costUsd: 0.06715600000000001
     inputTokens: 164765
     outputTokens: 116111
+  model-candidate-matrix:
+    costUsd: 0.045265
+    inputTokens: 116110
+    outputTokens: 59317
+  pylint-cache-semantics-closure:
+    costUsd: 0.18856
+    inputTokens: 439297
+    outputTokens: 213083
+  runner-format-contract:
+    costUsd: 0.467148
+    inputTokens: 1187671
+    outputTokens: 340789
+  consolidate-integration-helpers-i2:
+    costUsd: 0.07747
+    inputTokens: 139419
+    outputTokens: 80611
   golden-contract-hardening:
     costUsd: 0.091885
     inputTokens: 206331
     outputTokens: 89105
-lastUpdated: 2026-11-08T19:50:49.712Z
+  golden-snapshot-wiring:
+    costUsd: 0.13088
+    inputTokens: 218824
+    outputTokens: 95126
+  consolidate-integration-helpers-v3:
+    costUsd: 0.19283999999999998
+    inputTokens: 341355
+    outputTokens: 174695
+  secrets-baseline-exclusion:
+    costUsd: 0.041534
+    inputTokens: 120849
+    outputTokens: 67989
+  secrets-triage-spike:
+    costUsd: 0.076996
+    inputTokens: 208236
+    outputTokens: 84395
+  adr-formalization:
+    costUsd: 0.051655
+    inputTokens: 168426
+    outputTokens: 56715
+  consolidate-integration-helpers-v2:
+    costUsd: 0.19363600000000003
+    inputTokens: 413243
+    outputTokens: 140910
+  pylint-cache-assumptions:
+    costUsd: 0.210224686
+    inputTokens: 334753
+    outputTokens: 167691
+  ownership-map-revalidation:
+    costUsd: 0.19766
+    inputTokens: 553037
+    outputTokens: 261868
+  (orchestration):
+    costUsd: 4.313406000000001
+    inputTokens: 9607994
+    outputTokens: 1069605
+lastUpdated: 2026-11-08T21:33:38.681Z
