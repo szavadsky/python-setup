@@ -1458,3 +1458,4 @@
 {"type":"step_started","task":"modernize","step":"plan-review-4-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/090-plan-review-4-1-a1","ts":"2026-11-08T23:35:38.952Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"plan-review-4-1","timeoutSec":3600,"ts":"2026-11-08T23:35:38.956Z"}
 {"type":"step_transcript_size_warning","task":"modernize","step":"plan-review-4-1","attempt":1,"sizeBytes":7571219,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T23-35-39-258Z_01a1bd84-7dfa-71ff-8af2-d9e8516aecf0.jsonl","ts":"2026-11-08T23:58:11.816Z"}
+{"type":"step_finished","task":"modernize","step":"plan-review-4-1","attempt":1,"status":"ok","sessionId":"01a1bd84-7dfa-71ff-8af2-d9e8516aecf0","usage":{"inputTokens":39492,"outputTokens":50475,"costUsd":0.014433},"ts":"2026-11-08T23:58:11.968Z"}
