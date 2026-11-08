@@ -1,6 +1,6 @@
 # Rule Overlay Configuration
 
-Consumer projects can overlay their own rules on the shared base config. Each tool has its own mechanism — this document covers all 13 shipped tools.
+Consumer projects can overlay their own rules on the shared base config. Each tool has its own mechanism — this document covers all 14 shipped tools.
 
 ## Per-tool overlay reference
 

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "_build_command",
+    "_build_path_and_exclude_args",
     "_build_statistics_flags",
     "_compose_pyright_config",
     "_compose_ruff_config",
@@ -109,6 +110,7 @@ def _config_flag_for(spec_name: str, config_path: Path | None) -> list[str]:
         return []
     flags: dict[str, list[str]] = {
         "ruff check": ["--config", str(config_path)],
+        "ruff format": ["--config", str(config_path)],
         "mypy": ["--config-file", str(config_path)],
         "pylint": ["--rcfile", str(config_path)],
         "pyright check": ["--project", str(config_path)],

@@ -152,7 +152,7 @@ uv run pytest tests/integration.py -v
 
 **What it covers:**
 
-- All 13 lint tools fire on planted violations
+- All 14 lint tools fire on planted violations
 - Config overlays work
 - Setup is idempotent
 - Pre-commit hooks validate

@@ -6,7 +6,7 @@ This file is the entry point for all AI agents working on python-setup. Read thi
 
 | Command | What it does |
 |---------|-------------|
- | `uv run lint` | Full 13-tool lint pipeline (baseline diffing, ~100s warm, 120s/tool cap) |
+ | `uv run lint` | Full 14-tool lint pipeline (baseline diffing, ~100s warm, 120s/tool cap) |
  | `uv run pytest -q` | Unit tests (1290 pass, 4 skip, 15 deselected, ~53s) |
  | `uv run pytest tests/integration.py -v` | Integration tests (7 pass, ~30s) |
 | `uv run lint --overwrite-baseline --baseline lint.baseline` | Regenerate `lint.baseline` after intentional rule changes |
@@ -40,7 +40,7 @@ This file is the entry point for all AI agents working on python-setup. Read thi
 | `CodingRules.md` | Python coding conventions (shipped to consumers) |
 | `lint.baseline` | Frozen baseline of pre-existing violations |
 | `src/python_setup_lint/runner/cli.py` | Main entry point (`main`, `run_lint`) |
-| `src/python_setup_lint/runner/dispatch.py` | Tool strategy registry (13 built-in tools) |
+| `src/python_setup_lint/runner/dispatch.py` | Tool strategy registry (14 built-in tools) |
 | `src/python_setup_lint/checkers/_base.py` | Shared checker utilities |
 | `tests/conftest.py` | Shared pytest fixtures |
 | `tests/integration.py` | Fit-for-purpose integration test |
@@ -60,7 +60,7 @@ pyproject.toml → ToolSpec[] → dispatch.run() → per-tool subprocess → res
 Each tool is a `ToolSpec` with name, command, args, config path, and parse strategy. The runner:
 
 1. Loads `pyproject.toml` for extra tools and config overrides
-2. Builds the tool list (13 built-in + any extras)
+2. Builds the tool list (14 built-in + any extras)
 3. Runs each tool sequentially (some tools share resources)
 4. Parses output per-tool (regex, JSON, lines)
 5. Filters against `lint.baseline` (only new violations fail)
@@ -89,8 +89,8 @@ The semantic checker (W9704) detects `Any` in function signatures, unjustified s
 | Layer | Command | Scope |
 |-------|---------|-------|
 | Unit | `uv run pytest -q` | Individual checkers, runner logic, config parsing |
-| Integration | `uv run pytest tests/integration.py -v` | End-to-end: install, lint, update on a sample project. Validates ALL 13 tools + custom checkers fire on planted violations; NOT marked slow; key fit-for-purpose gate. |
-| Lint | `uv run lint` | Self-lint: all 13 tools on python-setup itself |
+| Integration | `uv run pytest tests/integration.py -v` | End-to-end: install, lint, update on a sample project. Validates ALL 14 tools + custom checkers fire on planted violations; NOT marked slow; key fit-for-purpose gate. |
+| Lint | `uv run lint` | Self-lint: all 14 tools on python-setup itself |
 
 ## Common Patterns
 

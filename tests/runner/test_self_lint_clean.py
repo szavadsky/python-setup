@@ -1,6 +1,6 @@
 """Guard against python-setup's own self-lint regression.
 
-Runs the full lint pipeline (all 13 tools) against the python-setup repo root
+Runs the full lint pipeline (all 14 tools) against the python-setup repo root
 with the shipped config.  A self-lint regression (new violation, crash, or
 unexpected skip) fails this test rather than slipping into CI.
 """
@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from python_setup_lint.runner import RunnerConfig, run_lint
-from tests.conftest import shipped_config_paths
+from tests._project_helpers import shipped_config_paths
 
 pytestmark = pytest.mark.slow
 

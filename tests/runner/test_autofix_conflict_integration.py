@@ -8,19 +8,30 @@ from pathlib import Path
 import pytest
 
 import python_setup_lint.runner.output as _output_module
-from python_setup_lint.runner import LINT_TOOLS, LintResult, RunnerConfig, ToolSpec, run_lint
-from python_setup_lint.runner._autofix import _AUTOFIX_ENV_VAR, _apply_autofix_conflict_aware
+from python_setup_lint.runner import (
+    LINT_TOOLS,
+    LintResult,
+    RunnerConfig,
+    ToolSpec,
+    run_lint,
+)
+from python_setup_lint.runner._autofix import (
+    _AUTOFIX_ENV_VAR,
+    _apply_autofix_conflict_aware,
+)
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
+from tests._project_helpers import (
+    commit_all,
+    git_init_bare,
+    stage_file,
+    write_project_file,
+)
 from tests.runner._autofix_helpers import (
     _CANARY_LABEL,
     _FIX_TOOL_NAMES,
-    _commit_all,
-    _git_init,
     _make_canned_fix_results,
     _PostFixFakeRunCmd,
     _setup_e999_canary_revert,
-    _stage,
-    _write_file,
 )
 from tests.runner._factories import (
     canned_results_all_tools,
@@ -133,7 +144,9 @@ class TestPrecommitTemplateHasFix:
         assert "ruff-check" in _PRECOMMIT_TEMPLATE
         assert "args: [--fix, --exit-non-zero-on-fix]" in _PRECOMMIT_TEMPLATE
 
-    def test_precommit_template_given_agents_snippet_then_documents_autofix(self) -> None:
+    def test_precommit_template_given_agents_snippet_then_documents_autofix(
+        self,
+    ) -> None:
         """The AGENTS snippet mentions the autofix route + env-var opt-out."""
         from python_setup_lint._setup_precommit import (
             _AGENTS_SENTINEL,
@@ -203,8 +216,8 @@ class TestRunLintFixDispatch:
         # Create source files under ruff's default_paths so the canary has
         # something to enumerate (otherwise canary_targets is empty and the
         # canary short-circuits without calling run_cmd).
-        _write_file(tmp_path, "src/main.py", "x = 1\n")
-        _write_file(tmp_path, "tests/test_main.py", "y = 1\n")
+        write_project_file(tmp_path, "src/main.py", "x = 1\n")
+        write_project_file(tmp_path, "tests/test_main.py", "y = 1\n")
         run_lint(config=tmp_config(tmp_path), fix=True)
         labels = [c.label for c in fake.calls]
         # ruff has default_paths=["src/", "tests/"] → canary fires once.
@@ -225,7 +238,7 @@ class TestRunLintFixDispatch:
         canned = _make_canned_fix_results()
         fake = fake_run_cmd_factory(canned)
         monkeypatch.setattr(_output_module, "_run_cmd", fake)
-        target = _write_file(tmp_path, "src/main.py", "x = 1\n")
+        target = write_project_file(tmp_path, "src/main.py", "x = 1\n")
         run_lint(
             config=tmp_config(tmp_path),
             path=str(target.relative_to(tmp_path)),
@@ -281,13 +294,13 @@ class TestAutofixRealGitIntegration:
         capsys: pytest.CaptureFixture[str],
     ) -> None:
         """File with staged AND unstaged changes is skipped; staged blob untouched."""
-        _git_init(tmp_path)
-        _write_file(tmp_path, "f.py", "x = 1\n")
-        _commit_all(tmp_path)
+        git_init_bare(tmp_path)
+        write_project_file(tmp_path, "f.py", "x = 1\n")
+        commit_all(tmp_path)
         # Stage a change, then overlay an unstaged change on the same file.
-        _write_file(tmp_path, "f.py", "y = 2\n")
-        _stage(tmp_path, "f.py")
-        _write_file(tmp_path, "f.py", "z = 3\n")
+        write_project_file(tmp_path, "f.py", "y = 2\n")
+        stage_file(tmp_path, "f.py")
+        write_project_file(tmp_path, "f.py", "z = 3\n")
         import subprocess
 
         staged_blob = subprocess.run(
@@ -327,11 +340,11 @@ class TestAutofixRealGitIntegration:
         capsys: pytest.CaptureFixture[str],
     ) -> None:
         """File staged only (no unstaged changes) → autofix applies."""
-        _git_init(tmp_path)
-        _write_file(tmp_path, "f.py", "x = 1\n")
-        _commit_all(tmp_path)
-        _write_file(tmp_path, "f.py", "y = 2\n")
-        _stage(tmp_path, "f.py")
+        git_init_bare(tmp_path)
+        write_project_file(tmp_path, "f.py", "x = 1\n")
+        commit_all(tmp_path)
+        write_project_file(tmp_path, "f.py", "y = 2\n")
+        stage_file(tmp_path, "f.py")
         # The file is staged-only — no unstaged overlay → safe to fix.
         # The fake fix writes "y = 2  # fixed\n" to simulate ruff --fix.
         target = tmp_path / "f.py"
@@ -362,9 +375,9 @@ class TestAutofixRealGitIntegration:
         capsys: pytest.CaptureFixture[str],
     ) -> None:
         """A fix that breaks parseability triggers E999-canary revert; file restored."""
-        _git_init(tmp_path)
-        _write_file(tmp_path, "src/main.py", "x = 1  # original\n")
-        _commit_all(tmp_path)
+        git_init_bare(tmp_path)
+        write_project_file(tmp_path, "src/main.py", "x = 1  # original\n")
+        commit_all(tmp_path)
         original = "x = 1  # original\n"
         post_fix = "x = 2  # broken-syntax\n"
         target = tmp_path / "src/main.py"

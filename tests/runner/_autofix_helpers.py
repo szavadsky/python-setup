@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import subprocess
 from collections.abc import Callable
 from pathlib import Path
 
@@ -16,46 +15,6 @@ _CANARY_LABEL = "python-setup:autofix-canary"
 _FIX_TOOL_NAMES: frozenset[str] = frozenset(t.name for t in LINT_TOOLS if t.supports_fix)
 
 assert {"ruff check", "rumdl check", "ty check"} == _FIX_TOOL_NAMES, f"Built-in supports_fix set drifted: {_FIX_TOOL_NAMES!r}"
-
-
-# ── Git scaffolding ───────────────────────────────────────────────
-
-
-def _git_init(cwd: Path) -> None:
-    subprocess.run(["git", "init", "-q"], cwd=cwd, check=True, capture_output=True)
-    subprocess.run(
-        ["git", "config", "user.email", "test@example.com"],
-        cwd=cwd,
-        check=True,
-        capture_output=True,
-    )
-    subprocess.run(
-        ["git", "config", "user.name", "Test"],
-        cwd=cwd,
-        check=True,
-        capture_output=True,
-    )
-
-
-def _write_file(cwd: Path, rel: str, content: str) -> Path:
-    p = cwd / rel
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(content, encoding="utf-8")
-    return p
-
-
-def _stage(cwd: Path, rel: str) -> None:
-    subprocess.run(["git", "add", rel], cwd=cwd, check=True, capture_output=True)
-
-
-def _commit_all(cwd: Path, msg: str = "init") -> None:
-    subprocess.run(["git", "add", "."], cwd=cwd, check=True, capture_output=True)
-    subprocess.run(
-        ["git", "commit", "-q", "-m", msg],
-        cwd=cwd,
-        check=True,
-        capture_output=True,
-    )
 
 
 def _make_canned_fix_results(

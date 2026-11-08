@@ -9,15 +9,17 @@ import pytest
 from python_setup_lint.runner import LINT_TOOLS, ToolSpec
 from python_setup_lint.runner._autofix import _apply_autofix_conflict_aware
 from python_setup_lint.testing import fake_run_cmd_factory
+from tests._project_helpers import (
+    commit_all,
+    git_init_bare,
+    stage_file,
+    write_project_file,
+)
 from tests.runner._autofix_helpers import (
     _CANARY_LABEL,
-    _commit_all,
-    _git_init,
     _make_canned_fix_results,
     _PostFixFakeRunCmd,
     _setup_e999_canary_revert,
-    _stage,
-    _write_file,
 )
 from tests.runner._factories import tmp_config
 
@@ -47,7 +49,7 @@ class TestApplyAutofixConflictAware:
         pass), AND (b) the canary fired once with the canary label (proves
         the parseability-canary seam ran end-to-end).
         """
-        _write_file(tmp_path, "src/main.py", "import os\n")
+        write_project_file(tmp_path, "src/main.py", "import os\n")
         # No git repo → both diff sets empty → no skip, no revert.
         # The fake is dict-mode so unknown labels (the canary label) also
         # return a zero-exit empty result by default — that's correct for
@@ -78,11 +80,11 @@ class TestApplyAutofixConflictAware:
         capsys: pytest.CaptureFixture[str],
     ) -> None:
         """File staged only → autofix applies; no skip line; no revert."""
-        _git_init(tmp_path)
-        _write_file(tmp_path, "committed.py", "x = 1\n")
-        _commit_all(tmp_path)
-        _write_file(tmp_path, "staged.py", "y = 2\n")
-        _stage(tmp_path, "staged.py")
+        git_init_bare(tmp_path)
+        write_project_file(tmp_path, "committed.py", "x = 1\n")
+        commit_all(tmp_path)
+        write_project_file(tmp_path, "staged.py", "y = 2\n")
+        stage_file(tmp_path, "staged.py")
         fake = fake_run_cmd_factory(_make_canned_fix_results())
         _apply_autofix_conflict_aware(
             self._make_spec(),
@@ -100,10 +102,10 @@ class TestApplyAutofixConflictAware:
         capsys: pytest.CaptureFixture[str],
     ) -> None:
         """File unstaged only → autofix applies; no skip line; no revert."""
-        _git_init(tmp_path)
-        _write_file(tmp_path, "committed.py", "x = 1\n")
-        _commit_all(tmp_path)
-        _write_file(tmp_path, "unstaged.py", "y = 2\n")  # no git add
+        git_init_bare(tmp_path)
+        write_project_file(tmp_path, "committed.py", "x = 1\n")
+        commit_all(tmp_path)
+        write_project_file(tmp_path, "unstaged.py", "y = 2\n")  # no git add
         fake = fake_run_cmd_factory(_make_canned_fix_results())
         _apply_autofix_conflict_aware(
             self._make_spec(),
@@ -121,12 +123,12 @@ class TestApplyAutofixConflictAware:
         capsys: pytest.CaptureFixture[str],
     ) -> None:
         """File in BOTH staged and unstaged → autofix skipped with stderr line."""
-        _git_init(tmp_path)
-        _write_file(tmp_path, "f.py", "x = 1\n")
-        _commit_all(tmp_path)
-        _write_file(tmp_path, "f.py", "y = 2\n")
-        _stage(tmp_path, "f.py")
-        _write_file(tmp_path, "f.py", "z = 3\n")  # unstaged overlay on the staged state
+        git_init_bare(tmp_path)
+        write_project_file(tmp_path, "f.py", "x = 1\n")
+        commit_all(tmp_path)
+        write_project_file(tmp_path, "f.py", "y = 2\n")
+        stage_file(tmp_path, "f.py")
+        write_project_file(tmp_path, "f.py", "z = 3\n")  # unstaged overlay on the staged state
         fake = fake_run_cmd_factory(_make_canned_fix_results())
         # The conflict detection happens BEFORE the fix tool runs — but the
         # helper still calls run_cmd (the tool's pass on the safe-to-fix
@@ -167,7 +169,7 @@ class TestApplyAutofixConflictAware:
         """
         original = "x = 1  # original\n"
         post_fix = "x = 2  # fixed-broken\n"
-        target = _write_file(tmp_path, "src/main.py", original)
+        target = write_project_file(tmp_path, "src/main.py", original)
         canned = _make_canned_fix_results(canary_e999_files=("src/main.py",))
         wrapped = _setup_e999_canary_revert(
             tmp_path,
@@ -219,7 +221,7 @@ class TestApplyAutofixConflictAware:
         """
         original = "x = 1\n"
         post_fix = "x = 1  # ruff-fix\n"  # benign — no E999 from canary
-        target = _write_file(tmp_path, "src/main.py", original)
+        target = write_project_file(tmp_path, "src/main.py", original)
         canned = _make_canned_fix_results()  # no E999 in canary
         wrapped = _PostFixFakeRunCmd(
             fake_run_cmd_factory(canned),
@@ -262,7 +264,7 @@ class TestApplyAutofixConflictAware:
         the loop fires when the fix DID modify the file.
         """
         original = "x = 1\n"
-        target = _write_file(tmp_path, "src/main.py", original)
+        target = write_project_file(tmp_path, "src/main.py", original)
         canned = _make_canned_fix_results(canary_e999_files=("src/main.py",))
         # NO _PostFixFakeRunCmd wrap — the fix pass does not write.
         fake = fake_run_cmd_factory(canned)
@@ -292,10 +294,10 @@ class TestApplyAutofixConflictAware:
         captured first.  This row exercises the untracked-file-only path
         by initialising a git repo but never ``git add``-ing the file.
         """
-        _git_init(tmp_path)
+        git_init_bare(tmp_path)
         original = "x = 1  # original\n"
         post_fix = "x = 2  # broken-syntax"
-        target = _write_file(tmp_path, "untracked.py", original)
+        target = write_project_file(tmp_path, "untracked.py", original)
         canned = _make_canned_fix_results(canary_e999_files=("untracked.py",))
         wrapped = _PostFixFakeRunCmd(
             fake_run_cmd_factory(canned),

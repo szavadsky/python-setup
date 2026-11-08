@@ -1,4 +1,4 @@
-# pylint: disable=too-many-lines  # 502 lines — factory data for 13 tools; splitting would lose context
+# pylint: disable=too-many-lines  # 502 lines — factory data for 14 tools; splitting would lose context
 """Extra-tools, dispatch, and small parametrize tables for python-setup runner tests.
 
 Moved from ``_factories.py`` to keep each file under 500 lines (pylint C0302).
@@ -371,16 +371,25 @@ CALLS_CAPTURED_CASES: list[ParameterSet] = [
 ]
 
 # Smoke-integration invariant table.
+
+
+def _expected_dispatched_tool_count(*, skipped: frozenset[str] = frozenset()) -> int:
+    """Count built-in tools minus *skipped*, read from the public registry."""
+    from ._factories import runner_registry_constant
+
+    return len(runner_registry_constant("EXPECTED_TOOL_NAMES") - skipped)
+
+
 RUN_LINT_FAKE_INVARIANT_CASES: list[ParameterSet] = [
     pytest.param(
         {"path": "src/python_setup_lint/runner.py"},
-        lambda f: len(f.calls) == 13 and all(len(c.cmd) > 0 and c.label for c in f.calls),
-        id="all_13_tools_dispatched",
+        lambda f: len(f.calls) == _expected_dispatched_tool_count() and all(len(c.cmd) > 0 and c.label for c in f.calls),
+        id="all_14_tools_dispatched",
     ),
     pytest.param(
         {"path": "src/python_setup_lint/runner.py", "fix": True},
         lambda f: all(
-            any("--fix" in c.cmd for c in f.calls if c.label == name) for name in {"ruff check", "rumdl check", "ty check"}
+            any("--fix" in c.cmd for c in f.calls if c.label == name) for name in ("ruff check", "rumdl check", "ty check")
         ),
         id="fix_flag_propagates_to_supports_fix_labels",
     ),
@@ -396,7 +405,7 @@ RUN_LINT_FAKE_INVARIANT_CASES: list[ParameterSet] = [
     pytest.param(
         {"package_name": None, "path": "src/python_setup_lint/runner.py"},
         lambda f: (
-            len(f.calls) == 11
+            len(f.calls) == _expected_dispatched_tool_count(skipped=frozenset({"mypy.stubtest", "pyright verify types"}))
             and "mypy.stubtest" not in {c.label for c in f.calls}
             and "pyright verify types" not in {c.label for c in f.calls}
         ),

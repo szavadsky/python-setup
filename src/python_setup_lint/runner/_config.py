@@ -7,6 +7,7 @@ from pathlib import Path
 # Each key is the canonical tool label used in ``_config_flag_for``.
 _SHIPPED_CONFIG_FILES: dict[str, str] = {
     "ruff check": "ruff.toml",
+    "ruff format": "ruff.toml",
     "mypy": "mypy.ini",
     "pylint": ".pylintrc",
     "pylint tests": ".pylintrc-tests",
