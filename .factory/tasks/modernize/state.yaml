@@ -2,7 +2,7 @@ task: modernize
 kind: saga
 status: active
 iteration: 1
-currentWave: 7
+currentWave: 10
 items:
   golden-determinism-probe:
     kind: fact-finder
@@ -62,19 +62,21 @@ items:
     mergedAt: 2026-11-08T00:11:56-05:00
   golden-snapshot-wiring:
     kind: dev
-    status: ready
+    status: merged
     branch: topic/modernize--golden-snapshot-wiring
     attempts: 2
     fixRounds: 1
     spendUsd: 0.13088
     currentStep: qa
+    mergedAt: 2026-11-08T00:54:17-05:00
   consolidate-integration-helpers-v2:
     kind: test-only
-    status: pending
+    status: blocked
     branch: topic/modernize--consolidate-integration-helpers-v2
-    attempts: 1
+    attempts: 2
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.19363600000000003
+    currentStep: review
   coding-rules-audit-v2:
     kind: fact-finder
     status: pending
@@ -157,20 +159,28 @@ debt:
     drive-letter absolutes"
   - "[golden-helpers-unit] Golden read silently drops extra keys and leaks raw
     JSON errors"
-budgetSpentUsd: 3.7806290000000016
+  - "[consolidate-integration-helpers-v2] Four docstrings/comments still say 13
+    tools after 14-tool reconciliation"
+  - "[consolidate-integration-helpers-v2] Bare-comma except clause works but
+    reads as Python 2 idiom"
+  - "[consolidate-integration-helpers-v2] Pre-existing pylint C0208 in touched
+    file could be fixed in passing"
+  - "[consolidate-integration-helpers-v2] Triple single-name re-export imports
+    could be one statement"
+budgetSpentUsd: 3.9830030000000014
 spendByRole:
   workhorse:
-    costUsd: 0.6643789999999999
-    inputTokens: 1170200
-    outputTokens: 549074
+    costUsd: 0.855554
+    inputTokens: 1578657
+    outputTokens: 681062
   alt-workhorse:
-    costUsd: 0.08050599999999998
-    inputTokens: 335776
-    outputTokens: 216855
+    costUsd: 0.085825
+    inputTokens: 354331
+    outputTokens: 232920
   architect:
-    costUsd: 2.9995920000000003
-    inputTokens: 1266245
-    outputTokens: 140690
+    costUsd: 3.005472
+    inputTokens: 1314422
+    outputTokens: 141326
   alt-architect:
     costUsd: 0.036152
     inputTokens: 137287
@@ -188,6 +198,10 @@ spendByItem:
     costUsd: 0.170578
     inputTokens: 226110
     outputTokens: 148096
+  consolidate-integration-helpers-v2:
+    costUsd: 0.19363600000000003
+    inputTokens: 413243
+    outputTokens: 140910
   golden-helpers-unit:
     costUsd: 0.057198
     inputTokens: 138170
@@ -197,7 +211,7 @@ spendByItem:
     inputTokens: 218824
     outputTokens: 95126
   (orchestration):
-    costUsd: 3.1800870000000017
-    inputTokens: 1829642
-    outputTokens: 430141
-lastUpdated: 2026-11-08T05:54:17.381Z
+    costUsd: 3.1888250000000014
+    inputTokens: 1891588
+    outputTokens: 437920
+lastUpdated: 2026-11-08T07:11:04.971Z
