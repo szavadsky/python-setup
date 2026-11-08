@@ -2,7 +2,7 @@ task: modernize
 kind: saga
 status: active
 iteration: 1
-currentWave: 11
+currentWave: 8
 items:
   golden-determinism-probe:
     kind: fact-finder
@@ -71,7 +71,7 @@ items:
     mergedAt: 2026-11-08T00:54:17-05:00
   consolidate-integration-helpers-v2:
     kind: test-only
-    status: blocked
+    status: ready
     branch: topic/modernize--consolidate-integration-helpers-v2
     attempts: 2
     fixRounds: 1
@@ -188,20 +188,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 4.531835000000002
+budgetSpentUsd: 4.541137000000002
 spendByRole:
   workhorse:
     costUsd: 1.035168
     inputTokens: 1828755
     outputTokens: 839834
   alt-workhorse:
-    costUsd: 0.116711
-    inputTokens: 557858
-    outputTokens: 279302
+    costUsd: 0.11955400000000001
+    inputTokens: 579760
+    outputTokens: 282086
   architect:
-    costUsd: 3.343804
-    inputTokens: 4635318
-    outputTokens: 166413
+    costUsd: 3.350263
+    inputTokens: 4683774
+    outputTokens: 167172
   alt-architect:
     costUsd: 0.036152
     inputTokens: 137287
@@ -236,7 +236,7 @@ spendByItem:
     inputTokens: 413243
     outputTokens: 140910
   (orchestration):
-    costUsd: 3.5448170000000006
-    inputTokens: 5324754
-    outputTokens: 493466
-lastUpdated: 2026-11-08T08:56:01.088Z
+    costUsd: 3.5541190000000005
+    inputTokens: 5395112
+    outputTokens: 497009
+lastUpdated: 2026-11-08T09:42:53.760Z
