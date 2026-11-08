@@ -1,7 +1,7 @@
 task: modernize
 kind: saga
 status: active
-iteration: 1
+iteration: 2
 currentWave: 8
 items:
   golden-determinism-probe:
@@ -107,32 +107,6 @@ items:
     fixRounds: 1
     spendUsd: 0
 debt:
-  - Suppression/bare-except checkers pass their own symbol as `rule`; the
-    rule-echo heuristic and model never see the actually-suppressed codes.
-  - Semantic tests patch module globals and builtins.__import__, import privates
-    under type:ignore; several assertions vacuous (`is None or ...`).
-  - tests/integration.py 627 lines + too-many-lines suppression; duplicates
-    conftest/_autofix helpers; substring-only assertions miss drift.
-  - test_semantic_check.py 506 lines + suppression; heuristic tables duplicate
-    test_semantic_threshold.py.
-  - ~15 checkers repeat structural suppressions (missing-beartype on register(),
-    type:ignore[misc] on mixin classes) + copied stream read/decode.
-  - "Legacy/compat: baseline._FALLBACK_TOOLS/peek_fallback_tools,
-    _compare_sorted re-export, astroid 3.x docstring fallback despite
-    astroid>=4.0.4."
-  - "dispatch.py 500+ char rationale comment ending in `# pylint:
-    disable=unjustified-suppression` suppresses the justification checker
-    itself."
-  - tests/checkers/_factories.py ~1400 lines; ~40 pytest.param tables typed
-    list[Any] with pasted justifications; cases far from tests.
-  - Task-ID test names (test_t5_*, test_t9_7_*, test_t11_*, test_t1b_*,
-    test_t3_*); repo-self-lint tests (test_self_lint_clean.py,
-    AST/source-scanning guards, config re-checks) duplicate the `uv run lint`
-    gate.
-  - "ADR locations disagree: CodingRules requires design/, factory ADRs go to
-    docs/adr."
-  - Shipped rumdl.toml excludes tests/data, forcing the integration per-run
-    rewrite to lint the sample AGENTS.md; affects golden determinism.
   - "RED-TEST WAIVED (gate inapplicable by design): golden-snapshot-wiring is a
     tests-only M1 contract item — probe verdict was test-side normalization
     sufficient, so the bounded src allowance was correctly NOT used and the diff
@@ -188,20 +162,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 4.541137000000002
+budgetSpentUsd: 4.557079000000002
 spendByRole:
   workhorse:
     costUsd: 1.035168
     inputTokens: 1828755
     outputTokens: 839834
   alt-workhorse:
-    costUsd: 0.11955400000000001
-    inputTokens: 579760
-    outputTokens: 282086
+    costUsd: 0.128976
+    inputTokens: 631696
+    outputTokens: 299765
   architect:
-    costUsd: 3.350263
-    inputTokens: 4683774
-    outputTokens: 167172
+    costUsd: 3.356783
+    inputTokens: 4713580
+    outputTokens: 168996
   alt-architect:
     costUsd: 0.036152
     inputTokens: 137287
@@ -236,7 +210,7 @@ spendByItem:
     inputTokens: 413243
     outputTokens: 140910
   (orchestration):
-    costUsd: 3.5541190000000005
-    inputTokens: 5395112
-    outputTokens: 497009
-lastUpdated: 2026-11-08T09:42:53.760Z
+    costUsd: 3.5700610000000004
+    inputTokens: 5476854
+    outputTokens: 516512
+lastUpdated: 2026-11-08T09:51:23.112Z
