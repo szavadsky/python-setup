@@ -6,5 +6,15 @@ question: Assumption + ADR-003 place git-stored cache at linted root for
   file per consumer, reviewable diffs, possible line-local merges, must pass
   detect-secrets. Architect can proceed; operator should be aware before epic
   implements.
-status: open
+status: answered
 createdAt: 2026-11-08T01:06:40.589Z
+answer: >
+  Operator acknowledges all plan-1 awareness items: (1) material definition and
+  its SEMANTIC=0 findings scope: OK; tightened acceptance by the model is
+  intentional, not a regression. (2) git-stored cache file at the linted repo
+  root: OK as required by INTENT; document it in install docs, keep it
+  detect-secrets clean, and note model weight licenses. (3) never-test-linting
+  broadening and removing the pytest self-lint guard: OK, it matches the
+  project's coding rules; the lint gate is the guard. No further action needed
+  on these.
+answeredAt: 2026-11-08T11:48:08.293Z
