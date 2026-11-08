@@ -1,0 +1,9 @@
+id: awareness-plan-1-never-linting-policy-needs-awareness
+ref: plan-1
+disposition: human-awareness
+question: Policy 'pytest never asserts lint-clean; lint gate does' removes
+  self-lint guard running all 13 tools on repo. Trades pytest redundancy for
+  gate reliance. Architect decides now; operator should know pytest -q alone
+  will no longer catch self-lint regressions.
+status: open
+createdAt: 2026-11-08T00:51:56.276Z
