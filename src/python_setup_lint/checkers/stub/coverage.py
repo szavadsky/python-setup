@@ -193,9 +193,8 @@ def _add_declaration(child: nodes.NodeNG, declarations: set[str]) -> None:
     elif isinstance(child, (nodes.ImportFrom, nodes.Import)):
         for name, _ in child.names:
             declarations.add(name)
-    elif isinstance(child, nodes.TypeAlias):
-        if isinstance(child.name, nodes.AssignName):
-            declarations.add(child.name.name)
+    elif isinstance(child, nodes.TypeAlias) and isinstance(child.name, nodes.AssignName):
+        declarations.add(child.name.name)
 
 
 def _index_stub_declarations(checker: StubChecker, module_name: str, stub_path: Path) -> None:
