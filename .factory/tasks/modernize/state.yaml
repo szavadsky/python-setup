@@ -93,11 +93,12 @@ items:
     spendUsd: 0
   consolidate-integration-helpers-v3:
     kind: test-only
-    status: pending
+    status: running
     branch: topic/modernize--consolidate-integration-helpers-v3
-    attempts: 1
+    attempts: 2
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.144313
+    currentStep: develop
   docs-counts-sync:
     kind: dev
     status: pending
@@ -181,20 +182,20 @@ debt:
     file could be fixed in passing"
   - "[consolidate-integration-helpers-v2] Triple single-name re-export imports
     could be one statement"
-budgetSpentUsd: 4.115548000000001
+budgetSpentUsd: 4.270172000000001
 spendByRole:
   workhorse:
-    costUsd: 0.855554
-    inputTokens: 1578657
-    outputTokens: 681062
+    costUsd: 0.9998670000000001
+    inputTokens: 1771087
+    outputTokens: 806324
   alt-workhorse:
-    costUsd: 0.09737499999999999
-    inputTokens: 430671
-    outputTokens: 251541
+    costUsd: 0.100414
+    inputTokens: 452706
+    outputTokens: 255367
   architect:
-    costUsd: 3.126467
-    inputTokens: 2491068
-    outputTokens: 157979
+    costUsd: 3.133739
+    inputTokens: 2540436
+    outputTokens: 163527
   alt-architect:
     costUsd: 0.036152
     inputTokens: 137287
@@ -212,20 +213,24 @@ spendByItem:
     costUsd: 0.170578
     inputTokens: 226110
     outputTokens: 148096
-  consolidate-integration-helpers-v2:
-    costUsd: 0.19363600000000003
-    inputTokens: 413243
-    outputTokens: 140910
   golden-helpers-unit:
     costUsd: 0.057198
     inputTokens: 138170
     outputTokens: 64014
+  consolidate-integration-helpers-v3:
+    costUsd: 0.144313
+    inputTokens: 192430
+    outputTokens: 125262
   golden-snapshot-wiring:
     costUsd: 0.13088
     inputTokens: 218824
     outputTokens: 95126
+  consolidate-integration-helpers-v2:
+    costUsd: 0.19363600000000003
+    inputTokens: 413243
+    outputTokens: 140910
   (orchestration):
-    costUsd: 3.321370000000001
-    inputTokens: 3144574
-    outputTokens: 473194
-lastUpdated: 2026-11-08T07:25:52.784Z
+    costUsd: 3.3316810000000006
+    inputTokens: 3215977
+    outputTokens: 482568
+lastUpdated: 2026-11-08T08:23:22.912Z
