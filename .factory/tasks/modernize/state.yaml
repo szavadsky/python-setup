@@ -3,7 +3,43 @@ kind: saga
 status: active
 iteration: 1
 currentWave: 1
-items: {}
+items:
+  golden-determinism-probe:
+    kind: fact-finder
+    status: ready
+    branch: topic/modernize--golden-determinism-probe
+    attempts: 1
+    fixRounds: 2
+  third-party-assumption-tests:
+    kind: test-assumptions
+    status: ready
+    branch: topic/modernize--third-party-assumption-tests
+    attempts: 1
+    fixRounds: 1
+  golden-findings-snapshot:
+    kind: dev
+    status: pending
+    branch: topic/modernize--golden-findings-snapshot
+    attempts: 1
+    fixRounds: 1
+  consolidate-integration-helpers:
+    kind: test-only
+    status: pending
+    branch: topic/modernize--consolidate-integration-helpers
+    attempts: 1
+    fixRounds: 1
+  coding-rules-audit:
+    kind: fact-finder
+    status: pending
+    branch: topic/modernize--coding-rules-audit
+    attempts: 1
+    fixRounds: 1
+  test-debloat-audit:
+    kind: fact-finder
+    status: pending
+    branch: topic/modernize--test-debloat-audit
+    attempts: 1
+    fixRounds: 1
 debt:
   - Suppression/bare-except checkers pass their own symbol as `rule`; the
     rule-echo heuristic and model never see the actually-suppressed codes.
@@ -31,5 +67,27 @@ debt:
     docs/adr."
   - Shipped rumdl.toml excludes tests/data, forcing the integration per-run
     rewrite to lint the sample AGENTS.md; affects golden determinism.
-budgetSpentUsd: 3.0061240000000007
-lastUpdated: 2026-11-08T01:09:41.495Z
+  - "[golden-determinism-probe] Assert rumdl override fired instead of blind
+    string replace"
+  - "[golden-determinism-probe] Resolve symlinks and define outside-cwd
+    relativize policy"
+  - "[golden-determinism-probe] R0801 rule string embeds file spans, bypasses
+    file relativization"
+  - "[golden-determinism-probe] 5/14 tools have no record parser; capture
+    silently drops them"
+  - "[golden-determinism-probe] Mypy record parser reads stdout but statistics
+    parser reads stderr"
+  - "[golden-determinism-probe] _relativize_file uses unresolved relative_to and
+    no ./ or separator normalization"
+  - "[golden-determinism-probe] Sort keys exclude msg but diff tuples include
+    it; tie-order flips false-positive"
+  - "[golden-determinism-probe] Rumdl override uses brittle str.replace and
+    post-git-add write; assert MD072 non-empty"
+  - "[golden-determinism-probe] First-run bootstrap vs rerun hook differ;
+    same-copy rerun may diverge"
+  - "[third-party-assumption-tests] Module-global _LIFECYCLE_EVENTS could use
+    fixture-scoped clearing"
+  - "[third-party-assumption-tests] Assert confidence is not None before reading
+    .name"
+budgetSpentUsd: 3.010605000000001
+lastUpdated: 2026-11-08T01:57:23.359Z
