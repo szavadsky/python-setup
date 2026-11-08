@@ -109,12 +109,13 @@ items:
     spendUsd: 0
   coding-rules-audit-i2:
     kind: fact-finder
-    status: ready
+    status: merged
     branch: topic/modernize--coding-rules-audit-i2
     attempts: 1
     fixRounds: 1
     spendUsd: 0.133783
     currentStep: review
+    mergedAt: 2026-11-08T10:57:08-05:00
   consolidate-integration-helpers:
     kind: test-only
     status: superseded
@@ -124,20 +125,22 @@ items:
     spendUsd: 0
   decision-runtime-pinning:
     kind: test-assumptions
-    status: ready
+    status: merged
     branch: topic/modernize--decision-runtime-pinning
     attempts: 1
     fixRounds: 1
     spendUsd: 0.016725999999999998
     currentStep: review
+    mergedAt: 2026-11-08T10:47:48-05:00
   remaining-lint-violations-fix:
     kind: no-behavior
-    status: ready
+    status: merged
     branch: topic/modernize--remaining-lint-violations-fix
     attempts: 1
     fixRounds: 1
     spendUsd: 0.053628
     currentStep: review
+    mergedAt: 2026-11-08T11:04:13-05:00
   coding-rules-audit:
     kind: fact-finder
     status: pending
@@ -147,11 +150,12 @@ items:
     spendUsd: 0
   test-debloat-audit-i2:
     kind: fact-finder
-    status: pending
+    status: running
     branch: topic/modernize--test-debloat-audit-i2
     attempts: 1
-    fixRounds: 1
-    spendUsd: 0
+    fixRounds: 2
+    spendUsd: 0.126925
+    currentStep: research
   test-debloat-audit:
     kind: fact-finder
     status: pending
@@ -364,6 +368,9 @@ debt:
     only"
   - "[remaining-lint-violations-fix] Reranker score>=0.5 not machine-validated
     (semantic extra absent); heuristic + pylint green only"
+  - "[test-debloat-audit-i2] Clarify LoC counting method; wc -l differs slightly"
+  - "[test-debloat-audit-i2] Clarify whether per-module N is default-collected
+    or total incl slow"
   - "[golden-helpers-unit] tool_minimums imports TOOLS via package root, pulling
     CLI structlog side effects"
   - "[golden-helpers-unit] Public FindingKey alias missing from __all__"
@@ -385,20 +392,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 6.656849685999999
+budgetSpentUsd: 6.823980686
 spendByRole:
   workhorse:
-    costUsd: 2.653226686
-    inputTokens: 5371701
-    outputTokens: 1873220
+    costUsd: 2.7671456860000005
+    inputTokens: 5542238
+    outputTokens: 1979097
   alt-workhorse:
-    costUsd: 0.44153000000000014
-    inputTokens: 2120007
-    outputTokens: 777540
+    costUsd: 0.4583010000000001
+    inputTokens: 2195643
+    outputTokens: 815648
   architect:
-    costUsd: 3.5065880000000003
-    inputTokens: 5983816
-    outputTokens: 258867
+    costUsd: 3.543029
+    inputTokens: 6337367
+    outputTokens: 260772
   alt-architect:
     costUsd: 0.055505
     inputTokens: 220763
@@ -444,6 +451,22 @@ spendByItem:
     costUsd: 0.07747
     inputTokens: 139419
     outputTokens: 80611
+  consolidate-integration-helpers-v2:
+    costUsd: 0.19363600000000003
+    inputTokens: 413243
+    outputTokens: 140910
+  test-debloat-audit-i2:
+    costUsd: 0.126925
+    inputTokens: 223742
+    outputTokens: 136952
+  decision-runtime-pinning:
+    costUsd: 0.016725999999999998
+    inputTokens: 57664
+    outputTokens: 27228
+  coding-rules-audit-i2:
+    costUsd: 0.133783
+    inputTokens: 266809
+    outputTokens: 117127
   remaining-lint-violations-fix:
     costUsd: 0.053628
     inputTokens: 140260
@@ -460,24 +483,12 @@ spendByItem:
     costUsd: 0.091885
     inputTokens: 206331
     outputTokens: 89105
-  coding-rules-audit-i2:
-    costUsd: 0.133783
-    inputTokens: 266809
-    outputTokens: 117127
-  consolidate-integration-helpers-v2:
-    costUsd: 0.19363600000000003
-    inputTokens: 413243
-    outputTokens: 140910
-  decision-runtime-pinning:
-    costUsd: 0.016725999999999998
-    inputTokens: 57664
-    outputTokens: 27228
   pylint-cache-assumptions:
     costUsd: 0.210224686
     inputTokens: 334753
     outputTokens: 167691
   (orchestration):
-    costUsd: 3.8558000000000003
-    inputTokens: 7177578
-    outputTokens: 765749
-lastUpdated: 2026-11-08T15:57:08.427Z
+    costUsd: 3.8960060000000003
+    inputTokens: 7553560
+    outputTokens: 774687
+lastUpdated: 2026-11-08T17:06:22.300Z
