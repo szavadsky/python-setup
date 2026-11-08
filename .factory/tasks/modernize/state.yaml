@@ -162,12 +162,12 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 4.557079000000002
+budgetSpentUsd: 4.6505480000000015
 spendByRole:
   workhorse:
-    costUsd: 1.035168
-    inputTokens: 1828755
-    outputTokens: 839834
+    costUsd: 1.1286370000000001
+    inputTokens: 2040088
+    outputTokens: 903780
   alt-workhorse:
     costUsd: 0.128976
     inputTokens: 631696
@@ -210,7 +210,7 @@ spendByItem:
     inputTokens: 413243
     outputTokens: 140910
   (orchestration):
-    costUsd: 3.5700610000000004
-    inputTokens: 5476854
-    outputTokens: 516512
-lastUpdated: 2026-11-08T09:51:23.112Z
+    costUsd: 3.66353
+    inputTokens: 5688187
+    outputTokens: 580458
+lastUpdated: 2026-11-08T10:10:45.920Z

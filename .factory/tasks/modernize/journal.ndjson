@@ -750,3 +750,4 @@
 {"type":"turn_timeout_nudge","task":"modernize","step":"context-pack-2","attempt":1,"sessionId":"01a1ba91-ddc0-7068-8a4f-d861a7979cc9","timeoutSec":300,"ts":"2026-11-08T10:06:25.382Z"}
 {"type":"infra_retry_started","task":"modernize","step":"context-pack-2","attempt":1,"retry":1,"maxRetries":3,"sessionId":"01a1ba91-ddc0-7068-8a4f-d861a7979cc9","costUsd":0.077772,"ts":"2026-11-08T10:06:25.382Z"}
 {"type":"infra_retry_finished","task":"modernize","step":"context-pack-2","attempt":1,"retry":1,"ok":true,"transient":false,"costUsd":0.093469,"ts":"2026-11-08T10:10:45.424Z"}
+{"type":"step_finished","task":"modernize","step":"context-pack-2","attempt":1,"status":"ok","sessionId":"01a1ba91-ddc0-7068-8a4f-d861a7979cc9","usage":{"inputTokens":211333,"outputTokens":63946,"costUsd":0.093469},"ts":"2026-11-08T10:10:45.526Z"}
