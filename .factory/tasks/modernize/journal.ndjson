@@ -945,3 +945,5 @@
 {"type":"item_merged","item":"model-candidate-matrix","sha":"9c36a975202c109f5d7f2a726089ade9726201d1","conflictResolved":false,"ts":"2026-11-08T13:10:47.017Z"}
 {"type":"step_started","task":"modernize","step":"wave-close-up-2-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/057-wave-close-up-2-1-a1","ts":"2026-11-08T13:16:51.565Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-2-1","timeoutSec":900,"ts":"2026-11-08T13:16:51.570Z"}
+{"type":"step_finished","task":"modernize","step":"wave-close-up-2-1","attempt":1,"status":"ok","sessionId":"01a1bb4d-f972-71e0-bad7-752fa4cc91c3","usage":{"inputTokens":23224,"outputTokens":6271,"costUsd":0.003695},"ts":"2026-11-08T13:18:01.862Z"}
+{"type":"scheduler_wait","wave":1,"iteration":2,"reason":"wave-end merge + close-up gates + close-up turn","gapWallMs":1429724,"gapActiveMs":1429724,"merges":["runner-format-contract","consolidate-integration-helpers-i2","model-candidate-matrix"],"ts":"2026-11-08T13:18:01.862Z"}
