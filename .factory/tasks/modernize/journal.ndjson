@@ -511,3 +511,4 @@
 {"type":"wave_started","wave":9,"iteration":1,"ts":"2026-11-08T07:19:13.025Z"}
 {"type":"step_started","task":"modernize","step":"wave-close-up-1-9","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/037-wave-close-up-1-9-a1","ts":"2026-11-08T07:23:57.947Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-1-9","timeoutSec":900,"ts":"2026-11-08T07:23:57.952Z"}
+{"type":"step_finished","task":"modernize","step":"wave-close-up-1-9","attempt":1,"status":"ok","sessionId":"01a1ba0a-e40a-73e7-9b60-da41785fdd92","usage":{"inputTokens":13754,"outputTokens":5835,"costUsd":0.002595},"ts":"2026-11-08T07:24:41.152Z"}
