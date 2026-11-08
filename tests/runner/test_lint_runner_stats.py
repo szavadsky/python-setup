@@ -221,7 +221,7 @@ class TestT8FailFastConfig:
 
 
 class TestLintToolRegistry:
-    """STRATEGIES/LINT_TOOLS mirror the 13 built-ins AND strategies are LintTool instances."""
+    """STRATEGIES/LINT_TOOLS mirror the 14 built-ins AND strategies are LintTool instances."""
 
     @pytest.mark.parametrize(
         "registry",

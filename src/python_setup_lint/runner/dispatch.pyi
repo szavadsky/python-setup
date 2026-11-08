@@ -1,8 +1,8 @@
 """Stub for :mod:`python_setup_lint.runner.dispatch`.
 
-Six built-ins override ``build_command`` for tool-specific command shapes
-(``mypy.stubtest``, ``pyright verify types``, ``detect-secrets``, ``pylint``);
-the rest inherit the default delegation to
+Seven built-ins override ``build_command`` for tool-specific command shapes
+(``ruff format``, ``mypy.stubtest``, ``pyright verify types``,
+``detect-secrets``, ``pylint``); the rest inherit the default delegation to
 :mod:`python_setup_lint.runner.cmd_build`.
 """
 
@@ -15,6 +15,24 @@ TOOLS: list[ToolSpec]
 
 TOOLS_BY_NAME: dict[str, ToolSpec]
 """Tool specs keyed by name for fast lookup (built-ins only)."""
+
+EXPECTED_TOOL_NAMES: frozenset[str]
+"""Names of all 14 built-in tools, derived from :data:`TOOLS`."""
+
+FORMATTER_ONLY: frozenset[str]
+"""Built-ins that only format (``ruff format``); exempt from parser coverage."""
+
+STATISTICS_PARSER_TOOLS: frozenset[str]
+"""Built-ins with a statistics parser in
+:data:`python_setup_lint.runner.parsers._STATISTICS_PARSERS`."""
+
+RECORD_PARSER_TOOLS: frozenset[str]
+"""Built-ins with a per-violation record parser in
+:data:`python_setup_lint.runner.parsers._RECORD_PARSERS`."""
+
+RECORDLESS_TOOLS: frozenset[str]
+"""Built-ins without a record parser: ``tach check``, ``mypy.stubtest``,
+``pyright verify types``, ``detect-secrets``, and ``ruff format``."""
 
 LINT_TOOLS: list[ToolSpec]
 """Live registry of declared ``ToolSpec`` instances — built-ins plus any
@@ -56,6 +74,13 @@ class LintTool:
         *,
         config: RunnerConfig,
         _fix: bool = False,
+        _path: str | None = None,
+        _exclude: str | None = None,
+    ) -> list[str]: ...
+    def build_format_command(
+        self,
+        *,
+        config: RunnerConfig,
         _path: str | None = None,
         _exclude: str | None = None,
     ) -> list[str]: ...

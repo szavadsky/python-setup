@@ -1,6 +1,6 @@
 """Python CLI runner for the python-setup lint pipeline.
 
-Replaces ``scripts/lint.sh``.  Runs all 13 lint steps sequentially with
+Replaces ``scripts/lint.sh``.  Runs all 14 lint steps sequentially with
 optional path scoping, fix mode, baseline diffing, flexible failure
 handling, statistics aggregation, declarative extra-tools (T11 v1), and
 autofix (T4).  See ``AGENTS.md`` for the full architecture.
@@ -22,7 +22,12 @@ from __future__ import annotations
 from .baseline import peek_fallback_tools
 from .cli import main, run_lint
 from .dispatch import (
+    EXPECTED_TOOL_NAMES,
+    FORMATTER_ONLY,
     LINT_TOOLS,
+    RECORDLESS_TOOLS,
+    RECORD_PARSER_TOOLS,
+    STATISTICS_PARSER_TOOLS,
     STRATEGIES,
     TOOLS,
     TOOLS_BY_NAME,
@@ -35,8 +40,13 @@ from .parsers import PARSE_STRATEGIES, Record
 from .types import LintResult, RunnerConfig, ToolSpec, ViolationCount
 
 __all__ = [
+    "EXPECTED_TOOL_NAMES",
+    "FORMATTER_ONLY",
     "LINT_TOOLS",
     "PARSE_STRATEGIES",
+    "RECORDLESS_TOOLS",
+    "RECORD_PARSER_TOOLS",
+    "STATISTICS_PARSER_TOOLS",
     "STRATEGIES",
     "TOOLS",
     "TOOLS_BY_NAME",
