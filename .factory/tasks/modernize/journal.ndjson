@@ -718,3 +718,4 @@
 {"type":"decision_made","context":"item","item":"consolidate-integration-helpers-v3","decision":"retry-with-guidance","decisionPath":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/decisions/004-item-consolidate-integration-helpers-v3.yaml","ts":"2026-11-08T08:49:51.183Z"}
 {"type":"step_started","task":"modernize","step":"wave-close-up-1-11","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/042-wave-close-up-1-11-a1","ts":"2026-11-08T08:54:14.425Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-1-11","timeoutSec":900,"ts":"2026-11-08T08:54:14.430Z"}
+{"type":"step_finished","task":"modernize","step":"wave-close-up-1-11","attempt":1,"status":"ok","sessionId":"01a1ba5d-89b1-7688-8bc0-7bc3c610535f","usage":{"inputTokens":13895,"outputTokens":8012,"costUsd":0.003071},"ts":"2026-11-08T08:55:13.493Z"}
