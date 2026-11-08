@@ -197,6 +197,13 @@ gates:
       ... [truncated 17052 bytes] ...
 
       6 failed, 1300 passed, 4 skipped, 18 deselected, 4 warnings in 26.01s
+    failingTests:
+      - tests.runner.test_lint_runner.TestToolSpec.test_tool_spec_given_known_tools_then_present
+      - tests.runner.test_lint_runner.TestToolSpec.test_tool_spec_given_tools_then_autofix_and_no_duplicates
+      - tests.runner.test_lint_runner_stats.test_statistics_parsers_given_all_tools_then_covered
+      - tests.runner.test_t3_coverage.TestParserCompleteness.test_parser_completeness_given_all_tools_then_have_parser
+      - tests.runner.test_testing_fakes.test_run_lint_with_fake_dispatch_invariants[all_13_tools_dispatched]
+      - tests.runner.test_testing_fakes.test_run_lint_with_fake_dispatch_invariants[package_name_none_skips_stubtest_verifytypes]
   - id: test-integration
     command: uv run pytest tests/integration.py -q
     status: pass
