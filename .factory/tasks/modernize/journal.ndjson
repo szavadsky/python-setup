@@ -326,3 +326,5 @@
 {"type":"item_merge_phase","item":"golden-snapshot-wiring","phase":"merge-child-into-parent","ts":"2026-11-08T05:58:42.800Z"}
 {"type":"item_merge_phase","item":"golden-snapshot-wiring","phase":"remove-worktree","ts":"2026-11-08T05:58:42.858Z"}
 {"type":"item_merged","item":"golden-snapshot-wiring","sha":"3635ed7d456024253b877aaa97a7d8f215ef75d5","conflictResolved":false,"ts":"2026-11-08T05:58:43.152Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-1-7","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/032-wave-close-up-1-7-a1","ts":"2026-11-08T06:02:48.075Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-1-7","timeoutSec":900,"ts":"2026-11-08T06:02:48.078Z"}
