@@ -135,20 +135,20 @@ debt:
     fixture-scoped clearing"
   - "[third-party-assumption-tests] Assert confidence is not None before reading
     .name"
-budgetSpentUsd: 3.517147000000002
+budgetSpentUsd: 3.526872000000002
 spendByRole:
   workhorse:
     costUsd: 0.483592
     inputTokens: 848479
     outputTokens: 407953
   alt-workhorse:
-    costUsd: 0.06457299999999999
-    inputTokens: 250205
-    outputTokens: 182242
+    costUsd: 0.06769399999999999
+    inputTokens: 264134
+    outputTokens: 190350
   architect:
-    costUsd: 2.9328300000000005
-    inputTokens: 653737
-    outputTokens: 128311
+    costUsd: 2.9394340000000003
+    inputTokens: 702703
+    outputTokens: 133827
   alt-architect:
     costUsd: 0.036152
     inputTokens: 137287
@@ -167,7 +167,7 @@ spendByItem:
     inputTokens: 226110
     outputTokens: 148096
   (orchestration):
-    costUsd: 3.104683000000002
-    inputTokens: 1166836
-    outputTokens: 401168
-lastUpdated: 2026-11-08T04:43:13.636Z
+    costUsd: 3.114408000000002
+    inputTokens: 1229731
+    outputTokens: 414792
+lastUpdated: 2026-11-08T04:49:06.109Z
