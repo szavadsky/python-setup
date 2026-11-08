@@ -1,9 +1,9 @@
 """Single-source helpers for building and inspecting test projects.
 
 Shared by the integration pipeline tests, the autofix conflict tests, and the
-self-lint guards.  This module may import stdlib plus ``python_setup_lint``
-only — never ``tests.conftest`` or ``tests.integration`` — to keep the test
-import graph acyclic.
+self-lint guards.  This module may import stdlib, ``python_setup_lint`` and
+``tests._golden`` only — never ``tests.conftest`` or ``tests.integration`` — to
+keep the test import graph acyclic.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ import pytest
 from python_setup_lint.runner import RunnerConfig
 from python_setup_lint.runner._config import _SHIPPED_CONFIG_FILES
 from python_setup_lint.setup import install
+from tests._golden import Finding, collect_findings
 
 SAMPLE_PROJECT = Path("tests/data/minimal_sample_project")
 
@@ -84,6 +85,13 @@ def make_runner_config(project: Path) -> RunnerConfig:
         package_name="minimal_sample",
         config_paths=config_paths,
     )
+
+
+def collect_sample_findings(dest_parent: Path) -> list[Finding]:
+    """Copy a fresh sample project under *dest_parent* and collect its golden findings."""
+    project = copy_sample_project(dest_parent)
+    git_init_and_stage(project)
+    return collect_findings(project, make_runner_config(project))
 
 
 def git_init_bare(cwd: Path) -> None:

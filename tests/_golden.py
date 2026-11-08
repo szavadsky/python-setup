@@ -14,6 +14,7 @@ together so the two artifacts can never disagree.
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import io
 import json
 import os
@@ -32,6 +33,7 @@ __all__ = [
     "SEMANTIC_ENV",
     "UPDATE_ENV",
     "Finding",
+    "assert_golden_byte_identical",
     "assert_matches_golden",
     "assert_oracle_coverage",
     "assert_tool_coverage",
@@ -186,7 +188,7 @@ def tool_minimums(findings: Iterable[Finding]) -> dict[str, int]:
     return {name: counts.get(name, 0) for name in sorted(names)}
 
 
-def collect_findings(project: Path, *, config: RunnerConfig) -> list[Finding]:
+def collect_findings(project: Path, config: RunnerConfig) -> list[Finding]:
     """Run the finding-producing lint tools on *project* and return normalized findings.
 
     Mirrors ``run_lint`` (config overrides included) on the caller-owned copy,
@@ -385,6 +387,25 @@ def assert_matches_golden(findings: Sequence[Finding], *, golden_path: Path) -> 
     added, removed = _diff_keys(findings, committed)
     if added or removed:
         pytest.fail(_format_drift(added, removed, golden_path))
+
+
+def assert_golden_byte_identical(golden_path: Path, *runs: Sequence[Finding]) -> None:
+    """Assert every collected run serializes byte-identically to the committed golden.
+
+    Covers both the findings snapshot and its sibling per-tool counts, and
+    compares SHA-256 digests so ordering and formatting drift cannot hide.
+    """
+    findings_payloads = [serialize_findings(run).encode("utf-8") for run in runs]
+    committed_findings = golden_path.read_bytes()
+    assert all(payload == committed_findings for payload in findings_payloads), (
+        "fresh-copy runs vs committed findings golden byte mismatch"
+    )
+    assert len({hashlib.sha256(payload).hexdigest() for payload in findings_payloads}) == 1
+    assert hashlib.sha256(committed_findings).hexdigest() == hashlib.sha256(findings_payloads[0]).hexdigest()
+
+    counts_payloads = [serialize_tool_minimums(tool_minimums(run)).encode("utf-8") for run in runs]
+    committed_counts = tool_counts_path(golden_path).read_bytes()
+    assert all(payload == committed_counts for payload in counts_payloads), "fresh-copy runs vs committed counts golden byte mismatch"
 
 
 def read_oracle_rules() -> list[str]:
