@@ -29,7 +29,7 @@ def _walk_and_release(
     *,
     file_path: str | None = None,
     module_name: str = "",
-) -> list[Any]:  # released pylint messages are dynamically typed; Any is the accurate contract
+) -> list[Any]:  # release_messages() builds dynamic MessageTest objects; runtime-only .msg_id/.args require Any
     tc = _make_tc(checker_class)
     module = astroid.parse(code, module_name=module_name)
     if file_path is not None:

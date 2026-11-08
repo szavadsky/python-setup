@@ -35,7 +35,7 @@ class GenericKeyDictChecker(BaseChecker):
             "Use 'allow-string-keys-for' config to suppress for legitimate categories.",
         ),
     )
-    options: tuple[tuple[str, dict[str, Any]], ...] = (  # pylint option dict values are Any by API contract
+    options: tuple[tuple[str, dict[str, Any]], ...] = (  # pylint option values are heterogeneous; Any matches the API contract
         (
             "allow-string-keys-for",
             {

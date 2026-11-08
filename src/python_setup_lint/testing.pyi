@@ -39,7 +39,7 @@ def _walk_and_release(
     *,
     file_path: str | None = None,
     module_name: str = "",
-) -> list[Any]:  # released pylint messages are dynamically typed; Any is the accurate contract
+) -> list[Any]:  # release_messages() builds dynamic MessageTest objects; runtime-only .msg_id/.args require Any
     """Parse *code*, walk *checker_class* over it, return released messages.
 
     Optionally set *file_path* for path-dependent logic (source-roots,
