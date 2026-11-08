@@ -6,12 +6,13 @@ currentWave: 1
 items:
   consolidate-integration-helpers-i2:
     kind: test-only
-    status: ready
+    status: merged
     branch: topic/modernize--consolidate-integration-helpers-i2
     attempts: 1
     fixRounds: 1
     spendUsd: 0.07747
     currentStep: review
+    mergedAt: 2026-11-08T07:59:15-05:00
   golden-determinism-probe:
     kind: fact-finder
     status: merged
@@ -23,12 +24,13 @@ items:
     mergedAt: 2026-11-07T20:57:23-05:00
   model-candidate-matrix:
     kind: fact-finder
-    status: ready
+    status: merged
     branch: topic/modernize--model-candidate-matrix
     attempts: 1
     fixRounds: 1
     spendUsd: 0.045265
     currentStep: review
+    mergedAt: 2026-11-08T08:05:08-05:00
   pylint-cache-assumptions:
     kind: test-assumptions
     status: running
@@ -39,12 +41,13 @@ items:
     currentStep: develop
   runner-format-contract:
     kind: dev
-    status: ready
+    status: merged
     branch: topic/modernize--runner-format-contract
     attempts: 1
     fixRounds: 2
     spendUsd: 0.467148
     currentStep: review
+    mergedAt: 2026-11-08T07:54:12-05:00
   third-party-assumption-tests:
     kind: test-assumptions
     status: merged
@@ -56,18 +59,20 @@ items:
     mergedAt: 2026-11-07T21:00:28-05:00
   baseline-violations-fix:
     kind: no-behavior
-    status: pending
+    status: ready
     branch: topic/modernize--baseline-violations-fix
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.06715600000000001
+    currentStep: review
   golden-contract-hardening:
     kind: test-only
-    status: pending
+    status: ready
     branch: topic/modernize--golden-contract-hardening
-    attempts: 1
+    attempts: 2
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.091885
+    currentStep: review
   golden-findings-snapshot:
     kind: dev
     status: superseded
@@ -78,18 +83,20 @@ items:
     currentStep: test-first
   model-eval-poc:
     kind: poc
-    status: pending
+    status: running
     branch: topic/modernize--model-eval-poc
     attempts: 1
-    fixRounds: 1
-    spendUsd: 0
+    fixRounds: 3
+    spendUsd: 0.40845699999999996
+    currentStep: review
   secrets-triage-spike:
     kind: fact-finder
-    status: pending
+    status: blocked
     branch: topic/modernize--secrets-triage-spike
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.076996
+    currentStep: review
   cache-design-spike:
     kind: poc
     status: pending
@@ -299,6 +306,32 @@ debt:
     fixture-scoped clearing"
   - "[third-party-assumption-tests] Assert confidence is not None before reading
     .name"
+  - "[golden-contract-hardening] Add runs guard and messages to byte-identical
+    hash asserts"
+  - "[golden-contract-hardening] Consider SHA-256 comparison for counts payloads
+    too"
+  - "[golden-contract-hardening] Note fragility of stubbed private pipeline
+    symbols"
+  - "[model-eval-poc] Decision prompts inject '(unknown)'/'(none)' literals for
+    None rule/context"
+  - "[model-eval-poc] 11 HuggingFace 404 HTML pages committed under cache/code
+    (~580KB)"
+  - "[model-eval-poc] Per-source breakdown must disclose dedup collapse
+    (meaningful_table 33->3)"
+  - "[model-eval-poc] params/weights_bytes hardcoded in adapters without
+    provenance"
+  - "[model-eval-poc] Ettin params/bytes overcounted by unused Dense/LayerNorm
+    heads (~592K params)"
+  - "[model-eval-poc] GLiDE exclusion rationale 'cannot be smallest' is
+    logically invalid when 0 compliant"
+  - "[model-eval-poc] Table 2 presents contended p50/p95 as point estimates;
+    annotate as upper bounds"
+  - "[model-eval-poc] Table 2 labels GLiDE 'eligible' while §6 excludes it from
+    the compliance matrix"
+  - "[model-eval-poc] Bekko excluded for 'no declared license' but decider/ettin
+    licenses unaudited"
+  - "[secrets-triage-spike] Scope the --baseline masking claim to
+    detect-secrets-scoped runs"
   - "[golden-helpers-unit] tool_minimums imports TOOLS via package root, pulling
     CLI structlog side effects"
   - "[golden-helpers-unit] Public FindingKey alias missing from __all__"
@@ -320,20 +353,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 5.545568686
+budgetSpentUsd: 6.217960686
 spendByRole:
   workhorse:
-    costUsd: 1.8720636860000002
-    inputTokens: 3599390
-    outputTokens: 1426170
+    costUsd: 2.384377686
+    inputTokens: 4649311
+    outputTokens: 1720144
   alt-workhorse:
-    costUsd: 0.19585100000000003
-    inputTokens: 902744
-    outputTokens: 450087
+    costUsd: 0.33172599999999997
+    inputTokens: 1553617
+    outputTokens: 632744
   architect:
-    costUsd: 3.422149
-    inputTokens: 5200890
-    outputTokens: 236447
+    costUsd: 3.446352
+    inputTokens: 5432553
+    outputTokens: 239321
   alt-architect:
     costUsd: 0.055505
     inputTokens: 220763
@@ -355,26 +388,42 @@ spendByItem:
     costUsd: 0.057198
     inputTokens: 138170
     outputTokens: 64014
-  consolidate-integration-helpers-i2:
-    costUsd: 0.07747
-    inputTokens: 139419
-    outputTokens: 80611
-  golden-snapshot-wiring:
-    costUsd: 0.13088
-    inputTokens: 218824
-    outputTokens: 95126
-  runner-format-contract:
-    costUsd: 0.467148
-    inputTokens: 1187671
-    outputTokens: 340789
-  consolidate-integration-helpers-v3:
-    costUsd: 0.19283999999999998
-    inputTokens: 341355
-    outputTokens: 174695
   model-candidate-matrix:
     costUsd: 0.045265
     inputTokens: 116110
     outputTokens: 59317
+  runner-format-contract:
+    costUsd: 0.467148
+    inputTokens: 1187671
+    outputTokens: 340789
+  consolidate-integration-helpers-i2:
+    costUsd: 0.07747
+    inputTokens: 139419
+    outputTokens: 80611
+  golden-contract-hardening:
+    costUsd: 0.091885
+    inputTokens: 206331
+    outputTokens: 89105
+  golden-snapshot-wiring:
+    costUsd: 0.13088
+    inputTokens: 218824
+    outputTokens: 95126
+  consolidate-integration-helpers-v3:
+    costUsd: 0.19283999999999998
+    inputTokens: 341355
+    outputTokens: 174695
+  secrets-triage-spike:
+    costUsd: 0.076996
+    inputTokens: 208236
+    outputTokens: 84395
+  baseline-violations-fix:
+    costUsd: 0.06715600000000001
+    inputTokens: 164765
+    outputTokens: 116111
+  model-eval-poc:
+    costUsd: 0.40845699999999996
+    inputTokens: 1098238
+    outputTokens: 180749
   consolidate-integration-helpers-v2:
     costUsd: 0.19363600000000003
     inputTokens: 413243
@@ -384,7 +433,7 @@ spendByItem:
     inputTokens: 334753
     outputTokens: 167691
   (orchestration):
-    costUsd: 3.758443
-    inputTokens: 6311370
-    outputTokens: 721234
-lastUpdated: 2026-11-08T12:54:12.135Z
+    costUsd: 3.786341
+    inputTokens: 6566257
+    outputTokens: 730379
+lastUpdated: 2026-11-08T14:32:48.686Z
