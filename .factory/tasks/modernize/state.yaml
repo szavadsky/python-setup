@@ -83,11 +83,11 @@ items:
     currentStep: test-first
   model-eval-poc:
     kind: poc
-    status: running
+    status: ready
     branch: topic/modernize--model-eval-poc
     attempts: 1
-    fixRounds: 3
-    spendUsd: 0.40845699999999996
+    fixRounds: 1
+    spendUsd: 0.57375
     currentStep: review
   secrets-triage-spike:
     kind: fact-finder
@@ -330,6 +330,8 @@ debt:
     the compliance matrix"
   - "[model-eval-poc] Bekko excluded for 'no declared license' but decider/ettin
     licenses unaudited"
+  - "[model-eval-poc] Table 2 labels GLiDE 'eligible' with '0 MB' while §6
+    excludes it (6/336)"
   - "[secrets-triage-spike] Scope the --baseline masking claim to
     detect-secrets-scoped runs"
   - "[golden-helpers-unit] tool_minimums imports TOOLS via package root, pulling
@@ -353,20 +355,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 6.217960686
+budgetSpentUsd: 6.4083826859999995
 spendByRole:
   workhorse:
-    costUsd: 2.384377686
-    inputTokens: 4649311
-    outputTokens: 1720144
+    costUsd: 2.4812766859999997
+    inputTokens: 5044493
+    outputTokens: 1741671
   alt-workhorse:
-    costUsd: 0.33172599999999997
-    inputTokens: 1553617
-    outputTokens: 632744
+    costUsd: 0.4001199999999999
+    inputTokens: 1922424
+    outputTokens: 687927
   architect:
-    costUsd: 3.446352
-    inputTokens: 5432553
-    outputTokens: 239321
+    costUsd: 3.4714810000000003
+    inputTokens: 5682152
+    outputTokens: 240167
   alt-architect:
     costUsd: 0.055505
     inputTokens: 220763
@@ -421,9 +423,9 @@ spendByItem:
     inputTokens: 164765
     outputTokens: 116111
   model-eval-poc:
-    costUsd: 0.40845699999999996
-    inputTokens: 1098238
-    outputTokens: 180749
+    costUsd: 0.57375
+    inputTokens: 1862227
+    outputTokens: 257459
   consolidate-integration-helpers-v2:
     costUsd: 0.19363600000000003
     inputTokens: 413243
@@ -433,7 +435,7 @@ spendByItem:
     inputTokens: 334753
     outputTokens: 167691
   (orchestration):
-    costUsd: 3.786341
-    inputTokens: 6566257
-    outputTokens: 730379
-lastUpdated: 2026-11-08T14:32:48.686Z
+    costUsd: 3.8114700000000004
+    inputTokens: 6815856
+    outputTokens: 731225
+lastUpdated: 2026-11-08T14:50:28.454Z
