@@ -2,7 +2,7 @@ task: modernize
 kind: saga
 status: active
 iteration: 1
-currentWave: 10
+currentWave: 11
 items:
   golden-determinism-probe:
     kind: fact-finder
@@ -32,7 +32,7 @@ items:
     currentStep: test-first
   consolidate-integration-helpers:
     kind: test-only
-    status: pending
+    status: superseded
     branch: topic/modernize--consolidate-integration-helpers
     attempts: 1
     fixRounds: 1
@@ -88,6 +88,20 @@ items:
     kind: fact-finder
     status: pending
     branch: topic/modernize--test-debloat-audit-v2
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  consolidate-integration-helpers-v3:
+    kind: test-only
+    status: pending
+    branch: topic/modernize--consolidate-integration-helpers-v3
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  docs-counts-sync:
+    kind: dev
+    status: pending
+    branch: topic/modernize--docs-counts-sync
     attempts: 1
     fixRounds: 1
     spendUsd: 0
@@ -167,20 +181,20 @@ debt:
     file could be fixed in passing"
   - "[consolidate-integration-helpers-v2] Triple single-name re-export imports
     could be one statement"
-budgetSpentUsd: 3.9830030000000014
+budgetSpentUsd: 4.050530000000001
 spendByRole:
   workhorse:
     costUsd: 0.855554
     inputTokens: 1578657
     outputTokens: 681062
   alt-workhorse:
-    costUsd: 0.085825
-    inputTokens: 354331
-    outputTokens: 232920
+    costUsd: 0.09477999999999999
+    inputTokens: 416917
+    outputTokens: 245706
   architect:
-    costUsd: 3.005472
-    inputTokens: 1314422
-    outputTokens: 141326
+    costUsd: 3.064044
+    inputTokens: 1878034
+    outputTokens: 152379
   alt-architect:
     costUsd: 0.036152
     inputTokens: 137287
@@ -211,7 +225,7 @@ spendByItem:
     inputTokens: 218824
     outputTokens: 95126
   (orchestration):
-    costUsd: 3.1888250000000014
-    inputTokens: 1891588
-    outputTokens: 437920
-lastUpdated: 2026-11-08T07:11:04.971Z
+    costUsd: 3.256352000000001
+    inputTokens: 2517786
+    outputTokens: 461759
+lastUpdated: 2026-11-08T07:19:12.935Z
