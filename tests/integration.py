@@ -31,16 +31,18 @@ from tests._golden import (
     SEMANTIC_ENV,
     UPDATE_ENV,
     Finding,
+    assert_golden_byte_identical,
     assert_matches_golden,
     assert_oracle_coverage,
     assert_tool_coverage,
-    collect_findings,
     finding_key,
     read_oracle_rules,
+    slice_tool_section,
     tool_counts_path,
 )
 from tests._project_helpers import (
     build_pylint_overlay_config,
+    collect_sample_findings,
     copy_sample_project,
     ensure_precommit_or_skip,
     git_init_and_stage,
@@ -108,15 +110,16 @@ class TestMinimalSampleProject:
         # The first run lets ``ruff format`` rewrite its copy; the snapshot
         # must observe the committed source, so it captures its own copy.
         monkeypatch.setenv(SEMANTIC_ENV, "0")
-        pristine = copy_sample_project(tmp_path / "golden")
-        git_init_and_stage(pristine)
-        findings = collect_findings(pristine, config=make_runner_config(pristine))
-
+        findings = collect_sample_findings(tmp_path / "golden")
+        assert findings, "collect_findings returned no findings for the planted-violation sample project"
         assert_matches_golden(findings, golden_path=GOLDEN_FINDINGS)
         assert_oracle_coverage(findings, read_oracle_rules())
         minimums = json.loads(tool_counts_path(GOLDEN_FINDINGS).read_text(encoding="utf-8"))
         assert_tool_coverage(findings, minimums)
-        assert set(minimums) == tool_names, f"tool counts missing registered tools: {tool_names - set(minimums)}"
+
+        # ── Determinism: a fresh-copy replay serializes byte-identically ──
+        replay = collect_sample_findings(tmp_path / "golden-replay")
+        assert_golden_byte_identical(GOLDEN_FINDINGS, findings, replay)
 
         # ── Brush-off is flagged, carry-from is not ───────────────────
         mod_findings = [f for f in findings if f["tool"] == "pylint" and f["file"] == "src/minimal_sample/mod.py"]
@@ -169,9 +172,7 @@ class TestMinimalSampleProject:
 
         # The disabled rule must NOT appear in the pylint section.
         # (pylint-pyi has its own rcfile resolution that doesn't use config_paths.)
-        pylint_section_start = output.find("[pylint] FAILED")
-        pylint_pyi_start = output.find("[pylint-pyi]")
-        pylint_output = output[pylint_section_start:pylint_pyi_start] if 0 <= pylint_section_start < pylint_pyi_start else output
+        pylint_output = slice_tool_section(output, "[pylint]", "[pylint-pyi]")
 
         assert "use-structlog" not in pylint_output, (
             "Expected 'use-structlog' to be disabled by config overlay in pylint output, but it still appears."
