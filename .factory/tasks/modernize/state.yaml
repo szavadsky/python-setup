@@ -233,10 +233,12 @@ debt:
   - "Docs/ADR drift: AGENTS.md stale counts + missing ruff-format scope row;
     CHANGELOG v1.2.9 vs pyproject 1.2.10; README v1.2.5 pin; 8 problem-statement
     ADRs partly stale; design/ vs docs/adr location split."
-  - Over-limit modules with disables (dispatch.py 542, _factories.py 1393,
-    _factories_extras.py 511 + duplicate disables, test_semantic_check.py 506),
-    dead compat shims, duplicated test helpers, milestone-ID test names,
-    hardcoded checkout paths.
+  - "Over-limit modules with disables, dead compat shims, duplicated test
+    helpers, milestone-ID test names, hardcoded checkout paths — split by owner:
+    runner owns dispatch.py (542) + tests/runner/_factories_extras.py (511,
+    incl. duplicate-disable collapse); checkers owns
+    tests/checkers/_factories.py (1393); semantic owns
+    tests/checkers/test_semantic_check.py (506)."
   - "RED-TEST WAIVED (gate inapplicable by design): golden-snapshot-wiring is a
     tests-only M1 contract item — probe verdict was test-side normalization
     sufficient, so the bounded src allowance was correctly NOT used and the diff
@@ -391,7 +393,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 7.350049685999999
+budgetSpentUsd: 7.362652685999999
 spendByRole:
   workhorse:
     costUsd: 3.0537076860000005
@@ -402,13 +404,13 @@ spendByRole:
     inputTokens: 2616311
     outputTokens: 919336
   architect:
-    costUsd: 3.6991280000000004
-    inputTokens: 7754940
-    outputTokens: 302165
+    costUsd: 3.704715
+    inputTokens: 7755320
+    outputTokens: 323710
   alt-architect:
-    costUsd: 0.066145
-    inputTokens: 255731
-    outputTokens: 184417
+    costUsd: 0.073161
+    inputTokens: 279595
+    outputTokens: 206994
 spendByItem:
   golden-determinism-probe:
     costUsd: 0.16489800000000002
@@ -459,9 +461,9 @@ spendByItem:
     inputTokens: 334753
     outputTokens: 167691
   (orchestration):
-    costUsd: 4.290615000000001
-    inputTokens: 9536190
-    outputTokens: 998763
+    costUsd: 4.303218000000001
+    inputTokens: 9560434
+    outputTokens: 1042885
   test-debloat-audit-i2:
     costUsd: 0.258385
     inputTokens: 707051
@@ -490,4 +492,4 @@ spendByItem:
     costUsd: 0.091885
     inputTokens: 206331
     outputTokens: 89105
-lastUpdated: 2026-11-08T19:24:27.279Z
+lastUpdated: 2026-11-08T19:50:49.712Z
