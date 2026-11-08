@@ -1098,3 +1098,5 @@
 {"type":"item_merge_phase","item":"remaining-lint-violations-fix","phase":"merge-child-into-parent","ts":"2026-11-08T16:12:23.252Z"}
 {"type":"item_merge_phase","item":"remaining-lint-violations-fix","phase":"remove-worktree","ts":"2026-11-08T16:12:23.311Z"}
 {"type":"item_merged","item":"remaining-lint-violations-fix","sha":"e4530e2b31ae8ed53ed9b77f813614537b6d8571","conflictResolved":false,"ts":"2026-11-08T16:12:23.926Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-2-3","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/063-wave-close-up-2-3-a1","ts":"2026-11-08T16:20:11.463Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-2-3","timeoutSec":900,"ts":"2026-11-08T16:20:11.468Z"}
