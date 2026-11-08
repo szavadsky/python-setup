@@ -1,7 +1,7 @@
 task: modernize
 kind: saga
 status: active
-iteration: 2
+iteration: 3
 currentWave: 1
 items:
   consolidate-integration-helpers-i2:
@@ -220,35 +220,6 @@ items:
     fixRounds: 1
     spendUsd: 0
 debt:
-  - "`ruff format` ToolSpec mutates the worktree (plain `ruff format`, no
-    --check/--config, default 88 vs shipped 130); phase-1a vs normal pass
-    indistinguishable at _fix=False."
-  - "Red baseline: 6 named tests assert 13 vs 14 tools; SIM102
-    src/python_setup_lint/checkers/stub/coverage.py:196-198; R0914 cli.py:50
-    (23/20); C0208 _factories_extras.py:383 set-iteration. Empty baseline masks
-    real violations."
-  - detect-secrets flags factory-journal files on clean checkout; environmental
-    vs real unverified, so M1 lint-green is undefined for that tool.
-  - tests/integration.py 661 lines with too-many-lines (:12) + stale
-    too-many-locals (:202, globally disabled in .pylintrc-tests:39)
-    suppressions; helpers duplicated across
-    integration/conftest/_autofix_helpers; nested tmp_path/golden copy needs
-    mkdir-parents.
-  - "Golden drift: tool-order vs sort placement, len!=0/crash asserts unplaced,
-    unused slice_tool_section with unpinned markers, regen-twice would mutate
-    committed files."
-  - Semantic tests patch module globals and builtins.__import__, import privates
-    under type:ignore, carry vacuous `is None or ...` asserts +
-    ImportError-propagation test; heuristic tables duplicated across two
-    modules.
-  - W9704/W9738 pass their own symbol as `rule`; rule-echo heuristic and future
-    model never see actually-suppressed codes.
-  - "Over-limit/duplicated test infra: _factories.py 1393 lines,
-    _factories_extras.py 502 lines with duplicate disables, 3 baseline-diff + 3
-    runner files overlapping, test_golden.py 341 lines of helper-unit tests."
-  - "Legacy/compat and docs drift: _FALLBACK_TOOLS/peek/_compare_sorted, astroid
-    3.x fallback, dispatch.py 500+ char rationale with self-suppression, rumdl
-    tests/data-exclude hack, ADR design/ vs docs/adr split."
   - "RED-TEST WAIVED (gate inapplicable by design): golden-snapshot-wiring is a
     tests-only M1 contract item — probe verdict was test-side normalization
     sufficient, so the bounded src allowance was correctly NOT used and the diff
@@ -403,20 +374,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 6.998441685999999
+budgetSpentUsd: 7.0510146859999985
 spendByRole:
   workhorse:
     costUsd: 2.8402316860000005
     inputTokens: 5694418
     outputTokens: 2042754
   alt-workhorse:
-    costUsd: 0.5206120000000001
-    inputTokens: 2549502
-    outputTokens: 906154
+    costUsd: 0.5310690000000001
+    inputTokens: 2616311
+    outputTokens: 919336
   architect:
-    costUsd: 3.5820930000000004
-    inputTokens: 6712064
-    outputTokens: 265015
+    costUsd: 3.6242090000000005
+    inputTokens: 7119899
+    outputTokens: 267603
   alt-architect:
     costUsd: 0.055505
     inputTokens: 220763
@@ -471,9 +442,9 @@ spendByItem:
     inputTokens: 334753
     outputTokens: 167691
   (orchestration):
-    costUsd: 3.9390070000000006
-    inputTokens: 7950987
-    outputTokens: 786538
+    costUsd: 3.991580000000001
+    inputTokens: 8425631
+    outputTokens: 802308
   test-debloat-audit-i2:
     costUsd: 0.258385
     inputTokens: 707051
@@ -502,4 +473,4 @@ spendByItem:
     costUsd: 0.091885
     inputTokens: 206331
     outputTokens: 89105
-lastUpdated: 2026-11-08T18:11:43.489Z
+lastUpdated: 2026-11-08T18:21:44.813Z
