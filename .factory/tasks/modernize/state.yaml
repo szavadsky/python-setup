@@ -5,43 +5,31 @@ iteration: 1
 currentWave: 1
 items: {}
 debt:
-  - The suppression-justification and bare-except checkers pass their own symbol
-    ('unjustified-suppression' / 'bare-except-comment') as `rule` to
-    check_if_meaningful. As a result, the documented rule-echo heuristic and the
-    semantic model never see the rule that is actually being suppressed.
-  - "Semantic tests mock first-party code: they patch module globals
-    (_RERANKER_UNAVAILABLE, _RESULT_CACHE), patch builtins.__import__, and
-    import private symbols under type: ignore. Several assertions are vacuous
-    (`result is None or isinstance(result, bool)`). This breaks the CodingRules
-    mocking strategy and protects nothing."
-  - tests/integration.py is 627 lines with a too-many-lines suppression. It
-    duplicates the helpers in tests/conftest.py and
-    tests/runner/_autofix_helpers.py, and it only substring-matches rule names,
-    so dropped, moved or new findings go unnoticed.
-  - tests/checkers/test_semantic_check.py is 506 lines and suppresses
-    too-many-lines. Its heuristic tables duplicate
-    tests/checkers/test_semantic_threshold.py.
-  - "The same structural suppressions repeat across about 15 checkers:
-    missing-beartype on every register(linter), type: ignore[misc] on every
-    SourceRootMixin/FunctionVisitMixin checker class, and copied
-    stream-read/decode blocks. These are design smells, not one-off
-    justifications."
-  - "Legacy and compat code remains for removed formats and for hard-declared
-    dependencies: baseline._FALLBACK_TOOLS and peek_fallback_tools ('legacy
-    stub: always empty'), the _compare_sorted re-export, and the astroid 3.x
-    docstring fallback even though astroid>=4.0.4 is declared. CodingRules says
-    to remove fallbacks for hard-declared dependencies."
-  - "runner/dispatch.py carries a rationale comment of more than 500 characters
-    that ends in `# pylint: disable=unjustified-suppression`, which suppresses
-    the justification checker itself."
-  - tests/checkers/_factories.py is about 1400 lines. It types around 40
-    pytest.param tables as list[Any] with copy-pasted justification comments,
-    and keeps cases far from the tests that use them.
-  - "Several test modules are named after historical task IDs (test_t5_*,
-    test_t9_7_*, test_t11_*, test_t1b_*, test_t3_*) instead of behavior. Some
-    tests lint this repository: test_self_lint_clean.py and the source-scanning
-    guards in test_runner_private_imports.py."
-  - "ADR locations disagree: CodingRules.md requires design/ (ADR format), but
-    factory ADRs are written to docs/adr."
-budgetSpentUsd: 2.9736280000000006
-lastUpdated: 2026-11-08T00:37:41.249Z
+  - Suppression/bare-except checkers pass their own symbol as `rule`; the
+    rule-echo heuristic and model never see the actually-suppressed codes.
+  - Semantic tests patch module globals and builtins.__import__, import privates
+    under type:ignore; several assertions vacuous (`is None or ...`).
+  - tests/integration.py 627 lines + too-many-lines suppression; duplicates
+    conftest/_autofix helpers; substring-only assertions miss drift.
+  - test_semantic_check.py 506 lines + suppression; heuristic tables duplicate
+    test_semantic_threshold.py.
+  - ~15 checkers repeat structural suppressions (missing-beartype on register(),
+    type:ignore[misc] on mixin classes) + copied stream read/decode.
+  - "Legacy/compat: baseline._FALLBACK_TOOLS/peek_fallback_tools,
+    _compare_sorted re-export, astroid 3.x docstring fallback despite
+    astroid>=4.0.4."
+  - "dispatch.py 500+ char rationale comment ending in `# pylint:
+    disable=unjustified-suppression` suppresses the justification checker
+    itself."
+  - tests/checkers/_factories.py ~1400 lines; ~40 pytest.param tables typed
+    list[Any] with pasted justifications; cases far from tests.
+  - Task-ID test names (test_t5_*, test_t9_7_*, test_t11_*, test_t1b_*,
+    test_t3_*); repo-self-lint tests (test_self_lint_clean.py,
+    AST/source-scanning guards, config re-checks) duplicate the `uv run lint`
+    gate.
+  - "ADR locations disagree: CodingRules requires design/, factory ADRs go to
+    docs/adr."
+  - Shipped rumdl.toml excludes tests/data, forcing the integration per-run
+    rewrite to lint the sample AGENTS.md; affects golden determinism.
+budgetSpentUsd: 2.9941790000000004
+lastUpdated: 2026-11-08T00:54:40.874Z
