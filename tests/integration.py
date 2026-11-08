@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -29,8 +30,22 @@ from python_setup_lint.testing import (
     assert_precommit_config_valid,
     assert_precommit_hooks_shape,
 )
+from tests._golden import (
+    SEMANTIC_ENV,
+    UPDATE_ENV,
+    Finding,
+    assert_matches_golden,
+    assert_oracle_coverage,
+    assert_tool_coverage,
+    collect_findings,
+    finding_key,
+    read_oracle_rules,
+    tool_counts_path,
+)
 
 # ── Helpers ────────────────────────────────────────────────────────────
+
+GOLDEN_FINDINGS = Path(__file__).resolve().parent / "data" / "golden" / "minimal_sample_project_findings.json"
 
 
 def _copy_sample(tmp_path: Path) -> Path:
@@ -57,16 +72,6 @@ def _init_git(project: Path) -> None:
         check=True,
     )
     subprocess.run(["git", "add", "."], cwd=project, capture_output=True, check=True)
-
-
-def _read_violation_rules() -> list[str]:
-    """Read expected violation rule names from ``violations.txt``."""
-    rules: list[str] = []
-    for line in Path("tests/data/minimal_sample_project/violations.txt").read_text().splitlines():
-        stripped = line.strip()
-        if stripped and not stripped.startswith("#"):
-            rules.append(stripped)
-    return rules
 
 
 def _shipped_config_paths() -> dict[str, Path]:
@@ -112,13 +117,19 @@ class TestMinimalSampleProject:
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
         isolated_runner_registries: None,
     ) -> None:
-        """Run lint on the sample project and verify all planted violations are reported.
+        """Run lint on the sample project and pin every finding in the golden snapshot.
 
         Asserts:
-        - Every rule name from ``violations.txt`` appears in the lint output.
-        - Every built-in tool section header appears in the lint output.
+        - The first run exits non-zero, reports every tool section, does not
+          crash, does not skip for unexpected reasons and fires W9705.
+        - A dedicated capture on a pristine copy matches the committed golden
+          as a multiset, covers every oracle rule and meets per-tool minimums.
+        - Brush-off suppression is reported where planted while the carry-from
+          justification is not flagged as unjustified.
+        - In-memory drift is reported precisely as added and removed keys.
         """
         project = _copy_sample(tmp_path)
         _init_git(project)
@@ -129,20 +140,6 @@ class TestMinimalSampleProject:
 
         captured = capsys.readouterr()
         output = captured.out + captured.err
-
-        # ── All planted violations are reported ──────────────────────
-        expected_rules = _read_violation_rules()
-        for rule in expected_rules:
-            assert rule in output, f"Expected violation rule {rule!r} not found in lint output.\nOutput excerpt:\n{output[:3000]}"
-
-        # ── Brush-off suppression is detected ─────────────────────────
-        assert "pre-existing" in output, (
-            f"Expected brush-off suppression 'pre-existing' to trigger W9704.\nOutput excerpt:\n{output[:3000]}"
-        )
-
-        # Carry-from external library should NOT be flagged as unjustified-suppression
-        carry_from_violations = [l for l in output.splitlines() if "_carry_from_external" in l and "unjustified-suppression" in l]
-        assert not carry_from_violations, f"Carry-from should NOT trigger W9704:\n{carry_from_violations}"
 
         # ── All tool sections appear ──────────────────────────────────
         tool_names = {t.name for t in TOOLS}
@@ -164,6 +161,43 @@ class TestMinimalSampleProject:
         assert "generic-return-requires-returns" in output, (
             f"Expected W9705 (generic-return-requires-returns) in lint output.\nOutput excerpt:\n{output[:3000]}"
         )
+
+        # ── Dedicated capture on a pristine copy ──────────────────────
+        # The first run lets ``ruff format`` rewrite its copy; the snapshot
+        # must observe the committed source, so it captures its own copy.
+        monkeypatch.setenv(SEMANTIC_ENV, "0")
+        pristine = _copy_sample(tmp_path / "golden")
+        _init_git(pristine)
+        findings = collect_findings(pristine, config=_make_config(pristine))
+
+        assert_matches_golden(findings, golden_path=GOLDEN_FINDINGS)
+        assert_oracle_coverage(findings, read_oracle_rules())
+        minimums = json.loads(tool_counts_path(GOLDEN_FINDINGS).read_text(encoding="utf-8"))
+        assert_tool_coverage(findings, minimums)
+        assert set(minimums) == tool_names, f"tool counts missing registered tools: {tool_names - set(minimums)}"
+
+        # ── Brush-off is flagged, carry-from is not ───────────────────
+        mod_findings = [f for f in findings if f["tool"] == "pylint" and f["file"] == "src/minimal_sample/mod.py"]
+        brushoff = [f for f in mod_findings if f["line"] == 49 and f["rule"] == "unjustified-suppression"]
+        carry_from = [f for f in mod_findings if f["line"] == 56 and f["rule"] == "unjustified-suppression"]
+        assert brushoff, f"Expected brush-off suppression at mod.py:49, got:\n{mod_findings}"
+        assert not carry_from, f"Carry-from should NOT trigger W9704: {carry_from}"
+
+        # ── Drift injection stays in memory ───────────────────────────
+        if os.environ.get(UPDATE_ENV) != "1":
+            injected = Finding(
+                tool="pylint",
+                file="src/minimal_sample/mod.py",
+                line=1,
+                col=1,
+                rule="injected-drift",
+            )
+            with pytest.raises(pytest.fail.Exception, match="added") as added_exc:
+                assert_matches_golden([*findings, injected], golden_path=GOLDEN_FINDINGS)
+            assert repr(finding_key(injected)) in str(added_exc.value)
+            with pytest.raises(pytest.fail.Exception, match="removed") as removed_exc:
+                assert_matches_golden(findings[1:], golden_path=GOLDEN_FINDINGS)
+            assert repr(finding_key(findings[0])) in str(removed_exc.value)
 
     def test_config_overlay(  # pylint: disable=too-many-locals  # test method uses several locals for config file manipulation
         self,

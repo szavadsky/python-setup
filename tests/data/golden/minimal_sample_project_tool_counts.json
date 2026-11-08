@@ -1,0 +1,16 @@
+{
+  "detect-secrets": 0,
+  "mypy": 2,
+  "mypy.stubtest": 0,
+  "pylint": 57,
+  "pylint tests": 29,
+  "pylint-pyi": 43,
+  "pyright check": 0,
+  "pyright verify types": 0,
+  "ruff check": 25,
+  "ruff format": 0,
+  "rumdl check": 1,
+  "tach check": 0,
+  "ty check": 1,
+  "yamllint": 0
+}
