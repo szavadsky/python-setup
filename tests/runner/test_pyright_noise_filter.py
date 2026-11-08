@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from python_setup_lint.runner import RunnerConfig, run_lint
-from tests.conftest import shipped_config_paths
+from tests._project_helpers import shipped_config_paths
 
 pytestmark = pytest.mark.slow
 

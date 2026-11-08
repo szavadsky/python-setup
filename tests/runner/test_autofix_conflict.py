@@ -50,15 +50,17 @@ from python_setup_lint.runner._autofix import (
     _ruff_parseability_errors,
 )
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
+from tests._project_helpers import (
+    commit_all,
+    git_init_bare,
+    stage_file,
+    write_project_file,
+)
 from tests.runner._autofix_helpers import (
     _CANARY_LABEL,
     _FIX_TOOL_NAMES,
-    _commit_all,
-    _git_init,
     _make_canned_fix_results,
     _PostFixFakeRunCmd,
-    _stage,
-    _write_file,
 )
 from tests.runner._factories import (
     canned_results_all_tools,
@@ -82,15 +84,15 @@ class TestGitChangedFiles:
         Both files must be tracked by git for the diff to report them — newly
         created (untracked) files do NOT appear in ``git diff --name-only``.
         """
-        _git_init(tmp_path)
-        _write_file(tmp_path, "staged.py", "x = 1\n")
-        _write_file(tmp_path, "unstaged.py", "x = 1\n")
-        _commit_all(tmp_path)
+        git_init_bare(tmp_path)
+        write_project_file(tmp_path, "staged.py", "x = 1\n")
+        write_project_file(tmp_path, "unstaged.py", "x = 1\n")
+        commit_all(tmp_path)
         # Staged: edit + stage (without committing).
-        _write_file(tmp_path, "staged.py", "y = 2\n")
-        _stage(tmp_path, "staged.py")
+        write_project_file(tmp_path, "staged.py", "y = 2\n")
+        stage_file(tmp_path, "staged.py")
         # Unstaged: edit tracked file (no ``git add``).
-        _write_file(tmp_path, "unstaged.py", "z = 3\n")
+        write_project_file(tmp_path, "unstaged.py", "z = 3\n")
         assert "staged.py" in _git_changed_files(tmp_path, staged=True)
         assert "unstaged.py" not in _git_changed_files(tmp_path, staged=True)
         assert "unstaged.py" in _git_changed_files(tmp_path, staged=False)
@@ -102,13 +104,13 @@ class TestGitChangedFiles:
         capsys: pytest.CaptureFixture[str],
     ) -> None:
         """A file with staged AND unstaged changes appears in BOTH sets."""
-        _git_init(tmp_path)
-        _write_file(tmp_path, "f.py", "v1\n")
-        _commit_all(tmp_path)
+        git_init_bare(tmp_path)
+        write_project_file(tmp_path, "f.py", "v1\n")
+        commit_all(tmp_path)
         # Edit + stage; then edit again without staging → in BOTH sets.
-        _write_file(tmp_path, "f.py", "v2\n")
-        _stage(tmp_path, "f.py")
-        _write_file(tmp_path, "f.py", "v3\n")
+        write_project_file(tmp_path, "f.py", "v2\n")
+        stage_file(tmp_path, "f.py")
+        write_project_file(tmp_path, "f.py", "v3\n")
         staged = _git_changed_files(tmp_path, staged=True)
         unstaged = _git_changed_files(tmp_path, staged=False)
         assert "f.py" in staged
@@ -187,7 +189,7 @@ class TestAutofixTargetPaths:
 
     def test_autofix_target_paths_given_explicit_path_then_overrides_default(self, tmp_path: Path) -> None:
         """When ``--path`` is given and the spec supports_path, that path is it."""
-        _write_file(tmp_path, "src/main.py", "x = 1\n")
+        write_project_file(tmp_path, "src/main.py", "x = 1\n")
         spec = ToolSpec(
             "ruff check",
             ["ruff", "check"],
@@ -198,8 +200,8 @@ class TestAutofixTargetPaths:
 
     def test_autofix_target_paths_given_no_path_then_uses_default(self, tmp_path: Path) -> None:
         """No ``--path`` → ``spec.default_paths`` is the seed."""
-        _write_file(tmp_path, "src/a.py", "x = 1\n")
-        _write_file(tmp_path, "src/b.py", "y = 2\n")
+        write_project_file(tmp_path, "src/a.py", "x = 1\n")
+        write_project_file(tmp_path, "src/b.py", "y = 2\n")
         spec = ToolSpec("ruff check", ["ruff", "check"], supports_path=True, default_paths=["src/"])
         result = _autofix_target_paths(spec, config=tmp_config(tmp_path), path=None)
         assert set(result) >= {"src/a.py", "src/b.py"}
@@ -211,8 +213,8 @@ class TestAutofixTargetPaths:
 
     def test_autofix_target_paths_given_glob_then_expands(self, tmp_path: Path) -> None:
         """``config/*.py`` glob expands to all matching python files."""
-        _write_file(tmp_path, "config/a.py", "")
-        _write_file(tmp_path, "config/b.py", "")
+        write_project_file(tmp_path, "config/a.py", "")
+        write_project_file(tmp_path, "config/b.py", "")
         spec = ToolSpec("test", ["t"], supports_path=True, default_paths=["config/*.py"])
         result = _autofix_target_paths(spec, config=tmp_config(tmp_path), path=None)
         assert sorted(result) == ["config/a.py", "config/b.py"]
@@ -305,12 +307,12 @@ class TestAutofixObservability:
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Stderr skip line: ``[<tool>] autofix skipped for <file>: staged+unstaged conflict``."""
-        _git_init(tmp_path)
-        _write_file(tmp_path, "f.py", "x = 1\n")
-        _commit_all(tmp_path)
-        _write_file(tmp_path, "f.py", "y = 2\n")
-        _stage(tmp_path, "f.py")
-        _write_file(tmp_path, "f.py", "z = 3\n")
+        git_init_bare(tmp_path)
+        write_project_file(tmp_path, "f.py", "x = 1\n")
+        commit_all(tmp_path)
+        write_project_file(tmp_path, "f.py", "y = 2\n")
+        stage_file(tmp_path, "f.py")
+        write_project_file(tmp_path, "f.py", "z = 3\n")
         canned = _make_canned_fix_results()
         fake = fake_run_cmd_factory(canned)
         _apply_autofix_conflict_aware(
@@ -329,7 +331,7 @@ class TestAutofixObservability:
         """Stderr revert line: ``[<tool>] autofix reverted <file>: E999 after fix``."""
         original = "x = 1\n"
         post_fix = "x = 2 broken"
-        target = _write_file(tmp_path, "src/main.py", original)
+        target = write_project_file(tmp_path, "src/main.py", original)
         canned = _make_canned_fix_results(canary_e999_files=("src/main.py",))
         wrapped = _PostFixFakeRunCmd(
             fake_run_cmd_factory(canned),

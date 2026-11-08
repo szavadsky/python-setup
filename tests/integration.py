@@ -9,14 +9,12 @@ programmatically (not subprocess), mock ``uv`` calls, and skip pre-commit if
 the binary is unavailable.
 """
 
-# pylint: disable=too-many-lines  # integration tests need 626 lines for full pipeline coverage
 from __future__ import annotations
 
 import json
 import logging
 import os
 import re
-import shutil
 import subprocess
 import textwrap
 from pathlib import Path
@@ -24,7 +22,6 @@ from pathlib import Path
 import pytest
 
 from python_setup_lint.runner import TOOLS, RunnerConfig, run_lint
-from python_setup_lint.runner._config import _SHIPPED_CONFIG_FILES
 from python_setup_lint.setup import install
 from python_setup_lint.testing import (
     assert_precommit_config_valid,
@@ -42,72 +39,17 @@ from tests._golden import (
     read_oracle_rules,
     tool_counts_path,
 )
-
-# ── Helpers ────────────────────────────────────────────────────────────
+from tests._project_helpers import (
+    build_pylint_overlay_config,
+    copy_sample_project,
+    ensure_precommit_or_skip,
+    git_init_and_stage,
+    install_twice_assert_idempotent,
+    make_clean_consumer_project,
+    make_runner_config,
+)
 
 GOLDEN_FINDINGS = Path(__file__).resolve().parent / "data" / "golden" / "minimal_sample_project_findings.json"
-
-
-def _copy_sample(tmp_path: Path) -> Path:
-    """Copy the minimal sample project to *tmp_path* and return the path."""
-    sample = Path("tests/data/minimal_sample_project")
-    dest = tmp_path / "project"
-    shutil.copytree(sample, dest)
-    return dest
-
-
-def _init_git(project: Path) -> None:
-    """Initialise a git repo in *project* (needed by detect-secrets)."""
-    subprocess.run(["git", "init"], cwd=project, capture_output=True, check=True)
-    subprocess.run(
-        ["git", "config", "user.email", "test@test"],
-        cwd=project,
-        capture_output=True,
-        check=True,
-    )
-    subprocess.run(
-        ["git", "config", "user.name", "test"],
-        cwd=project,
-        capture_output=True,
-        check=True,
-    )
-    subprocess.run(["git", "add", "."], cwd=project, capture_output=True, check=True)
-
-
-def _shipped_config_paths() -> dict[str, Path]:
-    """Build config_paths dict from the python-setup project root config/ dir."""
-    config_root = Path("config")
-    paths: dict[str, Path] = {}
-    for tool_label, filename in _SHIPPED_CONFIG_FILES.items():
-        candidate = config_root / filename
-        if candidate.is_file():
-            paths[tool_label] = candidate.resolve()
-    return paths
-
-
-def _make_config(project: Path) -> RunnerConfig:
-    """Build a ``RunnerConfig`` for the sample project with shipped config paths."""
-    config_paths = _shipped_config_paths()
-    # The shipped rumdl config excludes ``tests/data/``, which is where the
-    # sample project lives when copied to a temp dir.  Create a project-local
-    # override that removes that exclusion so rumdl checks the sample's
-    # AGENTS.md (which has planted MD022/MD009/MD012/MD071 violations).
-    shipped_rumdl = Path("config/rumdl.toml")
-    if shipped_rumdl.is_file():
-        local_rumdl = project / "rumdl.toml"
-        content = shipped_rumdl.read_text()
-        # Remove the ``tests/data`` entry from the exclude list.
-        content = content.replace('"tests/data", ', "")
-        local_rumdl.write_text(content)
-        config_paths["rumdl check"] = local_rumdl
-    return RunnerConfig(
-        cwd=project,
-        package_name="minimal_sample",
-        config_paths=config_paths,
-    )
-
-
-# ── Tests ─────────────────────────────────────────────────────────────
 
 
 class TestMinimalSampleProject:
@@ -131,10 +73,10 @@ class TestMinimalSampleProject:
           justification is not flagged as unjustified.
         - In-memory drift is reported precisely as added and removed keys.
         """
-        project = _copy_sample(tmp_path)
-        _init_git(project)
+        project = copy_sample_project(tmp_path)
+        git_init_and_stage(project)
 
-        config = _make_config(project)
+        config = make_runner_config(project)
         rc = run_lint(config=config, path=".")
         assert rc != 0, f"Expected non-zero exit (sample project has planted violations), got rc={rc}"
 
@@ -166,9 +108,9 @@ class TestMinimalSampleProject:
         # The first run lets ``ruff format`` rewrite its copy; the snapshot
         # must observe the committed source, so it captures its own copy.
         monkeypatch.setenv(SEMANTIC_ENV, "0")
-        pristine = _copy_sample(tmp_path / "golden")
-        _init_git(pristine)
-        findings = collect_findings(pristine, config=_make_config(pristine))
+        pristine = copy_sample_project(tmp_path / "golden")
+        git_init_and_stage(pristine)
+        findings = collect_findings(pristine, config=make_runner_config(pristine))
 
         assert_matches_golden(findings, golden_path=GOLDEN_FINDINGS)
         assert_oracle_coverage(findings, read_oracle_rules())
@@ -199,7 +141,7 @@ class TestMinimalSampleProject:
                 assert_matches_golden(findings[1:], golden_path=GOLDEN_FINDINGS)
             assert repr(finding_key(findings[0])) in str(removed_exc.value)
 
-    def test_config_overlay(  # pylint: disable=too-many-locals  # test method uses several locals for config file manipulation
+    def test_config_overlay(
         self,
         tmp_path: Path,
         capsys: pytest.CaptureFixture[str],
@@ -211,39 +153,14 @@ class TestMinimalSampleProject:
         and passes it via ``config_paths``.  The ``use-structlog`` violation
         must disappear from the pylint output.
         """
-        project = _copy_sample(tmp_path)
-        _init_git(project)
+        project = copy_sample_project(tmp_path)
+        git_init_and_stage(project)
 
         # Build a project-local .pylintrc that disables use-structlog.
-        config_root = Path("config")
-        shipped_pylintrc = config_root / ".pylintrc"
-        assert shipped_pylintrc.is_file(), "Shipped pylintrc not found"
-        pylintrc_content = shipped_pylintrc.read_text()
-
-        # Add use-structlog to the disable list.
-        pylintrc_content = pylintrc_content.replace(
-            "disable=",
-            "disable=use-structlog,",
-        )
-        # Remove use-structlog from the enable list programmatically (robust against enable list churn).
-        enable_match = re.search(r"^enable=(.+)", pylintrc_content, re.MULTILINE)
-        assert enable_match, "Could not find enable= line in pylintrc"
-        enable_items = enable_match.group(1).split(",")
-        filtered = [item for item in enable_items if item != "use-structlog"]
-        new_enable = "enable=" + ",".join(filtered)
-        pylintrc_content = pylintrc_content[: enable_match.start()] + new_enable + pylintrc_content[enable_match.end() :]
-        local_pylintrc = project / ".pylintrc"
-        local_pylintrc.write_text(pylintrc_content)
-
-        # Build config paths from shipped configs, then override pylint.
-        config_paths = _shipped_config_paths()
-        config_paths["pylint"] = local_pylintrc
-
-        config = RunnerConfig(
-            cwd=project,
-            package_name="minimal_sample",
-            config_paths=config_paths,
-        )
+        config = make_runner_config(project)
+        config_paths = config.config_paths
+        assert config_paths is not None
+        config_paths["pylint"] = build_pylint_overlay_config(project, "use-structlog")
         rc = run_lint(config=config)
         assert isinstance(rc, int)
 
@@ -272,30 +189,9 @@ class TestMinimalSampleProject:
 
         Mocks ``_run_uv`` to avoid network calls.
         """
-        import python_setup_lint.setup as _setup_mod
-        from python_setup_lint.setup import install
-
-        project = _copy_sample(tmp_path)
-        _init_git(project)
-
-        # Mock _run_uv to return success without network.
-        original_run_uv = _setup_mod._run_uv
-
-        def fake_run_uv(args: list[str], *, cwd: str | Path) -> tuple[int, str, str]:
-            return 0, "", ""
-
-        monkeypatch.setattr(_setup_mod, "_run_uv", fake_run_uv)
-
-        try:
-            # First install.
-            rc1 = install(project)
-            assert rc1 == 0, f"First install failed with exit code {rc1}"
-
-            # Second install — should be idempotent.
-            rc2 = install(project)
-            assert rc2 == 0, f"Second install failed with exit code {rc2} (should be idempotent)"
-        finally:
-            monkeypatch.setattr(_setup_mod, "_run_uv", original_run_uv)
+        project = copy_sample_project(tmp_path)
+        git_init_and_stage(project)
+        install_twice_assert_idempotent(project, monkeypatch)
 
     def test_dry_run_hooks(
         self,
@@ -305,18 +201,9 @@ class TestMinimalSampleProject:
 
         Skips the test if ``pre-commit`` is not available.
         """
-        try:
-            subprocess.run(
-                ["pre-commit", "--version"],
-                capture_output=True,
-                check=True,
-            )
-        except FileNotFoundError, subprocess.CalledProcessError:
-            logging.warning("pre-commit not available, skipping test")
-            pytest.skip("pre-commit not available")
-
-        project = _copy_sample(tmp_path)
-        _init_git(project)
+        ensure_precommit_or_skip()
+        project = copy_sample_project(tmp_path)
+        git_init_and_stage(project)
 
         # Create .pre-commit-config.yaml from the template with a known rev.
         from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
@@ -341,28 +228,7 @@ class TestMinimalSampleProject:
         Verifies install artifacts are created and lint runs without crashing.
         """
         d = tmp_path / "consumer"
-        d.mkdir()
-        (d / "src/consumer").mkdir(parents=True)
-        (d / "src/consumer/__init__.py").write_text("# c\n")
-        (d / "tests").mkdir()
-        (d / "tests/__init__.py").write_text("# t\n")
-        (d / "pyproject.toml").write_text(
-            textwrap.dedent("""\
-            [project]
-            name = "consumer"
-            version = "0.1.0"
-            requires-python = ">=3.14"
-            [dependency-groups]
-            dev = ["ruff>=0.5", "python-setup"]
-        """)
-        )
-        (d / "AGENTS.md").write_text("# C\n")
-        _init_git(d)
-        (d / ".secrets.baseline").write_text(
-            '{"version":"1.0","plugins_used":[],"filters_used":[],"results":{},"generated_at":"2025-01-01T00:00:00Z"}\n'
-        )
-        (d / "tach.toml").write_text('[[modules]]\npath = "src/consumer"\ndepends_on = []\n')
-
+        make_clean_consumer_project(d)
         # Install
         rc = install(d, dev_path=str(Path.cwd()))
         assert rc == 0, f"install failed with exit code {rc}"
@@ -373,16 +239,7 @@ class TestMinimalSampleProject:
         assert "<!-- python-setup:pre-commit -->" in (d / "AGENTS.md").read_text()
 
         # Run lint
-        rc = run_lint(
-            config=RunnerConfig(
-                cwd=d,
-                tools_override=[
-                    "ruff check",
-                    "mypy",
-                    "pylint",
-                ],
-            )
-        )
+        rc = run_lint(config=RunnerConfig(cwd=d, tools_override=["ruff check", "mypy", "pylint"]))
         # Lint may find violations in the minimal consumer project;
         # we only assert it ran without crashing (exit code 0 or 2
         # for pylint-found issues, not a crash).
@@ -396,38 +253,9 @@ class TestMinimalSampleProject:
 
         Skips the test if ``pre-commit`` is not available.
         """
-        try:
-            subprocess.run(
-                ["pre-commit", "--version"],
-                capture_output=True,
-                check=True,
-            )
-        except FileNotFoundError, subprocess.CalledProcessError:
-            logging.warning("pre-commit not available, skipping test")
-            pytest.skip("pre-commit not available")
-
+        ensure_precommit_or_skip()
         d = tmp_path / "hooks"
-        d.mkdir()
-        (d / "src/consumer").mkdir(parents=True)
-        (d / "src/consumer/__init__.py").write_text("# c\n")
-        (d / "tests").mkdir()
-        (d / "tests/__init__.py").write_text("# t\n")
-        (d / "pyproject.toml").write_text(
-            textwrap.dedent("""\
-            [project]
-            name = "consumer"
-            version = "0.1.0"
-            requires-python = ">=3.14"
-            [dependency-groups]
-            dev = ["ruff>=0.5", "python-setup"]
-        """)
-        )
-        (d / "AGENTS.md").write_text("# C\n")
-        _init_git(d)
-        (d / ".secrets.baseline").write_text(
-            '{"version":"1.0","plugins_used":[],"filters_used":[],"results":{},"generated_at":"2025-01-01T00:00:00Z"}\n'
-        )
-        (d / "tach.toml").write_text('[[modules]]\npath = "src/consumer"\ndepends_on = []\n')
+        make_clean_consumer_project(d)
 
         # Install
         rc = install(d, dev_path=str(Path.cwd()))
@@ -449,7 +277,10 @@ class TestMinimalSampleProject:
                 check=True,
             )
         except subprocess.CalledProcessError as exc:
-            logging.debug("pre-commit dry-run exited with code %d (expected 0 or 1)", exc.returncode)
+            logging.debug(
+                "pre-commit dry-run exited with code %d (expected 0 or 1)",
+                exc.returncode,
+            )
             result = exc
         # Dry-run should succeed (exit 0) or report hooks would change files (exit 1)
         assert result.returncode in (0, 1), (
@@ -472,12 +303,17 @@ class TestMinimalSampleProject:
         - Every ``file`` value in the baseline JSON is either ``None`` or a
           relative path (does not start with ``/``).
         """
-        project = _copy_sample(tmp_path)
-        _init_git(project)
+        project = copy_sample_project(tmp_path)
+        git_init_and_stage(project)
 
-        config = _make_config(project)
+        config = make_runner_config(project)
         baseline_file = tmp_path / "lint.baseline"
-        rc = run_lint(config=config, path=".", baseline=str(baseline_file), overwrite_baseline=True)
+        rc = run_lint(
+            config=config,
+            path=".",
+            baseline=str(baseline_file),
+            overwrite_baseline=True,
+        )
         assert isinstance(rc, int)
 
         assert baseline_file.exists(), "Baseline file was not created"
@@ -503,11 +339,11 @@ class TestMinimalSampleProject:
         Guards against regressions where the runner's tool command diverges
         from the standalone tool invocation (single-source-of-truth broken).
         """
-        project = _copy_sample(tmp_path)
-        _init_git(project)
+        project = copy_sample_project(tmp_path)
+        git_init_and_stage(project)
 
         # ── Run ruff through the runner ──────────────────────────────
-        config = _make_config(project)
+        config = make_runner_config(project)
         config.tools_override = ["ruff check"]
         rc = run_lint(config=config, path=".")
         assert isinstance(rc, int)
