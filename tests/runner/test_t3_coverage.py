@@ -21,56 +21,37 @@ from python_setup_lint.runner.parsers import (
     _parse_yamllint_parsable,
 )
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
+from tests.runner._factories import runner_registry_constant
 
 if TYPE_CHECKING:
     import pytest
 
-# ── All TOOLS must have a registered parser ────────────────────────
+# ── All non-formatter tools must have a registered parser ──────────
 
 
 class TestParserCompleteness:
-    """Every tool in TOOLS must have a corresponding statistics parser."""
-
-    # Replicate the parser dispatch dict here to catch drift
-    # (importing a private symbol is OK in the same package tests)
-    EXPECTED_PARSER_TOOLS = {
-        "ruff check",
-        "rumdl check",
-        "pylint",
-        "pylint-pyi",
-        "pylint tests",
-        "pyright check",
-        "pyright verify types",
-        "mypy",
-        "ty check",
-        "tach check",
-        "yamllint",
-        "mypy.stubtest",
-        "detect-secrets",
-    }
+    """Every non-formatter tool in TOOLS must have a corresponding statistics parser."""
 
     def test_parser_completeness_given_all_tools_then_have_parser(self) -> None:
         """Every TOOLS entry has a statistics parser registered."""
         tool_names = {t.name for t in TOOLS}
-        missing = tool_names - self.EXPECTED_PARSER_TOOLS
+        missing = tool_names - runner_registry_constant("FORMATTER_ONLY") - runner_registry_constant("STATISTICS_PARSER_TOOLS")
         assert not missing, f"TOOLS missing statistics parsers: {missing}"
 
     def test_parser_completeness_given_all_parsers_then_correspond_to_tools(self) -> None:
         """Every registered parser tool name exists in TOOLS."""
         tool_names = {t.name for t in TOOLS}
-        extra = self.EXPECTED_PARSER_TOOLS - tool_names
+        extra = runner_registry_constant("STATISTICS_PARSER_TOOLS") - tool_names
         assert not extra, f"Parsers exist for unknown tools: {extra}"
 
     def test_parser_completeness_given_statistics_flags_then_align_with_parsers(self) -> None:
         """Tools with a statistics parser also have non-empty flags."""
-        has_flags = set()
-        for spec in TOOLS:
-            if _build_statistics_flags(spec):
-                has_flags.add(spec.name)
+        has_flags = {spec.name for spec in TOOLS if _build_statistics_flags(spec)}
         # pyright verify types, mypy.stubtest, detect-secrets have no extra flags
         # but still have parsers
-        assert has_flags <= self.EXPECTED_PARSER_TOOLS
-        no_flag_but_parser = self.EXPECTED_PARSER_TOOLS - has_flags
+        statistics_tools = runner_registry_constant("STATISTICS_PARSER_TOOLS")
+        assert has_flags <= statistics_tools
+        no_flag_but_parser = statistics_tools - has_flags
         assert no_flag_but_parser <= {
             "pyright verify types",
             "mypy.stubtest",

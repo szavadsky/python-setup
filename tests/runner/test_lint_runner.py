@@ -47,11 +47,12 @@ _CONFIG = RunnerConfig(cwd=Path.cwd())
 
 
 class TestToolSpec:
-    """The static 13-tool table invariant."""
+    """The static 14-tool table invariant."""
 
     def test_tool_spec_given_known_tools_then_present(self) -> None:
         assert {t.name for t in TOOLS} == {
             "tach check",
+            "ruff format",
             "ruff check",
             "rumdl check",
             "mypy",
@@ -73,7 +74,7 @@ class TestToolSpec:
             "ty check",
         }
         assert all(t.name for t in TOOLS)
-        assert len({t.name for t in TOOLS}) == len(TOOLS) == 13
+        assert len({t.name for t in TOOLS}) == len(TOOLS) == 14
 
     def test_tool_spec_given_yamllint_then_default_paths_is_dot(self) -> None:
         """yamllint default_paths changed from config/*.yaml to . (T5 fix)."""
