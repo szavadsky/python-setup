@@ -735,3 +735,4 @@
 {"type":"step_started","task":"modernize","step":"plan-close-up-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/046-plan-close-up-1-a1","ts":"2026-11-08T09:42:55.448Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"plan-close-up-1","timeoutSec":900,"ts":"2026-11-08T09:42:55.462Z"}
 {"type":"step_tool_call_warning","task":"modernize","step":"plan-close-up-1","attempt":1,"toolCalls":72,"threshold":60,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T09-42-56-073Z_01a1ba8a-1d49-71f6-ae4f-e5cf629d4569.jsonl","ts":"2026-11-08T09:50:53.764Z"}
+{"type":"step_finished","task":"modernize","step":"plan-close-up-1","attempt":1,"status":"ok","sessionId":"01a1ba8a-1d49-71f6-ae4f-e5cf629d4569","usage":{"inputTokens":51936,"outputTokens":17679,"costUsd":0.009422},"ts":"2026-11-08T09:50:53.840Z"}
