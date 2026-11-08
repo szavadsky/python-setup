@@ -93,12 +93,12 @@ items:
     spendUsd: 0
   consolidate-integration-helpers-v3:
     kind: test-only
-    status: running
+    status: ready
     branch: topic/modernize--consolidate-integration-helpers-v3
-    attempts: 2
+    attempts: 1
     fixRounds: 1
-    spendUsd: 0.144313
-    currentStep: develop
+    spendUsd: 0.19283999999999998
+    currentStep: review
   docs-counts-sync:
     kind: dev
     status: pending
@@ -182,20 +182,26 @@ debt:
     file could be fixed in passing"
   - "[consolidate-integration-helpers-v2] Triple single-name re-export imports
     could be one statement"
-budgetSpentUsd: 4.270172000000001
+  - "[consolidate-integration-helpers-v3] Triple single-name re-exports could be
+    one import statement"
+  - "[consolidate-integration-helpers-v3] Comma-form except tuple is valid but
+    obscure"
+  - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
+    "consumer" dirname for hooks test'
+budgetSpentUsd: 4.4555630000000015
 spendByRole:
   workhorse:
-    costUsd: 0.9998670000000001
-    inputTokens: 1771087
-    outputTokens: 806324
+    costUsd: 1.035168
+    inputTokens: 1828755
+    outputTokens: 839834
   alt-workhorse:
-    costUsd: 0.100414
-    inputTokens: 452706
-    outputTokens: 255367
+    costUsd: 0.11363999999999999
+    inputTokens: 543963
+    outputTokens: 271290
   architect:
-    costUsd: 3.133739
-    inputTokens: 2540436
-    outputTokens: 163527
+    costUsd: 3.270603
+    inputTokens: 3904569
+    outputTokens: 165781
   alt-architect:
     costUsd: 0.036152
     inputTokens: 137287
@@ -218,9 +224,9 @@ spendByItem:
     inputTokens: 138170
     outputTokens: 64014
   consolidate-integration-helpers-v3:
-    costUsd: 0.144313
-    inputTokens: 192430
-    outputTokens: 125262
+    costUsd: 0.19283999999999998
+    inputTokens: 341355
+    outputTokens: 174695
   golden-snapshot-wiring:
     costUsd: 0.13088
     inputTokens: 218824
@@ -230,7 +236,7 @@ spendByItem:
     inputTokens: 413243
     outputTokens: 140910
   (orchestration):
-    costUsd: 3.3316810000000006
-    inputTokens: 3215977
-    outputTokens: 482568
-lastUpdated: 2026-11-08T08:23:22.912Z
+    costUsd: 3.4685450000000007
+    inputTokens: 4580110
+    outputTokens: 484822
+lastUpdated: 2026-11-08T08:44:03.964Z
