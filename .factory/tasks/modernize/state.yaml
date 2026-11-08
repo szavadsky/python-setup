@@ -53,11 +53,12 @@ items:
     spendUsd: 0
   golden-helpers-unit:
     kind: test-only
-    status: pending
+    status: ready
     branch: topic/modernize--golden-helpers-unit
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.057198
+    currentStep: review
   golden-snapshot-wiring:
     kind: dev
     status: pending
@@ -135,20 +136,27 @@ debt:
     fixture-scoped clearing"
   - "[third-party-assumption-tests] Assert confidence is not None before reading
     .name"
-budgetSpentUsd: 3.526872000000002
+  - "[golden-helpers-unit] tool_minimums imports TOOLS via package root, pulling
+    CLI structlog side effects"
+  - "[golden-helpers-unit] Public FindingKey alias missing from __all__"
+  - "[golden-helpers-unit] Path normalization keeps '..' and misses Windows
+    drive-letter absolutes"
+  - "[golden-helpers-unit] Golden read silently drops extra keys and leaks raw
+    JSON errors"
+budgetSpentUsd: 3.5925870000000013
 spendByRole:
   workhorse:
-    costUsd: 0.483592
-    inputTokens: 848479
-    outputTokens: 407953
+    costUsd: 0.533499
+    inputTokens: 951376
+    outputTokens: 453948
   alt-workhorse:
-    costUsd: 0.06769399999999999
-    inputTokens: 264134
-    outputTokens: 190350
+    costUsd: 0.07745999999999999
+    inputTokens: 316580
+    outputTokens: 211861
   architect:
-    costUsd: 2.9394340000000003
-    inputTokens: 702703
-    outputTokens: 133827
+    costUsd: 2.945476
+    inputTokens: 750678
+    outputTokens: 136540
   alt-architect:
     costUsd: 0.036152
     inputTokens: 137287
@@ -166,8 +174,12 @@ spendByItem:
     costUsd: 0.170578
     inputTokens: 226110
     outputTokens: 148096
+  golden-helpers-unit:
+    costUsd: 0.057198
+    inputTokens: 138170
+    outputTokens: 64014
   (orchestration):
-    costUsd: 3.114408000000002
-    inputTokens: 1229731
-    outputTokens: 414792
-lastUpdated: 2026-11-08T04:49:06.109Z
+    costUsd: 3.1229250000000017
+    inputTokens: 1294879
+    outputTokens: 420997
+lastUpdated: 2026-11-08T05:12:00.295Z
