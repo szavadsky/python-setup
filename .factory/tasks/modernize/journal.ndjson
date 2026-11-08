@@ -1134,3 +1134,6 @@
 {"type":"steer_poll","task":"modernize","wave":4,"iteration":2,"processed":1,"skipped":0,"ts":"2026-11-08T17:22:12.512Z"}
 {"type":"infra_retry_finished","task":"modernize","item":"test-debloat-audit-i2","step":"review","attempt":1,"retry":1,"ok":true,"transient":false,"costUsd":0.013324,"ts":"2026-11-08T17:22:48.069Z"}
 {"type":"step_finished","task":"modernize","item":"test-debloat-audit-i2","step":"review","attempt":1,"status":"ok","sessionId":"01a1bc20-1a10-7287-9fd9-7719d13eae2f","usage":{"inputTokens":80978,"outputTokens":18346,"costUsd":0.013324},"ts":"2026-11-08T17:22:48.133Z"}
+{"type":"step_started","task":"modernize","step":"consult-test-debloat-audit-i2","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/065-consult-test-debloat-audit-i2-a1","ts":"2026-11-08T17:22:50.287Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"consult-test-debloat-audit-i2","timeoutSec":1200,"ts":"2026-11-08T17:22:50.291Z"}
+{"type":"step_transcript_size_warning","task":"modernize","step":"consult-test-debloat-audit-i2","attempt":1,"sizeBytes":6993323,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T00-51-56-494Z_01a1b8a3-f9ce-7511-963e-37a3531a2d3a.jsonl","ts":"2026-11-08T17:23:43.940Z"}
