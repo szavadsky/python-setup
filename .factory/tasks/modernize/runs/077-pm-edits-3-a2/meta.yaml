@@ -8,5 +8,11 @@ models:
   - opencode-go/deepseek-v4.1-flash
 session: 01a1bcb6-a9d0-7072-9a55-bf509817ab09
 timeoutSec: 2700
-status: started
+status: ok
 startedAt: 2026-11-08T19:53:11.207Z
+endedAt: 2026-11-08T19:53:48.446Z
+usage:
+  inputTokens: 3099
+  outputTokens: 5293
+  costUsd: 0.001457
+traceRef: /home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T19-50-50-064Z_01a1bcb6-a9d0-7072-9a55-bf509817ab09.jsonl
