@@ -36,3 +36,6 @@
 {"type":"step_transcript_size_warning","task":"modernize","step":"context-pack","attempt":1,"sizeBytes":25706162,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T00-27-27-858Z_01a1b88d-90f2-7789-bcdb-c72e31a04506.jsonl","ts":"2026-11-08T00:37:41.173Z"}
 {"type":"step_finished","task":"modernize","step":"context-pack","attempt":1,"status":"ok","sessionId":"01a1b88d-90f2-7789-bcdb-c72e31a04506","usage":{"inputTokens":143360,"outputTokens":39174,"costUsd":0.06287},"ts":"2026-11-08T00:37:41.226Z"}
 {"type":"iteration_started","iteration":1,"ts":"2026-11-08T00:37:41.296Z"}
+{"type":"step_started","task":"modernize","step":"plan-review-1-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/010-plan-review-1-1-a1","ts":"2026-11-08T00:37:41.331Z"}
+{"type":"step_timeout","task":"modernize","step":"plan-review-1-1","timeoutSec":900,"ts":"2026-11-08T00:37:41.333Z"}
+{"type":"step_transcript_size_warning","task":"modernize","step":"plan-review-1-1","attempt":1,"sizeBytes":5780918,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T00-37-41-526Z_01a1b896-ee16-73d0-8b7f-dcc417a6385e.jsonl","ts":"2026-11-08T00:51:56.211Z"}
