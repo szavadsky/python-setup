@@ -1,9 +1,12 @@
 """Pin the writer, timing, and ``--path`` scoping of the cache written during pylint runs.
 
-Observed at HEAD with pylint 4.0.6 (pinned in ``pyproject.toml``).  The tracked
-cache in this verdict is the semantic result cache consumed by
-``epic-semantic-infrastructure`` -- not pylint's separate persistent
-``~/.cache/pylint/*.stats`` bookkeeping.
+Observed at HEAD with pylint 4.0.6 -- the current floor in ``pyproject.toml``
+(``pylint>=4.0.6``), so these tests double as the upgrade watchdog: a newer
+pylint that shifts the ``jobs`` default or the ``check_parallel`` dispatch
+fails them.  The tracked cache in this verdict is the semantic result cache
+consumed by ``epic-semantic-infrastructure`` -- not pylint's separate
+persistent ``~/.cache/pylint/*.stats`` bookkeeping (a Linux example; pylint's
+persistent-data home is platform-dependent).
 
 WRITER-FIRST VERDICT (feeds ``cache-design-spike``)
 ===================================================
@@ -12,8 +15,9 @@ WRITER-FIRST VERDICT (feeds ``cache-design-spike``)
   calls ``_save_result_cache``.  The runner performs no post-process merge and
   checker ``open()``/``close()`` hooks do not write the file.
 * **Timing** -- one whole-file rewrite per newly computed verdict (cache miss),
-  synchronously before the check returns.  Cache hits and heuristic fallbacks
-  (reranker unavailable) write nothing.
+  synchronously before the check returns.  Cache hits, heuristic fallbacks
+  (reranker unavailable), and the empty-primary short-circuit (``False``
+  before key computation) write nothing.
 * **``--path`` scoping** -- the runner's ``--path`` narrows only the file
   arguments passed to each pylint invocation.  The cache is a single
   home-directory file and the key is SHA-256 over
@@ -21,15 +25,21 @@ WRITER-FIRST VERDICT (feeds ``cache-design-spike``)
   scoped and full runs share entries across the sequential ``pylint``,
   ``pylint-pyi`` and ``pylint tests`` invocations.
 * **Sweep implication** -- because cache identity is path-free, ``--path``
-  cannot partition the cache.  Prune/sweep scope must come from per-entry file
-  references (the tracked schema's ``files`` field), not from the lint
-  invocation's path argument.
+  cannot partition the cache.  Prune/sweep scope would need per-entry file
+  references -- a future tracked schema needs a ``files`` field per entry;
+  today's schema is only ``dict[int, bool]`` -- not the lint invocation's path
+  argument.
 * **Concurrency** -- the runner executes tools sequentially and none of the
   three pylint specs passes ``-j``/``--jobs``; pylint's default ``jobs`` is 1,
-  so each run has a single writer.  No lockfile, runner-side merge, or sidecar
-  files are required today.  If ``-j`` is introduced, pylint dispatches workers
-  as separate processes, and the verdict flips to per-writer sidecars plus a
-  runner merge (or a crash-safe lock plus atomic replace).
+  and the shipped ``config/.pylintrc*`` files do not raise it (watchdog test).
+  The single-writer claim holds *only while the effective ``jobs`` is 1*, so
+  no lockfile, runner-side merge, or sidecar files are required today.  The
+  runner resolves the rcfile from ``--config pylint=PATH``, then
+  ``cwd/config/.pylintrc``, then ``cwd/.pylintrc``: a consumer rcfile or
+  override that sets ``jobs > 1`` (or ``jobs = 0`` auto-detect) silently
+  enables pylint's process pool and voids the claim.  If that happens, pylint
+  dispatches separate processes and the verdict flips to per-writer sidecars
+  plus a runner merge (or a crash-safe lock plus atomic replace).
 * **Crash safety** -- the writer is a non-atomic ``Path.write_text``.  A crash
   mid-write can lose entries but cannot break lint: unparsable JSON loads as an
   empty cache and is recomputed.
@@ -41,23 +51,29 @@ semantics before changing the assertion rather than loosening it.
 from __future__ import annotations
 
 import ast
+import configparser
 import hashlib
 import inspect
 import json
 from pathlib import Path
 from typing import Any, cast
 
+import pylint.lint.parallel as pylint_parallel
 import pytest
 from pylint.lint import PyLinter
 
 import python_setup_lint.checkers._semantic as semantic_module
 from python_setup_lint.checkers._semantic import semantic_check_if_meaningful
+from python_setup_lint.runner._config import _default_config_paths
+from python_setup_lint.runner.cmd_build import _resolve_pylintrc
 from python_setup_lint.runner.dispatch import TOOLS, TOOLS_BY_NAME, _strategy_for
 from python_setup_lint.runner.types import RunnerConfig
 
 pytestmark = pytest.mark.no_external_api
 
 _PYLINT_TOOL_NAMES = ("pylint", "pylint-pyi", "pylint tests")
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_SHIPPED_PYLINT_RCFILES = tuple(sorted((_REPO_ROOT / "config").glob(".pylintrc*")))
 
 
 class _FakeReranker:
@@ -78,6 +94,25 @@ def _expected_cache_key(text: str, *, rule: str, code_context: str, comment: str
     model = cast(Any, semantic_module)._RERANKER_MODEL
     payload = f"{text}|{rule}|{code_context}|{comment}|{model}"
     return int.from_bytes(hashlib.sha256(payload.encode()).digest()[:8], "big")
+
+
+def _is_save_result_cache_call(node: ast.Call) -> bool:
+    """Match bare and attribute-qualified calls to the cache writer."""
+    func = node.func
+    if isinstance(func, ast.Name):
+        return func.id == "_save_result_cache"
+    return isinstance(func, ast.Attribute) and func.attr == "_save_result_cache"
+
+
+def _pylintrc_jobs_overrides(rcfile: Path) -> list[tuple[str, int]]:
+    """Return effective ``jobs`` options from *rcfile* as ``(section, value)`` pairs.
+
+    Pylint 4.0.6 flattens options from every rcfile section into CLI flags, so a
+    ``jobs`` key anywhere in the file is effective.
+    """
+    parser = configparser.ConfigParser(interpolation=None, inline_comment_prefixes=("#", ";"))
+    parser.read_string(rcfile.read_text())
+    return [(section, int(parser[section]["jobs"])) for section in parser.sections() if parser.has_option(section, "jobs")]
 
 
 @pytest.fixture
@@ -177,6 +212,18 @@ class TestSemanticCacheWriter:
         monkeypatch.setattr("python_setup_lint.checkers._semantic._load_reranker", lambda: None)
 
         assert semantic_check_if_meaningful("checked elsewhere", rule="W9704", code_context="x = 1") is None
+        assert not semantic_cache.exists()
+        assert not semantic_cache.parent.exists()
+
+    def test_semantic_check_if_meaningful_given_empty_primary_then_returns_false_without_writing(
+        self, semantic_cache: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """OBSERVED: the empty-primary short-circuit returns False before key computation and writes nothing."""
+        reranker = _FakeReranker(score=0.9)
+        monkeypatch.setattr("python_setup_lint.checkers._semantic._load_reranker", lambda: reranker)
+
+        assert semantic_check_if_meaningful("", rule="W9704", code_context="x = 1", comment="   ") is False
+        assert reranker.calls == 0
         assert not semantic_cache.exists()
         assert not semantic_cache.parent.exists()
 
@@ -291,19 +338,13 @@ class TestSemanticCachePathScoping:
         """OBSERVED: `_save_result_cache` has one caller; runner code never performs a merge."""
         source = Path(semantic_module.__file__).read_text()
         tree = ast.parse(source)
-        save_calls = [
-            node
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "_save_result_cache"
-        ]
+        save_calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and _is_save_result_cache_call(node)]
         assert len(save_calls) == 1
         callers = [
             node.name
             for node in ast.walk(tree)
             if isinstance(node, ast.FunctionDef)
-            and any(
-                isinstance(call, ast.Call) and getattr(call.func, "id", None) == "_save_result_cache" for call in ast.walk(node)
-            )
+            and any(isinstance(call, ast.Call) and _is_save_result_cache_call(call) for call in ast.walk(node))
         ]
         assert callers == ["semantic_check_if_meaningful"]
 
@@ -321,6 +362,36 @@ class TestSemanticCachePathScoping:
             if path.name != Path(semantic_module.__file__).name
             and ("_save_result_cache" in path.read_text() or "_RESULT_CACHE_FILE" in path.read_text())
         ]
+
+
+class TestPylintRcfileJobsWatchdog:
+    """Shipped rcfiles must leave pylint's ``jobs`` at 1 so the cache writer stays single."""
+
+    def test_shipped_pylint_rcfiles_given_effective_options_then_never_enable_worker_pool(self) -> None:
+        """OBSERVED: every shipped rcfile leaves ``jobs`` at its default of 1."""
+        assert _SHIPPED_PYLINT_RCFILES
+        for rcfile in _SHIPPED_PYLINT_RCFILES:
+            assert all(value == 1 for _, value in _pylintrc_jobs_overrides(rcfile)), rcfile
+
+    def test_pylintrc_jobs_scan_given_consumer_jobs_override_then_detects_it(self, tmp_path: Path) -> None:
+        """NEGATIVE CONTROL: the watchdog parser flags an rcfile that raises ``jobs``."""
+        rcfile = tmp_path / ".pylintrc"
+        rcfile.write_text("[MAIN]\njobs=2\n")
+
+        assert _pylintrc_jobs_overrides(rcfile) == [("MAIN", 2)]
+
+    def test_runner_pylint_config_resolution_given_repo_root_then_uses_shipped_jobs_free_rcfiles(self) -> None:
+        """OBSERVED: all three pylint invocations resolve to shipped, jobs-free rcfiles."""
+        expected_names = {"pylint": ".pylintrc", "pylint-pyi": ".pylintrc-pyi", "pylint tests": ".pylintrc-tests"}
+        resolved = {
+            "pylint": _resolve_pylintrc({}, _REPO_ROOT),
+            "pylint-pyi": _default_config_paths(_REPO_ROOT).get("pylint-pyi"),
+            "pylint tests": _default_config_paths(_REPO_ROOT).get("pylint tests"),
+        }
+        for tool_name, rcfile in resolved.items():
+            assert rcfile is not None, tool_name
+            assert rcfile.name == expected_names[tool_name], tool_name
+            assert all(value == 1 for _, value in _pylintrc_jobs_overrides(rcfile)), tool_name
 
 
 class TestPylintInvocationConcurrency:
@@ -376,3 +447,39 @@ class TestPylintInvocationConcurrency:
         linter.check([str(source)])
 
         assert dispatched == [2]
+
+    def test_pylint_check_parallel_given_worker_pool_then_uses_process_pool_executor(self) -> None:
+        """OBSERVED: parallel pylint workers are processes, not threads, so each writes separately."""
+        assert "ProcessPoolExecutor" in inspect.getsource(pylint_parallel.check_parallel)
+
+    def test_runner_pipeline_given_tool_selection_then_dispatches_tools_serially(self) -> None:
+        """OBSERVED: ``_run_tool_pipeline`` blocks on ``_run_cmd`` in one loop; no pool imports."""
+        runner_dir = Path(semantic_module.__file__).parent.parent / "runner"
+        for path in runner_dir.rglob("*.py"):
+            tree = ast.parse(path.read_text())
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    roots = {alias.name.split(".")[0] for alias in node.names}
+                elif isinstance(node, ast.ImportFrom):
+                    roots = {(node.module or "").split(".")[0]}
+                else:
+                    continue
+                assert roots.isdisjoint({"concurrent", "multiprocessing"}), path.name
+
+        cli_tree = ast.parse((runner_dir / "cli.py").read_text())
+        pipeline = next(
+            node for node in ast.walk(cli_tree) if isinstance(node, ast.FunctionDef) and node.name == "_run_tool_pipeline"
+        )
+        serial_loops = [
+            node
+            for node in ast.walk(pipeline)
+            if isinstance(node, ast.For)
+            and isinstance(node.iter, ast.Call)
+            and isinstance(node.iter.func, ast.Name)
+            and node.iter.func.id == "_select_lint_tools"
+        ]
+        assert len(serial_loops) == 1
+        assert any(
+            isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id == "_run_cmd"
+            for call in ast.walk(serial_loops[0])
+        )
