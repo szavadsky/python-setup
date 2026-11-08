@@ -753,3 +753,4 @@
 {"type":"step_finished","task":"modernize","step":"context-pack-2","attempt":1,"status":"ok","sessionId":"01a1ba91-ddc0-7068-8a4f-d861a7979cc9","usage":{"inputTokens":211333,"outputTokens":63946,"costUsd":0.093469},"ts":"2026-11-08T10:10:45.526Z"}
 {"type":"step_started","task":"modernize","step":"architect-plan-2","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/049-architect-plan-2-a1","ts":"2026-11-08T10:10:45.979Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"architect-plan-2","timeoutSec":1200,"ts":"2026-11-08T10:10:45.983Z"}
+{"type":"step_finished","task":"modernize","step":"architect-plan-2","attempt":1,"status":"ok","sessionId":"01a1b8a3-f9ce-7511-963e-37a3531a2d3a","usage":{"inputTokens":48607,"outputTokens":17397,"costUsd":0.009958},"ts":"2026-11-08T10:13:03.728Z"}

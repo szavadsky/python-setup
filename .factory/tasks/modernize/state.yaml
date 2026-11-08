@@ -107,6 +107,28 @@ items:
     fixRounds: 1
     spendUsd: 0
 debt:
+  - "`ruff format` ToolSpec mutates the worktree (plain `ruff format`, no
+    --check/--config, default line-length 88 vs shipped 130); every `uv run
+    lint` dirties ~109 files."
+  - "Red baseline: 6 tests assert 13 tools vs 14-entry TOOLS; SIM102 at
+    stub/coverage.py:196; too-many-locals 23/20 at runner/cli.py:50. Empty
+    lint.baseline masks real violations."
+  - tests/integration.py 661 lines with too-many-lines suppression; helpers
+    duplicated across integration/conftest/_autofix_helpers.
+  - "Golden interface drift: collect signature/behavior vs plan, missing
+    sort/len/crash asserts, unused slice_tool_section."
+  - Semantic tests patch module globals and builtins.__import__, import privates
+    under type:ignore, carry vacuous `is None or ...` asserts; heuristic tables
+    duplicated across two modules.
+  - W9704/W9738 pass their own symbol as `rule`; rule-echo heuristic and future
+    model never see the actually-suppressed codes.
+  - "Over-limit/duplicated test infrastructure: _factories.py 1393 lines,
+    _factories_extras.py 502 lines with duplicate disables, 3 baseline-diff + 3
+    runner files overlapping, test_golden.py 341 lines of helper-unit tests."
+  - "Legacy/compat and docs drift: _FALLBACK_TOOLS/peek/_compare_sorted, astroid
+    3.x fallback, dispatch.py 500+ char rationale with self-suppression, rumdl
+    tests/data-exclude hack, ADR design/ vs docs/adr split, factory-journal
+    detect-secrets noise."
   - "RED-TEST WAIVED (gate inapplicable by design): golden-snapshot-wiring is a
     tests-only M1 contract item — probe verdict was test-side normalization
     sufficient, so the bounded src allowance was correctly NOT used and the diff
@@ -162,7 +184,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 4.6505480000000015
+budgetSpentUsd: 4.660506000000002
 spendByRole:
   workhorse:
     costUsd: 1.1286370000000001
@@ -173,9 +195,9 @@ spendByRole:
     inputTokens: 631696
     outputTokens: 299765
   architect:
-    costUsd: 3.356783
-    inputTokens: 4713580
-    outputTokens: 168996
+    costUsd: 3.366741
+    inputTokens: 4762187
+    outputTokens: 186393
   alt-architect:
     costUsd: 0.036152
     inputTokens: 137287
@@ -210,7 +232,7 @@ spendByItem:
     inputTokens: 413243
     outputTokens: 140910
   (orchestration):
-    costUsd: 3.66353
-    inputTokens: 5688187
-    outputTokens: 580458
-lastUpdated: 2026-11-08T10:10:45.920Z
+    costUsd: 3.6734880000000003
+    inputTokens: 5736794
+    outputTokens: 597855
+lastUpdated: 2026-11-08T10:13:04.122Z
