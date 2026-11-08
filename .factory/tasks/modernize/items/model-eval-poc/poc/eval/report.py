@@ -247,7 +247,7 @@ def main() -> None:
             accepted = run["augmented"]["cells"][best_key]["heuristic_accepted"]
             contracted = run["contracted"]["cells"][best_key]["heuristic_accepted"]
             add(f"| {entry['label']} | `{prompt}` | {best_key} | {pct(accepted['accuracy'])} | "
-                f"{pct(accepted['meaningless_precision'])} | {pct(accepted['meaningless_precision'] and accepted['meaningless_precision'])} | "
+                f"{pct(accepted['meaningless_precision'])} | {pct(accepted['meaningful_recall'])} | "
                 f"{pct(contracted['meaningful_recall'])} |")
     add("")
     add("### 4.4 Compliance table")

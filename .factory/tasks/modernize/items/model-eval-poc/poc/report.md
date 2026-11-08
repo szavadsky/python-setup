@@ -206,16 +206,16 @@ Not scored: incomplete (6/336 rows).
 | GLiDE-0.4B | `canonical` | not scored (incomplete) | n/a | n/a | n/a | n/a |
 | GLiDE-0.4B | `rubric` | not scored (incomplete) | n/a | n/a | n/a | n/a |
 | GLiDE-0.4B | `compact` | not scored (incomplete) | n/a | n/a | n/a | n/a |
-| tasksource-decider-nano | `canonical` | 0.5/veto | 37.0% | 19.0% | 19.0% | 26.5% |
-| tasksource-decider-nano | `rubric` | 0.5/veto | 25.6% | 3.1% | 3.1% | 27.9% |
-| tasksource-decider-nano | `compact` | 0.5/veto | 39.4% | 15.2% | 15.2% | 34.9% |
-| bekko-system-one-v0-17m | `canonical` | 0.5/veto | 32.3% | 16.9% | 16.9% | 22.3% |
-| bekko-system-one-v0-17m | `rubric` | 0.5/veto | 39.0% | 11.8% | 11.8% | 37.7% |
-| bekko-system-one-v0-17m | `compact` | 0.5/veto | 16.5% | 15.5% | 15.5% | 1.4% |
-| ettin-reranker-150m-v1 | `current` | 0.5/veto | 84.6% | n/a | n/a | 100.0% |
+| tasksource-decider-nano | `canonical` | 0.5/veto | 37.0% | 19.0% | 26.5% | 26.5% |
+| tasksource-decider-nano | `rubric` | 0.5/veto | 25.6% | 3.1% | 27.9% | 27.9% |
+| tasksource-decider-nano | `compact` | 0.5/veto | 39.4% | 15.2% | 34.9% | 34.9% |
+| bekko-system-one-v0-17m | `canonical` | 0.5/veto | 32.3% | 16.9% | 22.3% | 22.3% |
+| bekko-system-one-v0-17m | `rubric` | 0.5/veto | 39.0% | 11.8% | 37.7% | 37.7% |
+| bekko-system-one-v0-17m | `compact` | 0.5/veto | 16.5% | 15.5% | 1.4% | 1.4% |
+| ettin-reranker-150m-v1 | `current` | 0.5/veto | 84.6% | n/a | 100.0% | 100.0% |
 | ettin-reranker-150m-v1 | `query_first` | not scored (missing) | n/a | n/a | n/a | n/a |
 | ettin-reranker-150m-v1 | `rubric_query` | not scored (missing) | n/a | n/a | n/a | n/a |
-| all-MiniLM-L6-v2 | `current` | 0.5/veto | 84.6% | n/a | n/a | 100.0% |
+| all-MiniLM-L6-v2 | `current` | 0.5/veto | 84.6% | n/a | 100.0% | 100.0% |
 | all-MiniLM-L6-v2 | `query_first` | not scored (missing) | n/a | n/a | n/a | n/a |
 | all-MiniLM-L6-v2 | `rubric_query` | not scored (missing) | n/a | n/a | n/a | n/a |
 
