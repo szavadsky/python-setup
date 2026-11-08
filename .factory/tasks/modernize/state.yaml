@@ -1,7 +1,7 @@
 task: modernize
 kind: saga
 status: active
-iteration: 3
+iteration: 4
 currentWave: 1
 items:
   adr-formalization:
@@ -283,25 +283,6 @@ items:
     fixRounds: 1
     spendUsd: 0
 debt:
-  - "Iteration-2 eval structural no-go: contracted accepted stratum 215/0 makes
-    95% meaningless-precision unevaluable; all 183 repo labels single-author
-    with terse borderlines all True. No model meets the bar by construction."
-  - "M4 audit report completeness + unified-map drift: reports live in
-    orchestration records; evidence lines may be stale at iteration-3 HEAD."
-  - Pylint writer/timing verdict may still be unmerged (iteration-2
-    pylint-cache-assumptions running at close-up); cache concurrency design
-    cannot be invented.
-  - detect-secrets gate red on factory journals (environmental) + MemoryError on
-    huge tracked artifacts in dirty worktrees.
-  - "Docs/ADR drift: AGENTS.md stale counts + missing ruff-format scope row;
-    CHANGELOG v1.2.9 vs pyproject 1.2.10; README v1.2.5 pin; 8 problem-statement
-    ADRs partly stale; design/ vs docs/adr location split."
-  - "Over-limit modules with disables, dead compat shims, duplicated test
-    helpers, milestone-ID test names, hardcoded checkout paths — split by owner:
-    runner owns dispatch.py (542) + tests/runner/_factories_extras.py (511,
-    incl. duplicate-disable collapse); checkers owns
-    tests/checkers/_factories.py (1393); semantic owns
-    tests/checkers/test_semantic_check.py (506)."
   - "RED-TEST WAIVED (gate inapplicable by design): golden-snapshot-wiring is a
     tests-only M1 contract item — probe verdict was test-side normalization
     sufficient, so the bounded src allowance was correctly NOT used and the diff
@@ -490,20 +471,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 8.276373685999996
+budgetSpentUsd: 8.296967685999995
 spendByRole:
   workhorse:
     costUsd: 3.4456536860000004
     inputTokens: 6859852
     outputTokens: 2528026
   alt-workhorse:
-    costUsd: 0.8270230000000005
-    inputTokens: 3950884
-    outputTokens: 1395384
+    costUsd: 0.8374480000000005
+    inputTokens: 4009627
+    outputTokens: 1413951
   architect:
-    costUsd: 3.930536
-    inputTokens: 9979333
-    outputTokens: 329403
+    costUsd: 3.9407050000000003
+    inputTokens: 10048981
+    outputTokens: 337895
   alt-architect:
     costUsd: 0.073161
     inputTokens: 279595
@@ -590,9 +571,9 @@ spendByItem:
     inputTokens: 206331
     outputTokens: 89105
   (orchestration):
-    costUsd: 4.551245000000001
-    inputTokens: 11900160
-    outputTokens: 1099221
+    costUsd: 4.571839000000001
+    inputTokens: 12028551
+    outputTokens: 1126280
   adr-formalization:
     costUsd: 0.051655
     inputTokens: 168426
@@ -605,4 +586,4 @@ spendByItem:
     costUsd: 0.18856
     inputTokens: 439297
     outputTokens: 213083
-lastUpdated: 2026-11-08T22:58:16.317Z
+lastUpdated: 2026-11-08T23:02:42.446Z
