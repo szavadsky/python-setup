@@ -35,16 +35,16 @@ items:
     branch: topic/modernize--pylint-cache-assumptions
     attempts: 2
     fixRounds: 1
-    spendUsd: 0.198600686
+    spendUsd: 0.210224686
     currentStep: develop
   runner-format-contract:
     kind: dev
-    status: running
+    status: ready
     branch: topic/modernize--runner-format-contract
     attempts: 1
     fixRounds: 2
-    spendUsd: 0.159076
-    currentStep: qa
+    spendUsd: 0.467148
+    currentStep: review
   third-party-assumption-tests:
     kind: test-assumptions
     status: merged
@@ -270,6 +270,31 @@ debt:
     correctly allowlisted"
   - "[runner-format-contract] AGENTS.md test counts stale (1290/7 vs 1352/9),
     defer to docs-counts-sync"
+  - "[runner-format-contract] AGENTS.md Tool Scope table lists 13 tools and
+    omits ruff format"
+  - "[runner-format-contract] AGENTS.md pytest/integration counts stale (1290/7
+    vs 1352/9)"
+  - "[runner-format-contract] Engine lint gate command omits ruff format"
+  - "[runner-format-contract] `--config ruff=...` applies to ruff check but not
+    ruff format"
+  - "[runner-format-contract] Redundant tautological assertion in statistics
+    coverage test"
+  - "[runner-format-contract] Consumer ruff config overrides do not reach ruff
+    format"
+  - "[runner-format-contract] AGENTS.md Tool Scope table still lists 13 tools,
+    omits ruff format"
+  - "[runner-format-contract] overlays.md claims 14 tools but documents only
+    ruff check's overlay"
+  - "[runner-format-contract] Integration comment still says first run lets ruff
+    format rewrite its copy"
+  - "[runner-format-contract] Several new tests omit the required given/then
+    naming pattern"
+  - "[runner-format-contract] Tautological parser-set assertion adds no coverage"
+  - "[runner-format-contract] Lint gate remains red on pre-existing
+    SIM102/R0914/detect-secrets noise"
+  - "[runner-format-contract] AGENTS.md test counts are stale (1290/7 vs 1352/9)"
+  - "[runner-format-contract] Factory helper header says 502 lines; file is now
+    511"
   - "[third-party-assumption-tests] Module-global _LIFECYCLE_EVENTS could use
     fixture-scoped clearing"
   - "[third-party-assumption-tests] Assert confidence is not None before reading
@@ -295,20 +320,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 5.2067836860000005
+budgetSpentUsd: 5.545568686
 spendByRole:
   workhorse:
-    costUsd: 1.580078686
-    inputTokens: 2844853
-    outputTokens: 1249995
+    costUsd: 1.8720636860000002
+    inputTokens: 3599390
+    outputTokens: 1426170
   alt-workhorse:
-    costUsd: 0.16813999999999998
-    inputTokens: 793169
-    outputTokens: 398028
+    costUsd: 0.19585100000000003
+    inputTokens: 902744
+    outputTokens: 450087
   architect:
-    costUsd: 3.40306
-    inputTokens: 5019560
-    outputTokens: 233473
+    costUsd: 3.422149
+    inputTokens: 5200890
+    outputTokens: 236447
   alt-architect:
     costUsd: 0.055505
     inputTokens: 220763
@@ -339,9 +364,9 @@ spendByItem:
     inputTokens: 218824
     outputTokens: 95126
   runner-format-contract:
-    costUsd: 0.159076
-    inputTokens: 335611
-    outputTokens: 120559
+    costUsd: 0.467148
+    inputTokens: 1187671
+    outputTokens: 340789
   consolidate-integration-helpers-v3:
     costUsd: 0.19283999999999998
     inputTokens: 341355
@@ -355,11 +380,11 @@ spendByItem:
     inputTokens: 413243
     outputTokens: 140910
   pylint-cache-assumptions:
-    costUsd: 0.198600686
-    inputTokens: 322701
-    outputTokens: 159687
+    costUsd: 0.210224686
+    inputTokens: 334753
+    outputTokens: 167691
   (orchestration):
-    costUsd: 3.739354
-    inputTokens: 6130040
-    outputTokens: 718260
-lastUpdated: 2026-11-08T12:04:14.152Z
+    costUsd: 3.758443
+    inputTokens: 6311370
+    outputTokens: 721234
+lastUpdated: 2026-11-08T12:54:12.135Z
