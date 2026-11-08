@@ -108,27 +108,29 @@ items:
     spendUsd: 0
 debt:
   - "`ruff format` ToolSpec mutates the worktree (plain `ruff format`, no
-    --check/--config, default line-length 88 vs shipped 130); every `uv run
-    lint` dirties ~109 files."
-  - "Red baseline: 6 tests assert 13 tools vs 14-entry TOOLS; SIM102 at
-    stub/coverage.py:196; too-many-locals 23/20 at runner/cli.py:50. Empty
-    lint.baseline masks real violations."
-  - tests/integration.py 661 lines with too-many-lines suppression; helpers
-    duplicated across integration/conftest/_autofix_helpers.
-  - "Golden interface drift: collect signature/behavior vs plan, missing
-    sort/len/crash asserts, unused slice_tool_section."
+    --check/--config, default 88 vs shipped 130); phase-1a vs normal pass
+    indistinguishable at _fix=False."
+  - "Red baseline: 6 tests assert 13 vs 14 tools; SIM102 stub/coverage.py:196;
+    R0914 cli.py:50 (23/20); C0208 _factories_extras.py:383 set-iteration;
+    factory-journal detect-secrets flag. Empty baseline masks real violations."
+  - tests/integration.py 661 lines with too-many-lines (:12) + too-many-locals
+    (:202) suppressions; helpers duplicated across
+    integration/conftest/_autofix_helpers; _write_file orphaned in prior matrix.
+  - "Golden drift: tool-order vs sort placement, len!=0/crash asserts unplaced,
+    invented __CRASH__ sentinel, unused slice_tool_section with unpinned
+    markers."
   - Semantic tests patch module globals and builtins.__import__, import privates
-    under type:ignore, carry vacuous `is None or ...` asserts; heuristic tables
-    duplicated across two modules.
+    under type:ignore, carry vacuous `is None or ...` asserts +
+    ImportError-propagation test; heuristic tables duplicated across two
+    modules.
   - W9704/W9738 pass their own symbol as `rule`; rule-echo heuristic and future
-    model never see the actually-suppressed codes.
-  - "Over-limit/duplicated test infrastructure: _factories.py 1393 lines,
+    model never see actually-suppressed codes.
+  - "Over-limit/duplicated test infra: _factories.py 1393 lines,
     _factories_extras.py 502 lines with duplicate disables, 3 baseline-diff + 3
     runner files overlapping, test_golden.py 341 lines of helper-unit tests."
   - "Legacy/compat and docs drift: _FALLBACK_TOOLS/peek/_compare_sorted, astroid
     3.x fallback, dispatch.py 500+ char rationale with self-suppression, rumdl
-    tests/data-exclude hack, ADR design/ vs docs/adr split, factory-journal
-    detect-secrets noise."
+    tests/data-exclude hack, ADR design/ vs docs/adr split."
   - "RED-TEST WAIVED (gate inapplicable by design): golden-snapshot-wiring is a
     tests-only M1 contract item — probe verdict was test-side normalization
     sufficient, so the bounded src allowance was correctly NOT used and the diff
@@ -184,7 +186,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 4.660506000000002
+budgetSpentUsd: 4.685599000000002
 spendByRole:
   workhorse:
     costUsd: 1.1286370000000001
@@ -195,13 +197,13 @@ spendByRole:
     inputTokens: 631696
     outputTokens: 299765
   architect:
-    costUsd: 3.366741
-    inputTokens: 4762187
-    outputTokens: 186393
+    costUsd: 3.382111
+    inputTokens: 4868224
+    outputTokens: 207343
   alt-architect:
-    costUsd: 0.036152
-    inputTokens: 137287
-    outputTokens: 101647
+    costUsd: 0.045875
+    inputTokens: 174494
+    outputTokens: 129868
 spendByItem:
   golden-determinism-probe:
     costUsd: 0.16489800000000002
@@ -232,7 +234,7 @@ spendByItem:
     inputTokens: 413243
     outputTokens: 140910
   (orchestration):
-    costUsd: 3.6734880000000003
-    inputTokens: 5736794
-    outputTokens: 597855
-lastUpdated: 2026-11-08T10:13:04.122Z
+    costUsd: 3.6985810000000003
+    inputTokens: 5880038
+    outputTokens: 647026
+lastUpdated: 2026-11-08T10:27:33.362Z
