@@ -110,15 +110,20 @@ debt:
   - "`ruff format` ToolSpec mutates the worktree (plain `ruff format`, no
     --check/--config, default 88 vs shipped 130); phase-1a vs normal pass
     indistinguishable at _fix=False."
-  - "Red baseline: 6 tests assert 13 vs 14 tools; SIM102 stub/coverage.py:196;
-    R0914 cli.py:50 (23/20); C0208 _factories_extras.py:383 set-iteration;
-    factory-journal detect-secrets flag. Empty baseline masks real violations."
-  - tests/integration.py 661 lines with too-many-lines (:12) + too-many-locals
-    (:202) suppressions; helpers duplicated across
-    integration/conftest/_autofix_helpers; _write_file orphaned in prior matrix.
+  - "Red baseline: 6 named tests assert 13 vs 14 tools; SIM102
+    src/python_setup_lint/checkers/stub/coverage.py:196-198; R0914 cli.py:50
+    (23/20); C0208 _factories_extras.py:383 set-iteration. Empty baseline masks
+    real violations."
+  - detect-secrets flags factory-journal files on clean checkout; environmental
+    vs real unverified, so M1 lint-green is undefined for that tool.
+  - tests/integration.py 661 lines with too-many-lines (:12) + stale
+    too-many-locals (:202, globally disabled in .pylintrc-tests:39)
+    suppressions; helpers duplicated across
+    integration/conftest/_autofix_helpers; nested tmp_path/golden copy needs
+    mkdir-parents.
   - "Golden drift: tool-order vs sort placement, len!=0/crash asserts unplaced,
-    invented __CRASH__ sentinel, unused slice_tool_section with unpinned
-    markers."
+    unused slice_tool_section with unpinned markers, regen-twice would mutate
+    committed files."
   - Semantic tests patch module globals and builtins.__import__, import privates
     under type:ignore, carry vacuous `is None or ...` asserts +
     ImportError-propagation test; heuristic tables duplicated across two
@@ -186,7 +191,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 4.685599000000002
+budgetSpentUsd: 4.716178000000001
 spendByRole:
   workhorse:
     costUsd: 1.1286370000000001
@@ -197,13 +202,13 @@ spendByRole:
     inputTokens: 631696
     outputTokens: 299765
   architect:
-    costUsd: 3.382111
-    inputTokens: 4868224
-    outputTokens: 207343
+    costUsd: 3.40306
+    inputTokens: 5019560
+    outputTokens: 233473
   alt-architect:
-    costUsd: 0.045875
-    inputTokens: 174494
-    outputTokens: 129868
+    costUsd: 0.055505
+    inputTokens: 220763
+    outputTokens: 150668
 spendByItem:
   golden-determinism-probe:
     costUsd: 0.16489800000000002
@@ -234,7 +239,7 @@ spendByItem:
     inputTokens: 413243
     outputTokens: 140910
   (orchestration):
-    costUsd: 3.6985810000000003
-    inputTokens: 5880038
-    outputTokens: 647026
-lastUpdated: 2026-11-08T10:27:33.362Z
+    costUsd: 3.7291600000000003
+    inputTokens: 6077643
+    outputTokens: 693956
+lastUpdated: 2026-11-08T10:47:01.277Z
