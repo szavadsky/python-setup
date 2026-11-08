@@ -1405,3 +1405,6 @@
 {"type":"step_started","task":"modernize","step":"architect-wave-report-3-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/080-architect-wave-report-3-1-a1","ts":"2026-11-08T22:46:32.591Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"architect-wave-report-3-1","timeoutSec":7200,"ts":"2026-11-08T22:46:32.597Z"}
 {"type":"step_transcript_size_warning","task":"modernize","step":"architect-wave-report-3-1","attempt":1,"sizeBytes":9530131,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T00-51-56-494Z_01a1b8a3-f9ce-7511-963e-37a3531a2d3a.jsonl","ts":"2026-11-08T22:47:43.236Z"}
+{"type":"step_finished","task":"modernize","step":"architect-wave-report-3-1","attempt":1,"status":"ok","sessionId":"01a1b8a3-f9ce-7511-963e-37a3531a2d3a","usage":{"inputTokens":833645,"outputTokens":1894,"costUsd":0.08541},"ts":"2026-11-08T22:47:43.303Z"}
+{"type":"wave_started","wave":2,"iteration":3,"ts":"2026-11-08T22:47:44.828Z"}
+{"type":"empty_wave_streak","wave":2,"iteration":3,"streak":1,"blocked":[],"ts":"2026-11-08T22:47:44.831Z"}

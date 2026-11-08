@@ -6,12 +6,13 @@ currentWave: 1
 items:
   adr-formalization:
     kind: no-behavior
-    status: ready
+    status: merged
     branch: topic/modernize--adr-formalization
     attempts: 1
     fixRounds: 1
     spendUsd: 0.051655
     currentStep: review
+    mergedAt: 2026-11-08T17:38:59-05:00
   consolidate-integration-helpers-i2:
     kind: test-only
     status: merged
@@ -57,12 +58,13 @@ items:
     currentStep: develop
   pylint-cache-semantics-closure:
     kind: test-assumptions
-    status: ready
+    status: merged
     branch: topic/modernize--pylint-cache-semantics-closure
     attempts: 1
     fixRounds: 2
     spendUsd: 0.18856
     currentStep: review
+    mergedAt: 2026-11-08T17:36:11-05:00
   runner-format-contract:
     kind: dev
     status: merged
@@ -74,12 +76,13 @@ items:
     mergedAt: 2026-11-08T07:54:12-05:00
   secrets-baseline-exclusion:
     kind: no-behavior
-    status: ready
+    status: merged
     branch: topic/modernize--secrets-baseline-exclusion
     attempts: 1
     fixRounds: 1
     spendUsd: 0.041534
     currentStep: review
+    mergedAt: 2026-11-08T17:32:58-05:00
   third-party-assumption-tests:
     kind: test-assumptions
     status: merged
@@ -487,20 +490,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 8.104197685999997
+budgetSpentUsd: 8.192724685999998
 spendByRole:
   workhorse:
-    costUsd: 3.445653686
+    costUsd: 3.4456536860000004
     inputTokens: 6859852
     outputTokens: 2528026
   alt-workhorse:
-    costUsd: 0.8150050000000006
-    inputTokens: 3882731
-    outputTokens: 1371461
+    costUsd: 0.8181220000000005
+    inputTokens: 3905144
+    outputTokens: 1375485
   architect:
-    costUsd: 3.770378
-    inputTokens: 8411014
-    outputTokens: 324177
+    costUsd: 3.855788
+    inputTokens: 9244659
+    outputTokens: 326071
   alt-architect:
     costUsd: 0.073161
     inputTokens: 279595
@@ -518,6 +521,46 @@ spendByItem:
     costUsd: 0.170578
     inputTokens: 226110
     outputTokens: 148096
+  golden-helpers-unit:
+    costUsd: 0.057198
+    inputTokens: 138170
+    outputTokens: 64014
+  consolidate-integration-helpers-v3:
+    costUsd: 0.19283999999999998
+    inputTokens: 341355
+    outputTokens: 174695
+  golden-snapshot-wiring:
+    costUsd: 0.13088
+    inputTokens: 218824
+    outputTokens: 95126
+  secrets-triage-spike:
+    costUsd: 0.076996
+    inputTokens: 208236
+    outputTokens: 84395
+  model-candidate-matrix:
+    costUsd: 0.045265
+    inputTokens: 116110
+    outputTokens: 59317
+  runner-format-contract:
+    costUsd: 0.467148
+    inputTokens: 1187671
+    outputTokens: 340789
+  consolidate-integration-helpers-i2:
+    costUsd: 0.07747
+    inputTokens: 139419
+    outputTokens: 80611
+  consolidate-integration-helpers-v2:
+    costUsd: 0.19363600000000003
+    inputTokens: 413243
+    outputTokens: 140910
+  pylint-cache-assumptions:
+    costUsd: 0.210224686
+    inputTokens: 334753
+    outputTokens: 167691
+  ownership-map-revalidation:
+    costUsd: 0.38394500000000004
+    inputTokens: 1215172
+    outputTokens: 444746
   test-debloat-audit-i2:
     costUsd: 0.258385
     inputTokens: 707051
@@ -534,10 +577,6 @@ spendByItem:
     costUsd: 0.053628
     inputTokens: 140260
     outputTokens: 60983
-  golden-helpers-unit:
-    costUsd: 0.057198
-    inputTokens: 138170
-    outputTokens: 64014
   model-eval-poc:
     costUsd: 0.57375
     inputTokens: 1862227
@@ -546,60 +585,24 @@ spendByItem:
     costUsd: 0.06715600000000001
     inputTokens: 164765
     outputTokens: 116111
-  model-candidate-matrix:
-    costUsd: 0.045265
-    inputTokens: 116110
-    outputTokens: 59317
-  pylint-cache-semantics-closure:
-    costUsd: 0.18856
-    inputTokens: 439297
-    outputTokens: 213083
-  runner-format-contract:
-    costUsd: 0.467148
-    inputTokens: 1187671
-    outputTokens: 340789
-  consolidate-integration-helpers-i2:
-    costUsd: 0.07747
-    inputTokens: 139419
-    outputTokens: 80611
   golden-contract-hardening:
     costUsd: 0.091885
     inputTokens: 206331
     outputTokens: 89105
-  golden-snapshot-wiring:
-    costUsd: 0.13088
-    inputTokens: 218824
-    outputTokens: 95126
-  consolidate-integration-helpers-v3:
-    costUsd: 0.19283999999999998
-    inputTokens: 341355
-    outputTokens: 174695
-  secrets-baseline-exclusion:
-    costUsd: 0.041534
-    inputTokens: 120849
-    outputTokens: 67989
-  secrets-triage-spike:
-    costUsd: 0.076996
-    inputTokens: 208236
-    outputTokens: 84395
+  (orchestration):
+    costUsd: 4.467596000000001
+    inputTokens: 11119746
+    outputTokens: 1075990
   adr-formalization:
     costUsd: 0.051655
     inputTokens: 168426
     outputTokens: 56715
-  consolidate-integration-helpers-v2:
-    costUsd: 0.19363600000000003
-    inputTokens: 413243
-    outputTokens: 140910
-  pylint-cache-assumptions:
-    costUsd: 0.210224686
-    inputTokens: 334753
-    outputTokens: 167691
-  ownership-map-revalidation:
-    costUsd: 0.38394500000000004
-    inputTokens: 1215172
-    outputTokens: 444746
-  (orchestration):
-    costUsd: 4.379069000000003
-    inputTokens: 10263688
-    outputTokens: 1070072
-lastUpdated: 2026-11-08T22:32:58.574Z
+  secrets-baseline-exclusion:
+    costUsd: 0.041534
+    inputTokens: 120849
+    outputTokens: 67989
+  pylint-cache-semantics-closure:
+    costUsd: 0.18856
+    inputTokens: 439297
+    outputTokens: 213083
+lastUpdated: 2026-11-08T22:47:44.704Z
