@@ -1197,3 +1197,4 @@
 {"type":"step_started","task":"modernize","step":"plan-review-3-2","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/074-plan-review-3-2-a1","ts":"2026-11-08T19:24:27.344Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"plan-review-3-2","timeoutSec":3600,"ts":"2026-11-08T19:24:27.348Z"}
 {"type":"step_transcript_size_warning","task":"modernize","step":"plan-review-3-2","attempt":1,"sizeBytes":6830454,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T19-24-27-669Z_01a1bc9e-8495-75bc-8d57-75a29de23b11","ts":"2026-11-08T19:44:54.131Z"}
+{"type":"step_finished","task":"modernize","step":"plan-review-3-2","attempt":1,"status":"ok","sessionId":"01a1bc9e-8495-75bc-8d57-75a29de23b11","usage":{"inputTokens":23864,"outputTokens":22577,"costUsd":0.007016},"ts":"2026-11-08T19:44:54.229Z"}
