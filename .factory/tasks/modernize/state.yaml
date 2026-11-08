@@ -150,11 +150,11 @@ items:
     spendUsd: 0
   test-debloat-audit-i2:
     kind: fact-finder
-    status: running
+    status: ready
     branch: topic/modernize--test-debloat-audit-i2
     attempts: 1
-    fixRounds: 3
-    spendUsd: 0.140249
+    fixRounds: 1
+    spendUsd: 0.258385
     currentStep: review
   test-debloat-audit:
     kind: fact-finder
@@ -372,6 +372,15 @@ debt:
   - "[test-debloat-audit-i2] Clarify whether per-module N is default-collected
     or total incl slow"
   - "[test-debloat-audit-i2] Confirm: 4 r1 fixes verified correct at HEAD"
+  - "[test-debloat-audit-i2] Shipped-label debt overstates unasserted set (ruff
+    format is pinned)"
+  - "[test-debloat-audit-i2] ruff check flag pin cited to wrong file"
+  - "[test-debloat-audit-i2] Two subgroup rows claim 1/1 for single slow tests
+    (should be 0/1)"
+  - "[test-debloat-audit-i2] Removal-pool slow parenthetical miscounts extras
+    and conflates core"
+  - "[test-debloat-audit-i2] Sources typo: baseline-diff-edge cited under
+    tests/checkers/"
   - "[golden-helpers-unit] tool_minimums imports TOOLS via package root, pulling
     CLI structlog side effects"
   - "[golden-helpers-unit] Public FindingKey alias missing from __all__"
@@ -393,20 +402,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 6.8373046859999995
+budgetSpentUsd: 6.994504685999999
 spendByRole:
   workhorse:
-    costUsd: 2.7671456860000005
-    inputTokens: 5542238
-    outputTokens: 1979097
+    costUsd: 2.8402316860000005
+    inputTokens: 5694418
+    outputTokens: 2042754
   alt-workhorse:
-    costUsd: 0.4716250000000001
-    inputTokens: 2276621
-    outputTokens: 833994
+    costUsd: 0.5166750000000002
+    inputTokens: 2526772
+    outputTokens: 898546
   architect:
-    costUsd: 3.543029
-    inputTokens: 6337367
-    outputTokens: 260772
+    costUsd: 3.5820930000000004
+    inputTokens: 6712064
+    outputTokens: 265015
   alt-architect:
     costUsd: 0.055505
     inputTokens: 220763
@@ -457,9 +466,9 @@ spendByItem:
     inputTokens: 413243
     outputTokens: 140910
   test-debloat-audit-i2:
-    costUsd: 0.140249
-    inputTokens: 304720
-    outputTokens: 155298
+    costUsd: 0.258385
+    inputTokens: 707051
+    outputTokens: 283507
   decision-runtime-pinning:
     costUsd: 0.016725999999999998
     inputTokens: 57664
@@ -489,7 +498,7 @@ spendByItem:
     inputTokens: 334753
     outputTokens: 167691
   (orchestration):
-    costUsd: 3.8960060000000003
-    inputTokens: 7553560
-    outputTokens: 774687
-lastUpdated: 2026-11-08T17:22:50.030Z
+    costUsd: 3.9350700000000005
+    inputTokens: 7928257
+    outputTokens: 778930
+lastUpdated: 2026-11-08T17:55:17.707Z
