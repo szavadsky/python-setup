@@ -13,15 +13,20 @@ together so the two artifacts can never disagree.
 
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import os
 import warnings
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path, PurePosixPath
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 import pytest
+
+if TYPE_CHECKING:
+    from python_setup_lint.runner import LintResult, RunnerConfig
 
 __all__ = [
     "SEMANTIC_ENV",
@@ -30,6 +35,7 @@ __all__ = [
     "assert_matches_golden",
     "assert_oracle_coverage",
     "assert_tool_coverage",
+    "collect_findings",
     "finding_key",
     "normalize_record",
     "read_golden",
@@ -44,6 +50,8 @@ __all__ = [
 
 UPDATE_ENV = "PYTHON_SETUP_LINT_UPDATE_GOLDEN"
 SEMANTIC_ENV = "PYTHON_SETUP_LINT_SEMANTIC"
+
+_JSON2_TOOLS = frozenset({"pylint", "pylint-pyi", "pylint tests"})
 
 _ORACLE_RULES_PATH = Path(__file__).resolve().parent / "data" / "minimal_sample_project" / "violations.txt"
 
@@ -176,6 +184,108 @@ def tool_minimums(findings: Iterable[Finding]) -> dict[str, int]:
     counts = Counter(finding["tool"] for finding in findings)
     names = {spec.name for spec in TOOLS} | set(counts)
     return {name: counts.get(name, 0) for name in sorted(names)}
+
+
+def collect_findings(project: Path, *, config: RunnerConfig) -> list[Finding]:
+    """Run the finding-producing lint tools on *project* and return normalized findings.
+
+    Mirrors ``run_lint`` (config overrides included) on the caller-owned copy,
+    but selects only tools with a record parser: formatter and statistics-only
+    tools emit no findings, and the formatter would mutate the pristine copy
+    before later tools assigned line numbers.  Pylint's ``json2`` report and
+    the runner's text record parsers supply the records, each reduced with
+    :func:`normalize_record`.
+
+    Args:
+        project: Copied sample project root, owned by the caller.
+        config: Runner config already built for *project*.
+
+    Returns:
+        Normalized findings in tool order.
+    """
+    from python_setup_lint.runner._cli_complexity import (  # local imports keep synthetic tests free of runner setup
+        _apply_config_overrides,
+        _select_tools,
+    )
+    from python_setup_lint.runner.cli import (  # type: ignore[attr-defined]  # private symbol absent from cli.pyi; runtime import works
+        _run_tool_pipeline,  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[unresolved-import]  # private symbol absent from cli.pyi stub; runtime import works
+    )
+    from python_setup_lint.runner.parsers import _RECORD_PARSERS
+
+    resolved = _apply_config_overrides(config)
+    selected = [spec for spec in _select_tools(resolved) if spec.name in _RECORD_PARSERS]
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        _, results = _run_tool_pipeline(
+            selected,
+            config=resolved,
+            fix=False,
+            path=".",
+            exclude=None,
+            statistics=False,
+        )
+    findings: list[Finding] = []
+    for result in results:
+        findings.extend(_result_findings(result, project))
+    return findings
+
+
+def _try_json2_findings(tool: str, stdout: str, project: Path) -> list[Finding] | None:
+    """Parse a pylint ``json2`` report, or return ``None`` for other output."""
+    try:
+        payload: object = json.loads(stdout)
+    except json.JSONDecodeError:  # pylint: disable=W9740  # non-JSON tool output is the expected path; text record parser handles it
+        return None
+    if not isinstance(payload, dict):
+        return None
+    messages = payload.get("messages")
+    if not isinstance(messages, list):
+        return None
+    findings: list[Finding] = []
+    for message in messages:
+        if not isinstance(message, Mapping):
+            continue
+        rule = message.get("symbol")
+        if not isinstance(rule, str):
+            continue
+        findings.append(
+            normalize_record(
+                {
+                    "tool": tool,
+                    "file": message.get("path"),
+                    "line": message.get("line"),
+                    "col": message.get("column"),
+                    "rule": rule,
+                },
+                project,
+            )
+        )
+    return findings
+
+
+def _result_findings(result: LintResult, project: Path) -> list[Finding]:
+    """Normalize the findings reported by one tool run."""
+    from python_setup_lint.runner.parsers import _RECORD_PARSERS  # local import keeps synthetic tests free of runner setup
+
+    stdout = result.stdout or ""
+    json2 = _try_json2_findings(result.tool_name, stdout, project) if result.tool_name in _JSON2_TOOLS else None
+    if json2 is not None:
+        return json2
+    parser = _RECORD_PARSERS.get(result.tool_name)
+    if parser is None:
+        return []
+    return [
+        normalize_record(
+            {
+                "tool": result.tool_name,
+                "file": record.file,
+                "line": record.line,
+                "col": record.col,
+                "rule": record.rule,
+            },
+            project,
+        )
+        for record in parser(stdout)
+    ]
 
 
 def tool_counts_path(golden_path: Path) -> Path:
