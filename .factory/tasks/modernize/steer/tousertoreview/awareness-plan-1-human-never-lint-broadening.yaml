@@ -1,0 +1,10 @@
+id: awareness-plan-1-human-never-lint-broadening
+ref: plan-1
+disposition: human-awareness
+question: Assumption expands never-test-linting to ban subprocess re-lint,
+  AST/source re-implementation, and config-consistency re-checks (e.g.
+  test_self_lint_clean.py slow gate, guards, config re-checks). M3 lists for
+  removal, iter2 removes. Rationale (rot with rule churn) reasonable but deletes
+  coverage; operator visibility warranted.
+status: open
+createdAt: 2026-11-08T01:06:40.590Z

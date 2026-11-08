@@ -1,0 +1,10 @@
+id: awareness-plan-1-human-material-definition
+ref: plan-1
+disposition: human-awareness
+question: Assumption defines material as findings {tool,file,line,col,rule}
+  SEMANTIC=0 + checker units + CLI/exit + baseline/autofix + configs/scopes;
+  model accept/reject non-material, heuristic rejections material. Makes
+  preserve testable but narrows intent. Architect can proceed for iter1; record
+  for operator review.
+status: open
+createdAt: 2026-11-08T01:06:40.587Z

@@ -1,0 +1,10 @@
+id: awareness-plan-1-human-cache-location
+ref: plan-1
+disposition: human-awareness
+question: Assumption + ADR-003 place git-stored cache at linted root for
+  python-setup and consumers; weights stay in user cache. Adds one committed
+  file per consumer, reviewable diffs, possible line-local merges, must pass
+  detect-secrets. Architect can proceed; operator should be aware before epic
+  implements.
+status: open
+createdAt: 2026-11-08T01:06:40.589Z
