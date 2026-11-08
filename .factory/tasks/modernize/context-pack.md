@@ -1,93 +1,75 @@
 # Context Pack — `modernize`
 
-Repository: `python-setup` v1.2.10 (`pyproject.toml:1-4`), MIT (`pyproject.toml:19-20`), Python `>=3.14`. The repo is both a lint-tooling product and its own heaviest consumer: 14 built-in tools (`src/python_setup_lint/runner/dispatch.py:46-137`), an empty frozen baseline (`lint.baseline:1` = `[]`), a golden snapshot of 158 findings (`tests/data/golden/minimal_sample_project_findings.json`), and 18,671 test LOC against 9,005 src LOC.
+Repository: `python-setup` v1.2.10 (`pyproject.toml:1-4`), Python `>=3.14`, MIT. The intent has three strands: enforce `CodingRules.md`/`AGENTS.md` across the code base, debloat code and tests while keeping test intent, and replace the embedding/reranker justification check with a CPU-friendly small decision model plus a git-stored, self-cleaning cache.
 
-## 0. Executive snapshot (measured 2026-11-08)
+---
 
-| Gate | Command | Result |
-|---|---|---|
-| Unit suite | `uv run pytest -q` | **1,357 passed, 4 skipped, 18 deselected, ~28–30 s**. The 4 skips are the `TestRerankerPairs` model tests (`tests/checkers/test_semantic_check.py:432,453,473,493`). |
-| Integration | `uv run pytest tests/integration.py -q` | **9 passed, ~65 s** (AGENTS.md says 7 pass / ~30 s — stale). |
-| Lint (all except detect-secrets) | `uv run lint --tools "tach check,ruff format,ruff check,rumdl check,mypy,yamllint,ty check,mypy.stubtest,pyright check,pyright verify types,pylint,pylint-pyi,pylint tests"` | **all 13 PASSED, ~61 s**. |
-| Lint (full) | `uv run lint` | detect-secrets dies with `MemoryError` scanning very large tracked binary artifacts present in this worktree. This is environmental, not a product-code violation; re-validate on a clean checkout/scoped tree. Do not weaken the baseline in response. |
-| Collection | `uv run pytest --collect-only -q` | 1,379 collected; 18 slow deselected by `addopts = "-m 'not slow'"` (`pyproject.toml:48-55`). |
+## 1. Snapshot and Gate State
 
-Product tree: 75 `.py` src modules + 59 test modules; 54 `.pyi` stubs; 780 test definitions. Marker counts: 18 slow, 702 `no_external_api`, 1 `with_real_api`, **0 `implementation_detail`** (marker declared at `pyproject.toml:50-55` but unused).
+| Fact | Evidence |
+|---|---|
+| Version / Python floor | `pyproject.toml:1-4` (`1.2.10`, `>=3.14`) |
+| Lint baseline | `lint.baseline:1` is `[]` — zero tolerated pre-existing violations |
+| Self-lint gate | `uv run lint` runs 14 tools with baseline diffing; pre-commit hook runs `lint --fix --baseline lint.baseline` (`AGENTS.md:9-12`, `AGENTS.md:129-138`) |
+| Pylint complexity gates | `max-module-lines=500`, `max-statements=65`, `max-branches=16`, `max-locals=20` (`config/.pylintrc:2`, `config/.pylintrc:21-27`); tests have their own rcfile (`config/.pylintrc-tests:19-39`); stubs have their own rcfile (`config/.pylintrc-pyi:8-39`) |
+| Default pytest selection | `addopts = "-m 'not slow'"`; markers `slow`, `no_external_api`, `with_real_api`, `implementation_detail` (`pyproject.toml:48-55`) |
+| Unit probe (2026-11-08) | `uv run pytest -q` → `1378 passed, 4 skipped, 18 deselected, 4 warnings in 27.19s`; the 4 skips are `pytest.importorskip("sentence_transformers")` in `tests/checkers/test_semantic_check.py:432,453,473,493` |
+| Integration probe (2026-11-08) | `uv run pytest tests/integration.py -q` → `9 passed in 65.61s` |
+| Pylint trio probe (2026-11-08) | `uv run lint --tools "pylint,pylint-pyi,pylint tests" --baseline lint.baseline` → pylint reports `10.0/10`, baseline reports no new violations, 37.86s |
+| AGENTS counts are stale | `AGENTS.md:10-11` says `1290 pass, 4 skip, 15 deselected` and `7` integration tests; actual probes are 1378/4/18 and 9 |
+| Integration is not in the default selector | `tests/integration.py` is named `integration.py`, not `test_*.py`; pytest default collection plus `pyproject.toml:48-55` means `uv run pytest -q` does not run the golden end-to-end test. `AGENTS.md:92` tells developers to run it explicitly |
+| Self-lint test is slow/deselected | `tests/runner/test_self_lint_clean.py:17` sets `pytestmark = pytest.mark.slow`; it asserts rc 0, no `[CRASH]`, no unexpected `SKIPPED`, and pylint `"score": 10.0` (`tests/runner/test_self_lint_clean.py:20-59`) |
 
-The semantic path is effectively dormant in dev/CI: `sentence-transformers` is only an optional extra (`pyproject.toml:28-31`), not in the dev group (`pyproject.toml:58-85`); the 4 model-pair tests skip, the 2 reranker-pipeline tests are slow-deselected, and the golden capture explicitly sets `PYTHON_SETUP_LINT_SEMANTIC=0` (`tests/integration.py:112`). Any model swap therefore has **no existing deterministic test coverage**.
+**ADRs at HEAD are decisions, not implementation.** `docs/adr/ADR-009.md:5` accepts a deferral, `docs/adr/ADR-009.md:29-37` says iteration 3 delivers a `DecisionBackend` plus tracked-cache infrastructure, and `docs/adr/ADR-010.md:23-36` freezes the backend/cache contracts. At HEAD the production module still uses `sentence_transformers.CrossEncoder` and `~/.cache/python-setup/semantic/results.json` (`src/python_setup_lint/checkers/_semantic.py:1-12`, `:37-52`, `:93-122`); no `DecisionBackend`, `get_backend`, or `.python-setup-decisions.json` implementation exists in `src/`. This is the central semantic open question (see §7).
 
-## 1. Module Map
+---
 
-### 1.1 Product source
+## 2. Module Map
 
-| Area | Files / LOC | Responsibility |
-|---|---|---|
-| Shared checker utilities | `src/python_setup_lint/checkers/_base.py` (238) | `MessageDef`, `_msgs`, path/source-root helpers, `check_if_meaningful` + heuristic fallback. |
-| Semantic scorer | `src/python_setup_lint/checkers/_semantic.py` (189) + `_semantic.pyi` | Lazy cross-encoder load, pair scoring, result cache. |
-| W9704 checker | `src/python_setup_lint/checkers/conformance/suppression_justification_checker.py` (393) + `.pyi` | Raw-line suppression scan, `Any` param/return/annassign scan, justification call sites. |
-| W9738 checker | `src/python_setup_lint/checkers/conformance/bare_except_comment_checker.py` (128) | Bare/`except Exception` comment justification; second consumer of `check_if_meaningful`. |
-| Other conformance checkers | `src/python_setup_lint/checkers/conformance/*.py` | 16 checker modules (trivial-wrapper, generic-key-dict, unnamed-tuple-dict, structlog, silent-except, etc.). |
-| Stub checkers | `src/python_setup_lint/checkers/stub/*.py` | `.pyi` fidelity, coverage, docstrings, import contract, normalizer. |
-| Runner registry/strategies | `src/python_setup_lint/runner/dispatch.py` (542) | 14 `ToolSpec`s, 7 strategy subclasses, `EXPECTED_TOOL_NAMES`, `register_lint_tool`. |
-| Runner CLI | `src/python_setup_lint/runner/cli.py` (413) | `main`, `run_lint`, `--tools`, `--path`, `--fix`, baseline flow. |
-| Baseline | `src/python_setup_lint/runner/baseline.py` (303) | Violations-only diff, atomic baseline write, dead compat exports at `:20-42`. |
-| Parsers | `src/python_setup_lint/runner/parsers.py` (290), `_record_parsers.py` (277), `_record_types.py` | Tool-output parsing and `Record` type. |
-| Command building | `src/python_setup_lint/runner/cmd_build.py` (293) | Pylint file discovery, config flags, pyright/ruff composition. |
-| Installer | `src/python_setup_lint/setup.py` (413), `_setup_precommit.py` (145), `_setup_update.py` (108) | `install`/`update`, shipped configs, pre-commit template. |
-| Shipped test helpers | `src/python_setup_lint/testing.py` (196) | `_make_tc`, `_walk_and_release`, `FakeRunCmd`, `make_lint_result`, pre-commit validators. |
-| Shipped configs | `config/.pylintrc`, `.pylintrc-tests`, `.pylintrc-pyi`, `ruff.toml`, `mypy.ini`, `pyrightconfig.json`, `rumdl.toml`, `tach.toml`, `ty.toml`, `.yamllint` | Enforced thresholds and rule selection. |
+### 2.1 Checker subsystem (`src/python_setup_lint/checkers/`)
 
-### 1.2 Semantic / justification subsystem
+| File(s) | Responsibility |
+|---|---|
+| `_base.py` (238 lines) + `_base.pyi` | Shared checker helpers: `MessageDef`, `_msgs`, path/source-root helpers, `SourceRootMixin`, `FunctionVisitMixin`, and the public `check_if_meaningful` decision entry point (`_base.py:27-238`). |
+| `_semantic.py` (189 lines) + `_semantic.pyi` | Optional NLP justification pipeline: lazy `CrossEncoder` load, pair scoring at threshold 0.5, in-memory + home-directory JSON result cache (`_semantic.py:1-12`, `:37-189`). |
+| `conformance/` (17 checker modules) | Pylint checkers implementing project rules: `no-try-import`, `missing-beartype`, `missing-return-annotation`, `unjustified-suppression` (W9704), `bare-except-comment`, `silent-except`, `trivial-wrapper`, `redundant-type-guard`, `generic-key-dict`, `unnamed-tuple-dict`, `pyi-underscore-symbol`, `use-structlog`/`use-structured-logging`, `missing-error-chain`, `asyncio-timeout`, `tempfile-mkdtemp-in-test`. Registration is `register(linter)` in each module; the installer discovers them via `pkgutil.walk_packages` (`setup.py:97-116`) and adds them to consumer `load-plugins` (`setup.py:179-203`). |
+| `stub/` | Stub checker (`stub/checker.py`, 379 lines), coverage/resolution (`stub/coverage.py`, 241 lines), import contract, docstring rules (`stub/docstring_checker.py`, 237 lines), and fidelity invariants (`stub/fidelity/*`, ~0.8k lines). |
 
-```text
-suppression line or Any annotation
-  └─ suppression_justification_checker.py  (W9704)
-     or bare_except_comment_checker.py     (W9738)
-        └─ check_if_meaningful()           _base.py:142-238
-           ├─ if PYTHON_SETUP_LINT_SEMANTIC != "0":
-           │    lazy import _semantic, call semantic_check_if_meaningful()
-           │      ├─ load result cache            _semantic.py:55-68, 136-138
-           │      ├─ cache lookup (64-bit key)    _semantic.py:143-157
-           │      ├─ lazy model load              _semantic.py:93-122
-           │      ├─ pair predict + score >= 0.5  _semantic.py:159-186
-           │      └─ persist cache                _semantic.py:71-78, 187-188
-           └─ result is None → exact-string heuristic  _base.py:160-238
-```
+### 2.2 Runner subsystem (`src/python_setup_lint/runner/`)
 
-### 1.3 Test / gate subsystem
+| File(s) | Responsibility |
+|---|---|
+| `dispatch.py` (542 lines) | Single-source 14-tool registry (`TOOLS`, `dispatch.py:46-137`), live `LINT_TOOLS` registry (`:503-507`), seven per-tool strategy subclasses (`:155-451`), `register_lint_tool` (`:517-542`). |
+| `cli.py` (413 lines) | `main`/`run_lint` orchestration, fix phase, tool selection, baseline handling (`run_lint` at `:204-273`; CLI parser at `:274-413`). |
+| `baseline.py` (303 lines) | Violations-only baseline capture/diff, sorted atomic JSON writer (`:182-229`), legacy-compatible shims (`:20-42`). |
+| `parsers.py` (290) + `_record_parsers.py` (277) | Per-tool text/JSON record parsers and `Record` type; backward-compat re-exports (`parsers.py:7-31`). |
+| `cmd_build.py` (293) | Command construction, path/glob discovery, config-flag resolution, pylint rcfile resolution. |
+| `output.py` (265) | Subprocess execution (`_run_cmd`, `:153-223`), memory guard (`RLIMIT_AS`, default 2048 MB), statistics printing. |
+| `types.py` (65) | `ToolSpec`, `LintResult`, `ViolationCount`, `RunnerConfig` (`types.py:12-65`). |
+| `_config.py` (152), `_cli_complexity.py` (154), `_cli_helpers.py` (65), `_autofix.py` (125), `extra_tools.py` (322), `_baseline_helpers.py` (82), `_record_types.py` (19) | Supporting config, CLI, autofix, declarative extra-tool, and baseline helpers. |
 
-| Area | Files | Notes |
-|---|---|---|
-| Checker unit tests | `tests/checkers/test_*.py` (26 files) + `_factories.py` (1,393) | Pylint `CheckerTestCase` via `python_setup_lint.testing._make_tc` / `_walk_and_release`. |
-| Runner unit tests | `tests/runner/test_*.py` (30 files) + `_factories*.py` (1,114 total) + `_autofix_helpers.py` | Tool registry, command building, baseline diff, autofix, setup. |
-| Golden helpers | `tests/_golden.py` (446), `tests/test_golden.py` (414) | Canonical finding serialization, multiset diff, coverage assertions. |
-| Shared project helpers | `tests/_project_helpers.py` (204) | Sample-project copy, git staging, runner config, install idempotence. |
-| Third-party assumption tests | `tests/assumptions/*.py` (393; 8 tests) | Pin astroid 4.0.4, beartype 0.22.9, pylint 4.0.6 contracts. |
-| Integration | `tests/integration.py` (498; 9 tests) | Install → lint → golden → config overlay → pre-commit validation → tool parity. |
-| Golden data | `tests/data/golden/*.json` | 158 findings, 51 unique rules, per-tool minimum counts. |
-| Sample project | `tests/data/minimal_sample_project/` | Planted violations, `violations.txt` oracle, `mod.py:41-63` W9704 cases. |
+### 2.3 Setup / testing / packaging
 
-### 1.4 Docs, ADRs, packaging
+| File(s) | Responsibility |
+|---|---|
+| `setup.py` (413) + `_setup_precommit.py` (145), `_setup_pyproject.py` (97), `_setup_update.py` (108) | Consumer install/update: add dependency, checker discovery + `load-plugins`, pre-commit template, AGENTS snippet, config symlinks, drift detection, state file (`setup.py:35-53`, `:97-116`, `:179-205`, `:365-413`). |
+| `testing.py` (196) | Consumer-agnostic test helpers: `_make_tc`, `_walk_and_release`, `make_lint_result`, `FakeRunCmd`, pre-commit validators (`testing.py:18-196`). |
+| `pyproject.toml` | Main deps (`astroid>=4.0.4`, `beartype`, `pylint`, `pytest`, `structlog`, `tomli-w`; `:10-16`), optional `[semantic]` extra (`:28-31`), wheel force-includes `config/` and `CodingRules.md` (`:39-46`), pytest config (`:48-55`), dev group (`:58-85`). |
+| `config/` | Shipped tool configs: `.pylintrc`, `.pylintrc-tests`, `.pylintrc-pyi`, `ruff.toml` (line-length 130, target `py314`), `mypy.ini` (`strict = true`), `pyrightconfig.json`, `ty.toml`, `rumdl.toml`, `yamllint`, `tach.toml`. |
+| `CodingRules.md`, `AGENTS.md`, `README.md`, `docs/` | Shipped coding rules, agent index, user docs, semantic docs, troubleshooting, tutorials, ADRs (`docs/adr/`). |
+| `tach.toml` | Module boundaries: `python_setup_lint/checkers` and `python_setup_lint/runner` both declare `depends_on = []`; checkers must not import runner (`tach.toml:14-21`). Any new decision module must respect this. |
 
-- `AGENTS.md:9-11` — stale quick-command counts (1,290 pass / 15 deselected / ~53 s; 7 integration pass / ~30 s).
-- `AGENTS.md:79-85` — semantic pipeline described as cross-encoder reranker with `PYTHON_SETUP_LINT_RERANKER_MODEL`.
-- `AGENTS.md:87-93` — testing strategy / 14-tool integration claim.
-- `AGENTS.md:121-139` — pre-commit hooks; `lint --fix --baseline lint.baseline` on every commit.
-- `CodingRules.md:9-16` — typing/beartype/suppression justification rules.
-- `CodingRules.md:90-107` — simplification, wrappers, duplicated logic, redundant fallbacks.
-- `CodingRules.md:139-159` — enforced R0912 ≤16 branches, R0915 ≤65 statements, C0302 ≤500 lines/module (split modules, never raise thresholds).
-- `CodingRules.md:230-307` — test metrics, mocking at boundaries, categories, coverage, naming (`test_<method>_given_<condition>_then_<expected>`), isolation, fixture scope, conftest scope.
-- `docs/semantic-justification.md:1-62` — full current semantic design and cache docs.
-- `docs/troubleshooting.md:97-109` — cross-encoder download-failure fallback and cache location.
-- `docs/custom-checks.md:53-55,97-104` — W9704 rules and `check_if_meaningful` contract.
-- `docs/tutorials.md:12-15,87,121` — `[semantic]` install and guide links.
-- `README.md:29,105` — `[semantic]` install line and semantic guide link.
-- `docs/adr/ADR-001.md` … `ADR-008.md` — eight 1–3-line problem statements for the three workstreams (see §3.10).
-- `uv.lock:980-1036` — project extras/dev deps; `:1552-1602` — torch 2.12.1 + CUDA/NVIDIA graph, transformers 5.12.1.
+### 2.4 Tests (`tests/`)
 
-## 2. Key Interfaces & Signatures
+59 `test_*.py` modules plus helpers, ~18.8k lines excluding `tests/data/`. Layers: unit checker tests (`tests/checkers/`), runner tests (`tests/runner/`), third-party assumption tests (`tests/assumptions/`), golden-helper tests (`tests/test_golden.py`), setup/config-symlink tests, and the non-auto-collected end-to-end `tests/integration.py` with planted-violation sample project and golden snapshot (`tests/data/golden/*.json`).
 
-### 2.1 `check_if_meaningful` — `src/python_setup_lint/checkers/_base.py:142-238`
+---
+
+## 3. Key Interfaces & Signatures
+
+### 3.1 Justification decision entry point — `check_if_meaningful`
+
+`src/python_setup_lint/checkers/_base.py:142-238`:
 
 ```python
 @beartype
@@ -100,11 +82,22 @@ def check_if_meaningful(
 ) -> bool:
 ```
 
-- Env gate: `os.environ.get("PYTHON_SETUP_LINT_SEMANTIC", "1") == "1"` (`:151`). The module is imported lazily **inside** the function (`:152-154`), so heavy optional deps must never be imported at checker-module top level.
-- If semantic returns non-`None`, that bool is returned (`:156-158`); otherwise the exact-string heuristic runs (`:160-238`).
-- Heuristic contract: strip `comment or text`; reject empty/`<5` chars (`:161-163`); reject exact boilerplate tokens (large set at `:165-209`, includes `noqa`, `ignore`, `pre-existing`, `baseline`, `wip`, `temp`, `legacy`, `later`, `for now`, `carryover`); reject exact meaningless multi-word phrases (`:213-234`); reject a reason equal to the rule symbol (`:238`). Matching is exact-string/lowercase, **not semantic**.
+Flow:
 
-### 2.2 `semantic_check_if_meaningful` — `src/python_setup_lint/checkers/_semantic.py:125-189`
+1. If `PYTHON_SETUP_LINT_SEMANTIC` is `"1"` (default), lazily import `semantic_check_if_meaningful` and call it with `(text, rule=..., code_context=..., comment=...)` (`_base.py:150-158`).
+2. If the semantic function returns `None`, fall back to the heuristic (`_base.py:160-211`): empty or `<5` chars rejects; a 50-entry boilerplate set rejects; a 16-entry meaningless-phrase set rejects; a justification equal to the rule symbol rejects (`_base.py:210-238`).
+
+`_base.pyi:69-95` documents this helper but says `*rule*` and `*code_context*` are “reserved for future semantic analysis” — stale, because both are used by `_semantic.py:164-177`.
+
+Call sites (all five pass a real rule/context):
+
+- `SuppressionJustificationChecker._emit_if_unjustified` — `conformance/suppression_justification_checker.py:149-155`.
+- `SuppressionJustificationChecker._has_justification` — same file `:370-386` (trailing and preceding comment paths).
+- `BareExceptCommentChecker._has_justifying_comment` — `conformance/bare_except_comment_checker.py:103-120` (trailing and preceding comment paths).
+
+### 3.2 Semantic implementation — `semantic_check_if_meaningful`
+
+`src/python_setup_lint/checkers/_semantic.py:125-189`:
 
 ```python
 @beartype
@@ -117,54 +110,19 @@ def semantic_check_if_meaningful(
 ) -> bool | None:
 ```
 
-- Tri-state contract: `True` = meaningful, `False` = reject, `None` = model unavailable/failed → caller falls back to heuristic.
-- Primary text = `(comment or text).strip()`; empty → `False` without model (`:134,139-140`).
-- Cache key = first 8 bytes of SHA-256 over `(text, rule, code_context, comment, _RERANKER_MODEL)`, converted to `int` (`:143-155`).
-- Cache hit returns before model load (`:156-157`).
-- Model load is a module-global singleton with a permanent failure sentinel (`:40-42,93-122`).
-- Query construction: `rule: … | context: <first 200 chars>` when rule/context present; self-pair otherwise (`:164-176`).
-- Score threshold is hard-coded `>= 0.5` (`:186`).
-- New results are stored and the whole cache file is rewritten (`:187-188`).
+| Detail | Evidence |
+|---|---|
+| Primary text is `(comment or text).strip()`; empty returns `False` before key computation | `_semantic.py:133-140` |
+| Cache key = SHA-256 over `(text, rule, code_context, comment, _RERANKER_MODEL)`, truncated to first 8 bytes / 64-bit int | `_semantic.py:142-157` |
+| Model singleton is lazy-loaded; `ImportError` or load failure sets `_RERANKER_UNAVAILABLE` and returns `None` | `_semantic.py:93-122` |
+| Query = `"rule: ... | context: ..."` when rule/context exist, otherwise self-pair `(primary, primary)` | `_semantic.py:164-177` |
+| Score below `0.5` rejects; each new verdict is appended to `_RESULT_CACHE` and the whole JSON file is rewritten | `_semantic.py:178-189` |
+| Public stub exposes only `semantic_check_if_meaningful`; `__all__` also exposes private test hooks `_RERANKER_UNAVAILABLE`, `_load_reranker`, `_reset_cache` | `_semantic.pyi:1-24`, `_semantic.py:26-31` |
+| The optional extra is only `sentence-transformers>=3.0.0` | `pyproject.toml:28-31` |
 
-### 2.3 Message definitions
+### 3.3 Cache and model constants (current, to be replaced)
 
-W9704 — `suppression_justification_checker.py:31-41`:
-
-```python
-msgs = _msgs(
-    W9704=MessageDef(
-        message="Suppression comment without technical justification: %s",
-        symbol="unjustified-suppression",
-        description="Suppression comments ... must be accompanied by a technical reason ...",
-    ),
-)
-```
-
-W9738 — `bare_except_comment_checker.py:21-36` (message symbol `bare-except-comment`). Both checkers call the same `check_if_meaningful`; the model swap affects **both** rules.
-
-### 2.4 Runner / registry
-
-- `ToolSpec` — `src/python_setup_lint/runner/types.py:12-23` (`name`, `command`, `supports_fix/path/exclude`, `default_paths`, `fix_flags`, `exclude_flag`, `timeout`, `memory_limit_mb`).
-- `TOOLS` — exactly 14 entries at `dispatch.py:46-137`: tach check, ruff format, ruff check, rumdl check, mypy, yamllint, ty check, mypy.stubtest, pyright check, pyright verify types, pylint, pylint-pyi, pylint tests, detect-secrets.
-- `EXPECTED_TOOL_NAMES` derives from `TOOLS` (`dispatch.py:141-152`).
-- `ruff format` is check-only on normal passes (`--check`) and mutates only in the fix phase (`dispatch.py:405-439`).
-- `detect-secrets` command is `git ls-files -z | xargs -0 detect-secrets-hook --baseline .secrets.baseline …` (`dispatch.py:261-292`). Any git-tracked cache must remain tiny and text-safe.
-
-### 2.5 Test helpers (shipped)
-
-`src/python_setup_lint/testing.py`:
-
-- `_make_tc(checker_class)` (`:18-22`) — builds a `CheckerTestCase`.
-- `_walk_and_release(checker_class, code, file_path=...)` (`:25-38`) — parses source, walks checker, releases messages. Used directly by 6 test files and re-defined locally by 10 others.
-- `make_lint_result(...)` (`:44-61`) — constructs `LintResult`.
-- `FakeRunCmd` / `fake_run_cmd_factory` (`:64-103`) — injectable command runner.
-- `test_checked_main`, `assert_precommit_config_valid`, `assert_precommit_hooks_shape` (`:106-196`).
-
-## 3. Relevant Excerpts
-
-### 3.1 Current semantic pipeline — `_semantic.py`
-
-Header (`:1-12`) documents “Cross-encoder reranking (jina-reranker-v2-base-multilingual)” and the lazy-load/fallback contract. Cache/model globals (`:37-52`):
+`_semantic.py:37-52`:
 
 ```python
 _CACHE_DIR = Path.home() / ".cache" / "python-setup" / "semantic"
@@ -178,237 +136,255 @@ _RERANKER_MODEL = os.environ.get(
 )
 ```
 
-Lazy loader (`:93-122`): imports `sentence_transformers.CrossEncoder` only inside the call; on `ImportError` sets `_RERANKER_UNAVAILABLE = True` and returns `None`; on `OSError/RuntimeError/ValueError` logs warning and returns `None`; `CrossEncoder(_RERANKER_MODEL, cache_folder=str(cache))`.
+Load/save are best-effort: missing file → `{}`; corrupt JSON/OSError/ValueError → warning + `{}`; save uses non-atomic `Path.write_text` (`_semantic.py:55-78`). `_reset_cache` clears both globals and unlinks the file (test helper; `:81-91`). `.gitignore:243-244` explicitly ignores `.cache/python-setup/semantic/`.
 
-Cache load/save/reset (`:55-90`):
+### 3.4 Planned backend contract from ADR-010 (absent at HEAD)
+
+`docs/adr/ADR-010.md:23-36` fixes:
+
+- `DecisionBackend` Protocol: `decide(justification, rule, context) -> float` in `[0.0, 1.0]`, with a heuristic-first hard gate.
+- Tracked cache `.python-setup-decisions.json` at the linted project root: sorted JSON array, `indent=2`, `sort_keys`, no bare hex strings of length ≥20, must pass the secrets scan.
+- Ordinary lint is read-only with a hash-asserted zero-write check; cache updates only through an explicit CI-guarded refresh path (lockfile + merge + atomic replace).
+- Prune missing files and stale model identifiers.
+- Concurrency semantics must come from the `pylint-cache-assumptions` verdict, not invented.
+- `PYTHON_SETUP_LINT_DECISION_BACKEND` is honored only when `PYTEST_CURRENT_TEST` is set; production lint ignores it.
+
+No implementation module exists at HEAD; `_semantic.py` remains the only decision path.
+
+### 3.5 Runner interfaces relevant to a cache-refresh command
+
+- `ToolSpec` fields include `timeout`, `memory_limit_mb`, `supports_path`, `supports_fix` (`runner/types.py:12-22`); default memory limit is 2048 MB (`types.py:22`) and pylint specs use that default (`dispatch.py:112-132`). `_run_cmd` applies `RLIMIT_AS` and injects `cwd/.venv/bin` on PATH (`runner/output.py:153-223`).
+- `run_lint` accepts `path`, `fix`, `baseline`, `overwrite_baseline`, `statistics`, etc. (`runner/cli.py:204-273`); `main` exposes `--baseline`, `--overwrite-baseline`, `--path`, `--tools`, `--cwd`, `--config` (`runner/cli.py:284-360`). There is no decision-cache refresh flag today.
+- The setup CLI has only `install` and `update` subcommands (`setup.py:365-413`); a `refresh-decisions`/`prune-decisions` command would be a new surface.
+- `runner/baseline.py:201-229` is the existing pattern for a sorted, atomic, `indent=2`, `sort_keys` JSON artifact; it uses a temp file in the system temp dir and `shutil.move`, whereas ADR-010 asks for atomic replace at the project root.
+
+### 3.6 Checker helper / test harness interfaces
+
+- `SourceRootMixin` declares `source-roots` option, resolves it in `open()`, and exposes `_skip_if_outside_source_roots` (`checkers/_base.py:96-128`).
+- `FunctionVisitMixin` dispatches `visit_functiondef`/`visit_asyncfunctiondef` to `self._check_function` (`_base.py:131-140`).
+- `testing._make_tc` builds a `CheckerTestCase`; `_walk_and_release` parses source, optionally sets `module.file`, walks, and drains messages (`testing.py:18-41`).
+- Checker tests import `_walk_and_release` directly or via `tests/checkers/_factories.make_tc` (`tests/checkers/_factories.py:40-43`).
+
+---
+
+## 4. Relevant Excerpts and Implementation Logic
+
+### 4.1 Current semantic pipeline is reranker-first, not heuristic-first
+
+`_semantic.py:1-12`:
 
 ```python
-try:
-    raw = _RESULT_CACHE_FILE.read_text()
-    return {int(k): v for k, v in json.loads(raw).items()}
-except FileNotFoundError:  # expected on first run
-    return {}
-except json.JSONDecodeError, OSError, ValueError:
-    _LOG.warning("Failed to load result cache", exc_info=True)
-    return {}
-...
-_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-assert _RESULT_CACHE is not None
-_RESULT_CACHE_FILE.write_text(json.dumps({str(k): v for k, v in _RESULT_CACHE.items()}))
+# Semantic justification checker using a cross-encoder reranker (Track B).
+# ...
+# 1. Cross-encoder reranking (jina-reranker-v2-base-multilingual):
+#    Re-score the justification against the rule and code context with a
+#    dedicated cross-encoder for higher accuracy.
+# ...
+# On ImportError ... or model download failure, semantic_check_if_meaningful
+# returns None, signalling the caller to fall back to the heuristic check.
 ```
 
-`_reset_cache()` (`:81-90`) is a test helper that clears memory and **deletes `~/.cache/python-setup/semantic/results.json`**.
+This is the opposite ordering from ADR-010’s “heuristic-first hard gate.” The current gate is in `_base.py:150-158`: semantic first, heuristic only when `None`.
 
-Scoring (`:158-189`): pair `(primary, query)`, `score = float(scores[0])`, `result = score >= 0.5`, persist. Exceptions from `predict` (`OSError/RuntimeError/ValueError`) return `None`.
+### 4.2 `semantic_check_if_meaningful` scoring and write path
 
-### 3.2 W9704 call sites
+`_semantic.py:142-189` (condensed):
 
-`suppression_justification_checker.py`:
+```python
+cache_key = hashlib.sha256(
+    "|".join(str(x) for x in (text, rule, code_context, comment, _RERANKER_MODEL)).encode()
+).digest()
+cache_key_int = int.from_bytes(cache_key[:8], "big")
+if cache_key_int in _RESULT_CACHE:
+    return _RESULT_CACHE[cache_key_int]
 
-- Raw-line scan: `visit_module` (`:43-61`) reads `node.stream()`, decodes, calls `_legacy_scan` (`:63-91`). Despite the name, `_legacy_scan` is the **only** scan path. It builds string-literal spans, skips matches inside strings, checks `_has_justification`, and emits W9704 (`:86-91`).
-- `Any` in function params/return: `_check_function` (`:96-124`) collects annotations and calls `_emit_if_unjustified` per annotation line.
-- `Any` in `AnnAssign`: `_check_any_annotation` (`:164-184`).
-- `_emit_if_unjustified` (`:136-162`) extracts the source line, looks for a trailing `# <reason>`, and calls:
+reranker = _load_reranker()
+if reranker is None:
+    return None
+...
+scores = reranker.predict([(primary, query)])
+result = float(scores[0]) >= 0.5
+_RESULT_CACHE[cache_key_int] = result
+_save_result_cache()
+return result
+```
+
+Implications: one model prediction per cache miss, synchronous whole-file rewrite, no file path in the key, no prune path, no explicit model metadata beyond the key.
+
+### 4.3 W9704 emission and the two decision call paths
+
+`SuppressionJustificationChecker` defines W9704 (`suppression_justification_checker.py:31-41`), scans raw lines for suppression patterns while excluding string-literal spans (`:44-91`), checks `Any` annotations/functions (`:96-162`), and evaluates trailing/preceding comments (`:331-388`). The call site inside `_emit_if_unjustified` is:
 
 ```python
 if check_if_meaningful(
-    reason, comment=reason, rule="unjustified-suppression",
-    code_context=src_line.split("#", 1)[0].strip(),
+    reason, comment=reason, rule="unjustified-suppression", code_context=src_line.split("#", 1)[0].strip()
 ):
     return
-self.add_message("unjustified-suppression", line=lineno, node=annotation, args=(annotation.as_string(),))
+self.add_message("unjustified-suppression", ...)
 ```
 
-- Trailing reason path (`:350-375`) checks every suppression match and calls the helper with `rule="unjustified-suppression"` and code before `#`.
-- Preceding-comment path (`:377-386`) does the same with the previous line.
-- Suppression patterns are `# pylint: disable=`, `# noqa`, `# type: ignore`, `# ty: ignore` (`:22-28`).
+`BareExceptCommentChecker._has_justifying_comment` performs the same trailing/preceding-comment shape for `bare-except-comment` (`bare_except_comment_checker.py:74-120`). The two checkers duplicate comment extraction and `check_if_meaningful` wiring; a shared source-stream/comment helper is a natural debloat target (ADR-011 names a planned `checkers/_source_stream.py`, which does not exist at HEAD).
 
-### 3.3 W9738 call sites
+### 4.4 Cache writer verdict that any redesign must consume
 
-`bare_except_comment_checker.py:98-122`: trailing `# <comment>` calls `check_if_meaningful(text=comment_text, rule="bare-except-comment", code_context=line.strip(), comment=comment_text)`; preceding `#` comment does the same. So a model/cache/threshold change affects W9738 as well as W9704.
+`tests/assumptions/test_pylint_cache_semantics.py:11-48` records the writer-first verdict:
 
-### 3.4 Gating and behavior contract
+- Writer identity: `semantic_check_if_meaningful` calls `_save_result_cache`; runner performs no merge; checker `open()`/`close()` do not write.
+- Timing: one whole-file rewrite per miss, synchronously before return; hits, heuristic fallbacks, and empty-primary short-circuit write nothing.
+- `--path` scoping: `--path` only narrows file arguments; the cache key is path-free, so scoped and full runs share entries.
+- Sweep implication: because identity is path-free, a tracked schema needs per-entry `files` references; today’s schema is only `dict[int, bool]`.
+- Concurrency: pylint `jobs` defaults to 1; shipped rc files do not raise it; a consumer override with `jobs > 1` voids the single-writer claim and flips to sidecars/merge or lock + atomic replace.
+- Crash safety: current writer is non-atomic `Path.write_text`; corrupt JSON loads as empty and is recomputed.
 
-- Default is **on** (`"1"`), not opt-in (`_base.py:151`); docs say the same (`docs/semantic-justification.md:3,18`).
-- If `sentence-transformers` is absent, `_load_reranker` returns `None`, so heuristic decides every case. This is the current dev/CI behavior.
-- If `_semantic` module import itself fails, `check_if_meaningful` does **not** catch it; `TestImportErrorFallback` expects `ImportError` to propagate (`tests/checkers/test_semantic_check.py:20-42`).
-- The model path never runs in the golden snapshot because `tests/integration.py:112` sets `SEMANTIC_ENV=0`; the snapshot is therefore a contract for the heuristic + non-semantic checkers only.
+The test also pins the current contract directly: home-dir single cache (`test_pylint_cache_semantics.py:298-305`), path-free signature (`:276-296`), one `_save_result_cache` caller (`:335-349`), and no cache artifacts outside `_semantic.py` (`:351-364`).
 
-### 3.5 Golden contract — `tests/_golden.py`
+### 4.5 ADR-010 conflicts with the current tests
 
-- `SEMANTIC_ENV = "PYTHON_SETUP_LINT_SEMANTIC"` and `UPDATE_ENV = "PYTHON_SETUP_LINT_UPDATE_GOLDEN"` (`:53-58`).
-- Canonical serialization: sorted findings, `json.dumps(..., indent=2, sort_keys=True) + "\n"` (`:156-172`); tool minimums use the same format (`:166-172`).
-- `collect_findings` bypasses `run_lint` and uses `_run_tool_pipeline` + record parsers, selecting only tools in `_RECORD_PARSERS` (`:191-231`).
-- `assert_matches_golden` rewrites only when `UPDATE_ENV=1` and refuses under `CI`/`GITHUB_ACTIONS` (`:374-390`).
-- `assert_golden_byte_identical` hashes every serialized run (`:392-410`).
-- Golden content: **158 findings, 51 unique rules, 18 `unjustified-suppression`, 2 `bare-except-comment`** (counted from `tests/data/golden/minimal_sample_project_findings.json`). Tool minimums at `tests/data/golden/minimal_sample_project_tool_counts.json`.
-- Integration asserts the exact multiset and byte-identical replay (`tests/integration.py:114-122`), then specifically asserts `mod.py:49` (“pre-existing”) is flagged and `mod.py:56` (“carried from external library …”) is not (`:124-129`).
+`docs/adr/ADR-010.md:26-28` requires a project-root tracked JSON array with per-entry file/model metadata and no long bare hex; `tests/assumptions/test_pylint_cache_semantics.py:298-305` asserts a single `~/.cache/python-setup/semantic/results.json`, and `:276-296` asserts the API/signature is path-free. `tests/checkers/test_semantic_check.py:321-360` independently recomputes the 64-bit SHA-256 key and pre-populates `_RESULT_CACHE`. A redesign must rewrite these tests, not merely extend them.
 
-### 3.6 Config thresholds
+### 4.6 `pylint-pyi` scoping defect (rule-enforcement gap)
 
-- `.pylintrc:2` `max-module-lines=500`; `:22-27` `max-statements=65`, `max-branches=16`, `max-locals=20`, `max-nested-blocks=8`, `max-public-methods=30`, `max-attributes=15`.
-- `.pylintrc-tests:20` `max-module-lines=500`; `:37-43` enables custom test rules (W9704, trivial-wrapper, redundant-type-guard, duplicate-code…) and disables production-only complexity/docstring/beartype rules. Tests are still subject to C0302.
-- `config/tach.toml` declares only `python_setup_lint.checkers` and `python_setup_lint.runner` as modules with no dependencies; excludes `.omp`/`.factory` as orchestration.
+`_PylintPyiLintTool.build_command` passes `.pyi` file paths to pylint (`runner/dispatch.py:342-370`; `_find_pyi_files` at `runner/cmd_build.py:82-93`). Probe behavior:
 
-### 3.7 ADRs — problem statements to reconcile
+- A temp `.pyi` with a companion `.py` is skipped by pylint (even a syntactically broken `.pyi` produces no error); an orphan `.pyi` is linted and `pyi-underscore-symbol` fires.
+- The committed golden confirms the consequence: of 43 `pylint-pyi` findings in `tests/data/golden/minimal_sample_project_findings.json`, 42 are on `.py` files and only 1 is on `standalone.pyi` (the orphan stub).
 
-All eight files are short problem statements, not full ADRs:
+So `pylint-pyi` currently re-lints companion `.py` modules under the pyi rcfile and does not enforce `pyi-underscore-symbol`/`duplicate-code` on companion stubs. A probe of `src/python_setup_lint/**/*.pyi` found 205 non-`TYPE_CHECKING` private symbols in 29 stub files (169 functions, 5 classes, 31 annotated assignments) that the `PyiUnderscoreChecker` would flag if stubs were actually linted (`conformance/pyi_underscore_checker.py:19-90`). `.pylintrc:4` and `.pylintrc-tests:22` ignore `*.pyi`, so only `pylint-pyi` is supposed to cover them. This is a high-signal enforcement gap; fixing it changes the golden contract and would expose a large latent cleanup.
 
-| File | Statement |
-|---|---|
-| `docs/adr/ADR-001.md` | Golden findings snapshot as behavior-preservation contract; notes integration only checks rule-name presence. (Current integration now also asserts exact multiset — partly stale.) |
-| `docs/adr/ADR-002.md` | `_semantic.py` misuses a sentence-transformers cross-encoder; dependency heavy; heuristic actually makes every decision today; intent wants CPU-friendly small decision model. |
-| `docs/adr/ADR-003.md` | Results cached per-machine in `~/.cache`, unbounded, keyed by 64-bit truncated SHA-256 including code context; W9704 can differ by machine; intent requires git-stored cache with cleanup. |
-| `docs/adr/ADR-004.md` | Three workstreams span ~28.6k LOC / 184 files; parallel edits to shared test infra conflict; test infrastructure/assumptions must be validated before debloat. |
-| `docs/adr/ADR-005.md` | Ruff format contract: claims plain `ruff format` rewrites ~109 files with line-length 88; claims 13 tools while `TOOLS` has 14. (Current dispatch uses `--check` + shipped config — verify stale.) |
-| `docs/adr/ADR-006.md` | Golden contract hardening: `collect_findings` uses private pipeline/record parsers; sorts only in serialize; no zero-crash assertion. (`slice_tool_section` is now used at `tests/integration.py:175` — partly stale.) |
-| `docs/adr/ADR-007.md` | Read-only lint with explicit cache refresh; a git-tracked cache written on every run makes lint non-hermetic. |
-| `docs/adr/ADR-008.md` | Progressive epic decomposition after audits; read final post-consolidation HEAD before decomposing. |
+### 4.7 Existing sorted-JSON/atomic-write patterns
 
-### 3.8 Documentation drift (semantic + counts)
+- Baseline writer: `runner/baseline.py:201-229` uses temp file + `json.dump(..., indent=2, sort_keys=True)` + `shutil.move`; `_write_baseline_if_modified` is gated by a `baseline_modified` flag.
+- Setup atomic writer: `_setup_precommit.py:70-84` uses `NamedTemporaryFile(dir=gettempdir(), delete=False)` + `shutil.move`.
+- Setup state writer: `setup.py:278-290` writes `.python-setup-state.json` with `json.dumps(..., indent=2, sort_keys=True)` via `_atomic_write`.
+- Baseline diffing silently rewrites the baseline on removals (`runner/baseline.py:286-299`), which is a precedent for auto-pruning but conflicts with ADR-010’s read-only decision-cache rule; the architect should decide whether the decision cache follows the baseline model or the stricter ADR-010 model.
 
-- `AGENTS.md:82` still says `cross-encoder reranker`; `:85` says configurable via `PYTHON_SETUP_LINT_RERANKER_MODEL`.
-- `docs/semantic-justification.md:9-14` describes reranker-first/heuristic-fallback; `:34-45` says model/result caches under `~/.cache/python-setup/semantic`; `:47-54` fallback table; `:56-62` test strategy/research status.
-- `docs/custom-checks.md:97` documents 0.5 threshold, `PYTHON_SETUP_LINT_RERANKER_MODEL`, SHA-256 cache over `(text, rule, code_context, comment, model)`.
-- `docs/troubleshooting.md:97-109` cross-encoder download failure + cache deletion.
-- `README.md:29` `[semantic]` line says “sentence-transformer-powered”; `README.md:72` update example pins `v1.2.5`.
-- `docs/tutorials.md:12-15` calls it a “rerunner”; `:87,121` links.
-- `CHANGELOG.md:3` top entry is `v1.2.9` while `pyproject.toml:3` is `1.2.10`; `CHANGELOG.md:113` is historical reranker fix.
-- `tests/checkers/test_semantic_check.py:1` says “504 lines” but file is 506; `tests/runner/_factories_extras.py:1` says “502 lines” but file is 511.
+---
 
-## 4. Existing Tests & Conventions
+## 5. Existing Tests and Conventions
 
-### 4.1 How checker tests are written
+### 5.1 Test layers and commands
 
-- Pylint `CheckerTestCase` via `python_setup_lint.testing._make_tc` (`testing.py:18-22`) or `_walk_and_release` (`:25-38`).
-- Typical pattern: parse a code string with `astroid`, set `module.file`, `tc.walk(module)`, then assert `msg.msg_id` / `len(msgs)`. Examples: `tests/checkers/test_suppression_justification_checker.py:26-120`, `tests/checkers/test_bare_except_comment_checker.py:20-32`.
-- `tests/checkers/_factories.py` (1,393 lines) holds parametrize tables and factory helpers; its docstring (`:1-15`) claims “data tables are free LOC” and disables `too-many-lines`.
-- `tests/runner/_factories.py` (209), `_factories_baseline.py`, `_factories_extras.py` (511), `_factories_tables.py` (394) split runner data; `_factories_extras.py:1-8` has **two** duplicate `too-many-lines` disables.
-
-### 4.2 Markers / selection
-
-- `pyproject.toml:48-55`: `addopts = "-m 'not slow'"`; markers `slow`, `no_external_api`, `with_real_api`, `implementation_detail`.
-- `slow` count 18; `no_external_api` 702; `with_real_api` 1; `implementation_detail` 0.
-- Model tests: 4 `TestRerankerPairs` are **skipped** (importorskip) and not slow; 2 `TestSuppressionRerankerPipeline` are slow-deselected; 3 `TestSemanticCheck` methods are slow (`test_semantic_check.py:361,384,402`). `docs/semantic-justification.md:58` says network tests are slow — the 4 pair tests contradict this and would download on first run if `sentence-transformers` were installed.
-
-### 4.3 Assumption / infra tests
-
-`tests/assumptions/` (393 LOC, 8 tests) pins third-party contracts:
-
-- `test_astroid_contracts.py` — `Module.stream()`, doc node shapes, `nodes_of_class`, `Const`/`JoinedStr` spans.
-- `test_beartype_contracts.py` — `TYPE_CHECKING`-only forward refs raise at first call, not import/decoration.
-- `test_pylint_contracts.py` — checker `open/close` order, `release_messages()` shape, `MessageDefinitionTuple` field order.
-
-This is the model for “test infra/assumptions first” (ADR-004): any new model/runtime dependency should get a similar assumption test (CPU load, `decide`/`classify` contract, probability range, no network on cache hit).
-
-### 4.4 Semantic tests — current coverage and gaps
-
-`tests/checkers/test_semantic_check.py` (506 lines, 19 test defs):
-
-| Class / lines | What it does | Gap |
+| Layer | Command | Scope / evidence |
 |---|---|---|
-| `TestImportErrorFallback` `:20-42` | `check_if_meaningful` propagates `ImportError` when `_semantic` import is blocked. | Tests an import failure path, not model behavior. |
-| `TestDefaultUserFallback` `:48-77` | Patches `_load_reranker` → `None`, asserts heuristic fallback. | Good deterministic fallback coverage. |
-| `TestRerankerImportFallback` `:83-153` | Sentinel set on ImportError; second call does not retry import. | Coupled to sentence-transformers internals. |
-| `TestBrushOffPatterns` `:159-209` | 35 brush-off strings with env `SEMANTIC=0`. | Overlaps `test_semantic_threshold`; no model. |
-| `TestMeaningfulPatterns` `:212-257` | 33 meaningful strings with env `SEMANTIC=0`. | 30/33 duplicated by `test_semantic_threshold`. |
-| `TestSemanticCheck` `:263-422` | Model smoke tests; one cache-hit test; three slow tests; weak `is None or isinstance(bool)` assertions. | No deterministic score contract; cache-hit test recomputes the 64-bit key (`:338-347`). |
-| `TestRerankerPairs` `:424-506` | Four model-pair tests with `importorskip`, unmarked slow, weak `True/False or None` assertions. | Skipped in CI; not a behavior contract. |
+| Unit | `uv run pytest -q` | 59 `test_*.py` modules; excludes `slow`; ~27-34s; probe 1378 passed, 4 skipped, 18 deselected |
+| Integration / golden | `uv run pytest tests/integration.py -q` | End-to-end install + 14-tool lint on `tests/data/minimal_sample_project`; golden multiset + oracle rules + per-tool minimums; probe 9 passed, 65.6s (`tests/integration.py:1-10`, `tests/_golden.py:1-12`) |
+| Self-lint | `uv run lint` | 14 tools, baseline diff, ~100s warm per `AGENTS.md:9`; pre-commit hook runs it with `--fix` (`AGENTS.md:129-138`) |
+| Self-lint guard | `uv run pytest tests/runner/test_self_lint_clean.py -q -m slow` | Slow/deselected; asserts rc 0 and pylint 10.0 (`test_self_lint_clean.py:17-59`) |
+| Assumptions | `uv run pytest tests/assumptions -q` | Pins astroid 4.0.4, beartype 0.22.9, pylint 4.0.6, and the semantic cache writer verdict |
 
-`tests/checkers/test_semantic_threshold.py` (135 lines): 30 meaningful + 50 meaningless comments with `SEMANTIC=0` (`:29-69,73-135`). The 30 meaningful cases are a **subset of** `TestMeaningfulPatterns` (30/30 overlap); only 3 of the 50 meaningless cases overlap the brush-off list. This is coverage-only duplication, not a new behavior.
+### 5.2 Checker test conventions
 
-`tests/checkers/test_suppression_justification_checker.py` (390 lines, 42 tests): 40 heuristic/W9704 tests + a slow `TestSuppressionRerankerPipeline` class (`:356-390`) with 2 tests that `importorskip` and reset the cache. The 40 heuristic tests do **not** set `PYTHON_SETUP_LINT_SEMANTIC=0`; they rely on `sentence-transformers` being absent. If `[semantic]` is installed, they may take the model path and change outcomes. Same for `tests/checkers/test_bare_except_comment_checker.py` (11 tests, no env guard).
+- Most checker tests use `_walk_and_release(code, CheckerClass, file_path=...)` and assert on `msg.msg_id` (`tests/checkers/test_suppression_justification_checker.py:1-120`; `testing.py:18-41`).
+- Shared parametrize tables and helpers live in `tests/checkers/_factories.py` (1393 lines, 16 functions), imported by 9 checker test modules. The file header claims “data tables are free LOC” and disables `too-many-lines` (`tests/checkers/_factories.py:1-15`), but `CodingRules.md:139-159` does not grant that exemption.
+- Runner tests use `RunnerConfig`, `make_lint_result`, `FakeRunCmd`, and `tests/runner/_factories*.py` (209 + 279 + 394 + 511 lines) imported by 16 runner test modules; `tests/runner/_factories_extras.py:1` and `:6` both disable `too-many-lines` and claim 502 lines while the file is 511.
+- Fixtures: `tests/conftest.py` provides `tmp_baseline`, `runner_config_factory`, `isolated_runner_registries`, `empty_project`, `configured_project` (`tests/conftest.py:1-160`). `configured_project` runs install once per session with a hardcoded `dev_path="/home/slava/aiexp/python-setup"` (`tests/conftest.py:86`).
+- Project helpers: `tests/_project_helpers.py` is the single source for sample-project copy, git init/stage, shipped config paths, runner config, and install idempotency (`tests/_project_helpers.py:1-204`). It must not import `tests.conftest`/`tests.integration` (module docstring `:1-8`).
+- Test naming convention is `test_<method>_given_<condition>_then_<expected>` (`CodingRules.md:288-290`). Probe: 497/799 test functions (62.2%) match; 60+ files are below 50%. `CodingRules.md:256-270` requires every test to be `no_external_api` or `with_real_api`; probe: 31/60 test modules carry a category marker.
 
-### 4.5 Debloat evidence (concrete, citation-backed)
+### 5.3 Golden behavior-preservation contract
 
-| Finding | Evidence |
-|---|---|
-| Test suite is 2× src size | 18,671 test LOC vs 9,005 src LOC (`find … wc -l`). |
-| Over-C0302 modules with disables | `dispatch.py` 542 (`:1`), `tests/checkers/_factories.py` 1,393 (`:15`), `tests/runner/_factories_extras.py` 511 (`:1,6` duplicate disables), `tests/checkers/test_semantic_check.py` 506 (`:1`). 7 `too-many-lines` disables total in src/tests. |
-| Trivial-wrapper suppressions | 60 `# pylint: disable` occurrences: 39 `trivial-wrapper` + 21 `W9728`, mostly tests; only 2 in src. |
-| Duplicated local test helpers | `_walk_and_release` defined in 10 test files plus shipped `testing.py:25-38`; `_msg_ids` defined in 8 test files. |
-| Redundant semantic tests | 30/30 meaningful cases duplicated between `test_semantic_check.py:212-257` and `test_semantic_threshold.py:29-69`; threshold test is 135 lines for 2 parametrized functions. |
-| Unused factory helpers | `assert_violation_contains_any` (`tests/runner/_factories.py:167`) and `assert_r4_reason` (`:200`) have zero references. |
-| Hardcoded checkout paths | 5 test files / 10 occurrences of `/home/slava/aiexp/python-setup`: `tests/conftest.py:86`, `tests/runner/test_setup.py:252,277`, `tests/runner/test_setup_install.py:265,274,284,288,350`, `tests/runner/test_autofix_conflict_integration.py:181`, `tests/runner/test_t9_7_compose_pyright_live.py:31,37`. |
-| Always-skipped live test | `tests/runner/test_t9_7_compose_pyright_live.py:29-37` skipif on the hardcoded checkout; 2 tests, 197 lines. |
-| Weak end-to-end smoke | `tests/runner/test_real_pipeline_smoke.py:26-40` asserts only `isinstance(rc, int)` and tool-name presence. |
-| Self-lint / config meta-tests | `tests/runner/test_self_lint_clean.py` (59 lines) runs full lint on the repo; `tests/runner/test_config_consistency.py` (9 tests) checks config files; `tests/runner/test_pyright_noise_filter.py` (2 slow tests) checks runner output; `tests/runner/test_runner_private_imports.py` checks import hygiene. These are the “never test linting” candidates to adjudicate. |
-| Legacy milestone naming | `tests/runner/test_t1b_self_discovery.py`, `test_t3_coverage.py` (390), `test_t5_compose_ruff.py` (366), `test_t9_7_compose_pyright.py`, `test_t9_7_compose_pyright_live.py`, `test_t11_health_checks.py` (383) retain milestone IDs. |
-| Test naming rule gap | `CodingRules.md:290` requires `test_<method>_given_<condition>_then_<expected>`; AST scan of 780 test defs finds 488 with `_given_` (292 not), e.g. `tests/runner/test_setup.py:124` `test_cases`. |
-| Dead compat shims | `src/python_setup_lint/runner/baseline.py:20-42`: `peek_fallback_tools()` always returns `frozenset()`; `_compare_sorted` only re-exports `_baseline_helpers._compare_sorted` “for backwards compat”. Tests still assert the empty shim (`tests/runner/test_baseline_diff_edge.py:229-236`). |
-| Misnamed/dead names | `suppression_justification_checker.py:63` `_legacy_scan` is the only scan path; `trivial_wrapper_checker.py:33-36` exempts `_legacy_to_records`, `_legacy_current_output`, `_legacy_saved_output` which no longer exist. |
-| Runner strategy duplication | `dispatch.py:155-260` base `LintTool` + 7 per-tool subclasses; several override only to append a handful of flags (`_PylintPyiLintTool`, `_PylintTestsLintTool`, `_RuffFormatLintTool` at `:342-439`). |
-| Report/doc drift | `AGENTS.md:10-11` says 1,290 pass / 15 deselected / ~53 s and 7 integration pass / ~30 s; actual 1,357 / 18 / ~28 s and 9 / ~65 s. `CHANGELOG.md:3` v1.2.9 vs `pyproject.toml:3` 1.2.10. `README.md:72` pins v1.2.5. |
+`tests/_golden.py` is the sole owner of normalization/serialization/assertions; a `Finding` is `(tool, file, line, col, rule)`, compared as a multiset (`Counter`) so duplicates, moved lines, new false positives, and dropped findings fail (`tests/_golden.py:1-12`, `:53-120`). Regeneration is opt-in via `PYTHON_SETUP_LINT_UPDATE_GOLDEN=1` and refused under CI (`tests/_golden.py:9-12`, `:370-420`). The golden capture explicitly disables the semantic pipeline with `monkeypatch.setenv(SEMANTIC_ENV, "0")` (`tests/integration.py:109-113`), and asserts the planted brush-off at `src/minimal_sample/mod.py:49` fires while the carry-from justification at `:56` does not (`tests/integration.py:124-129`; sample source `tests/data/minimal_sample_project/src/minimal_sample/mod.py:45-57`).
 
-### 4.6 Coding-rule enforcement mapping
+Consequently, the model swap has **no deterministic coverage**: the golden pins heuristic W9704 behavior only; the 4 reranker pair tests skip without `sentence_transformers`, and the 2 slow semantic tests are deselected by default (`tests/checkers/test_semantic_check.py:424-506`; skip probe above).
 
-Mechanically enforced today:
+### 5.4 Semantic test inventory and redundancy
 
-- Complexity: R0912/R0915/C0302 from `.pylintrc:2,22-27`; custom `unjustified-suppression`, `trivial-wrapper`, `generic-key-dict`, `unnamed-tuple-dict-value`, `missing-return-annotation`, `docstring-in-impl`, `pyi-underscore-symbol`, stub fidelity, etc. from `.pylintrc:17`.
-- Typing/beartype: custom `missing-beartype`, `missing-return-annotation`, `generic-key-dict`, `unnamed-tuple-dict-value`; `mypy`, `pyright`, `ty`, `mypy.stubtest`.
-- Test-specific: `.pylintrc-tests:37-43` enables W9704, W9702, W9728, W9729, W9738, W9739, etc.
-
-Not mechanically enforced (judgment/manual):
-
-- `CodingRules.md:93-107` simplification/wrapper inlining/redundant fallbacks/over-engineering.
-- `CodingRules.md:278-286` “optimize test LoC and complexity vigorously”, “prefer long end-to-end scenario tests”, “reuse test code”, “test data factories”.
-- `CodingRules.md:290` test naming.
-- `CodingRules.md:292-307` isolation/fixture scope/conftest scope.
-- `CodingRules.md:66-68` comments must not duplicate signatures; `.py` implementation comments only.
-- `CodingRules.md:81` CHANGELOG user-visible only.
-- `CodingRules.md:87` `design/` ADR format (current ADRs live in `docs/adr/`).
-
-## 5. External model research (for the semantic swap)
-
-The intent names GLiDE-0.4B or smaller, with the Jev Decision Index as reference. Facts gathered from the model cards and package registries (2026-11-08).
-
-| Candidate | Size / params | License | Runtime | CPU evidence | Risk / notes |
-|---|---|---|---|---|---|
-| **fastino/GLiDE-0.4B** | 394,781,696 BF16 params; 0.81 GB weights; 7,999-token context | **Fastino Community License** (custom): free use, but production commercial use by entities with annual revenue > **$10M** requires a separate agreement; commercial use must display “Built with Fastino GLiDE”; derivative works share-alike | Vendored `glide/` package (~56 KB) inside the model repo; `torch==2.14.0`, `transformers==5.17.0` pins; `Glide.from_pretrained(path, device="cuda")` defaults to CUDA but accepts a `device` argument; encoder path uses `.to(device=device, dtype=dtype)` | Card says tested on RTX PRO 6000; **no CPU benchmark** | Heavy 0.8 GB download; npm-style vendored code, not a normal PyPI dependency; `glide` on PyPI 0.4.1 is an unrelated ETL package; non-MIT model/code license in an MIT project; torch/transformers pin conflict with current lock (torch 2.12.1 / transformers 5.12.1) |
-| **fastino/GLiNER2.5-Decide** | 340M English classifier; stored `model.safetensors` 1.95 GB (F32 metadata 486M tensors) | **Apache-2.0** | `pip install "gliner2[local]"` (gliner2 2.1.0: torch>=2.1, transformers>=4.43,<6, peft, safetensors); `AutoExtractor.from_pretrained(...)`; `classify_text(text, {label_set})` | No explicit CPU benchmark; torch CPU feasible; card emphasizes local shipping | Simpler API and permissive license, but 1.95 GB download and 340M inference; returns a label string for single-label tasks, so a probability threshold may need a custom head/API |
-| **fastino/GLiNER2.5-multi-Decide** | 287M multilingual; 1.15 GB safetensors | **Apache-2.0** | Same `gliner2[local]` | Same | Smaller than English Decide, multilingual; same API trade-off |
-| **hotchpotch/bekko-system-one-v0-17m** | 16.8M params; 67 MB `model.safetensors`; 29 MB ONNX browser export | Model card has **no license metadata**; base is `cross-encoder/ettin-reranker-17m-v1` (Ettin MIT line) | `BekkoSentenceTransformer` via `trust_remote_code=True`; requirements `torch>=2.10,<2.11`, `transformers==5.17.0`, `sentence-transformers==6.1.0`; `predict()` returns choice/noul/score probabilities | **Explicit CPU or CUDA** (`device="cpu"`); browser ONNX demo CPU/WebGPU | Truly small compute, but custom remote code, no license tag, and strict torch 2.10–2.11 pin; S1MB full task avg 27.57 vs Jev 59.59 (weak generalization); ONNX path would need tokenizer/head work |
-| **Elfsong/jev-ettin-150m-v16** | 149.6M params; 598 MB FP32 | **Apache-2.0** | Custom `inference/decision_index_engine.py`; CUDA-oriented example (`device="cuda"`), FP32 weights + BF16 autocast; license requires supplying loader, not `AutoModelForSequenceClassification` | No CPU claim; CUDA B200 latency reported | Permissive and moderate size, but custom inference code and GPU-oriented validation |
-| Other Decision Index sub-500M models | e.g. `tardellirs/crivo-17m/32m/68m/150m/400m`, `moganai/lavoir`, `Elfsong/jev-ettin-150m/400m` | Mixed: `crivo`/`lavoir` are **CC-BY-NC-4.0** (non-commercial); `jev-ettin` Apache-2.0 | Custom option-marker readout implementations | Varies | Non-commercial licenses are unsuitable for an MIT developer tool; evaluate case-by-case |
-
-The Decision Index leaderboard (`https://huggingface.co/spaces/multimodalart/jev-decision-index`) lists ~200 models and includes many sub-500M entrants; the README is the authoritative candidate index. For a CPU-only tool, the practical shortlist is GLiDE-0.4B (0.81 GB, permissive-ish but custom license), GLiNER2.5-Decide (Apache-2.0, 1.95 GB), and bekko-17m (67 MB, CPU-explicit, but license/pin risk).
-
-Environment feasibility facts:
-
-- `torch 2.12.1` publishes cp314 manylinux wheels (532 MB x86_64 wheel) — Python 3.14 is supported.
-- `onnxruntime 1.31.1` publishes cp314 manylinux wheels — an ONNX-only path is feasible and avoids torch (~532 MB + 18 CUDA/NVIDIA packages).
-- Current `uv.lock` resolves `torch 2.12.1` with `cuda-bindings`, `cuda-toolkit`, `triton`, and 15 `nvidia-*` packages (`uv.lock:1552-1602`); there is no `[tool.uv.sources]` CPU index pin in `pyproject.toml`.
-- `sentence-transformers` 6.2.0 requires `transformers>=5.0,<6` and `torch>=2.2`; the optional extra currently pins only `sentence-transformers>=3.0.0` (`pyproject.toml:28-31`).
-
-## 6. Open Questions & Uncertainties (architect/spike framing)
-
-1. **Model choice + license.** GLiDE-0.4B is the named example but its Fastino Community License imposes revenue/attribution/share-alike terms and its `glide/` code is vendored, not a PyPI package. GLiNER2.5-Decide is Apache-2.0 but 1.95 GB. bekko-17m is 67 MB/CPU-explicit but has no license metadata and strict pins. Decide whether a non-MIT model license is acceptable for `python-setup` (MIT, `pyproject.toml:19-20`) and whether the model is downloaded at runtime vs vendored.
-2. **CPU latency/memory budget.** No candidate has a published CPU benchmark; GLiDE/GLiNER cards report GPU numbers only. W9704/W9738 can call the scorer for every suppression with a reason and every `Any` annotation; this repo alone has ~407 suppression-like comments. Measure cold/warm latency and peak RSS on representative comments; decide batching, max context, and whether to cap calls.
-3. **Pipeline placement.** Current order is semantic-first, heuristic-fallback (`_base.py:150-158`). ADR-002’s title says “heuristic-gated local decision model”. Choose: model-first with heuristic fallback (current), heuristic-first then model only for borderline cases, or heuristic-veto + model-confirm. Each changes W9704/W9738 outcomes and cache requirements.
-4. **Behavior-preservation contract.** Golden (158 findings) and integration (`mod.py:49` reject, `:56` accept) run with `SEMANTIC=0`. Define the contract for semantic-on: must the existing labeled corpora (`30` meaningful + `50` meaningless + `33` meaningful + `35` brush-off) keep their expected labels? Define precision/recall and a new deterministic contract test for the model path.
-5. **Cache shape / key.** Current key is a 64-bit truncated SHA-256 over `(text, rule, code_context, comment, model)` (`_semantic.py:143-155`). For a git-stored cache, include model ID + revision/hash + prompt-template version + threshold + normalization version; use full SHA-256 hex, sorted keys, `indent=2`, trailing newline (repo convention at `tests/_golden.py:156-172`); store only hash→bool (no raw comments/PII). Decide max entries, expiry/prune policy, and whether cache entries for old model versions are deleted.
-6. **Read-only lint / refresh.** ADR-007 requires lint to be read-only and cache refresh to be explicit. Current `_save_result_cache` writes on every new result (`_semantic.py:71-78,187-188`), which would dirty a tracked file. Decide: read-only cache with `--refresh-semantic-cache` (or env var), atomic tempfile+rename write (pattern at `runner/baseline.py:201-229`), file locking, and whether cache-miss lint falls back to heuristic or fails.
-7. **Env/API compatibility.** Keep `PYTHON_SETUP_LINT_SEMANTIC` (default `"1"`) and `PYTHON_SETUP_LINT_RERANKER_MODEL` names, or introduce `PYTHON_SETUP_LINT_DECISION_MODEL` and deprecate the old name? Keep the extra name `[semantic]` or rename? Update `README.md:29`, `docs/tutorials.md:12-15`, `docs/custom-checks.md:97`, `docs/troubleshooting.md:97-109`, `docs/semantic-justification.md`, `AGENTS.md:79-85`.
-8. **Test strategy for the model path.** No deterministic test exists. Options: inject a scorer via a private `_score` hook and monkeypatch it; commit a small decision cache for the existing labeled corpus and run cache-hit tests without a model; or use a tiny local model (bekko-17m ONNX) in a slow test. Also fix the existing test-isolation bugs: `TestRerankerPairs` not marked slow (`test_semantic_check.py:424-506`), semantic tests that delete `~/.cache` via `_reset_cache` (`_semantic.py:81-90`), and checker tests that rely on `sentence-transformers` being absent (`test_suppression_justification_checker.py`, `test_bare_except_comment_checker.py`).
-9. **“Never test linting.”** Ambiguous in a linter product. Candidate removals: `tests/runner/test_self_lint_clean.py` (self-lint), `tests/runner/test_config_consistency.py` (config file consistency), `tests/runner/test_pyright_noise_filter.py` (runner display guard), `tests/runner/test_runner_private_imports.py` (import hygiene). Confirm the intended boundary: remove self-referential gates and rely on `uv run lint`, or keep them as gate evidence.
-10. **Debloat scope / test-intent mapping.** The safe net is `tests/_golden.py` + `tests/assumptions/` + `tests/integration.py`; any deletion should map old test intent → retained scenario/assumption. Decide whether to split `tests/checkers/_factories.py` (1,393) and `tests/runner/_factories_extras.py` (511) by checker group, inline local `_walk_and_release`/`_msg_ids` helpers into `testing.py`, and remove unused `assert_violation_contains_any`/`assert_r4_reason`.
-11. **Code debloat scope.** `dispatch.py` 542 lines with 7 strategy subclasses; `baseline.py` dead compat (`peek_fallback_tools`, `_compare_sorted`); `trivial_wrapper_checker` dead `_legacy_*` exemptions; `_legacy_scan` naming. Decide whether to delete compat shims and tests (behavior-preserving) or keep them for external consumers; if deleted, update `runner/__init__.py:17,22,62` and tests.
-12. **Gate + golden process.** `lint.baseline` is empty; any new violation fails the self-lint/pre-commit gate. Golden regeneration is local-only via `PYTHON_SETUP_LINT_UPDATE_GOLDEN=1` and refused under CI (`tests/_golden.py:374-390`); tool counts are rewritten atomically. Decide how to validate the final worktree given the detect-secrets MemoryError on large tracked artifacts (scope detect-secrets or clean the tree; do not edit the baseline).
-13. **Doc/ADR reconciliation.** Eight ADRs are problem statements, some partly stale (ADR-001 exact multiset now exists; ADR-005 check-only format now exists; ADR-006 `slice_tool_section` now used). Decide whether to formalize them into Decision/Consequences ADRs, move them to `design/` per `CodingRules.md:87`, and update stale counts (`AGENTS.md:10-11`), version (`CHANGELOG.md:3` vs `pyproject.toml:3`), and README pin (`README.md:72`).
-
-## 7. Likely touch map (for planning, not a decision)
-
-| Workstream | Primary files | Contract tests / gates |
+| File | Lines / roles | Redundancy / impact |
 |---|---|---|
-| Coding-rule enforcement | `src/python_setup_lint/runner/dispatch.py`, `baseline.py`, `testing.py`, checker modules; `config/.pylintrc*`; test helpers | `uv run lint` (13 tools pass, 61 s), `tests/runner/test_config_consistency.py`, `tests/runner/test_self_lint_clean.py` |
-| Code/test debloat | `tests/checkers/_factories.py`, `tests/runner/_factories*.py`, `tests/_project_helpers.py`, duplicated `_walk_and_release`/`_msg_ids`, over-limit modules, dead compat shims | `uv run pytest -q` (1,357 pass), `tests/assumptions/`, `tests/integration.py` |
-| Semantic swap | `checkers/_semantic.py` + `.pyi`, `checkers/_base.py`, W9704/W9738 checkers, `pyproject.toml` extra, `uv.lock`, `.gitignore:243-244`, semantic tests, docs/AGENTS/README | `uv run pytest -q` (4 model skips), `tests/integration.py` (semantic=0 golden), new deterministic model-path test + cache contract |
+| `tests/checkers/test_semantic_check.py` | 506 lines; 7 classes: import fallback, default fallback, reranker sentinel, brush-off patterns, meaningful patterns, pipeline, reranker pairs (`:20-506`) | Over C0302; header claims 504 lines (`:1`). Heuristic pattern lists at `:159-257`; reranker-specific classes at `:424-506` encode the current cross-encoder contract. Weak assertions like `result is None or isinstance(result, bool)` and `result is True or result is None` (`:271-286`, `:430-506`) cannot fail meaningfully. |
+| `tests/checkers/test_semantic_threshold.py` | 135 lines; `TestSemanticThreshold` (`:19-135`) | Its 30 meaningful comments are fully contained in `test_semantic_check.py`’s 33 (probe: 30/33 overlap); its 50 meaningless comments overlap only 3 with the brush-off list. Prime consolidation candidate. |
+| `tests/checkers/test_suppression_justification_checker.py` | 390 lines; 42 tests incl. slow `TestSuppressionRerankerPipeline` (`:356-390`) | The slow reranker pipeline tests duplicate semantic-pipeline coverage and add a download dependency; the rest are genuine checker behavior tests. |
+| `tests/assumptions/test_pylint_cache_semantics.py` | 485 lines; `TestSemanticCacheWriter`, `TestSemanticCachePathScoping`, `TestPylintRcfileJobsWatchdog`, `TestPylintInvocationConcurrency` (`:129-485`) | Intimately coupled to `_CACHE_DIR`, `_RESULT_CACHE_FILE`, `_RERANKER_MODEL`, `_load_reranker`, `_save_result_cache`; a cache redesign must rewrite this file. |
 
-Key invariants to preserve:
+### 5.5 Existing debloat evidence (objective)
 
-- W9704 message text/ID and line/col behavior unchanged; W9738 unchanged.
-- Heuristic fallback exact outcomes unchanged for the existing 30+50+33+35 labeled comments and for all currently passing checker tests.
-- Golden 158 findings unchanged unless intentionally regenerated; `lint.baseline` stays `[]`.
-- Default lint without `[semantic]` never imports heavy ML deps and remains fast.
-- Heavy model imports stay lazy inside the scorer (`_base.py:150-156` pattern), so pylint plugin import remains cheap.
-- Any git-stored cache is tiny, deterministic, sorted, and read-only during lint (ADR-007).
+| Category | Evidence |
+|---|---|
+| Over-limit modules | `tests/checkers/_factories.py` 1393 lines (disable at `:15`), `src/.../runner/dispatch.py` 542 (disable at `:1`), `tests/runner/_factories_extras.py` 511 (disables at `:1` and `:6`), `tests/checkers/test_semantic_check.py` 506 (disable at `:1`) |
+| Stale over-limit suppressions | `tests/runner/test_lint_runner.py` 479 lines (disable at `:7`), `tests/runner/test_lint_runner_integration.py` 418 (disable at `:1`); both are under the 500-line limit |
+| Stale comments | `test_semantic_check.py:1` says 504 vs 506; `_factories_extras.py:1` says 502 vs 511; `_base.pyi:69-95` says rule/context are unused |
+| Backward-compat shims | `runner/baseline.py:20-42` (`_FALLBACK_TOOLS`, `peek_fallback_tools` returning empty, `_compare_sorted` re-export); `runner/parsers.py:7-31` re-exports; `dispatch.py:503-507` `TOOLS` legacy alias; `trivial_wrapper_checker.py:28-36` exemption names `_legacy_to_records`/`_legacy_current_output`/`_legacy_saved_output` that no longer exist |
+| Duplicate helpers | `checkers/stub/coverage.py:131-138` reimplements `_is_under_source_root` already in `checkers/_base.py:54-62`; `bare_except_comment_checker.py:74-120` and `suppression_justification_checker.py:331-388` duplicate trailing/preceding-comment extraction |
+| Dead compatibility code | `_add_doc_node_spans` handles astroid 4.x `.doc_node` **and** astroid 3.x `body[0].value` (`suppression_justification_checker.py:247-271`), but the project floors astroid at `>=4.0.4` (`pyproject.toml:11`; lock 4.0.4 at `uv.lock:71-76`) |
+| Redundant exception checks | `_semantic.py:66` catches `JSONDecodeError, OSError, ValueError`; `JSONDecodeError` subclasses `ValueError` |
+| Test helper wrappers | 38 `trivial-wrapper` disables in tests, e.g. `_make_tc` aliases (`tests/checkers/test_stub_checker.py:82`, `test_redundant_type_guard_checker.py:16`), `_sorted` aliases (`test_baseline_diff.py:21`, `test_baseline_diff_parsers.py:32`), `_ctx` (`test_extra_tools.py:285`), `_s_*` (`test_setup_install.py:113-130`) |
+| Hardcoded environment paths | `/home/slava/aiexp/python-setup` at `tests/conftest.py:86`, `tests/runner/test_setup_install.py:265-350`, `tests/runner/test_autofix_conflict_integration.py:181`, `tests/runner/test_setup.py:252,277`, `tests/runner/test_t9_7_compose_pyright_live.py:31` |
+| Baseline test split | `tests/runner/test_baseline_diff.py` 249 + `test_baseline_diff_edge.py` 308 + `test_baseline_diff_parsers.py` 486 = 1043 lines / 21 test functions, with overlapping `_compare_sorted`/`_diff_baseline`/`_capture_baseline` coverage |
+| Docs drift | `AGENTS.md:10-11` stale counts; `CHANGELOG.md:3` v1.2.9 vs `pyproject.toml:3` 1.2.10; `README.md:72` still shows v1.2.5; `config/ty.toml:8` names `sentence_transformers` |
+
+### 5.6 Third-party assumptions to read before debloating
+
+- `tests/assumptions/test_astroid_contracts.py:1-10` pins astroid 4.0.4 behavior used by checkers.
+- `tests/assumptions/test_beartype_contracts.py:1-13` pins beartype 0.22.9’s TYPE_CHECKING forward-ref behavior: `@beartype` succeeds at import but raises on first call; this explains many `# pylint: disable=missing-beartype` comments on mixins/`register()`.
+- `tests/assumptions/test_pylint_contracts.py` pins pylint 4.0.6 checker lifecycle (`open`/`close` order), `CheckerTestCase`/`UnittestLinter` message shape, and `MessageDefinitionTuple` arity (`:67-175`).
+- `tests/assumptions/test_pylint_cache_semantics.py:11-48` is the writer-first verdict; the file says “these tests are the verdict” and must be re-derived before changing assertions.
+
+---
+
+## 6. Model Candidate Landscape (external; verify before adoption)
+
+The intent names GLiDE-0.4B and the JEV Decision Index. The following are external facts from model cards/leaderboard, not codebase facts; they should seed a spike, not be treated as final choices.
+
+| Candidate | Params | License | Runtime / CPU evidence | Notes |
+|---|---:|---|---|---|
+| `fastino/GLiDE-0.4B` | 0.40B | `fastino-community` | Custom `glide` package; torch/transformers; card reports RTX PRO 6000 GPU latency 6.9 ms, 0.81 GB bf16; no CPU claim | Intent’s named candidate; ADR-009 requires human license review and notes no candidate is proven compliant (`docs/adr/ADR-009.md:15-19`) |
+| `fastino/GLiNER2.5-Decide` | 340M | Apache-2.0 | Card says “Runs on CPU or GPU, through `gliner2`”; `gliner2[local]` | English classification; 60.2% exact match on `fastino/fast-decisions`; 0.34B is smaller than GLiDE |
+| `tasksource/tasksource-decider-nano` | 150M | Apache-2.0 | ModernBERT cross-encoder, self-contained `decider.py` (PyTorch + transformers); A30 median 23 ms | #1 among models under 300M on Decision Index 0.4 (19.85); 8,192-token context; no explicit CPU claim but 150M encoder |
+| `SupersonicLabs/Julia-1` | 144.3M | Apache-2.0 | Card: CPU inference works with standard PyTorch; FP32 weights 550.5 MiB; 8,192-token CPU smoke test; ONNX/GGUF variants | Typed decisions (`choice`, `noul`, `score`); Python 3.11+ |
+| `hotchpotch/bekko-system-one-v0-{17m,68m,400m}` | 17M/68M/400M | No license field in card/API | Card: CPU or CUDA through `BekkoSentenceTransformer`; 17M ONNX ~29 MB | Experimental; license risk until clarified |
+| `tardellirs/crivo-68m` / `crivo-400m` | 68M/400M | CC-BY-NC-4.0 | Cross-encoder/ModernBERT decision models | Noncommercial license likely incompatible with an MIT tool; treat as unsuitable unless legal says otherwise |
+| `cross-encoder/ettin-reranker-68m-v1` / `150m-v1` | 68M/150M | Apache-2.0 | ONNX/OpenVINO tags; sentence-transformers cross-encoders | Rerankers, not decision models; could be a lightweight stopgap but does not satisfy “decision model” framing |
+
+Leaderboard: `https://multimodalart-jev-decision-index.static.hf.space/index.html` (Decision Index 0.4.1; 274 model entries). GLiDE-0.4B card: `https://huggingface.co/fastino/GLiDE-0.4B`. GLiNER2.5-Decide: `https://huggingface.co/fastino/GLiNER2.5-Decide`. tasksource-decider-nano: `https://huggingface.co/tasksource/tasksource-decider-nano`. Julia-1: `https://huggingface.co/SupersonicLabs/Julia-1`. Bekko: `https://huggingface.co/hotchpotch/bekko-system-one-v0-400m`. Crivo: `https://huggingface.co/tardellirs/crivo-68m`. Ettin reranker: `https://huggingface.co/cross-encoder/ettin-reranker-68m-v1`.
+
+Caveats: leaderboard latencies are GPU measurements; CPU latency must be measured on the target laptop/CI class. The model cards’ benchmark labels are not the W9704 meaningful-vs-brush-off task. No double-rated W9704 corpus exists at HEAD (ADR-009 says the accepted stratum had 215 meaningful and 0 meaningless labels; `docs/adr/ADR-009.md:9-13`).
+
+---
+
+## 7. Open Questions and Uncertainties
+
+1. **Backend semantics: what exactly replaces what?** ADR-010 specifies `DecisionBackend.decide(justification, rule, context) -> float` with a “heuristic-first hard gate” (`docs/adr/ADR-010.md:23-25`), while current code is semantic-first with heuristic fallback (`_base.py:150-158`). Does “hard gate” mean the heuristic must pass before the model runs, or that the heuristic is only a fallback when the model is unavailable? Does the model return a probability that the caller thresholds, or a boolean? How does `None` (model unavailable) map to `check_if_meaningful`’s `bool` return?
+
+2. **Which model is compliant and CPU-feasible?** GLiDE-0.4B is the intent’s example but carries a Fastino Community License and GPU-only evidence (`https://huggingface.co/fastino/GLiDE-0.4B`). Apache-2.0 alternatives exist (GLiNER2.5-Decide 340M, tasksource-decider-nano 150M, Julia-1 144.3M), but none is trained on W9704 labels; zero-shot behavior on terse comments is unproven. A CPU benchmark on the target class and a license decision are both unresolved. Python 3.14 is supported by locked torch 2.12.1/transformers 5.12.1 (`uv.lock` entries; PyPI classifiers), but `gliner2` advertises classifiers only through 3.12 — verify before adopting it.
+
+3. **Evaluation corpus is missing.** The only in-repo labeled examples are the heuristic test lists (`test_semantic_check.py:159-257`, `test_semantic_threshold.py:29-131`) and the planted sample project (`tests/data/minimal_sample_project/src/minimal_sample/mod.py:45-57`). ADR-009’s required double-rated brush-off sample (`docs/adr/ADR-009.md:23-27`) is not in the repo. Without it, the 95% meaningless-precision gate cannot be evaluated; a model may improve or regress W9704 silently because the golden forces `SEMANTIC=0` (`tests/integration.py:112`).
+
+4. **Cache location and key schema.** ADR-010 wants `.python-setup-decisions.json` at the linted project root with per-entry file/model metadata and no bare hex ≥20 (`docs/adr/ADR-010.md:26-28`). The current key is path-free and 64-bit truncated (`_semantic.py:142-157`), and the tests assert a home-dir single file and path-free signature (`tests/assumptions/test_pylint_cache_semantics.py:276-305`). How does a checker know the project root? Options: `Path.cwd()` (pylint is launched with `cwd=config.cwd`; `runner/output.py:186-188`), walking up from `node.root().file`, or adding a `path`/`project_root` parameter to `check_if_meaningful`. The last conflicts with the current assumption test and the public helper signature.
+
+5. **Refresh vs read-only lint, and the writer side channel.** ADR-010 says ordinary lint is read-only and cache updates happen only through an explicit CI-guarded refresh with lockfile + merge + atomic replace (`docs/adr/ADR-010.md:29-32`). But pylint runs as a subprocess, so model verdicts computed during lint are not visible to the runner. Is the refresh command a separate source walker? Does pylint run with a special env var that permits a temp sidecar? Does the refresh reuse checker parsing? This is unspecified and should be spiked before implementation.
+
+6. **Prune/cleanup semantics.** “Prune entries for missing files and stale model identifiers” (`docs/adr/ADR-010.md:33`) requires file refs and a model identifier per entry. How are moved files handled? Does a model ID change invalidate all entries? Is pruning automatic on refresh or a separate `--prune` flag? Does `--path` scope the refresh? The current cache has no path or prune support (`tests/assumptions/test_pylint_cache_semantics.py:27-31`).
+
+7. **Secrets scan and tracked-cache safety.** `detect-secrets` scans all tracked files (`config`/runner strategy; `.secrets.baseline:42-44` only excludes `^\\.factory/`). ADR-010’s “no bare hex strings of length ≥20” suggests hashes must be encoded or avoided; storing raw justification text would be worse. What exact fields are safe to commit? Does the cache need a `.secrets.baseline` allowlist entry, or a non-hex key encoding?
+
+8. **Memory/time limits for a model in pylint subprocesses.** Pylint runs with default `memory_limit_mb=2048` (`runner/types.py:22`; pylint specs at `dispatch.py:112-132`), and `_run_cmd` applies `RLIMIT_AS` (`runner/output.py:171-200`). A torch/transformers model plus Python 3.14 may exceed 2 GB virtual address space; `ty` already needed `memory_limit_mb=0` for this reason (`dispatch.py:93`). Does every pylint spec need a memory/time override, or should the backend use a lighter ONNX runtime? How many model loads occur across the three pylint invocations (`pylint`, `pylint-pyi`, `pylint tests`)?
+
+9. **Dependency packaging.** The `[semantic]` extra is only `sentence-transformers>=3.0.0` (`pyproject.toml:28-31`); dev group has no ML deps (`pyproject.toml:58-85`), so the semantic path is untested in CI and four tests skip. Does the new backend replace the extra’s contents, add a new extra (e.g. `[decision]`), or become a core dependency? Core would change every consumer install and the default lint path; optional preserves the current “heuristic by default” behavior but leaves the model unexercised. `uv.lock` must be regenerated either way.
+
+10. **Debloat scope and ordering.** Objective targets are listed in §5.5, but the intent also says “test infra/assumptions first.” Which comes first: splitting `tests/checkers/_factories.py`/`tests/runner/_factories_extras.py`, consolidating `test_semantic_threshold.py` into `test_semantic_check.py`, removing the three baseline-diff modules’ overlap, removing stale shims (`peek_fallback_tools`, `_compare_sorted`, `_legacy_*` exemptions), or fixing `pylint-pyi`? Each touches different gates; ADR-011’s single-writer map is not present at HEAD (`docs/adr/ADR-011.md:40-70` plans a `_source_stream.py` and ownership table, neither implemented).
+
+11. **`pylint-pyi` blind spot.** Do we fix the strategy to lint companion stubs (e.g., copy stubs to a temp tree or use a pylint mode that does not resolve companions), and then clean up the 205 private stub symbols / duplicate-code findings? Or do we explicitly scope the rule to orphan stubs and document that companion `.pyi` files are governed only by `mypy.stubtest`? Fixing it changes the golden (currently 42/43 `pylint-pyi` findings are on `.py` files) and will likely require a large baseline/golden regeneration, which conflicts with “preserve every material lint/check behavior” unless staged deliberately.
+
+12. **Coding-rule enforcement that is currently subjective.** `CodingRules.md` requires simplification, wrapper justification, no fallbacks for hard dependencies, test naming `test_<method>_given_<condition>_then_<expected>`, test isolation/fixture scope, and `no_external_api`/`with_real_api` categories (`CodingRules.md:90-107`, `:256-306`). Probes show 62.2% naming compliance, 31/60 marker coverage, 38 test `trivial-wrapper` disables, and several hardcoded `/home/slava/aiexp/python-setup` paths. Which of these become lint-enforced rules vs one-time cleanup? A new checker for test naming/markers would itself need tests and could create a large baseline.
+
+13. **Docs/version reconciliation.** `AGENTS.md:79-85` still describes the cross-encoder and `PYTHON_SETUP_LINT_RERANKER_MODEL`; `docs/semantic-justification.md:3-62` describes reranker-first/fallback, `~/.cache`, and `results.json`; `docs/custom-checks.md:97-104` documents the reranker helper; `docs/troubleshooting.md:97-111` documents download fallback and cache deletion; `README.md:29` and `docs/tutorials.md:12-16` tell users to install `python-setup[semantic]`; `config/ty.toml:8` names `sentence_transformers`; `CHANGELOG.md:3` vs `pyproject.toml:3` version drift. All must move together, or the docs will contradict the new backend/cache.
+
+14. **Behavior-preservation verification gap.** The default `uv run pytest -q` does not run `tests/integration.py` (`tests/integration.py` is not named `test_*.py`; `pyproject.toml:48-55`), and the golden explicitly disables semantic scoring (`tests/integration.py:112`). A model/cache change can pass the default suite while changing W9704 behavior on the sample project. The architect should require `uv run pytest tests/integration.py -q` plus a new model-specific contract test (mocked backend for determinism, one `slow` real-model smoke) before claiming behavior preservation.
+
+---
+
+## 8. Recommendations for the Architect
+
+1. **Pin the behavior contract before touching the model.** Record baseline probe results (`uv run pytest -q`; `uv run pytest tests/integration.py -q`; `uv run lint`) and keep `PYTHON_SETUP_LINT_SEMANTIC=0` as the deterministic W9704 contract. Add a mocked-backend contract test for the new decision path; keep real-model tests behind `slow` + `importorskip`.
+
+2. **Resolve ADR-009’s no-go gates explicitly.** Either (a) produce the double-rated brush-off sample and license decision, then implement a compliant CPU model, or (b) keep the heuristic as production default and land only the model-independent `DecisionBackend` + cache infrastructure. Do not claim the swap is complete without a CPU benchmark and a license verdict.
+
+3. **Spike the model bake-off with license-clean candidates first.** For a W9704 binary decision, evaluate `tasksource/tasksource-decider-nano` (150M, Apache-2.0), `SupersonicLabs/Julia-1` (144.3M, Apache-2.0, explicit CPU), and `fastino/GLiNER2.5-Decide` (340M, Apache-2.0, CPU via gliner2) against GLiDE-0.4B. Measure CPU latency, peak RSS under the 2048 MB `RLIMIT_AS`, model load time, and threshold sweep on the double-rated sample; verify Python 3.14 support for the chosen runtime.
+
+4. **Implement ADR-010 cache as an explicit-refresh artifact, not a lint side effect.** Decide project-root resolution (`cwd` vs node path vs explicit parameter), per-entry `files`/`model` schema, non-hex key encoding, prune policy, and atomic replace in the target directory. Consume `tests/assumptions/test_pylint_cache_semantics.py`’s writer/concurrency verdict; rewrite that file deliberately rather than loosening it. Add a CI-guarded `refresh-decisions` command (or `lint --refresh-decisions`) and keep ordinary lint read-only.
+
+5. **Debloat test infrastructure first.** Split `tests/checkers/_factories.py` by checker domain, trim `_factories_extras.py` below 500 lines, consolidate `test_semantic_threshold.py` into `test_semantic_check.py`, and merge the three baseline-diff modules’ overlapping cases. Remove stale `too-many-lines` disables and stale `_legacy_*`/`peek_fallback_tools`/`_compare_sorted` shims only after the golden/baseline gates confirm no behavior change.
+
+6. **Treat `pylint-pyi` as a decision, not an assumption.** Reproduce the companion-stub skip, decide whether to fix it, and if so, budget for the 205 private stub symbols and duplicate-code findings. Regenerate the golden and baseline in the same change; otherwise document the orphan-only scope so “coding rules enforced” is not overstated.
+
+7. **Fix rule-enforcement and portability drift in measured increments.** Add/enable checks or one-time cleanups for test naming/markers, hardcoded `/home/slava/aiexp/python-setup` paths, stale docs counts/versions, and `config/ty.toml` optional-import comments. Keep each change behind the existing lint + integration gates.
