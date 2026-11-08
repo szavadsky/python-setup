@@ -81,3 +81,5 @@
 {"type":"item_merged","item":"golden-determinism-probe","sha":"406ab0167b235fd3adfab2c264d04c579db4ee9a","conflictResolved":false,"ts":"2026-11-08T02:00:28.651Z"}
 {"type":"item_merge_started","item":"third-party-assumption-tests","branch":"topic/modernize--third-party-assumption-tests","ts":"2026-11-08T02:00:28.652Z"}
 {"type":"item_merged","item":"third-party-assumption-tests","sha":"4a722f4fbff68c8a47f472a6844d3aa0d78436ae","conflictResolved":false,"ts":"2026-11-08T02:04:12.733Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-1-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/015-wave-close-up-1-1-a1","ts":"2026-11-08T02:04:12.780Z"}
+{"type":"step_timeout","task":"modernize","step":"wave-close-up-1-1","timeoutSec":900,"ts":"2026-11-08T02:04:12.785Z"}
