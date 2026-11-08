@@ -59,20 +59,22 @@ items:
     mergedAt: 2026-11-07T21:00:28-05:00
   baseline-violations-fix:
     kind: no-behavior
-    status: ready
+    status: merged
     branch: topic/modernize--baseline-violations-fix
     attempts: 1
     fixRounds: 1
     spendUsd: 0.06715600000000001
     currentStep: review
+    mergedAt: 2026-11-08T09:50:28-05:00
   golden-contract-hardening:
     kind: test-only
-    status: ready
+    status: merged
     branch: topic/modernize--golden-contract-hardening
     attempts: 2
     fixRounds: 1
     spendUsd: 0.091885
     currentStep: review
+    mergedAt: 2026-11-08T09:56:30-05:00
   golden-findings-snapshot:
     kind: dev
     status: superseded
@@ -83,12 +85,13 @@ items:
     currentStep: test-first
   model-eval-poc:
     kind: poc
-    status: ready
+    status: merged
     branch: topic/modernize--model-eval-poc
     attempts: 1
     fixRounds: 1
     spendUsd: 0.57375
     currentStep: review
+    mergedAt: 2026-11-08T10:03:05-05:00
   secrets-triage-spike:
     kind: fact-finder
     status: blocked
@@ -106,11 +109,12 @@ items:
     spendUsd: 0
   coding-rules-audit-i2:
     kind: fact-finder
-    status: pending
+    status: ready
     branch: topic/modernize--coding-rules-audit-i2
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.133783
+    currentStep: review
   consolidate-integration-helpers:
     kind: test-only
     status: superseded
@@ -120,11 +124,20 @@ items:
     spendUsd: 0
   decision-runtime-pinning:
     kind: test-assumptions
-    status: pending
+    status: ready
     branch: topic/modernize--decision-runtime-pinning
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.016725999999999998
+    currentStep: review
+  remaining-lint-violations-fix:
+    kind: no-behavior
+    status: ready
+    branch: topic/modernize--remaining-lint-violations-fix
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0.053628
+    currentStep: review
   coding-rules-audit:
     kind: fact-finder
     status: pending
@@ -334,6 +347,23 @@ debt:
     excludes it (6/336)"
   - "[secrets-triage-spike] Scope the --baseline masking claim to
     detect-secrets-scoped runs"
+  - "[coding-rules-audit-i2] Reconcile beartype taxonomy: true total is 26
+    sites, A22 undercounts by 2"
+  - "[coding-rules-audit-i2] A33 counts drift: measured 45 W9740 in src+scripts,
+    row says 43, title says 42"
+  - "[coding-rules-audit-i2] A20/A21 overcount and mix two stale-comment species
+    (20, not 23)"
+  - "[coding-rules-audit-i2] Minor number hygiene: 41 rows not 40; 17 runner
+    stubs not 18; 11 runtime PyLinter importers not 10"
+  - "[coding-rules-audit-i2] A4 overstates: only :76-77 is silent; :85-86
+    failure is surfaced via errors list"
+  - "[coding-rules-audit-i2] A7 deletion should re-verify
+    stubtest/pyright-verifytypes completeness after removing 4 stubs"
+  - "[remaining-lint-violations-fix] Cross-encoder score>=0.5 not
+    machine-validated locally (semantic extra absent); heuristic + pylint green
+    only"
+  - "[remaining-lint-violations-fix] Reranker score>=0.5 not machine-validated
+    (semantic extra absent); heuristic + pylint green only"
   - "[golden-helpers-unit] tool_minimums imports TOOLS via package root, pulling
     CLI structlog side effects"
   - "[golden-helpers-unit] Public FindingKey alias missing from __all__"
@@ -355,20 +385,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 6.4083826859999995
+budgetSpentUsd: 6.656849685999999
 spendByRole:
   workhorse:
-    costUsd: 2.4812766859999997
-    inputTokens: 5044493
-    outputTokens: 1741671
+    costUsd: 2.653226686
+    inputTokens: 5371701
+    outputTokens: 1873220
   alt-workhorse:
-    costUsd: 0.4001199999999999
-    inputTokens: 1922424
-    outputTokens: 687927
+    costUsd: 0.44153000000000014
+    inputTokens: 2120007
+    outputTokens: 777540
   architect:
-    costUsd: 3.4714810000000003
-    inputTokens: 5682152
-    outputTokens: 240167
+    costUsd: 3.5065880000000003
+    inputTokens: 5983816
+    outputTokens: 258867
   alt-architect:
     costUsd: 0.055505
     inputTokens: 220763
@@ -390,6 +420,18 @@ spendByItem:
     costUsd: 0.057198
     inputTokens: 138170
     outputTokens: 64014
+  consolidate-integration-helpers-v3:
+    costUsd: 0.19283999999999998
+    inputTokens: 341355
+    outputTokens: 174695
+  golden-snapshot-wiring:
+    costUsd: 0.13088
+    inputTokens: 218824
+    outputTokens: 95126
+  secrets-triage-spike:
+    costUsd: 0.076996
+    inputTokens: 208236
+    outputTokens: 84395
   model-candidate-matrix:
     costUsd: 0.045265
     inputTokens: 116110
@@ -402,40 +444,40 @@ spendByItem:
     costUsd: 0.07747
     inputTokens: 139419
     outputTokens: 80611
-  golden-contract-hardening:
-    costUsd: 0.091885
-    inputTokens: 206331
-    outputTokens: 89105
-  golden-snapshot-wiring:
-    costUsd: 0.13088
-    inputTokens: 218824
-    outputTokens: 95126
-  consolidate-integration-helpers-v3:
-    costUsd: 0.19283999999999998
-    inputTokens: 341355
-    outputTokens: 174695
-  secrets-triage-spike:
-    costUsd: 0.076996
-    inputTokens: 208236
-    outputTokens: 84395
-  baseline-violations-fix:
-    costUsd: 0.06715600000000001
-    inputTokens: 164765
-    outputTokens: 116111
+  remaining-lint-violations-fix:
+    costUsd: 0.053628
+    inputTokens: 140260
+    outputTokens: 60983
   model-eval-poc:
     costUsd: 0.57375
     inputTokens: 1862227
     outputTokens: 257459
+  baseline-violations-fix:
+    costUsd: 0.06715600000000001
+    inputTokens: 164765
+    outputTokens: 116111
+  golden-contract-hardening:
+    costUsd: 0.091885
+    inputTokens: 206331
+    outputTokens: 89105
+  coding-rules-audit-i2:
+    costUsd: 0.133783
+    inputTokens: 266809
+    outputTokens: 117127
   consolidate-integration-helpers-v2:
     costUsd: 0.19363600000000003
     inputTokens: 413243
     outputTokens: 140910
+  decision-runtime-pinning:
+    costUsd: 0.016725999999999998
+    inputTokens: 57664
+    outputTokens: 27228
   pylint-cache-assumptions:
     costUsd: 0.210224686
     inputTokens: 334753
     outputTokens: 167691
   (orchestration):
-    costUsd: 3.8114700000000004
-    inputTokens: 6815856
-    outputTokens: 731225
-lastUpdated: 2026-11-08T14:50:28.454Z
+    costUsd: 3.8558000000000003
+    inputTokens: 7177578
+    outputTokens: 765749
+lastUpdated: 2026-11-08T15:57:08.427Z
