@@ -2,25 +2,27 @@ task: modernize
 kind: saga
 status: active
 iteration: 1
-currentWave: 1
+currentWave: 2
 items:
   golden-determinism-probe:
     kind: fact-finder
-    status: ready
+    status: merged
     branch: topic/modernize--golden-determinism-probe
     attempts: 1
     fixRounds: 2
+    mergedAt: 2026-11-07T20:57:23-05:00
   third-party-assumption-tests:
     kind: test-assumptions
-    status: ready
+    status: merged
     branch: topic/modernize--third-party-assumption-tests
     attempts: 1
     fixRounds: 1
+    mergedAt: 2026-11-07T21:00:28-05:00
   golden-findings-snapshot:
     kind: dev
-    status: pending
+    status: running
     branch: topic/modernize--golden-findings-snapshot
-    attempts: 1
+    attempts: 2
     fixRounds: 1
   consolidate-integration-helpers:
     kind: test-only
@@ -89,5 +91,5 @@ debt:
     fixture-scoped clearing"
   - "[third-party-assumption-tests] Assert confidence is not None before reading
     .name"
-budgetSpentUsd: 3.010605000000001
-lastUpdated: 2026-11-08T01:57:23.359Z
+budgetSpentUsd: 3.272212000000001
+lastUpdated: 2026-11-08T02:44:57.776Z
