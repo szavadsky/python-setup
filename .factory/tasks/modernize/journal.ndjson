@@ -114,3 +114,5 @@
 {"type":"wave_report_old_format_rerun","wave":2,"iteration":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/019-architect-wave-report-1-2-a1","ts":"2026-11-08T04:32:09.767Z"}
 {"type":"wave_started","wave":2,"iteration":1,"ts":"2026-11-08T04:32:09.886Z"}
 {"type":"step_reused","task":"modernize","step":"wave-close-up-1-2","recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/018-wave-close-up-1-2-a1","ts":"2026-11-08T04:35:53.708Z"}
+{"type":"step_started","task":"modernize","step":"architect-wave-report-1-2","attempt":2,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/021-architect-wave-report-1-2-a2","ts":"2026-11-08T04:35:53.820Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"architect-wave-report-1-2","timeoutSec":1200,"ts":"2026-11-08T04:35:53.824Z"}
