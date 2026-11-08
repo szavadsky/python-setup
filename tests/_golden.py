@@ -405,7 +405,9 @@ def assert_golden_byte_identical(golden_path: Path, *runs: Sequence[Finding]) ->
 
     counts_payloads = [serialize_tool_minimums(tool_minimums(run)).encode("utf-8") for run in runs]
     committed_counts = tool_counts_path(golden_path).read_bytes()
-    assert all(payload == committed_counts for payload in counts_payloads), "fresh-copy runs vs committed counts golden byte mismatch"
+    assert all(payload == committed_counts for payload in counts_payloads), (
+        "fresh-copy runs vs committed counts golden byte mismatch"
+    )
 
 
 def read_oracle_rules() -> list[str]:
