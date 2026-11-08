@@ -10,7 +10,7 @@ from pylint.typing import MessageDefinitionTuple
 class GenericKeyDictChecker(BaseChecker):
     name: str = "generic-key-dict"
     msgs: dict[str, MessageDefinitionTuple]
-    options: tuple[tuple[str, dict[str, Any]], ...]  # pylint option dict values are Any by API contract
+    options: tuple[tuple[str, dict[str, Any]], ...]  # pylint option values are heterogeneous; Any matches the API contract
 
     def __init__(self, linter: PyLinter) -> None: ...
     def open(self) -> None: ...
