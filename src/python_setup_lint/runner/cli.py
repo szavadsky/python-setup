@@ -48,6 +48,81 @@ __all__ = [
 ]
 
 
+_PACKAGE_REQUIRED_TOOLS = frozenset({"mypy.stubtest", "pyright verify types"})
+
+
+def _run_fix_phase(
+    selected: list[ToolSpec],
+    *,
+    config: RunnerConfig,
+    force: bool,
+    path: str | None,
+    exclude: str | None,
+) -> int:
+    """Run the format and fix-only passes.
+
+    Returns:
+        The accumulated non-zero exit code from the format pass, or 0.
+    """
+    overall_rc = 0
+    cwd = config.cwd
+
+    from .output import _print_result, _run_cmd
+
+    # ── Phase 1a: format pass (ruff format before fix tools) ──
+    for spec in selected:
+        if spec.name not in FORMATTER_ONLY:
+            continue
+        _print_tool_notes(spec, fix=False, path=path, exclude=exclude)
+        strategy = _strategy_for(spec.name, spec)
+        cmd = strategy.build_format_command(config=config, _path=path, _exclude=exclude)
+        result = _run_cmd(cmd, cwd=cwd, label=spec.name)
+        _print_result(result)
+        if result.exit_code != 0:
+            overall_rc = result.exit_code
+    # ── Phase 1b: fix-only pass (mutates files; results discarded) ──
+    for spec in selected:
+        if not spec.supports_fix:
+            continue
+        if spec.name in _PACKAGE_REQUIRED_TOOLS and config.package_name is None:
+            continue
+        _print_tool_notes(spec, fix=True, path=path, exclude=exclude)
+        timeouts = config.tool_timeouts or {}
+        mem_limits = config.tool_memory_limits or {}
+        effective_timeout = timeouts.get(spec.name, spec.timeout)
+        effective_mem = mem_limits.get(spec.name, spec.memory_limit_mb)
+        file_targets = _autofix_target_paths(spec, config=config, path=path)
+        fix_result = _apply_autofix_conflict_aware(
+            spec,
+            config=config,
+            paths_to_check=file_targets,
+            run_cmd=__import__("functools").partial(
+                _run_cmd,
+                timeout=effective_timeout,
+                memory_limit_mb=effective_mem,
+            ),
+            force=force,
+        )
+        _print_result(fix_result)
+    return overall_rc
+
+
+def _select_lint_tools(
+    selected: list[ToolSpec],
+    config: RunnerConfig,
+) -> list[tuple[ToolSpec, str | None]]:
+    """Pair each tool with its skip reason.
+
+    Returns:
+        One ``(tool, reason)`` pair per selected tool; *reason* is ``None``
+        when the tool can run.
+    """
+    return [
+        (spec, "--package-name not set" if spec.name in _PACKAGE_REQUIRED_TOOLS and config.package_name is None else None)
+        for spec in selected
+    ]
+
+
 def _run_tool_pipeline(
     selected: list[ToolSpec],
     *,
@@ -70,59 +145,17 @@ def _run_tool_pipeline(
     # every tool — and thus the baseline — observe the same post-fix file
     # state, eliminating the pre-fix-vs-post-fix mismatch that produced
     # non-deterministic baselines.  Without --fix, a single lint pass runs.
-    if fix and not statistics:
-        # ── Phase 1a: format pass (ruff format before fix tools) ──
-        for spec in selected:
-            if spec.name not in FORMATTER_ONLY:
-                continue
-            _print_tool_notes(spec, fix=False, path=path, exclude=exclude)
-            strategy = _strategy_for(spec.name, spec)
-            cmd = strategy.build_format_command(config=config, _path=path, _exclude=exclude)
-            result = _run_cmd(cmd, cwd=cwd, label=spec.name)
-            _print_result(result)
-            if result.exit_code != 0:
-                overall_rc = result.exit_code
-        # ── Phase 1b: fix-only pass (mutates files; results discarded) ──
-        for spec in selected:
-            if not spec.supports_fix:
-                continue
-            if spec.name in ("mypy.stubtest", "pyright verify types") and config.package_name is None:
-                continue
-            _print_tool_notes(spec, fix=True, path=path, exclude=exclude)
-            timeouts = config.tool_timeouts or {}
-            mem_limits = config.tool_memory_limits or {}
-            effective_timeout = timeouts.get(spec.name, spec.timeout)
-            effective_mem = mem_limits.get(spec.name, spec.memory_limit_mb)
-            file_targets = _autofix_target_paths(spec, config=config, path=path)
-            fix_result = _apply_autofix_conflict_aware(
-                spec,
-                config=config,
-                paths_to_check=file_targets,
-                run_cmd=__import__("functools").partial(
-                    _run_cmd,
-                    timeout=effective_timeout,
-                    memory_limit_mb=effective_mem,
-                ),
-                force=force,
-            )
-            _print_result(fix_result)
-        # ── Phase 2: lint-only pass over ALL tools (no autofix) ──
-        lint_fix = False
-    else:
-        lint_fix = fix
-
-    for spec in selected:
-        if spec.name in ("mypy.stubtest", "pyright verify types") and config.package_name is None:
-            print(f"  [{spec.name}] SKIPPED: --package-name not set", file=sys.stderr)
+    run_fix_passes = fix and not statistics
+    lint_fix = False if run_fix_passes else fix
+    if run_fix_passes:
+        overall_rc = _run_fix_phase(selected, config=config, force=force, path=path, exclude=exclude)
+    # ── Phase 2: lint-only pass over ALL tools (no autofix) ──
+    for spec, skip_reason in _select_lint_tools(selected, config):
+        if skip_reason is not None:
+            print(f"  [{spec.name}] SKIPPED: {skip_reason}", file=sys.stderr)
             continue
 
         _print_tool_notes(spec, fix=fix, path=path, exclude=exclude)
-
-        timeouts = config.tool_timeouts or {}
-        mem_limits = config.tool_memory_limits or {}
-        effective_timeout = timeouts.get(spec.name, spec.timeout)
-        effective_mem = mem_limits.get(spec.name, spec.memory_limit_mb)
-
         strategy = _strategy_for(spec.name, spec)
         cmd = strategy.build_command(config=config, _fix=lint_fix, _path=path, _exclude=exclude)
         if statistics:
@@ -131,8 +164,8 @@ def _run_tool_pipeline(
             cmd,
             cwd=cwd,
             label=spec.name,
-            timeout=effective_timeout,
-            memory_limit_mb=effective_mem,
+            timeout=(config.tool_timeouts or {}).get(spec.name, spec.timeout),
+            memory_limit_mb=(config.tool_memory_limits or {}).get(spec.name, spec.memory_limit_mb),
         )
         results.append(result)
         if not statistics:
