@@ -122,3 +122,5 @@
 {"type":"pm_amend_validation_failed","iteration":1,"wave":2,"amendment":1,"errors":["removeItemSlugs cannot remove \"golden-findings-snapshot\" with status \"superseded\" (pending only)"],"ts":"2026-11-08T04:36:21.613Z"}
 {"type":"pm_amend_discarded","iteration":1,"wave":2,"amendment":1,"note":"Amend removal invalid: removeItemSlugs cannot remove \"golden-findings-snapshot\" with status \"superseded\" (pending only)","errors":["removeItemSlugs cannot remove \"golden-findings-snapshot\" with status \"superseded\" (pending only)"],"ts":"2026-11-08T04:36:21.615Z"}
 {"type":"wave_started","wave":3,"iteration":1,"ts":"2026-11-08T04:36:21.731Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-1-3","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/022-wave-close-up-1-3-a1","ts":"2026-11-08T04:39:53.384Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-1-3","timeoutSec":900,"ts":"2026-11-08T04:39:53.389Z"}
