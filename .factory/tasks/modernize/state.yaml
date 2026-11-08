@@ -181,20 +181,20 @@ debt:
     file could be fixed in passing"
   - "[consolidate-integration-helpers-v2] Triple single-name re-export imports
     could be one statement"
-budgetSpentUsd: 4.050530000000001
+budgetSpentUsd: 4.115548000000001
 spendByRole:
   workhorse:
     costUsd: 0.855554
     inputTokens: 1578657
     outputTokens: 681062
   alt-workhorse:
-    costUsd: 0.09477999999999999
-    inputTokens: 416917
-    outputTokens: 245706
+    costUsd: 0.09737499999999999
+    inputTokens: 430671
+    outputTokens: 251541
   architect:
-    costUsd: 3.064044
-    inputTokens: 1878034
-    outputTokens: 152379
+    costUsd: 3.126467
+    inputTokens: 2491068
+    outputTokens: 157979
   alt-architect:
     costUsd: 0.036152
     inputTokens: 137287
@@ -225,7 +225,7 @@ spendByItem:
     inputTokens: 218824
     outputTokens: 95126
   (orchestration):
-    costUsd: 3.256352000000001
-    inputTokens: 2517786
-    outputTokens: 461759
-lastUpdated: 2026-11-08T07:19:12.935Z
+    costUsd: 3.321370000000001
+    inputTokens: 3144574
+    outputTokens: 473194
+lastUpdated: 2026-11-08T07:25:52.784Z
