@@ -45,7 +45,7 @@ items:
     branch: topic/modernize--ownership-map-revalidation
     attempts: 1
     fixRounds: 3
-    spendUsd: 0.19766
+    spendUsd: 0.38394500000000004
     currentStep: review
   pylint-cache-assumptions:
     kind: test-assumptions
@@ -347,6 +347,14 @@ debt:
     filter"
   - "[ownership-map-revalidation] Note PEP 758 except form vs helper tuple
     normalization"
+  - "[ownership-map-revalidation] Pin map-a073b83 stale by 4 factory-only files
+    at review HEAD; add equivalence note not re-pin loop"
+  - "[ownership-map-revalidation] Packaging range cites :29-30 vs established
+    :28-31 convention"
+  - "[ownership-map-revalidation] D04 lumps a02b41e leg as 7 factory files,
+    actual 4"
+  - "[ownership-map-revalidation] Pin stale by factory-only review commits; add
+    equivalence note"
   - "[pylint-cache-semantics-closure] Third no-write path (empty primary)
     omitted from timing enumeration"
   - "[pylint-cache-semantics-closure] Sequential runner assumed but only
@@ -479,20 +487,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 7.852249685999999
+budgetSpentUsd: 8.104197685999997
 spendByRole:
   workhorse:
-    costUsd: 3.360946686
-    inputTokens: 6715795
-    outputTokens: 2436432
+    costUsd: 3.445653686
+    inputTokens: 6859852
+    outputTokens: 2528026
   alt-workhorse:
-    costUsd: 0.7134270000000007
-    inputTokens: 3364653
-    outputTokens: 1280177
+    costUsd: 0.8150050000000006
+    inputTokens: 3882731
+    outputTokens: 1371461
   architect:
-    costUsd: 3.704715
-    inputTokens: 7755320
-    outputTokens: 323710
+    costUsd: 3.770378
+    inputTokens: 8411014
+    outputTokens: 324177
   alt-architect:
     costUsd: 0.073161
     inputTokens: 279595
@@ -587,11 +595,11 @@ spendByItem:
     inputTokens: 334753
     outputTokens: 167691
   ownership-map-revalidation:
-    costUsd: 0.19766
-    inputTokens: 553037
-    outputTokens: 261868
+    costUsd: 0.38394500000000004
+    inputTokens: 1215172
+    outputTokens: 444746
   (orchestration):
-    costUsd: 4.313406000000001
-    inputTokens: 9607994
-    outputTokens: 1069605
-lastUpdated: 2026-11-08T21:33:38.681Z
+    costUsd: 4.379069000000003
+    inputTokens: 10263688
+    outputTokens: 1070072
+lastUpdated: 2026-11-08T22:32:58.574Z
