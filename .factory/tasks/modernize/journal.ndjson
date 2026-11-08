@@ -1157,3 +1157,5 @@
 {"type":"item_merge_phase","item":"test-debloat-audit-i2","phase":"merge-child-into-parent","ts":"2026-11-08T18:02:14.111Z"}
 {"type":"item_merge_phase","item":"test-debloat-audit-i2","phase":"remove-worktree","ts":"2026-11-08T18:02:14.175Z"}
 {"type":"item_merged","item":"test-debloat-audit-i2","sha":"de8c7907c8a155e1d011831741f208598341400a","conflictResolved":false,"ts":"2026-11-08T18:02:15.119Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-2-4","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/066-wave-close-up-2-4-a1","ts":"2026-11-08T18:09:51.028Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-2-4","timeoutSec":900,"ts":"2026-11-08T18:09:51.032Z"}
