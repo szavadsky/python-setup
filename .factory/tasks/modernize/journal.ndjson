@@ -40,3 +40,5 @@
 {"type":"step_timeout","task":"modernize","step":"plan-review-1-1","timeoutSec":900,"ts":"2026-11-08T00:37:41.333Z"}
 {"type":"step_transcript_size_warning","task":"modernize","step":"plan-review-1-1","attempt":1,"sizeBytes":5780918,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T00-37-41-526Z_01a1b896-ee16-73d0-8b7f-dcc417a6385e.jsonl","ts":"2026-11-08T00:51:56.211Z"}
 {"type":"step_finished","task":"modernize","step":"plan-review-1-1","attempt":1,"status":"ok","sessionId":"01a1b896-ee16-73d0-8b7f-dcc417a6385e","usage":{"inputTokens":12121,"outputTokens":45482,"costUsd":0.010618},"ts":"2026-11-08T00:51:56.274Z"}
+{"type":"step_started","task":"modernize","step":"architect-revise-1-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/011-architect-revise-1-1-a1","ts":"2026-11-08T00:51:56.307Z"}
+{"type":"step_timeout","task":"modernize","step":"architect-revise-1-1","timeoutSec":1200,"ts":"2026-11-08T00:51:56.310Z"}
