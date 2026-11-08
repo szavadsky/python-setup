@@ -1,0 +1,8 @@
+{"id": "c001", "model": "decider-nano", "prompt": "canonical", "prob": 0.38505921286071865, "latency_ms": 171.92050197627395, "error": null}
+{"id": "c002", "model": "decider-nano", "prompt": "canonical", "prob": 0.21738517748452277, "latency_ms": 154.73295201081783, "error": null}
+{"id": "c003", "model": "decider-nano", "prompt": "canonical", "prob": 0.37753708293277266, "latency_ms": 182.91437497828156, "error": null}
+{"id": "c004", "model": "decider-nano", "prompt": "canonical", "prob": 0.3014705826261763, "latency_ms": 189.01801807805896, "error": null}
+{"id": "c005", "model": "decider-nano", "prompt": "canonical", "prob": 0.32624720149330527, "latency_ms": 178.31923300400376, "error": null}
+{"id": "c006", "model": "decider-nano", "prompt": "canonical", "prob": 0.18891351494229383, "latency_ms": 159.69118103384972, "error": null}
+{"id": "c007", "model": "decider-nano", "prompt": "canonical", "prob": 0.3196338370213481, "latency_ms": 158.5034830495715, "error": null}
+{"id": "c008", "model": "decider-nano", "prompt": "canonical", "prob": 0.38285678582849586, "latency_ms": 155.7368419598788, "error": null}

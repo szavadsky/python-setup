@@ -1,0 +1,3 @@
+{"id": "c001", "model": "glide", "prompt": "canonical", "prob": 0.18820956171231978, "latency_ms": 907.918781042099, "error": null}
+{"id": "c002", "model": "glide", "prompt": "canonical", "prob": 0.5092864383298349, "latency_ms": 835.1027680328116, "error": null}
+{"id": "c003", "model": "glide", "prompt": "canonical", "prob": 0.9235396374628848, "latency_ms": 918.9453299622983, "error": null}

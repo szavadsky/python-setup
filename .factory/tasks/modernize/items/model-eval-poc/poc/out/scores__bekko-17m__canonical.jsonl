@@ -1,0 +1,4 @@
+{"id": "c001", "model": "bekko-17m", "prompt": "canonical", "prob": 0.41921502351760864, "latency_ms": 27.391882031224668, "error": null}
+{"id": "c002", "model": "bekko-17m", "prompt": "canonical", "prob": 0.45105549693107605, "latency_ms": 27.493878034874797, "error": null}
+{"id": "c003", "model": "bekko-17m", "prompt": "canonical", "prob": 0.40136006474494934, "latency_ms": 31.1678679427132, "error": null}
+{"id": "c004", "model": "bekko-17m", "prompt": "canonical", "prob": 0.47170060873031616, "latency_ms": 36.01286199409515, "error": null}

@@ -1,0 +1,4 @@
+{"id": "c001", "model": "ettin-reranker-150m", "prompt": "current", "prob": 0.9799011168105144, "raw": 3.8867874145507812, "latency_ms": 103.60425303224474, "error": null}
+{"id": "c002", "model": "ettin-reranker-150m", "prompt": "current", "prob": 0.9721676170294524, "raw": 3.553328037261963, "latency_ms": 88.88844994362444, "error": null}
+{"id": "c003", "model": "ettin-reranker-150m", "prompt": "current", "prob": 0.9724945289345519, "raw": 3.5654795169830322, "latency_ms": 93.65240903571248, "error": null}
+{"id": "c004", "model": "ettin-reranker-150m", "prompt": "current", "prob": 0.994544879077479, "raw": 5.205730438232422, "latency_ms": 88.70177995413542, "error": null}

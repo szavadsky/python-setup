@@ -1,0 +1,4 @@
+{"id": "c001", "model": "minilm-l6-v2", "prompt": "current", "prob": 0.6244191944373042, "raw": 0.508348286151886, "latency_ms": 14.660152024589479, "error": null}
+{"id": "c002", "model": "minilm-l6-v2", "prompt": "current", "prob": 0.6233141377946197, "raw": 0.5036390423774719, "latency_ms": 17.261350993067026, "error": null}
+{"id": "c003", "model": "minilm-l6-v2", "prompt": "current", "prob": 0.6234164901885371, "raw": 0.5040749907493591, "latency_ms": 15.19748498685658, "error": null}
+{"id": "c004", "model": "minilm-l6-v2", "prompt": "current", "prob": 0.6238073541734439, "raw": 0.505740225315094, "latency_ms": 14.918390894308686, "error": null}
