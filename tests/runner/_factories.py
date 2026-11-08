@@ -31,10 +31,46 @@ if TYPE_CHECKING:
 InstallFakeFn = Callable[..., Any]
 
 
-# The 13 built-in tool names — used both for the canned-results factory
+# The 14 built-in tool names — used both for the canned-results factory
 # (dict-mode ``FakeRunCmd``) and for the "every tool dispatched" assertion
 # in the orchestration tests.
 ALL_TOOL_NAMES: frozenset[str] = frozenset(t.name for t in TOOLS)
+
+
+# Hardcoded 14-name oracle shared by test_lint_runner.py and
+# test_runner_format_contract.py — the literal lives in exactly one
+# place so drift-catching assertions don't trip pylint R0801.
+EXPECTED_BUILTIN_TOOL_NAMES: frozenset[str] = frozenset(
+    {
+        "tach check",
+        "ruff format",
+        "ruff check",
+        "rumdl check",
+        "mypy",
+        "yamllint",
+        "ty check",
+        "mypy.stubtest",
+        "pyright check",
+        "pyright verify types",
+        "pylint",
+        "pylint-pyi",
+        "pylint tests",
+        "detect-secrets",
+    }
+)
+
+
+def runner_registry_constant(name: str) -> frozenset[str]:
+    """Return public tool-registry constant *name*, asserting the runner re-exports it.
+
+    Kept as a runtime lookup so a missing export fails the owning test with a
+    clear assertion instead of aborting collection for the whole module.
+    """
+    import python_setup_lint.runner as runner_pkg
+
+    value = getattr(runner_pkg, name, None)
+    assert value is not None, f"python_setup_lint.runner must re-export {name}"
+    return frozenset(value)
 
 
 def canned_results_all_tools(
@@ -43,11 +79,11 @@ def canned_results_all_tools(
     stdout: str = "",
     overrides: Mapping[str, LintResult] | None = None,
 ) -> dict[str, LintResult]:  # pylint: disable=generic-key-dict  # dict[str, LintResult] is a test helper; string keys are tool labels
-    """Build the 13-tool canned-result dict for ``fake_run_cmd_factory``.
+    """Build the 14-tool canned-result dict for ``fake_run_cmd_factory``.
 
     Every built-in label maps to a ``LintResult`` with defaults; pass
     *overrides* to vary any subset. Used by the orchestration / smoke
-    tests so they stop repeating the 13-key dict literal.
+    tests so they stop repeating the 14-key dict literal.
     """
     # Late import to avoid any conftest-collection ordering surprise.
     from python_setup_lint.testing import make_lint_result

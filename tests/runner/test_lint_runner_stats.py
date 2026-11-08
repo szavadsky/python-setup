@@ -28,7 +28,7 @@ from python_setup_lint.runner._config import _SUPPORTED_CONFIG_KEYS
 from python_setup_lint.runner.cmd_build import _build_command, _build_statistics_flags
 from python_setup_lint.runner.output import _print_statistics_grouped, _sort_counts
 from python_setup_lint.runner.parsers import _STATISTICS_PARSERS
-from tests.runner._factories import install_fake_runner, lint_config, write_pyproject
+from tests.runner._factories import install_fake_runner, lint_config, runner_registry_constant, write_pyproject
 from tests.runner._factories_extras import (
     CLEAN_EXTRAS_PYPROJECT_BODY,
     GROUPED_OUTPUT_CASES,
@@ -70,7 +70,10 @@ def test_statistics_parser(tool_name: str, stdout: str, stderr: str, expected: l
 
 
 def test_statistics_parsers_given_all_tools_then_covered() -> None:
-    assert {t.name for t in TOOLS} <= set(_STATISTICS_PARSERS)
+    formatter_only = runner_registry_constant("FORMATTER_ONLY")
+    statistics_tools = runner_registry_constant("STATISTICS_PARSER_TOOLS")
+    assert statistics_tools == frozenset(_STATISTICS_PARSERS)
+    assert {t.name for t in TOOLS} - formatter_only == statistics_tools
 
 
 def test_parse_strategies_given_stats_then_includes_all_keys() -> None:
@@ -218,7 +221,7 @@ class TestT8FailFastConfig:
 
 
 class TestLintToolRegistry:
-    """STRATEGIES/LINT_TOOLS mirror the 13 built-ins AND strategies are LintTool instances."""
+    """STRATEGIES/LINT_TOOLS mirror the 14 built-ins AND strategies are LintTool instances."""
 
     @pytest.mark.parametrize(
         "registry",

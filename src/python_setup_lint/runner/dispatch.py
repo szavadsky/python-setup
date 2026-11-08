@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines  # 542 lines — 14-tool registry + 7 strategy subclasses; splitting would scatter the single-source registry
 from __future__ import annotations
 
 import sys
@@ -8,17 +9,23 @@ from beartype import beartype
 from ._config import _default_config_paths
 from .cmd_build import (
     _build_command,
+    _build_path_and_exclude_args,
     _build_statistics_flags,
     _config_flag_for,
     _find_py_files,
     _find_pyi_files,
     _resolve_pylintrc,
 )
-from .parsers import _STATISTICS_PARSERS
+from .parsers import _RECORD_PARSERS, _STATISTICS_PARSERS
 from .types import RunnerConfig, ToolSpec
 
 __all__ = [
+    "EXPECTED_TOOL_NAMES",
+    "FORMATTER_ONLY",
     "LINT_TOOLS",
+    "RECORDLESS_TOOLS",
+    "RECORD_PARSER_TOOLS",
+    "STATISTICS_PARSER_TOOLS",
     "STRATEGIES",
     "TOOLS",
     "TOOLS_BY_NAME",
@@ -26,6 +33,7 @@ __all__ = [
     "LintTool",
     "_DetectSecretsLintTool",
     "_PylintLintTool",
+    "_RuffFormatLintTool",
     "_StubtestLintTool",
     "_VerifyTypesLintTool",
     "_strategy_for",
@@ -130,6 +138,19 @@ TOOLS: list[ToolSpec] = [
 
 TOOLS_BY_NAME: dict[str, ToolSpec] = {t.name: t for t in TOOLS}
 
+# ── Single-source registry invariants ───────────────────────────────
+# Public constants consumed by the runner and its tests.  Each set is
+# derived from TOOLS or the parser tables so no test hardcodes counts.
+EXPECTED_TOOL_NAMES: frozenset[str] = frozenset(t.name for t in TOOLS)
+FORMATTER_ONLY: frozenset[str] = frozenset({"ruff format"})
+STATISTICS_PARSER_TOOLS: frozenset[str] = frozenset(_STATISTICS_PARSERS)
+RECORD_PARSER_TOOLS: frozenset[str] = frozenset(_RECORD_PARSERS)
+# The complement of RECORD_PARSER_TOOLS: tools whose output has no
+# per-violation record structure (tach/mypy.stubtest/pyright verify
+# types/detect-secrets emit counts or a pass-fail verdict, and
+# ruff format emits only a file-count summary).  Documented intentional.
+RECORDLESS_TOOLS: frozenset[str] = EXPECTED_TOOL_NAMES - RECORD_PARSER_TOOLS
+
 
 class LintTool:
     spec: ToolSpec
@@ -154,6 +175,16 @@ class LintTool:
         return _build_command(self.spec, config=config, fix=_fix, path=_path, exclude=_exclude)
 
     @beartype
+    def build_format_command(
+        self,
+        *,
+        config: RunnerConfig,
+        _path: str | None = None,
+        _exclude: str | None = None,
+    ) -> list[str]:
+        return self.build_command(config=config, _fix=True, _path=_path, _exclude=_exclude)
+
+    @beartype
     def statistics_flags(self) -> list[str]:
         return _build_statistics_flags(self.spec)
 
@@ -166,7 +197,7 @@ class LintTool:
 
 
 # ── Per-tool strategy subclasses ─────────────────────────────────
-# Six built-ins have fundamentally different command shapes that
+# Seven built-ins have fundamentally different command shapes that
 # cannot be expressed via ToolSpec declarative fields alone.  Each
 # overrides ``build_command`` with tool-specific logic, eliminating
 # ``if spec.name ==`` branches from ``_build_command``.
@@ -371,8 +402,46 @@ class _PylintTestsLintTool(LintTool):
         return cmd
 
 
+class _RuffFormatLintTool(LintTool):
+    # ``ruff format`` is check-only on normal passes; only phase 1a mutates.
+
+    def _build(self, *, mode: str | None, config: RunnerConfig, path: str | None, exclude: str | None) -> list[str]:
+        cmd = [*self.spec.command]
+        if mode is not None:
+            cmd.append(mode)
+        config_path = (config.config_paths or {}).get(self.spec.name)
+        if config_path is None:
+            config_path = _default_config_paths(config.cwd).get(self.spec.name)
+        cmd.extend(_config_flag_for(self.spec.name, config_path))
+        cmd.extend(_build_path_and_exclude_args(self.spec, config=config, path=path, exclude=exclude))
+        return cmd
+
+    @beartype
+    def build_command(
+        self,
+        *,
+        config: RunnerConfig,
+        _fix: bool = False,
+        _path: str | None = None,
+        _exclude: str | None = None,
+    ) -> list[str]:
+        _ = _fix  # normal passes never mutate; mutation lives in build_format_command
+        return self._build(mode="--check", config=config, path=_path, exclude=_exclude)
+
+    @beartype
+    def build_format_command(
+        self,
+        *,
+        config: RunnerConfig,
+        _path: str | None = None,
+        _exclude: str | None = None,
+    ) -> list[str]:
+        return self._build(mode=None, config=config, path=_path, exclude=_exclude)
+
+
 # Populate the strategy registry from the 14 built-ins.
 _STRATEGY_CLASSES: dict[str, type[LintTool]] = {
+    "ruff format": _RuffFormatLintTool,
     "mypy.stubtest": _StubtestLintTool,
     "pyright verify types": _VerifyTypesLintTool,
     "detect-secrets": _DetectSecretsLintTool,

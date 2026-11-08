@@ -2,8 +2,16 @@ task: modernize
 kind: saga
 status: active
 iteration: 2
-currentWave: 8
+currentWave: 1
 items:
+  consolidate-integration-helpers-i2:
+    kind: test-only
+    status: ready
+    branch: topic/modernize--consolidate-integration-helpers-i2
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0.07747
+    currentStep: review
   golden-determinism-probe:
     kind: fact-finder
     status: merged
@@ -13,6 +21,30 @@ items:
     spendUsd: 0.16489800000000002
     currentStep: review
     mergedAt: 2026-11-07T20:57:23-05:00
+  model-candidate-matrix:
+    kind: fact-finder
+    status: ready
+    branch: topic/modernize--model-candidate-matrix
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0.045265
+    currentStep: review
+  pylint-cache-assumptions:
+    kind: test-assumptions
+    status: running
+    branch: topic/modernize--pylint-cache-assumptions
+    attempts: 2
+    fixRounds: 1
+    spendUsd: 0.198600686
+    currentStep: develop
+  runner-format-contract:
+    kind: dev
+    status: running
+    branch: topic/modernize--runner-format-contract
+    attempts: 1
+    fixRounds: 2
+    spendUsd: 0.159076
+    currentStep: qa
   third-party-assumption-tests:
     kind: test-assumptions
     status: merged
@@ -22,6 +54,20 @@ items:
     spendUsd: 0.076988
     currentStep: review
     mergedAt: 2026-11-07T21:00:28-05:00
+  baseline-violations-fix:
+    kind: no-behavior
+    status: pending
+    branch: topic/modernize--baseline-violations-fix
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  golden-contract-hardening:
+    kind: test-only
+    status: pending
+    branch: topic/modernize--golden-contract-hardening
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
   golden-findings-snapshot:
     kind: dev
     status: superseded
@@ -30,6 +76,34 @@ items:
     fixRounds: 1
     spendUsd: 0.170578
     currentStep: test-first
+  model-eval-poc:
+    kind: poc
+    status: pending
+    branch: topic/modernize--model-eval-poc
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  secrets-triage-spike:
+    kind: fact-finder
+    status: pending
+    branch: topic/modernize--secrets-triage-spike
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  cache-design-spike:
+    kind: poc
+    status: pending
+    branch: topic/modernize--cache-design-spike
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  coding-rules-audit-i2:
+    kind: fact-finder
+    status: pending
+    branch: topic/modernize--coding-rules-audit-i2
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
   consolidate-integration-helpers:
     kind: test-only
     status: superseded
@@ -37,10 +111,24 @@ items:
     attempts: 1
     fixRounds: 1
     spendUsd: 0
+  decision-runtime-pinning:
+    kind: test-assumptions
+    status: pending
+    branch: topic/modernize--decision-runtime-pinning
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
   coding-rules-audit:
     kind: fact-finder
     status: pending
     branch: topic/modernize--coding-rules-audit
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  test-debloat-audit-i2:
+    kind: fact-finder
+    status: pending
+    branch: topic/modernize--test-debloat-audit-i2
     attempts: 1
     fixRounds: 1
     spendUsd: 0
@@ -148,6 +236,8 @@ debt:
     determinism; oracle + per-tool coverage + tool-qualified brush-off/carry
     lookups prove sensitivity. QA rejected 2/2 solely on red-test; all other
     checks passed. No src follow-up required."
+  - "[consolidate-integration-helpers-i2] Parenthesize bare comma-except to
+    avoid Python-2 misread"
   - "[golden-determinism-probe] Assert rumdl override fired instead of blind
     string replace"
   - "[golden-determinism-probe] Resolve symlinks and define outside-cwd
@@ -166,6 +256,20 @@ debt:
     post-git-add write; assert MD072 non-empty"
   - "[golden-determinism-probe] First-run bootstrap vs rerun hook differ;
     same-copy rerun may diverge"
+  - "[model-candidate-matrix] Pinned-revision block joins ettin-encoder and
+    MiniLM pins on one line"
+  - "[model-candidate-matrix] GLiDE runtime-stack column omits triton /
+    flash-linear-attention / server pins"
+  - "[model-candidate-matrix] torch requires_python stated as >=3.11, PyPI says
+    >=3.10"
+  - "[model-candidate-matrix] GLIDE_DEVICE default is uncited; verified code
+    shows device='cuda' parameter default"
+  - "[runner-format-contract] Engine lint gate command omitted ruff format;
+    overall pass misleading"
+  - "[runner-format-contract] parsers.pyi 13s are statistics-parser counts,
+    correctly allowlisted"
+  - "[runner-format-contract] AGENTS.md test counts stale (1290/7 vs 1352/9),
+    defer to docs-counts-sync"
   - "[third-party-assumption-tests] Module-global _LIFECYCLE_EVENTS could use
     fixture-scoped clearing"
   - "[third-party-assumption-tests] Assert confidence is not None before reading
@@ -191,16 +295,16 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 4.716178000000001
+budgetSpentUsd: 5.2067836860000005
 spendByRole:
   workhorse:
-    costUsd: 1.1286370000000001
-    inputTokens: 2040088
-    outputTokens: 903780
+    costUsd: 1.580078686
+    inputTokens: 2844853
+    outputTokens: 1249995
   alt-workhorse:
-    costUsd: 0.128976
-    inputTokens: 631696
-    outputTokens: 299765
+    costUsd: 0.16813999999999998
+    inputTokens: 793169
+    outputTokens: 398028
   architect:
     costUsd: 3.40306
     inputTokens: 5019560
@@ -226,20 +330,36 @@ spendByItem:
     costUsd: 0.057198
     inputTokens: 138170
     outputTokens: 64014
-  consolidate-integration-helpers-v3:
-    costUsd: 0.19283999999999998
-    inputTokens: 341355
-    outputTokens: 174695
+  consolidate-integration-helpers-i2:
+    costUsd: 0.07747
+    inputTokens: 139419
+    outputTokens: 80611
   golden-snapshot-wiring:
     costUsd: 0.13088
     inputTokens: 218824
     outputTokens: 95126
+  runner-format-contract:
+    costUsd: 0.159076
+    inputTokens: 335611
+    outputTokens: 120559
+  consolidate-integration-helpers-v3:
+    costUsd: 0.19283999999999998
+    inputTokens: 341355
+    outputTokens: 174695
+  model-candidate-matrix:
+    costUsd: 0.045265
+    inputTokens: 116110
+    outputTokens: 59317
   consolidate-integration-helpers-v2:
     costUsd: 0.19363600000000003
     inputTokens: 413243
     outputTokens: 140910
+  pylint-cache-assumptions:
+    costUsd: 0.198600686
+    inputTokens: 322701
+    outputTokens: 159687
   (orchestration):
-    costUsd: 3.7291600000000003
-    inputTokens: 6077643
-    outputTokens: 693956
-lastUpdated: 2026-11-08T10:47:01.277Z
+    costUsd: 3.739354
+    inputTokens: 6130040
+    outputTokens: 718260
+lastUpdated: 2026-11-08T12:04:14.152Z
