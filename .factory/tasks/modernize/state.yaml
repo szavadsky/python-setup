@@ -94,7 +94,7 @@ items:
     mergedAt: 2026-11-08T10:03:05-05:00
   secrets-triage-spike:
     kind: fact-finder
-    status: blocked
+    status: ready
     branch: topic/modernize--secrets-triage-spike
     attempts: 1
     fixRounds: 1
@@ -153,9 +153,9 @@ items:
     status: running
     branch: topic/modernize--test-debloat-audit-i2
     attempts: 1
-    fixRounds: 2
-    spendUsd: 0.126925
-    currentStep: research
+    fixRounds: 3
+    spendUsd: 0.140249
+    currentStep: review
   test-debloat-audit:
     kind: fact-finder
     status: pending
@@ -371,6 +371,7 @@ debt:
   - "[test-debloat-audit-i2] Clarify LoC counting method; wc -l differs slightly"
   - "[test-debloat-audit-i2] Clarify whether per-module N is default-collected
     or total incl slow"
+  - "[test-debloat-audit-i2] Confirm: 4 r1 fixes verified correct at HEAD"
   - "[golden-helpers-unit] tool_minimums imports TOOLS via package root, pulling
     CLI structlog side effects"
   - "[golden-helpers-unit] Public FindingKey alias missing from __all__"
@@ -392,16 +393,16 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 6.823980686
+budgetSpentUsd: 6.8373046859999995
 spendByRole:
   workhorse:
     costUsd: 2.7671456860000005
     inputTokens: 5542238
     outputTokens: 1979097
   alt-workhorse:
-    costUsd: 0.4583010000000001
-    inputTokens: 2195643
-    outputTokens: 815648
+    costUsd: 0.4716250000000001
+    inputTokens: 2276621
+    outputTokens: 833994
   architect:
     costUsd: 3.543029
     inputTokens: 6337367
@@ -456,9 +457,9 @@ spendByItem:
     inputTokens: 413243
     outputTokens: 140910
   test-debloat-audit-i2:
-    costUsd: 0.126925
-    inputTokens: 223742
-    outputTokens: 136952
+    costUsd: 0.140249
+    inputTokens: 304720
+    outputTokens: 155298
   decision-runtime-pinning:
     costUsd: 0.016725999999999998
     inputTokens: 57664
@@ -491,4 +492,4 @@ spendByItem:
     costUsd: 3.8960060000000003
     inputTokens: 7553560
     outputTokens: 774687
-lastUpdated: 2026-11-08T17:06:22.300Z
+lastUpdated: 2026-11-08T17:22:50.030Z
