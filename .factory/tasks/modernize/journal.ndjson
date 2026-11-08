@@ -1437,3 +1437,5 @@
 {"type":"empty_wave_streak","wave":5,"iteration":3,"streak":4,"blocked":[],"ts":"2026-11-08T22:59:01.862Z"}
 {"type":"step_reused","task":"modernize","step":"consult-empty-waves-3","recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/085-consult-empty-waves-3-a1","ts":"2026-11-08T22:59:01.887Z"}
 {"type":"decision_made","context":"non-item","seam":"empty-waves-3","decision":"fix-item","decisionPath":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/decisions/009-nonitem.yaml","ts":"2026-11-08T22:59:01.887Z"}
+{"type":"step_started","task":"modernize","step":"plan-close-up-3","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/086-plan-close-up-3-a1","ts":"2026-11-08T22:59:02.129Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"plan-close-up-3","timeoutSec":2700,"ts":"2026-11-08T22:59:02.135Z"}
