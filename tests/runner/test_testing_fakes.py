@@ -130,11 +130,11 @@ def test_fake_run_cmd_direct_construction(results: Any, label: str, expected_exi
 # Parametrised (kwargs, predicate) invariant table. Each row asserts a
 # distinct behavioural invariant of ``run_lint`` with the fake installed
 # (tool count, --fix propagation, --exclude propagation, package_name=None
-# skip). Uses ``canned_results_all_tools()`` to avoid the 13-key dict literal.
+# skip). Uses ``canned_results_all_tools()`` to avoid the 14-key dict literal.
 
 
 def _install_fake_and_run(monkeypatch: pytest.MonkeyPatch, **run_lint_kwargs: Any) -> FakeRunCmd:
-    """Install a 13-tool dict-mode ``FakeRunCmd`` + invoke ``run_lint``.
+    """Install a 14-tool dict-mode ``FakeRunCmd`` + invoke ``run_lint``.
 
     ``package_name=None`` ⇒ skip stubtest+verifytypes. Returns ``fake`` for assertion.
     Resets ``LINT_TOOLS`` to built-in ``TOOLS`` to avoid cross-test pollution.
@@ -162,7 +162,7 @@ def test_run_lint_with_fake_dispatch_invariants(
     predicate: Callable[[FakeRunCmd], bool],
     isolated_runner_registries: None,
 ) -> None:
-    """One ``run_lint(...)`` + 13-tool fake; the row's predicate asserts the invariant."""
+    """One ``run_lint(...)`` + 14-tool fake; the row's predicate asserts the invariant."""
     fake = _install_fake_and_run(monkeypatch, **run_lint_kwargs)
     assert predicate(fake), f"Invariant failed; calls={[c.label for c in fake.calls]}"
 

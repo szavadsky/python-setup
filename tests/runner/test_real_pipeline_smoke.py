@@ -21,7 +21,7 @@ def test_consolidated_real_pipeline_smoke(
 
     Asserts:
     - ``isinstance(rc, int)`` — the pipeline ran to completion.
-    - All 13 tools appear in the printed output (captured via capsys).
+    - All 14 tools appear in the printed output (captured via capsys).
     """
     src = tmp_path / "src"
     src.mkdir()

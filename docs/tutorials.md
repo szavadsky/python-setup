@@ -23,7 +23,7 @@ See [troubleshooting.md](troubleshooting.md) if `uv run python-setup install` fa
 uv run lint
 ```
 
-Runs all 13 lint tools sequentially. On a fresh project the first run may produce violations — that's expected.
+Runs all 14 lint tools sequentially. On a fresh project the first run may produce violations — that's expected.
 
 ## 3. Read output
 

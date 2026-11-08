@@ -25,6 +25,7 @@ from ._cli_complexity import (
 )
 from ._cli_helpers import _handle_baseline, _print_tool_notes
 from .dispatch import (
+    FORMATTER_ONLY,
     _strategy_for,  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
 )
 from .extra_tools import (
@@ -72,11 +73,11 @@ def _run_tool_pipeline(
     if fix and not statistics:
         # ── Phase 1a: format pass (ruff format before fix tools) ──
         for spec in selected:
-            if spec.name != "ruff format":
+            if spec.name not in FORMATTER_ONLY:
                 continue
             _print_tool_notes(spec, fix=False, path=path, exclude=exclude)
             strategy = _strategy_for(spec.name, spec)
-            cmd = strategy.build_command(config=config, _fix=False, _path=path, _exclude=exclude)
+            cmd = strategy.build_format_command(config=config, _path=path, _exclude=exclude)
             result = _run_cmd(cmd, cwd=cwd, label=spec.name)
             _print_result(result)
             if result.exit_code != 0:
@@ -311,7 +312,7 @@ def main(argv: list[str] | None = None, *, config: RunnerConfig | None = None) -
     parser.add_argument(
         "--tools",
         metavar="LIST",
-        help="Comma-separated tool names to run (default: all 13 tools)",
+        help="Comma-separated tool names to run (default: all 14 tools)",
     )
     parser.add_argument(
         "--default-py-dirs",
