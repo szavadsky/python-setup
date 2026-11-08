@@ -31,3 +31,6 @@
 {"type":"lock_takeover","task":"modernize","previousPid":3583876,"previousHost":"Slava-Yoga","newPid":85390,"newHost":"Slava-Yoga","ts":"2026-11-08T00:27:27.507Z"}
 {"type":"task_started","task":"modernize","branch":"topic/modernize","ts":"2026-11-08T00:27:27.507Z"}
 {"type":"ingest_started","task":"modernize","ts":"2026-11-08T00:27:27.564Z"}
+{"type":"step_started","task":"modernize","step":"context-pack","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/009-context-pack-a1","ts":"2026-11-08T00:27:27.635Z"}
+{"type":"step_timeout","task":"modernize","step":"context-pack","timeoutSec":900,"ts":"2026-11-08T00:27:27.639Z"}
+{"type":"step_transcript_size_warning","task":"modernize","step":"context-pack","attempt":1,"sizeBytes":25706162,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T00-27-27-858Z_01a1b88d-90f2-7789-bcdb-c72e31a04506.jsonl","ts":"2026-11-08T00:37:41.173Z"}
