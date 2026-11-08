@@ -21,31 +21,14 @@ from python_setup_lint.runner import STRATEGIES, TOOLS, RunnerConfig, run_lint
 from python_setup_lint.runner._config import _default_config_paths
 from python_setup_lint.runner.cmd_build import _config_flag_for
 from python_setup_lint.testing import FakeRunCmd, fake_run_cmd_factory
-from tests.runner._factories import canned_results_all_tools, runner_registry_constant
+from tests.runner._factories import EXPECTED_BUILTIN_TOOL_NAMES, canned_results_all_tools, runner_registry_constant
 
 pytestmark = pytest.mark.no_external_api
 
 _CONFIG = RunnerConfig(cwd=Path.cwd())
 _GOLDEN_COUNTS = Path(__file__).resolve().parent.parent / "data" / "golden" / "minimal_sample_project_tool_counts.json"
 
-_EXPECTED_TOOL_NAMES = frozenset(
-    {
-        "tach check",
-        "ruff format",
-        "ruff check",
-        "rumdl check",
-        "mypy",
-        "yamllint",
-        "ty check",
-        "mypy.stubtest",
-        "pyright check",
-        "pyright verify types",
-        "pylint",
-        "pylint-pyi",
-        "pylint tests",
-        "detect-secrets",
-    }
-)
+_EXPECTED_TOOL_NAMES = EXPECTED_BUILTIN_TOOL_NAMES
 _FORMATTER_ONLY = frozenset({"ruff format"})
 _RECORDLESS_TOOLS = frozenset({"tach check", "mypy.stubtest", "pyright verify types", "detect-secrets", "ruff format"})
 _REGISTRY_CONSTANT_NAMES = (

@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines  # 542 lines — 14-tool registry + 7 strategy subclasses; splitting would scatter the single-source registry
 from __future__ import annotations
 
 import sys
@@ -181,7 +182,6 @@ class LintTool:
         _path: str | None = None,
         _exclude: str | None = None,
     ) -> list[str]:
-        """Mutating command used only by the ``--fix`` phase-1a format pass."""
         return self.build_command(config=config, _fix=True, _path=_path, _exclude=_exclude)
 
     @beartype
@@ -403,7 +403,7 @@ class _PylintTestsLintTool(LintTool):
 
 
 class _RuffFormatLintTool(LintTool):
-    """``ruff format`` is check-only on normal passes; only phase 1a mutates."""
+    # ``ruff format`` is check-only on normal passes; only phase 1a mutates.
 
     def _build(self, *, mode: str | None, config: RunnerConfig, path: str | None, exclude: str | None) -> list[str]:
         cmd = [*self.spec.command]

@@ -83,7 +83,8 @@ class LintTool:
         config: RunnerConfig,
         _path: str | None = None,
         _exclude: str | None = None,
-    ) -> list[str]: ...
+    ) -> list[str]:
+        """Mutating command used only by the ``--fix`` phase-1a format pass."""
     def statistics_flags(self) -> list[str]: ...
     def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]: ...
 

@@ -37,6 +37,29 @@ InstallFakeFn = Callable[..., Any]
 ALL_TOOL_NAMES: frozenset[str] = frozenset(t.name for t in TOOLS)
 
 
+# Hardcoded 14-name oracle shared by test_lint_runner.py and
+# test_runner_format_contract.py — the literal lives in exactly one
+# place so drift-catching assertions don't trip pylint R0801.
+EXPECTED_BUILTIN_TOOL_NAMES: frozenset[str] = frozenset(
+    {
+        "tach check",
+        "ruff format",
+        "ruff check",
+        "rumdl check",
+        "mypy",
+        "yamllint",
+        "ty check",
+        "mypy.stubtest",
+        "pyright check",
+        "pyright verify types",
+        "pylint",
+        "pylint-pyi",
+        "pylint tests",
+        "detect-secrets",
+    }
+)
+
+
 def runner_registry_constant(name: str) -> frozenset[str]:
     """Return public tool-registry constant *name*, asserting the runner re-exports it.
 

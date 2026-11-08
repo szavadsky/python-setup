@@ -29,7 +29,7 @@ from python_setup_lint.runner.cmd_build import (
 )
 from python_setup_lint.runner.output import _print_result
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
-from tests.runner._factories import canned_results_all_tools
+from tests.runner._factories import EXPECTED_BUILTIN_TOOL_NAMES, canned_results_all_tools
 from tests.runner._factories_extras import (
     EXPAND_GLOBS_CASES,
     FIND_PY_FILES_BOUNDARY_CASES,
@@ -50,22 +50,7 @@ class TestToolSpec:
     """The static 14-tool table invariant."""
 
     def test_tool_spec_given_known_tools_then_present(self) -> None:
-        assert {t.name for t in TOOLS} == {
-            "tach check",
-            "ruff format",
-            "ruff check",
-            "rumdl check",
-            "mypy",
-            "yamllint",
-            "ty check",
-            "mypy.stubtest",
-            "pyright check",
-            "pyright verify types",
-            "pylint",
-            "pylint-pyi",
-            "pylint tests",
-            "detect-secrets",
-        }
+        assert frozenset(t.name for t in TOOLS) == EXPECTED_BUILTIN_TOOL_NAMES
 
     def test_tool_spec_given_tools_then_autofix_and_no_duplicates(self) -> None:
         assert {t.name for t in TOOLS if t.supports_fix} == {
