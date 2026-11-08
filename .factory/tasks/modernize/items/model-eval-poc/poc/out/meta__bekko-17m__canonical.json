@@ -12,10 +12,10 @@
   "transformers": "5.17.0",
   "sentence_transformers": "6.1.0",
   "prompt": "canonical",
-  "n": 4,
-  "load_seconds": 0.8228907689917833,
-  "total_seconds": 0.12241333292331547,
-  "peak_rss_mb": 624.75,
+  "n": 336,
+  "load_seconds": 0.6837534769438207,
+  "total_seconds": 11.765229595941491,
+  "peak_rss_mb": 624.3125,
   "errors": 0,
   "license": "none declared (excluded from recommendation)"
 }

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import resource
 import time
 from contextlib import contextmanager
@@ -13,6 +14,8 @@ from typing import Any, Iterator
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
 OUT = ROOT / "out"
+
+_FIELD = re.compile(r"\{(\w+)\}")
 
 
 def load_corpus() -> list[dict[str, Any]]:
@@ -25,18 +28,44 @@ def load_prompts() -> dict[str, Any]:
 
 
 def render_state(item: dict[str, Any], variant: dict[str, Any]) -> str:
-    return variant["state"].format(
-        justification=item["justification"],
-        rule=item.get("rule") or "(unknown)",
-        context=item.get("context") or "(none)",
-    )
+    """Render the decision state, omitting fields the item does not carry.
+
+    The contract allows ``context`` to be None and records the rule symbol when
+    no codes are available, so absent fields are dropped instead of substituted
+    with fabricated ``(unknown)``/``(none)`` literals.
+    """
+    fields: dict[str, Any] = {
+        "justification": item["justification"],
+        "rule": item.get("rule"),
+        "context": item.get("context"),
+    }
+    lines: list[str] = []
+    for line in variant["state"].splitlines():
+        refs = _FIELD.findall(line)
+        if any(fields.get(name) in (None, "") for name in refs):
+            continue
+        lines.append(line.format(**fields))
+    return "\n".join(lines)
 
 
 def render_query(item: dict[str, Any], variant: dict[str, Any]) -> str:
-    return variant["query"].format(
-        rule=item.get("rule") or "(unknown)",
-        context=(item.get("context") or "(none)")[:200],
-    )
+    """Production query construction (``_semantic.py:168-176``) plus an optional ablation prefix.
+
+    With a rule or code context present the query names the suppressed code; with
+    both absent the production checker self-pairs ``(primary, primary)``.  The
+    ``rubric_query`` variant keeps that behaviour and only prefixes a rubric.
+    """
+    rule = item.get("rule")
+    context = item.get("context")
+    prefix = variant.get("prefix", "")
+    if rule or context:
+        parts: list[str] = []
+        if rule:
+            parts.append(f"rule: {rule}")
+        if context:
+            parts.append(f"context: {str(context)[:200]}")
+        return prefix + " | ".join(parts)
+    return prefix + str(item["justification"])
 
 
 def decision_question(variant: dict[str, Any]) -> dict[str, Any]:

@@ -11,9 +11,9 @@
   "torch": "2.15.0+cpu",
   "transformers": "5.22.2",
   "prompt": "canonical",
-  "n": 8,
-  "load_seconds": 14.126158172031865,
-  "total_seconds": 1.35124570899643,
-  "peak_rss_mb": 1463.08984375,
+  "n": 336,
+  "load_seconds": 12.912264187005349,
+  "total_seconds": 57.87381588795688,
+  "peak_rss_mb": 1464.35546875,
   "errors": 0
 }

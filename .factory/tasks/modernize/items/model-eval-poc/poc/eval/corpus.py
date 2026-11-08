@@ -144,46 +144,46 @@ _SUFFIXES = (".py", ".pyi")
 # negatives needed to make meaningless-precision on the heuristic-accepted
 # stratum meaningful rather than vacuous.
 _HARD_NEGATIVES = [
-    ("pre-existing issue in this module", "W9704"),
-    ("will fix later in a follow-up", "W9704"),
-    ("temporary workaround until the refactor", "W9704"),
-    ("TODO: clean this up", "W9704"),
-    ("not sure why this fails", "W9704"),
-    ("placeholder for now", "W9704"),
-    ("baseline had this issue", "W9704"),
-    ("legacy code, don't touch", "W9704"),
-    ("carry over from before", "W9704"),
-    ("existing issue not caused here", "W9704"),
-    ("same as before", "W9704"),
-    ("would break tests", "W9704"),
-    ("sometimes fails", "W9704"),
-    ("test is flaky", "W9704"),
-    ("tried it and it didn't work", "W9704"),
-    ("not my code", "W9704"),
-    ("copied from upstream", "W9704"),
-    ("known issue", "W9704"),
-    ("hack to make it pass", "W9704"),
-    ("for now until later", "W9704"),
-    ("later once tests pass", "W9704"),
-    ("wip - needs rework", "W9704"),
-    ("fixme: revisit", "W9704"),
-    ("temporary stopgap", "W9704"),
-    ("skip this check", "W9704"),
-    ("disable for this line", "W9704"),
-    ("ignore this warning", "W9704"),
-    ("noqa needed", "W9704"),
-    ("works on my machine", "W9704"),
-    ("see PR", "W9704"),
-    ("as discussed", "W9704"),
-    ("per review", "W9704"),
-    ("because tests", "W9704"),
-    ("required", "W9704"),
-    ("special case", "W9704"),
-    ("edge case", "W9704"),
-    ("backwards compatibility", "W9704"),
-    ("performance", "W9704"),
-    ("cleanup", "W9704"),
-    ("known limitation", "W9704"),
+    "pre-existing issue in this module",
+    "will fix later in a follow-up",
+    "temporary workaround until the refactor",
+    "TODO: clean this up",
+    "not sure why this fails",
+    "placeholder for now",
+    "baseline had this issue",
+    "legacy code, don't touch",
+    "carry over from before",
+    "existing issue not caused here",
+    "same as before",
+    "would break tests",
+    "sometimes fails",
+    "test is flaky",
+    "tried it and it didn't work",
+    "not my code",
+    "copied from upstream",
+    "known issue",
+    "hack to make it pass",
+    "for now until later",
+    "later once tests pass",
+    "wip - needs rework",
+    "fixme: revisit",
+    "temporary stopgap",
+    "skip this check",
+    "disable for this line",
+    "ignore this warning",
+    "noqa needed",
+    "works on my machine",
+    "see PR",
+    "as discussed",
+    "per review",
+    "because tests",
+    "required",
+    "special case",
+    "edge case",
+    "backwards compatibility",
+    "performance",
+    "cleanup",
+    "known limitation",
 ]
 
 
@@ -201,17 +201,21 @@ def _split_codes(kind: str, raw: str | None) -> tuple[list[str], str]:
     return [], symbol
 
 
-def _reason_for(line: str, match: re.Match[str], lines: list[str], idx: int) -> tuple[str, str]:
-    """Mirror the production checker: same-line trailing comment, else preceding line."""
-    after = line[match.end() :]
-    next_start = len(after)
-    for _kind, pat in _PATTERNS:
-        nxt = pat.search(after)
-        if nxt is not None and nxt.start() < next_start:
-            next_start = nxt.start()
-    trailing = _TRAILING_REASON.search(after[:next_start])
-    if trailing:
-        return trailing.group(1).strip(), "same-line"
+def _reason_for_line(line: str, matches: list[tuple[int, int, str, re.Match[str]]], lines: list[str], idx: int) -> tuple[str, str]:
+    """Mirror the production checker: same-line trailing comment, else preceding line.
+
+    Production checks every suppression on the line and accepts the first trailing
+    reason that sits before the next suppression; one line therefore yields at
+    most one justification (never one reason per suppression pattern).
+    """
+    for pos, end, _kind, _match in matches:
+        next_start = len(line) - end
+        for pos2, _end2, _kind2, _match2 in matches:
+            if pos2 > pos:
+                next_start = min(next_start, pos2 - end)
+        trailing = _TRAILING_REASON.search(line[end:][:next_start])
+        if trailing:
+            return trailing.group(1).strip(), "same-line"
     if idx > 0:
         prev = _PRECEDING_COMMENT.match(lines[idx - 1])
         if prev and not any(pat.search(lines[idx - 1]) for _kind, pat in _PATTERNS):
@@ -246,6 +250,7 @@ def _inside_string(spans: list[tuple[int, int, int, int]], row: int, col: int) -
 
 
 def real_suppressions() -> list[dict[str, object]]:
+    """One row per suppression line, with all suppressed codes joined per the contract."""
     rows: list[dict[str, object]] = []
     for rel_root in _SCAN_ROOTS:
         for path in sorted((WORKTREE / rel_root).rglob("*")):
@@ -258,29 +263,40 @@ def real_suppressions() -> list[dict[str, object]]:
             lines = source.splitlines()
             spans = _string_spans(source)
             for idx, line in enumerate(lines):
+                matches: list[tuple[int, int, str, re.Match[str]]] = []
                 for kind, pat in _PATTERNS:
                     for match in pat.finditer(line):
                         if _inside_string(spans, idx + 1, match.start()):
                             continue
                         if _inside_backticks(line, match.start()):
                             continue
-                        codes, rule = _split_codes(kind, match.group(1))
-                        reason, reason_source = _reason_for(line, match, lines, idx)
-                        rows.append(
-                            {
-                                "source": "repo_suppression",
-                                "file": str(path.relative_to(WORKTREE)),
-                                "line": idx + 1,
-                                "kind": kind,
-                                "rule": rule,
-                                "rule_codes": codes,
-                                "rule_source": "codes" if codes else "symbol",
-                                "justification": reason,
-                                "reason_source": reason_source,
-                                "code_context": line.split("#", 1)[0].strip(),
-                                "raw_line": line.strip(),
-                            }
-                        )
+                        matches.append((match.start(), match.end(), kind, match))
+                if not matches:
+                    continue
+                matches.sort(key=lambda item: item[0])
+                parts: list[str] = []
+                code_hits = 0
+                for _pos, _end, kind, match in matches:
+                    codes, symbol = _split_codes(kind, match.group(1))
+                    parts.extend(codes or [symbol])
+                    code_hits += bool(codes)
+                rule_source = "codes" if code_hits == len(matches) else ("symbol" if code_hits == 0 else "mixed")
+                reason, reason_source = _reason_for_line(line, matches, lines, idx)
+                rows.append(
+                    {
+                        "source": "repo_suppression",
+                        "file": str(path.relative_to(WORKTREE)),
+                        "line": idx + 1,
+                        "kind": ",".join(kind for _pos, _end, kind, _match in matches),
+                        "rule": ",".join(parts),
+                        "rule_codes": parts,
+                        "rule_source": rule_source,
+                        "justification": reason,
+                        "reason_source": reason_source,
+                        "code_context": line.split("#", 1)[0].strip(),
+                        "raw_line": line.strip(),
+                    }
+                )
     return rows
 
 
@@ -314,7 +330,7 @@ def load_repo_labels() -> dict[str, dict[str, object]]:
     return json.loads(LABELS_FILE.read_text(encoding="utf-8"))
 
 
-def build() -> list[Item]:
+def build() -> tuple[list[Item], dict[str, object]]:
     threshold = WORKTREE / "tests/checkers/test_semantic_threshold.py"
     semantic = WORKTREE / "tests/checkers/test_semantic_check.py"
     sources: list[dict[str, object]] = []
@@ -328,12 +344,17 @@ def build() -> list[Item]:
         sources.append({"source": "meaningful_table", "justification": text, "label": True})
 
     repo_labels = load_repo_labels()
+    known = {normalize(str(row["justification"])): bool(row["label"]) for row in sources}
+    unlabelled: list[str] = []
     for row in real_suppressions():
         norm = normalize(str(row["justification"]))
         labelled = repo_labels.get(norm)
         if labelled is None:
-            # Unlabelled rows are emitted so the audit file can be completed.
-            label, note = False, "UNLABELLED"
+            if norm in known:
+                label, note = known[norm], "label inherited from test table"
+            else:
+                unlabelled.append(norm)
+                label, note = False, "UNLABELLED"
         else:
             label, note = bool(labelled["label"]), str(labelled.get("note", ""))
         sources.append(
@@ -343,6 +364,7 @@ def build() -> list[Item]:
                 "label": label,
                 "label_note": note,
                 "rule": row["rule"],
+                "rule_source": row["rule_source"],
                 "context": row["code_context"],
                 "file": row["file"],
                 "line": row["line"],
@@ -350,24 +372,29 @@ def build() -> list[Item]:
                 "reason_source": row["reason_source"],
             }
         )
+    if unlabelled:
+        raise SystemExit(f"{len(unlabelled)} repo justifications lack rubric labels, e.g. {unlabelled[:5]}")
 
-    for justification, rule in _HARD_NEGATIVES:
+    for justification in _HARD_NEGATIVES:
         sources.append(
             {
                 "source": "hard_negative",
                 "justification": justification,
                 "label": False,
                 "label_note": "placeholder, deferral, brush-off, or rule restatement",
-                "rule": rule,
+                "rule": None,
                 "context": None,
             }
         )
 
+    raw_counts = Counter(str(row["source"]) for row in sources)
     seen: dict[str, Item] = {}
+    dropped: Counter[str] = Counter()
     for row in sources:
         primary = str(row["justification"]).strip()
         norm = normalize(primary)
         if norm in seen:
+            dropped[str(row["source"])] += 1
             continue
         rule = row.get("rule")
         rule_str = str(rule) if rule else None
@@ -387,15 +414,29 @@ def build() -> list[Item]:
             raw_line=str(row["raw_line"]) if row.get("raw_line") else None,
             reason_source=str(row["reason_source"]) if row.get("reason_source") else None,
         )
-    return list(seen.values())
+    items = list(seen.values())
+    post = Counter(i.source for i in items)
+    stats: dict[str, object] = {
+        "raw_counts": dict(sorted(raw_counts.items())),
+        "post_dedup_counts": dict(sorted(post.items())),
+        "dedup_dropped": dict(sorted(dropped.items())),
+        "total_raw": sum(raw_counts.values()),
+        "total_post_dedup": len(items),
+        "strata": dict(Counter(i.stratum for i in items)),
+        "labels": {str(k): v for k, v in Counter(i.label for i in items).items()},
+        "contracted_total": sum(1 for i in items if i.source != "hard_negative"),
+        "augmented_total": len(items),
+    }
+    return items, stats
 
 
 def main() -> None:
     DATA.mkdir(parents=True, exist_ok=True)
-    items = build()
+    items, stats = build()
     with (DATA / "corpus.jsonl").open("w", encoding="utf-8") as fh:
         for item in items:
             fh.write(json.dumps(asdict(item), ensure_ascii=False) + "\n")
+    (DATA / "corpus_stats.json").write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
     counts = Counter((i.source, i.label) for i in items)
     print(f"items={len(items)}")
     for key, count in sorted(counts.items()):

@@ -22,15 +22,18 @@
   "reranker_variants": {
     "current": {
       "order": "justification_first",
-      "query": "rule: {rule} | context: {context}"
+      "query": "production",
+      "prefix": ""
     },
     "query_first": {
       "order": "query_first",
-      "query": "rule: {rule} | context: {context}"
+      "query": "production",
+      "prefix": ""
     },
     "rubric_query": {
       "order": "query_first",
-      "query": "Does the comment give a specific technical justification for suppressing this lint rule, rather than a placeholder, deferral, or brush-off? rule: {rule} | context: {context}"
+      "query": "production",
+      "prefix": "Does the comment give a specific technical justification for suppressing this lint rule, rather than a placeholder, deferral, or brush-off? "
     }
   }
 }
