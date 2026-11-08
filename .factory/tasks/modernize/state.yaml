@@ -31,5 +31,5 @@ debt:
     docs/adr."
   - Shipped rumdl.toml excludes tests/data, forcing the integration per-run
     rewrite to lint the sample AGENTS.md; affects golden determinism.
-budgetSpentUsd: 2.9941790000000004
-lastUpdated: 2026-11-08T00:54:40.874Z
+budgetSpentUsd: 3.0061240000000007
+lastUpdated: 2026-11-08T01:09:41.495Z
