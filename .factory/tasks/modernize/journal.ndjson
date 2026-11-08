@@ -1400,3 +1400,5 @@
 {"type":"item_merged","item":"adr-formalization","sha":"d6e20efd0f53227116e80e82e98eea43530bc6a8","conflictResolved":false,"ts":"2026-11-08T22:42:27.649Z"}
 {"type":"step_started","task":"modernize","step":"wave-close-up-3-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/079-wave-close-up-3-1-a1","ts":"2026-11-08T22:45:24.569Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-3-1","timeoutSec":2700,"ts":"2026-11-08T22:45:24.575Z"}
+{"type":"step_finished","task":"modernize","step":"wave-close-up-3-1","attempt":1,"status":"ok","sessionId":"01a1bd56-7f19-73c4-8dad-84086ff4e068","usage":{"inputTokens":22413,"outputTokens":4024,"costUsd":0.003117},"ts":"2026-11-08T22:46:32.283Z"}
+{"type":"scheduler_wait","wave":1,"iteration":3,"reason":"wave-end merge + close-up gates + close-up turn","gapWallMs":813704,"gapActiveMs":813704,"merges":["secrets-baseline-exclusion","pylint-cache-semantics-closure","adr-formalization"],"ts":"2026-11-08T22:46:32.284Z"}
