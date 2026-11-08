@@ -2,7 +2,7 @@ task: modernize
 kind: saga
 status: active
 iteration: 1
-currentWave: 6
+currentWave: 7
 items:
   golden-determinism-probe:
     kind: fact-finder
@@ -53,19 +53,21 @@ items:
     spendUsd: 0
   golden-helpers-unit:
     kind: test-only
-    status: ready
+    status: merged
     branch: topic/modernize--golden-helpers-unit
     attempts: 1
     fixRounds: 1
     spendUsd: 0.057198
     currentStep: review
+    mergedAt: 2026-11-08T00:11:56-05:00
   golden-snapshot-wiring:
     kind: dev
-    status: pending
+    status: running
     branch: topic/modernize--golden-snapshot-wiring
-    attempts: 1
+    attempts: 2
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.13088
+    currentStep: qa
   consolidate-integration-helpers-v2:
     kind: test-only
     status: pending
@@ -143,20 +145,20 @@ debt:
     drive-letter absolutes"
   - "[golden-helpers-unit] Golden read silently drops extra keys and leaks raw
     JSON errors"
-budgetSpentUsd: 3.5925870000000013
+budgetSpentUsd: 3.7321850000000016
 spendByRole:
   workhorse:
-    costUsd: 0.533499
-    inputTokens: 951376
-    outputTokens: 453948
+    costUsd: 0.6643789999999999
+    inputTokens: 1170200
+    outputTokens: 549074
   alt-workhorse:
-    costUsd: 0.07745999999999999
-    inputTokens: 316580
-    outputTokens: 211861
+    costUsd: 0.08050599999999998
+    inputTokens: 335776
+    outputTokens: 216855
   architect:
-    costUsd: 2.945476
-    inputTokens: 750678
-    outputTokens: 136540
+    costUsd: 2.9511480000000003
+    inputTokens: 798735
+    outputTokens: 136884
   alt-architect:
     costUsd: 0.036152
     inputTokens: 137287
@@ -178,8 +180,12 @@ spendByItem:
     costUsd: 0.057198
     inputTokens: 138170
     outputTokens: 64014
+  golden-snapshot-wiring:
+    costUsd: 0.13088
+    inputTokens: 218824
+    outputTokens: 95126
   (orchestration):
-    costUsd: 3.1229250000000017
-    inputTokens: 1294879
-    outputTokens: 420997
-lastUpdated: 2026-11-08T05:12:00.295Z
+    costUsd: 3.1316430000000017
+    inputTokens: 1362132
+    outputTokens: 426335
+lastUpdated: 2026-11-08T05:53:07.040Z
