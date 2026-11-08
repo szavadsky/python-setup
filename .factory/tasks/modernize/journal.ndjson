@@ -1100,3 +1100,5 @@
 {"type":"item_merged","item":"remaining-lint-violations-fix","sha":"e4530e2b31ae8ed53ed9b77f813614537b6d8571","conflictResolved":false,"ts":"2026-11-08T16:12:23.926Z"}
 {"type":"step_started","task":"modernize","step":"wave-close-up-2-3","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/063-wave-close-up-2-3-a1","ts":"2026-11-08T16:20:11.463Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-2-3","timeoutSec":900,"ts":"2026-11-08T16:20:11.468Z"}
+{"type":"step_finished","task":"modernize","step":"wave-close-up-2-3","attempt":1,"status":"ok","sessionId":"01a1bbf5-d18d-724d-96c0-617b8b1f5af3","usage":{"inputTokens":22431,"outputTokens":7033,"costUsd":0.003765},"ts":"2026-11-08T16:21:23.023Z"}
+{"type":"scheduler_wait","wave":3,"iteration":2,"reason":"wave-end merge + close-up gates + close-up turn","gapWallMs":1454592,"gapActiveMs":1454592,"merges":["decision-runtime-pinning","coding-rules-audit-i2","remaining-lint-violations-fix"],"ts":"2026-11-08T16:21:23.024Z"}
