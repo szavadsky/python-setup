@@ -2,7 +2,7 @@ task: modernize
 kind: saga
 status: active
 iteration: 1
-currentWave: 5
+currentWave: 6
 items:
   golden-determinism-probe:
     kind: fact-finder
@@ -48,6 +48,41 @@ items:
     kind: fact-finder
     status: pending
     branch: topic/modernize--test-debloat-audit
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  golden-helpers-unit:
+    kind: test-only
+    status: pending
+    branch: topic/modernize--golden-helpers-unit
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  golden-snapshot-wiring:
+    kind: dev
+    status: pending
+    branch: topic/modernize--golden-snapshot-wiring
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  consolidate-integration-helpers-v2:
+    kind: test-only
+    status: pending
+    branch: topic/modernize--consolidate-integration-helpers-v2
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  coding-rules-audit-v2:
+    kind: fact-finder
+    status: pending
+    branch: topic/modernize--coding-rules-audit-v2
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  test-debloat-audit-v2:
+    kind: fact-finder
+    status: pending
+    branch: topic/modernize--test-debloat-audit-v2
     attempts: 1
     fixRounds: 1
     spendUsd: 0
@@ -100,20 +135,20 @@ debt:
     fixture-scoped clearing"
   - "[third-party-assumption-tests] Assert confidence is not None before reading
     .name"
-budgetSpentUsd: 3.4999090000000015
+budgetSpentUsd: 3.517147000000002
 spendByRole:
   workhorse:
     costUsd: 0.483592
     inputTokens: 848479
     outputTokens: 407953
   alt-workhorse:
-    costUsd: 0.053765999999999994
-    inputTokens: 194627
-    outputTokens: 156415
+    costUsd: 0.06457299999999999
+    inputTokens: 250205
+    outputTokens: 182242
   architect:
-    costUsd: 2.9263990000000004
-    inputTokens: 605087
-    outputTokens: 123014
+    costUsd: 2.9328300000000005
+    inputTokens: 653737
+    outputTokens: 128311
   alt-architect:
     costUsd: 0.036152
     inputTokens: 137287
@@ -132,7 +167,7 @@ spendByItem:
     inputTokens: 226110
     outputTokens: 148096
   (orchestration):
-    costUsd: 3.0874450000000015
-    inputTokens: 1062608
-    outputTokens: 370044
-lastUpdated: 2026-11-08T04:36:21.696Z
+    costUsd: 3.104683000000002
+    inputTokens: 1166836
+    outputTokens: 401168
+lastUpdated: 2026-11-08T04:43:13.636Z

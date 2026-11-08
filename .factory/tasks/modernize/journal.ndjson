@@ -131,3 +131,4 @@
 {"type":"step_started","task":"modernize","step":"pm-amend-1-2","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/024-pm-amend-1-2-a1","ts":"2026-11-08T04:41:10.781Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"pm-amend-1-2","timeoutSec":900,"ts":"2026-11-08T04:41:10.784Z"}
 {"type":"step_finished","task":"modernize","step":"pm-amend-1-2","attempt":1,"status":"ok","sessionId":"01a1b975-da42-70e2-9541-239044718b04","usage":{"inputTokens":39050,"outputTokens":20991,"costUsd":0.008103},"ts":"2026-11-08T04:43:13.144Z"}
+{"type":"wave_started","wave":4,"iteration":1,"ts":"2026-11-08T04:43:13.741Z"}
