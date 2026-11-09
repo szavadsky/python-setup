@@ -81,7 +81,7 @@ items:
     branch: topic/modernize--pylint-cache-assumptions
     attempts: 2
     fixRounds: 1
-    spendUsd: 0.210224686
+    spendUsd: 0.23190968599999998
     currentStep: develop
   pylint-cache-semantics-closure:
     kind: test-assumptions
@@ -671,20 +671,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 11.262917685999998
+budgetSpentUsd: 11.354209685999997
 spendByRole:
   workhorse:
-    costUsd: 5.299290686
-    inputTokens: 10313165
-    outputTokens: 3856181
+    costUsd: 5.320975686
+    inputTokens: 10433645
+    outputTokens: 3858933
   alt-workhorse:
     costUsd: 1.3953400000000005
     inputTokens: 6547500
     outputTokens: 2378857
   architect:
-    costUsd: 4.440803999999999
-    inputTokens: 14417555
-    outputTokens: 549438
+    costUsd: 4.5104109999999995
+    inputTokens: 15105292
+    outputTokens: 553603
   alt-architect:
     costUsd: 0.127483
     inputTokens: 457640
@@ -823,19 +823,19 @@ spendByItem:
     inputTokens: 413243
     outputTokens: 140910
   pylint-cache-assumptions:
-    costUsd: 0.210224686
-    inputTokens: 334753
-    outputTokens: 167691
+    costUsd: 0.23190968599999998
+    inputTokens: 455233
+    outputTokens: 170443
   ownership-map-revalidation:
     costUsd: 0.38394500000000004
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 5.572994
-    inputTokens: 17873942
-    outputTokens: 1876403
+    costUsd: 5.642601
+    inputTokens: 18561679
+    outputTokens: 1880568
   never-test-linting-prune:
     costUsd: 0.055946
     inputTokens: 148483
     outputTokens: 85833
-lastUpdated: 2026-11-09T11:58:50.996Z
+lastUpdated: 2026-11-09T12:10:01.826Z
