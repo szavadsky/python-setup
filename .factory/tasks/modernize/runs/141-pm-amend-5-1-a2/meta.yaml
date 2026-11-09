@@ -1,0 +1,12 @@
+seq: 141
+name: pm-amend-5-1
+attempt: 2
+agent: pm
+role: alt-workhorse
+models:
+  - opencode-go/muse-spark-1.3-contributor
+  - opencode-go/deepseek-v4.1-flash
+session: 01a1c24c-d03c-7391-96e3-003c245be848
+timeoutSec: 2700
+status: started
+startedAt: 2026-11-09T21:55:02.508Z
