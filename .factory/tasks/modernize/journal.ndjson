@@ -2115,3 +2115,5 @@
 {"type":"step_started","task":"modernize","step":"pm-amend-5-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/140-pm-amend-5-1-a1","ts":"2026-11-09T21:52:55.986Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"pm-amend-5-1","timeoutSec":2700,"ts":"2026-11-09T21:52:55.991Z"}
 {"type":"step_finished","task":"modernize","step":"pm-amend-5-1","attempt":1,"status":"ok","sessionId":"01a1c24c-d03c-7391-96e3-003c245be848","usage":{"inputTokens":66931,"outputTokens":16365,"costUsd":0.009966},"ts":"2026-11-09T21:55:02.368Z"}
+{"type":"step_started","task":"modernize","step":"pm-amend-5-1","attempt":2,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/141-pm-amend-5-1-a2","ts":"2026-11-09T21:55:02.577Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"pm-amend-5-1","timeoutSec":2700,"ts":"2026-11-09T21:55:02.583Z"}
