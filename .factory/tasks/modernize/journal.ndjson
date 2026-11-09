@@ -1546,3 +1546,5 @@
 {"type":"item_merge_phase","item":"checkers-semantic-guards","phase":"merge-child-into-parent","ts":"2026-11-09T01:51:24.357Z"}
 {"type":"item_merge_phase","item":"checkers-semantic-guards","phase":"remove-worktree","ts":"2026-11-09T01:51:24.446Z"}
 {"type":"item_merged","item":"checkers-semantic-guards","sha":"6fc28d65e0129a9a7270ba1a5f5dd312237ce316","conflictResolved":false,"ts":"2026-11-09T01:51:26.289Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-4-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/096-wave-close-up-4-1-a1","ts":"2026-11-09T01:54:54.333Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-4-1","timeoutSec":2700,"ts":"2026-11-09T01:54:54.338Z"}
