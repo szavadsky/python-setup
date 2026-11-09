@@ -420,9 +420,9 @@ items:
     fixRounds: 1
     spendUsd: 0
 concerns:
-  open: 1
+  open: 0
   dismissed: 0
-  routed: 0
+  routed: 1
   resolved: 2
 debt:
   - No compliant model proven (215/0 unevaluable, single-author labels, Fastino
@@ -682,20 +682,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.159703685999997
+budgetSpentUsd: 12.169640685999996
 spendByRole:
   workhorse:
     costUsd: 5.446816686
     inputTokens: 10745022
     outputTokens: 3940170
   alt-workhorse:
-    costUsd: 1.5347480000000002
-    inputTokens: 7296285
-    outputTokens: 2602638
+    costUsd: 1.5378180000000001
+    inputTokens: 7319130
+    outputTokens: 2605987
   architect:
-    costUsd: 5.050655999999998
-    inputTokens: 20105689
-    outputTokens: 680930
+    costUsd: 5.057522999999998
+    inputTokens: 20158964
+    outputTokens: 681948
   alt-architect:
     costUsd: 0.127483
     inputTokens: 457640
@@ -838,9 +838,9 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 6.263261999999999
-    inputTokens: 23980599
-    outputTokens: 2195015
+    costUsd: 6.273198999999999
+    inputTokens: 24056719
+    outputTokens: 2199382
   never-test-linting-prune:
     costUsd: 0.055946
     inputTokens: 148483
@@ -849,4 +849,4 @@ spendByItem:
     costUsd: 0.19651400000000002
     inputTokens: 713974
     outputTokens: 167344
-lastUpdated: 2026-11-09T22:49:35.409Z
+lastUpdated: 2026-11-09T22:54:21.229Z
