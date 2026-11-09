@@ -2020,3 +2020,5 @@
 {"type":"item_merge_phase","item":"secrets-triage-spike","phase":"merge-child-into-parent","ts":"2026-11-09T18:59:21.168Z"}
 {"type":"item_merge_phase","item":"secrets-triage-spike","phase":"remove-worktree","ts":"2026-11-09T18:59:21.257Z"}
 {"type":"item_merged","item":"secrets-triage-spike","sha":"0864a76aa90444de41cc6d39d45059203f18d4c0","conflictResolved":false,"ts":"2026-11-09T18:59:21.921Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-5-2","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/125-wave-close-up-5-2-a1","ts":"2026-11-09T19:02:07.169Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-5-2","timeoutSec":2700,"ts":"2026-11-09T19:02:07.173Z"}
