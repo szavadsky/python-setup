@@ -2,7 +2,7 @@ task: modernize
 kind: saga
 status: failed
 iteration: 5
-currentWave: 1
+currentWave: 2
 items:
   adr-formalization:
     kind: no-behavior
@@ -77,7 +77,7 @@ items:
     currentStep: review
   pylint-cache-assumptions:
     kind: test-assumptions
-    status: running
+    status: failed
     branch: topic/modernize--pylint-cache-assumptions
     attempts: 2
     fixRounds: 1
@@ -838,4 +838,4 @@ spendByItem:
     costUsd: 0.055946
     inputTokens: 148483
     outputTokens: 85833
-lastUpdated: 2026-11-09T12:10:01.826Z
+lastUpdated: 2026-11-09T12:10:16.272Z
