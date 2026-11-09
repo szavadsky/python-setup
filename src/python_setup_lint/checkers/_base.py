@@ -153,7 +153,7 @@ def normalize_suppressed_codes(raw: str) -> str:
     codes, _, reason = raw[match.end() :].partition("#")
     tokens = {token.lower() for token in re.split(r"[\s,]+", codes.strip(" []:=")) if token}
     reason_tokens = {token.lower() for token in re.split(r"[\s,]+", reason) if token}
-    return "" if not reason_tokens or reason_tokens <= tokens else reason.strip()
+    return raw.strip() if not reason_tokens else "" if reason_tokens <= tokens else reason.strip()
 
 
 @beartype
@@ -242,7 +242,7 @@ def check_if_meaningful(
     if primary_lower in meaningless_phrases:
         return False
     # Reject justification that is just the rule symbol itself.
-    if rule and primary_lower == rule.lower():
+    if rule and primary_lower in {code.strip().lower() for code in normalize_suppressed_codes(rule).split(",")}:
         return False
 
     if os.environ.get("PYTHON_SETUP_LINT_SEMANTIC", "1") != "1":

@@ -247,6 +247,23 @@ def test_semantic_disabled_never_calls_the_backend(
     assert backend.calls == []
 
 
+def test_bare_directive_stays_meaningful_when_semantic_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A bare directive without a reason is accepted, as the golden sample requires."""
+    monkeypatch.setenv(_SEMANTIC_ENV, "0")
+    comment = "pylint: disable=some-rule"
+
+    result = check_if_meaningful(
+        comment,
+        comment=comment,
+        rule="unjustified-suppression",
+        code_context="def _bare_suppression() -> None:",
+    )
+
+    assert result is True
+
+
 # ── Suppressed-code normalization ──────────────────────────────────
 
 

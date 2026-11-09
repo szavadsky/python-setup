@@ -69,7 +69,7 @@ class FunctionVisitMixin(SourceRootMixin):
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None: ...
 
 def normalize_suppressed_codes(raw: str) -> str:  # pylint: disable=generic-return-requires-returns  # the one-line doc states the return
-    """Reduce a suppression comment to its technical reason; ``""`` when none."""
+    """Return the technical reason; raw comment when none is given, ``""`` when it echoes codes."""
 
 def check_if_meaningful(
     text: str,
