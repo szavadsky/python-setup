@@ -147,20 +147,20 @@ items:
     currentStep: review
   checkers-stream-helper:
     kind: no-behavior
-    status: running
+    status: ready
     branch: topic/modernize--checkers-stream-helper
     attempts: 1
     fixRounds: 2
-    spendUsd: 0.18664000000000003
-    currentStep: qa
+    spendUsd: 0.209252
+    currentStep: review
   decision-backend-impl:
     kind: dev
-    status: running
+    status: ready
     branch: topic/modernize--decision-backend-impl
-    attempts: 2
+    attempts: 1
     fixRounds: 1
-    spendUsd: 0.405485
-    currentStep: develop
+    spendUsd: 0.554482
+    currentStep: review
   epic-kickoff-gate:
     kind: fact-finder
     status: pending
@@ -556,6 +556,14 @@ debt:
     .name"
   - "[checkers-factories-split] _factories_stub.py at 474/500 lines leaves 26
     lines of C0302 headroom"
+  - "[checkers-stream-helper] Add why-comment for intentional code_context
+    divergence from helper prefix"
+  - "[decision-backend-impl] Pin PYTHON_SETUP_LINT_SEMANTIC=1 explicitly in
+    backend-veto tests"
+  - "[decision-backend-impl] Align empty-string handling for reranker vs
+    decision-model warnings"
+  - "[decision-backend-impl] Expand nested ternary in normalize_suppressed_codes"
+  - "[decision-backend-impl] Add minimal docstrings to decision-backend stub"
   - "[golden-contract-hardening] Add runs guard and messages to byte-identical
     hash asserts"
   - "[golden-contract-hardening] Consider SHA-256 comparison for counts payloads
@@ -635,20 +643,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 9.801449685999998
+budgetSpentUsd: 9.994741685999998
 spendByRole:
   workhorse:
-    costUsd: 4.531155685999999
-    inputTokens: 8728965
-    outputTokens: 3289815
+    costUsd: 4.568640685999999
+    inputTokens: 8809324
+    outputTokens: 3322066
   alt-workhorse:
-    costUsd: 1.0925280000000004
-    inputTokens: 5118111
-    outputTokens: 1889714
+    costUsd: 1.226652
+    inputTokens: 5696507
+    outputTokens: 2039704
   architect:
-    costUsd: 4.079484000000001
-    inputTokens: 11205244
-    outputTokens: 424987
+    costUsd: 4.101167
+    inputTokens: 11372374
+    outputTokens: 438611
   alt-architect:
     costUsd: 0.098282
     inputTokens: 360499
@@ -747,9 +755,9 @@ spendByItem:
     inputTokens: 218824
     outputTokens: 95126
   checkers-stream-helper:
-    costUsd: 0.18664000000000003
-    inputTokens: 589111
-    outputTokens: 219258
+    costUsd: 0.209252
+    inputTokens: 746464
+    outputTokens: 243396
   consolidate-integration-helpers-v3:
     costUsd: 0.19283999999999998
     inputTokens: 341355
@@ -759,9 +767,9 @@ spendByItem:
     inputTokens: 208236
     outputTokens: 84395
   decision-backend-impl:
-    costUsd: 0.405485
-    inputTokens: 661131
-    outputTokens: 295838
+    costUsd: 0.554482
+    inputTokens: 1162533
+    outputTokens: 453941
   consolidate-integration-helpers-v2:
     costUsd: 0.19363600000000003
     inputTokens: 413243
@@ -779,7 +787,7 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 4.94665
-    inputTokens: 13644622
-    outputTokens: 1442515
-lastUpdated: 2026-11-09T03:45:54.072Z
+    costUsd: 4.968333
+    inputTokens: 13811752
+    outputTokens: 1456139
+lastUpdated: 2026-11-09T05:09:28.903Z
