@@ -2,7 +2,7 @@ task: modernize
 kind: saga
 status: active
 iteration: 5
-currentWave: 4
+currentWave: 3
 items:
   adr-formalization:
     kind: no-behavior
@@ -216,11 +216,12 @@ items:
     mergedAt: 2026-11-09T13:56:23-05:00
   cache-design-spike:
     kind: poc
-    status: blocked
+    status: running
     branch: topic/modernize--cache-design-spike
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.105401
+    currentStep: develop
   checkers-legacy-dead-cleanup:
     kind: no-behavior
     status: blocked
@@ -420,7 +421,7 @@ items:
     fixRounds: 1
     spendUsd: 0
 concerns:
-  open: 0
+  open: 4
   dismissed: 0
   routed: 1
   resolved: 2
@@ -682,14 +683,14 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.169640685999996
+budgetSpentUsd: 12.275041685999996
 spendByRole:
   workhorse:
-    costUsd: 5.446816686
-    inputTokens: 10745022
-    outputTokens: 3940170
+    costUsd: 5.552217686
+    inputTokens: 10922000
+    outputTokens: 4028142
   alt-workhorse:
-    costUsd: 1.5378180000000001
+    costUsd: 1.5378180000000008
     inputTokens: 7319130
     outputTokens: 2605987
   architect:
@@ -813,10 +814,10 @@ spendByItem:
     costUsd: 0.09088800000000001
     inputTokens: 274090
     outputTokens: 70148
-  decision-cache-impl:
-    costUsd: 0.393308
-    inputTokens: 802730
-    outputTokens: 337356
+  never-test-linting-prune:
+    costUsd: 0.055946
+    inputTokens: 148483
+    outputTokens: 85833
   runner-dispatch-split:
     costUsd: 0.128832
     inputTokens: 294444
@@ -825,6 +826,18 @@ spendByItem:
     costUsd: 0.041291
     inputTokens: 95491
     outputTokens: 43569
+  secrets-triage-spike:
+    costUsd: 0.19651400000000002
+    inputTokens: 713974
+    outputTokens: 167344
+  cache-design-spike:
+    costUsd: 0.105401
+    inputTokens: 176978
+    outputTokens: 87972
+  decision-cache-impl:
+    costUsd: 0.393308
+    inputTokens: 802730
+    outputTokens: 337356
   consolidate-integration-helpers-v2:
     costUsd: 0.258951
     inputTokens: 549144
@@ -841,12 +854,4 @@ spendByItem:
     costUsd: 6.273198999999999
     inputTokens: 24056719
     outputTokens: 2199382
-  never-test-linting-prune:
-    costUsd: 0.055946
-    inputTokens: 148483
-    outputTokens: 85833
-  secrets-triage-spike:
-    costUsd: 0.19651400000000002
-    inputTokens: 713974
-    outputTokens: 167344
-lastUpdated: 2026-11-09T22:54:21.229Z
+lastUpdated: 2026-11-09T23:18:43.791Z
