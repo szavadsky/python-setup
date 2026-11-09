@@ -287,12 +287,13 @@ debt:
     review open, no CPU bench).
   - I3 M1 gate not closed per engine (map running, kickoff pending) caused 3
     empty waves.
+  - Cache refresh/root/prune/secrets unresolved (Q4-7); writer-first verdict
+    must be consumed, not invented; blocks M4 backend/cache impls.
   - Pylint-pyi blind spot (42/43 findings on .py, 205 latent private symbols,
     companion stubs unenforced).
-  - Cache refresh/root/prune/secrets unresolved (Q4-7); writer-first verdict
-    must be consumed, not invented.
   - Docs/version drift (AGENTS stale counts/scope/pipeline, CHANGELOG 1.2.9 vs
-    1.2.10, README v1.2.5 pin, ty.toml sentence_transformers).
+    1.2.10, README v1.2.5 pin, ty.toml sentence_transformers, ADR-013..016
+    stubs, legacy .gitignore .cache lines retained intentionally).
   - Over-limit modules/shims/duplicates/hardcoded paths (dispatch 542,
     _factories 1393, _factories_extras 511 + dup disables, test_semantic 506,
     baseline shims, stream blocks, mixin misc, trivial-wrapper disables,
@@ -485,7 +486,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 8.517702685999994
+budgetSpentUsd: 8.546772685999994
 spendByRole:
   workhorse:
     costUsd: 3.6386346860000005
@@ -496,13 +497,13 @@ spendByRole:
     inputTokens: 4009627
     outputTokens: 1413951
   architect:
-    costUsd: 3.968459
-    inputTokens: 10251057
-    outputTokens: 371330
+    costUsd: 3.983096
+    inputTokens: 10323442
+    outputTokens: 397052
   alt-architect:
-    costUsd: 0.073161
-    inputTokens: 279595
-    outputTokens: 206994
+    costUsd: 0.087594
+    inputTokens: 319087
+    outputTokens: 257469
 spendByItem:
   golden-determinism-probe:
     costUsd: 0.16489800000000002
@@ -585,9 +586,9 @@ spendByItem:
     inputTokens: 206331
     outputTokens: 89105
   (orchestration):
-    costUsd: 4.792574
-    inputTokens: 12535676
-    outputTokens: 1257170
+    costUsd: 4.821644
+    inputTokens: 12647553
+    outputTokens: 1333367
   adr-formalization:
     costUsd: 0.051655
     inputTokens: 168426
@@ -600,4 +601,4 @@ spendByItem:
     costUsd: 0.18856
     inputTokens: 439297
     outputTokens: 213083
-lastUpdated: 2026-11-08T23:35:38.888Z
+lastUpdated: 2026-11-09T00:01:01.061Z
