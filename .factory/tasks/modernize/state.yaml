@@ -13,6 +13,22 @@ items:
     spendUsd: 0.051655
     currentStep: review
     mergedAt: 2026-11-08T17:38:59-05:00
+  baseline-diff-merge:
+    kind: test-only
+    status: ready
+    branch: topic/modernize--baseline-diff-merge
+    attempts: 1
+    fixRounds: 2
+    spendUsd: 0.11384300000000001
+    currentStep: review
+  checkers-semantic-guards:
+    kind: test-only
+    status: ready
+    branch: topic/modernize--checkers-semantic-guards
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0.032317
+    currentStep: review
   consolidate-integration-helpers-i2:
     kind: test-only
     status: merged
@@ -22,6 +38,14 @@ items:
     spendUsd: 0.07747
     currentStep: review
     mergedAt: 2026-11-08T07:59:15-05:00
+  decision-cache-design-spike:
+    kind: poc
+    status: ready
+    branch: topic/modernize--decision-cache-design-spike
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0.211512
+    currentStep: review
   golden-determinism-probe:
     kind: fact-finder
     status: merged
@@ -83,6 +107,14 @@ items:
     spendUsd: 0.041534
     currentStep: review
     mergedAt: 2026-11-08T17:32:58-05:00
+  semantic-threshold-consolidation:
+    kind: test-only
+    status: ready
+    branch: topic/modernize--semantic-threshold-consolidation
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0.032682
+    currentStep: review
   third-party-assumption-tests:
     kind: test-assumptions
     status: merged
@@ -101,6 +133,27 @@ items:
     spendUsd: 0.06715600000000001
     currentStep: review
     mergedAt: 2026-11-08T09:50:28-05:00
+  checkers-factories-split:
+    kind: test-only
+    status: pending
+    branch: topic/modernize--checkers-factories-split
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  checkers-stream-helper:
+    kind: no-behavior
+    status: pending
+    branch: topic/modernize--checkers-stream-helper
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  decision-backend-impl:
+    kind: dev
+    status: pending
+    branch: topic/modernize--decision-backend-impl
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
   epic-kickoff-gate:
     kind: fact-finder
     status: pending
@@ -134,6 +187,13 @@ items:
     spendUsd: 0.57375
     currentStep: review
     mergedAt: 2026-11-08T10:03:05-05:00
+  runner-compat-shim-removal:
+    kind: no-behavior
+    status: pending
+    branch: topic/modernize--runner-compat-shim-removal
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
   secrets-triage-spike:
     kind: fact-finder
     status: ready
@@ -146,6 +206,13 @@ items:
     kind: poc
     status: pending
     branch: topic/modernize--cache-design-spike
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  checkers-legacy-dead-cleanup:
+    kind: no-behavior
+    status: pending
+    branch: topic/modernize--checkers-legacy-dead-cleanup
     attempts: 1
     fixRounds: 1
     spendUsd: 0
@@ -190,6 +257,27 @@ items:
     spendUsd: 0.053628
     currentStep: review
     mergedAt: 2026-11-08T11:04:13-05:00
+  runner-dispatch-split:
+    kind: no-behavior
+    status: pending
+    branch: topic/modernize--runner-dispatch-split
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  runner-factories-trim:
+    kind: test-only
+    status: pending
+    branch: topic/modernize--runner-factories-trim
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  stale-disables-portability-cleanup:
+    kind: test-only
+    status: pending
+    branch: topic/modernize--stale-disables-portability-cleanup
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
   coding-rules-audit:
     kind: fact-finder
     status: pending
@@ -197,10 +285,24 @@ items:
     attempts: 1
     fixRounds: 1
     spendUsd: 0
+  decision-cache-impl:
+    kind: dev
+    status: pending
+    branch: topic/modernize--decision-cache-impl
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
   golden-regen-hatch:
     kind: test-only
     status: pending
     branch: topic/modernize--golden-regen-hatch
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  never-test-linting-prune:
+    kind: test-only
+    status: pending
+    branch: topic/modernize--never-test-linting-prune
     attempts: 1
     fixRounds: 1
     spendUsd: 0
@@ -220,10 +322,24 @@ items:
     attempts: 1
     fixRounds: 1
     spendUsd: 0
+  semantic-tests-rewrite:
+    kind: test-only
+    status: pending
+    branch: topic/modernize--semantic-tests-rewrite
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
   test-debloat-audit:
     kind: fact-finder
     status: pending
     branch: topic/modernize--test-debloat-audit
+    attempts: 1
+    fixRounds: 1
+    spendUsd: 0
+  docs-reconciliation:
+    kind: no-behavior
+    status: pending
+    branch: topic/modernize--docs-reconciliation
     attempts: 1
     fixRounds: 1
     spendUsd: 0
@@ -313,8 +429,29 @@ debt:
   - "[adr-formalization] ADR-012 examples could include conformance/ path prefix"
   - "[adr-formalization] H1 heading prefix inconsistent between new and legacy
     ADRs"
+  - "[baseline-diff-merge] Duplicate _capture_one section header from merge"
+  - "[baseline-diff-merge] Perf benchmark renames lack old-to-new mapping
+    comment"
+  - "[checkers-semantic-guards] Identical _semantic_disabled fixture duplicated
+    in two modules"
   - "[consolidate-integration-helpers-i2] Parenthesize bare comma-except to
     avoid Python-2 misread"
+  - "[decision-cache-design-spike] Scoped merge retains unvalidated file paths,
+    breaking strict-load round-trip"
+  - "[decision-cache-design-spike] _pass_files hardcodes src/tests partition,
+    drops other dirs"
+  - "[decision-cache-design-spike] CLI implements singular --path but docs claim
+    [--path ...]"
+  - "[decision-cache-design-spike] Merge last-wins conflicts while dump raises
+    on them"
+  - "[decision-cache-design-spike] Non-POSIX lock path silently provides no
+    mutual exclusion"
+  - "[decision-cache-design-spike] Three sequential lock+merge+write passes
+    leave partial-refresh window"
+  - "[decision-cache-design-spike] Stored key field plus sort tie-break extends
+    pinned schema"
+  - "[decision-cache-design-spike] Committed 476K regenerable poc/tmp plus
+    timing-churned proofs.json"
   - "[golden-determinism-probe] Assert rumdl override fired instead of blind
     string replace"
   - "[golden-determinism-probe] Resolve symlinks and define outside-cwd
@@ -403,6 +540,8 @@ debt:
     cite landed commit instead"
   - "[secrets-baseline-exclusion] Pattern matches bare gate paths only; ./
     prefix bypasses (gate form verified, no action)"
+  - "[semantic-threshold-consolidation] Header overlap arithmetic omits the
+    30-row pack and misstates the dedup math"
   - "[third-party-assumption-tests] Module-global _LIFECYCLE_EVENTS could use
     fixture-scoped clearing"
   - "[third-party-assumption-tests] Assert confidence is not None before reading
@@ -486,16 +625,16 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 8.565585685999993
+budgetSpentUsd: 8.972082685999995
 spendByRole:
   workhorse:
-    costUsd: 3.6386346860000005
-    inputTokens: 7164901
-    outputTokens: 2625481
+    costUsd: 3.915029686
+    inputTokens: 7635653
+    outputTokens: 2842296
   alt-workhorse:
-    costUsd: 0.8374480000000005
-    inputTokens: 4009627
-    outputTokens: 1413951
+    costUsd: 0.9675500000000007
+    inputTokens: 4521588
+    outputTokens: 1673254
   architect:
     costUsd: 3.9912210000000004
     inputTokens: 10327036
@@ -517,46 +656,6 @@ spendByItem:
     costUsd: 0.170578
     inputTokens: 226110
     outputTokens: 148096
-  golden-helpers-unit:
-    costUsd: 0.057198
-    inputTokens: 138170
-    outputTokens: 64014
-  consolidate-integration-helpers-v3:
-    costUsd: 0.19283999999999998
-    inputTokens: 341355
-    outputTokens: 174695
-  golden-snapshot-wiring:
-    costUsd: 0.13088
-    inputTokens: 218824
-    outputTokens: 95126
-  secrets-triage-spike:
-    costUsd: 0.076996
-    inputTokens: 208236
-    outputTokens: 84395
-  model-candidate-matrix:
-    costUsd: 0.045265
-    inputTokens: 116110
-    outputTokens: 59317
-  runner-format-contract:
-    costUsd: 0.467148
-    inputTokens: 1187671
-    outputTokens: 340789
-  consolidate-integration-helpers-i2:
-    costUsd: 0.07747
-    inputTokens: 139419
-    outputTokens: 80611
-  consolidate-integration-helpers-v2:
-    costUsd: 0.19363600000000003
-    inputTokens: 413243
-    outputTokens: 140910
-  pylint-cache-assumptions:
-    costUsd: 0.210224686
-    inputTokens: 334753
-    outputTokens: 167691
-  ownership-map-revalidation:
-    costUsd: 0.38394500000000004
-    inputTokens: 1215172
-    outputTokens: 444746
   test-debloat-audit-i2:
     costUsd: 0.258385
     inputTokens: 707051
@@ -573,6 +672,14 @@ spendByItem:
     costUsd: 0.053628
     inputTokens: 140260
     outputTokens: 60983
+  golden-helpers-unit:
+    costUsd: 0.057198
+    inputTokens: 138170
+    outputTokens: 64014
+  adr-formalization:
+    costUsd: 0.051655
+    inputTokens: 168426
+    outputTokens: 56715
   model-eval-poc:
     costUsd: 0.57375
     inputTokens: 1862227
@@ -581,18 +688,10 @@ spendByItem:
     costUsd: 0.06715600000000001
     inputTokens: 164765
     outputTokens: 116111
-  golden-contract-hardening:
-    costUsd: 0.091885
-    inputTokens: 206331
-    outputTokens: 89105
-  (orchestration):
-    costUsd: 4.840457
-    inputTokens: 12692559
-    outputTokens: 1388718
-  adr-formalization:
-    costUsd: 0.051655
-    inputTokens: 168426
-    outputTokens: 56715
+  model-candidate-matrix:
+    costUsd: 0.045265
+    inputTokens: 116110
+    outputTokens: 59317
   secrets-baseline-exclusion:
     costUsd: 0.041534
     inputTokens: 120849
@@ -601,4 +700,60 @@ spendByItem:
     costUsd: 0.18856
     inputTokens: 439297
     outputTokens: 213083
-lastUpdated: 2026-11-09T00:26:14.447Z
+  baseline-diff-merge:
+    costUsd: 0.11384300000000001
+    inputTokens: 336919
+    outputTokens: 146988
+  runner-format-contract:
+    costUsd: 0.467148
+    inputTokens: 1187671
+    outputTokens: 340789
+  consolidate-integration-helpers-i2:
+    costUsd: 0.07747
+    inputTokens: 139419
+    outputTokens: 80611
+  golden-contract-hardening:
+    costUsd: 0.091885
+    inputTokens: 206331
+    outputTokens: 89105
+  golden-snapshot-wiring:
+    costUsd: 0.13088
+    inputTokens: 218824
+    outputTokens: 95126
+  consolidate-integration-helpers-v3:
+    costUsd: 0.19283999999999998
+    inputTokens: 341355
+    outputTokens: 174695
+  checkers-semantic-guards:
+    costUsd: 0.032317
+    inputTokens: 74694
+    outputTokens: 40738
+  secrets-triage-spike:
+    costUsd: 0.076996
+    inputTokens: 208236
+    outputTokens: 84395
+  semantic-threshold-consolidation:
+    costUsd: 0.032682
+    inputTokens: 87033
+    outputTokens: 43025
+  consolidate-integration-helpers-v2:
+    costUsd: 0.19363600000000003
+    inputTokens: 413243
+    outputTokens: 140910
+  decision-cache-design-spike:
+    costUsd: 0.211512
+    inputTokens: 419522
+    outputTokens: 197490
+  pylint-cache-assumptions:
+    costUsd: 0.210224686
+    inputTokens: 334753
+    outputTokens: 167691
+  ownership-map-revalidation:
+    costUsd: 0.38394500000000004
+    inputTokens: 1215172
+    outputTokens: 444746
+  (orchestration):
+    costUsd: 4.856599999999999
+    inputTokens: 12757104
+    outputTokens: 1436595
+lastUpdated: 2026-11-09T01:41:29.191Z
