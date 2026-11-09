@@ -305,10 +305,10 @@ items:
     spendUsd: 0
   decision-cache-impl:
     kind: dev
-    status: running
+    status: failed
     branch: topic/modernize--decision-cache-impl
     attempts: 2
-    fixRounds: 1
+    fixRounds: 2
     spendUsd: 0.393308
     currentStep: qa
   golden-regen-hatch:
@@ -345,7 +345,7 @@ items:
     spendUsd: 0
   semantic-tests-rewrite:
     kind: test-only
-    status: pending
+    status: blocked
     branch: topic/modernize--semantic-tests-rewrite
     attempts: 1
     fixRounds: 1
@@ -359,7 +359,7 @@ items:
     spendUsd: 0
   docs-reconciliation:
     kind: no-behavior
-    status: pending
+    status: blocked
     branch: topic/modernize--docs-reconciliation
     attempts: 1
     fixRounds: 1
@@ -844,4 +844,4 @@ spendByItem:
     costUsd: 0.19651400000000002
     inputTokens: 713974
     outputTokens: 167344
-lastUpdated: 2026-11-09T21:45:15.038Z
+lastUpdated: 2026-11-09T21:45:20.835Z
