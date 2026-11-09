@@ -1,0 +1,8 @@
+wave: 2
+iteration: 5
+status: complete
+mergedItems:
+  - secrets-triage-spike
+failedItems: []
+blockedItems: []
+summary: "Wave 2 completed. Merged items: secrets-triage-spike"
