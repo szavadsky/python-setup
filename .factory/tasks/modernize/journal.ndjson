@@ -1977,3 +1977,5 @@
 {"type":"item_failed_consults_exhausted","item":"pylint-cache-assumptions","ts":"2026-11-09T12:10:08.654Z"}
 {"type":"step_started","task":"modernize","step":"wave-close-up-5-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/123-wave-close-up-5-1-a1","ts":"2026-11-09T12:13:48.651Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-5-1","timeoutSec":2700,"ts":"2026-11-09T12:13:48.656Z"}
+{"type":"step_finished","task":"modernize","step":"wave-close-up-5-1","attempt":1,"status":"ok","sessionId":"01a1c03a-9c7f-741a-9a88-970392ce7d36","usage":{"inputTokens":23617,"outputTokens":7605,"costUsd":0.004003},"ts":"2026-11-09T12:15:26.348Z"}
+{"type":"scheduler_wait","wave":1,"iteration":5,"reason":"close-up gates + close-up turn","gapWallMs":310060,"gapActiveMs":310060,"merges":[],"ts":"2026-11-09T12:15:26.349Z"}
