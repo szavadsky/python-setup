@@ -6,7 +6,7 @@ detail: Item abandoned after consults exhausted per engine record; no code
 affects:
   - decision-cache-impl
 severity: medium
-status: routed
+status: resolved
 source:
   record: 138-wave-close-up-5-4-a1
   agent: wave-close-up
@@ -14,5 +14,4 @@ source:
   iteration: 5
   lastSeen: 2026-11-09T21:50:23.652Z
 createdAt: 2026-11-09T21:50:23.652Z
-updatedAt: 2026-11-09T22:05:03.162Z
-disposition: architect
+updatedAt: 2026-11-09T22:07:17.438Z
