@@ -2168,3 +2168,5 @@
 {"type":"step_finished","task":"modernize","step":"architect-wave-report-5-6","attempt":1,"status":"ok","sessionId":"01a1b8a3-f9ce-7511-963e-37a3531a2d3a","usage":{"inputTokens":53417,"outputTokens":22806,"costUsd":0.010816},"ts":"2026-11-09T22:22:55.291Z"}
 {"type":"step_started","task":"modernize","step":"pm-amend-5-3","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/151-pm-amend-5-3-a1","ts":"2026-11-09T22:22:56.028Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"pm-amend-5-3","timeoutSec":2700,"ts":"2026-11-09T22:22:56.036Z"}
+{"type":"step_finished","task":"modernize","step":"pm-amend-5-3","attempt":1,"status":"ok","sessionId":"01a1c268-479c-77dd-a475-43c877b6e956","usage":{"inputTokens":70036,"outputTokens":48502,"costUsd":0.016704},"ts":"2026-11-09T22:28:36.441Z"}
+{"type":"amend_existing_dropped","iteration":5,"wave":6,"amendment":3,"slugs":["model-candidate-matrix","model-eval-poc","decision-runtime-pinning"],"ts":"2026-11-09T22:28:36.465Z"}
