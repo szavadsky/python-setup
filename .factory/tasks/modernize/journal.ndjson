@@ -2032,3 +2032,13 @@
 {"type":"wave_started","wave":3,"iteration":5,"ts":"2026-11-09T19:06:11.044Z"}
 {"type":"stranded_no_owner","iteration":5,"wave":3,"slugs":["checkers-stream-helper"],"reason":"ownerless non-terminal items unchanged across 3 reconciler re-queues","ts":"2026-11-09T19:06:17.973Z"}
 {"type":"task_error","error":"reconciliation_failed: wave 3 has ownerless non-terminal items unchanged across 3 re-queues: checkers-stream-helper","ts":"2026-11-09T19:06:20.664Z"}
+{"type":"task_started","task":"modernize","branch":"topic/modernize","ts":"2026-11-09T21:22:05.255Z"}
+{"type":"iteration_started","iteration":5,"ts":"2026-11-09T21:22:09.817Z"}
+{"type":"step_reused","task":"modernize","step":"context-pack-5","recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/113-context-pack-5-a1","ts":"2026-11-09T21:22:09.930Z"}
+{"type":"wave_resume_reopened","wave":2,"iteration":5,"stragglers":["checkers-stream-helper","epic-kickoff-gate"],"ts":"2026-11-09T21:22:15.090Z"}
+{"type":"wave_started","wave":2,"iteration":5,"ts":"2026-11-09T21:22:15.338Z"}
+{"type":"wave_not_complete","wave":2,"iteration":5,"stragglers":["epic-kickoff-gate"],"mergeOwned":["checkers-stream-helper"],"redrive":1,"ts":"2026-11-09T21:22:18.152Z"}
+{"type":"empty_wave_streak","wave":2,"iteration":5,"streak":1,"blocked":[],"ts":"2026-11-09T21:22:18.154Z"}
+{"type":"step_reused","task":"modernize","step":"wave-close-up-5-2","recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/125-wave-close-up-5-2-a1","ts":"2026-11-09T21:25:00.553Z"}
+{"type":"scheduler_wait","wave":2,"iteration":5,"reason":"close-up gates + close-up turn","gapWallMs":162401,"gapActiveMs":162401,"merges":[],"ts":"2026-11-09T21:25:00.553Z"}
+{"type":"step_reused","task":"modernize","step":"architect-wave-report-5-2","recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/126-architect-wave-report-5-2-a1","ts":"2026-11-09T21:25:30.922Z"}
