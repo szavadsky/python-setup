@@ -10,36 +10,21 @@ from pathlib import Path
 
 import beartype
 
-from ._record_types import Record
 from .parsers import _RECORD_PARSERS
 from .types import LintResult
 
 __all__ = ["_capture_baseline", "_diff_baseline"]
 
 
-# ── Backward-compat exports (legacy stubs for external consumers) ──
-
-
-_FALLBACK_TOOLS: set[str] = set()
+# ── Retained package-export shim (debt: owned by dispatch-split) ──
+# ``runner/__init__.py`` and its stub still re-export ``peek_fallback_tools``;
+# this trivial stub keeps that forbidden-to-edit consumer importable and is
+# deleted together with the package-level export.
 
 
 @beartype.beartype
 def peek_fallback_tools() -> frozenset[str]:
     return frozenset()
-
-
-def _compare_sorted(a: list[Record], b: list[Record]) -> tuple[list[Record], list[Record]]:
-    """Re-export of :func:`_baseline_helpers._compare_sorted` for backwards compat.
-
-    The new violations-only baseline uses a direct violation-list diff instead,
-    but test code imported this from baseline before the refactor.
-
-    Returns:
-        A tuple ``(added, removed)`` of :class:`Record` lists.
-    """
-    from ._baseline_helpers import _compare_sorted as _cs
-
-    return _cs(a, b)
 
 
 # ── Core helpers ──────────────────────────────────────────────────
