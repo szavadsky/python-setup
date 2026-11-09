@@ -1858,3 +1858,5 @@
 {"type":"item_merge_phase","item":"never-test-linting-prune","phase":"merge-child-into-parent","ts":"2026-11-09T08:12:18.511Z"}
 {"type":"item_merge_phase","item":"never-test-linting-prune","phase":"remove-worktree","ts":"2026-11-09T08:12:18.564Z"}
 {"type":"item_merged","item":"never-test-linting-prune","sha":"172f90aa2932e8695f790a26db2414a7703835ee","conflictResolved":false,"ts":"2026-11-09T08:12:19.044Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-4-4","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/105-wave-close-up-4-4-a1","ts":"2026-11-09T08:15:31.976Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-4-4","timeoutSec":2700,"ts":"2026-11-09T08:15:31.984Z"}
