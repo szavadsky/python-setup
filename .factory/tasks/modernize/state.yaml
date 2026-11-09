@@ -1,6 +1,6 @@
 task: modernize
 kind: saga
-status: active
+status: failed
 iteration: 5
 currentWave: 1
 items:
@@ -69,10 +69,10 @@ items:
     mergedAt: 2026-11-08T08:05:08-05:00
   ownership-map-revalidation:
     kind: fact-finder
-    status: running
+    status: failed
     branch: topic/modernize--ownership-map-revalidation
     attempts: 1
-    fixRounds: 3
+    fixRounds: 5
     spendUsd: 0.38394500000000004
     currentStep: review
   pylint-cache-assumptions:
@@ -838,4 +838,4 @@ spendByItem:
     costUsd: 0.055946
     inputTokens: 148483
     outputTokens: 85833
-lastUpdated: 2026-11-09T11:58:45.513Z
+lastUpdated: 2026-11-09T11:58:50.996Z
