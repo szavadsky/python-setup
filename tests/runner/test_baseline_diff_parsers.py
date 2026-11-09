@@ -1,4 +1,4 @@
-"""Parser and capture unit tests for baseline diff."""
+"""Parser, capture, and baseline schema-load tests for baseline diff."""
 
 from __future__ import annotations
 
@@ -9,10 +9,8 @@ from typing import Any
 import pytest
 
 from python_setup_lint.runner import Record
-from python_setup_lint.runner._record_types import _compare_records_key
 from python_setup_lint.runner.baseline import (  # private import for white-box testing
     _capture_baseline,
-    _compare_sorted,
     _diff_baseline,
 )
 from python_setup_lint.runner.parsers import (  # type: ignore[attr-defined]  # private import for white-box testing
@@ -25,12 +23,9 @@ from python_setup_lint.runner.parsers import (  # type: ignore[attr-defined]  # 
     _parse_yamllint_records,
 )
 from python_setup_lint.testing import make_lint_result
+from tests.runner._factories import diff_baseline_with
 
 pytestmark = pytest.mark.no_external_api
-
-
-def _sorted(records: list[Record]) -> list[Record]:  # pylint: disable=trivial-wrapper  # test helper; readability over DRY
-    return sorted(records, key=_compare_records_key)
 
 
 # ── Private-complex unit: per-tool record parsers ────────────────
@@ -266,6 +261,38 @@ class TestCaptureSchemaV2:
         assert check(cap)
 
 
+# ── _capture_baseline persistence (merged from deleted edge module) ──
+# Survivor: TestCaptureBaselineOnDisk; both persistence cases moved verbatim.
+
+
+class TestCaptureBaselineOnDisk:
+    def test_capture_baseline_given_records_then_emitted_in_sorted_order(self) -> None:
+        stdout = "src/z.py:9:1: E501 zeta\nsrc/a.py:1:3: E501 alpha\nsrc/a.py:1: E501 alpha-no-col\n"
+        records = _capture_baseline([make_lint_result(tool_name="ruff check", stdout=stdout)])
+        # _capture_baseline returns a flat list of violation dicts (no nested "records" key).
+        keys = [
+            (
+                () if r["file"] is None else (r["file"],),
+                () if r["line"] is None else (r["line"],),
+                () if r["col"] is None else (r["col"],),
+                r["rule"],
+            )
+            for r in records
+        ]
+        assert keys == sorted(keys), f"records not sorted: {records!r}"
+        assert [r["file"] for r in records] == ["src/a.py", "src/a.py", "src/z.py"]
+        assert records[0]["col"] is None
+        assert records[1]["col"] == 3
+
+    def test_capture_baseline_given_sorted_records_then_round_trips_through_diff(self, tmp_path: Path) -> None:
+        stdout = "src/z.py:9:1: E501 zeta\nsrc/a.py:1:3: E501 alpha\nsrc/b.py:5:2: E501 beta\n"
+        cap = _capture_baseline([make_lint_result(tool_name="ruff check", stdout=stdout)])
+        saved = cap
+        current = [make_lint_result(tool_name="ruff check", stdout=stdout)]
+        violations, _ = diff_baseline_with(tmp_path, saved, current)
+        assert violations == []
+
+
 # ── _capture_one edge cases ──────────────────────────────────────
 
 
@@ -293,24 +320,8 @@ class TestCaptureOneEdgeCases:
                 lambda cap: cap == [],
                 id="rumdl_json_captured_as_diagnostics",
             ),
-            pytest.param(
-                "rumdl check",
-                "README.md:8:1: [MD013] Line too long\n",
-                lambda cap: (
-                    cap
-                    == [
-                        {
-                            "tool": "rumdl check",
-                            "file": "README.md",
-                            "line": 8,
-                            "col": 1,
-                            "rule": "MD013",
-                            "msg": "Line too long",
-                        },
-                    ]
-                ),
-                id="rumdl_text_captured_as_records",
-            ),
+            # Survivor: rumdl_timing_normalised_in_output; merged duplicate:
+            # rumdl_text_captured_as_records (same record, no footer).
             pytest.param(
                 "rumdl check",
                 "No issues found (42ms)\n",
@@ -357,54 +368,42 @@ class TestCaptureOneEdgeCases:
         assert violations == []
 
 
-# ── _compare_sorted edge cases ───────────────────────────────────
+# ── Baseline schema load ─────────────────────────────────────────
+# Legacy pylint round-trip merged into test_baseline_diff.py::TestFlatRecordRoundTrip.
 
 
-class TestCompareSortedEdgeCases:
-    @pytest.mark.parametrize(
-        ("current", "saved", "exp_additions", "exp_removals"),
-        [
-            pytest.param([], [], 0, 0, id="both_empty"),
-            pytest.param(
-                [],
-                _sorted([Record("a.py", 1, 1, "E1", "m")]),
-                0,
-                1,
-                id="current_empty_saved_has_records",
-            ),
-            pytest.param(
-                _sorted([Record("a.py", 1, 1, "E1", "m")]),
-                [],
-                1,
-                0,
-                id="current_has_records_saved_empty",
-            ),
-            pytest.param(
-                _sorted([Record(None, None, None, "R0801:x<->y", "dup")]),
-                _sorted([Record(None, None, None, "R0801:x<->y", "dup")]),
-                0,
-                0,
-                id="none_file_on_both_sides",
-            ),
-            pytest.param(
-                _sorted([Record(None, None, None, "R0801:x<->y", "dup"), Record("a.py", 1, 1, "E1", "m")]),
-                _sorted([Record("a.py", 1, 1, "E1", "m")]),
-                1,
-                0,
-                id="none_file_added",
-            ),
-        ],
-    )
-    def test_compare_sorted_given_edge_cases_then_expected_additions_and_removals(
-        self,
-        current: list[Record],
-        saved: list[Record],
-        exp_additions: int,
-        exp_removals: int,
-    ) -> None:
-        added, removed = _compare_sorted(current, saved)
-        assert len(added) == exp_additions
-        assert len(removed) == exp_removals
+class TestMixedSchemaLoad:
+    def test_mixed_schema_given_unknown_tool_then_baseline_shrinks(self, tmp_path: Path) -> None:
+        saved = [
+            {"tool": "strange-tool", "file": "src/a.py", "line": 1, "col": 1, "rule": "E001", "msg": "old violation"},
+        ]
+        current = [make_lint_result(tool_name="strange-tool", stdout="")]
+        violations, reloaded = diff_baseline_with(tmp_path, saved, current)
+        assert violations == []
+        assert reloaded == []
+
+    def test_mixed_schema_given_empty_baseline_then_ok_for_all_tools(self, tmp_path: Path) -> None:
+        tool_names = [
+            "tach check",
+            "ruff check",
+            "rumdl check",
+            "mypy",
+            "yamllint",
+            "ty check",
+            "pyright verify types",
+            "pylint",
+            "detect-secrets",
+        ]
+        saved: list[dict[str, object]] = []
+        current = [make_lint_result(tool_name=t, exit_code=0, stdout="") for t in tool_names]
+        current.append(
+            make_lint_result(
+                tool_name="pyright check",
+                stdout=json.dumps({"summary": {"errorCount": 0, "warningCount": 0}}),
+            )
+        )
+        violations, _ = diff_baseline_with(tmp_path, saved, current)
+        assert violations == []
 
 
 # ── Parser edge cases ────────────────────────────────────────────
