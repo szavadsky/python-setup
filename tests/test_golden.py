@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 
+from python_setup_lint.runner import TOOLS, LintResult, RunnerConfig, ToolSpec
+from python_setup_lint.runner._record_types import Record
 from tests._golden import (
     SEMANTIC_ENV,
     UPDATE_ENV,
@@ -18,8 +20,10 @@ from tests._golden import (
     assert_matches_golden,
     assert_oracle_coverage,
     assert_tool_coverage,
+    collect_findings,
     finding_key,
     normalize_record,
+    read_golden,
     read_oracle_rules,
     serialize_findings,
     serialize_tool_minimums,
@@ -176,6 +180,61 @@ def test_serialize_tool_minimums_given_mapping_then_sorted_canonical_json() -> N
     assert text.index('"mypy"') < text.index('"ruff check"')
 
 
+def test_serialize_findings_given_empty_input_then_empty_canonical_arrays() -> None:
+    assert serialize_findings([]) == "[]\n"
+    assert serialize_tool_minimums({}) == "{}\n"
+
+
+def test_write_golden_files_given_empty_findings_then_roundtrips_and_counts_zero(tmp_path: Path) -> None:
+    golden = tmp_path / "empty_findings.json"
+
+    write_golden_files(golden, [])
+
+    assert golden.read_bytes() == b"[]\n"
+    assert read_golden(golden) == []
+    minimums = json.loads(tool_counts_path(golden).read_text(encoding="utf-8"))
+    assert set(minimums) == {spec.name for spec in TOOLS}
+    assert set(minimums.values()) == {0}
+    assert_matches_golden([], golden_path=golden)
+
+
+def _stub_collect_pipeline(monkeypatch: pytest.MonkeyPatch, results: list[LintResult]) -> None:
+    """Replace ``collect_findings``' private pipeline with in-memory tool results."""
+    specs = [ToolSpec("alpha", []), ToolSpec("beta", [])]
+    records = {
+        "alpha": [Record(file="mod.py", line=1, col=1, rule="A", msg="")],
+        "beta": [Record(file="mod.py", line=2, col=1, rule="B", msg="")],
+    }
+    monkeypatch.setattr("python_setup_lint.runner._cli_complexity._apply_config_overrides", lambda config: config)
+    monkeypatch.setattr("python_setup_lint.runner._cli_complexity._select_tools", lambda config: specs)
+    monkeypatch.setattr(
+        "python_setup_lint.runner.parsers._RECORD_PARSERS",
+        {name: (lambda _stdout, rows=rows: rows) for name, rows in records.items()},
+    )
+    monkeypatch.setattr("python_setup_lint.runner.cli._run_tool_pipeline", lambda selected, **_kwargs: (0, results))
+
+
+def test_collect_findings_given_tool_results_then_keeps_pipeline_order(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _stub_collect_pipeline(monkeypatch, [LintResult("beta", 0, "", "", 0.0), LintResult("alpha", 0, "", "", 0.0)])
+
+    findings = collect_findings(tmp_path, RunnerConfig(cwd=tmp_path))
+
+    assert [finding["tool"] for finding in findings] == ["beta", "alpha"]
+    assert [finding["rule"] for finding in findings] == ["B", "A"]
+
+
+def test_collect_findings_given_no_tool_results_then_returns_empty_list(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _stub_collect_pipeline(monkeypatch, [])
+
+    assert collect_findings(tmp_path, RunnerConfig(cwd=tmp_path)) == []
+
+
 def test_tool_counts_path_given_findings_name_then_sibling_tool_counts() -> None:
     assert tool_counts_path(Path("/x/minimal_sample_project_findings.json")) == Path("/x/minimal_sample_project_tool_counts.json")
     assert tool_counts_path(Path("/x/snapshot.json")) == Path("/x/snapshot_tool_counts.json")
@@ -237,6 +296,20 @@ def test_assert_matches_golden_given_duplicate_golden_entry_then_reports_one_rem
     message = str(excinfo.value)
     assert "removed (1):" in message
     assert message.count(repr(finding_key(duplicate))) == 1
+
+
+def test_diff_keys_given_duplicate_multisets_then_counts_duplicates_once() -> None:
+    from tests._golden import _diff_keys  # testing the Counter internals directly
+
+    duplicate = _finding(rule="DUP")
+    added = _finding(rule="ADDED", line=2)
+    removed = _finding(rule="REMOVED", line=3)
+
+    added_keys, removed_keys = _diff_keys([duplicate, duplicate, added], [duplicate, removed])
+
+    assert added_keys == sorted([finding_key(duplicate), finding_key(added)])
+    assert removed_keys == [finding_key(removed)]
+    assert _diff_keys([duplicate], [duplicate]) == ([], [])
 
 
 @pytest.mark.parametrize("ci_var", ["CI", "GITHUB_ACTIONS"])

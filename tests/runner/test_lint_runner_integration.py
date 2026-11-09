@@ -1,8 +1,4 @@
-# pylint: disable=too-many-lines  # integration test suite; splitting would lose shared fixture context
-"""Unit tests for baseline/diff/overwrite/print/orchestration/CLI/integration in ``python_setup_lint.runner``.
-
-Splitting would lose context.
-"""
+"""Unit tests for baseline/diff/overwrite/print/orchestration/CLI/integration in ``python_setup_lint.runner``."""
 
 # pylint: disable=too-many-positional-arguments  # parametrized test with 6 args; pylint default is 5
 from __future__ import annotations
@@ -38,7 +34,7 @@ from tests.runner._factories_baseline import (
     build_current_results,
     diff_violation_kind,
 )
-from tests.runner._factories_extras import (
+from tests.runner._factories_extras_small import (
     MAIN_EXIT_CODE_CASES,
     PACKAGE_NAME_STUBTEST_CASES,
     RUFF_BASELINE_FIX_CASES,

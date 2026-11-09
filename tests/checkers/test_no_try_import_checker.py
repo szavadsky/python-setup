@@ -1,8 +1,8 @@
 """Unit tests for python_setup_lint.checkers.no_try_import_checker.
 
 Verifies the AST checker detects (and does not detect) the correct
-try/except+import patterns. All fixture src strings live in
-``tests/checkers/_factories.py`` (free LOC, not counted against the gate).
+try/except+import patterns. Parametrize rows (src strings) live in
+``tests/checkers/_factories_no_try_import.py``.
 """
 
 from __future__ import annotations
@@ -11,16 +11,33 @@ from typing import Any
 
 import pytest
 
+from python_setup_lint.checkers.conformance import no_try_import_checker
 from python_setup_lint.checkers.conformance.no_try_import_checker import (
     NoTryImportChecker,
 )
 from python_setup_lint.testing import _walk_and_release
-from tests.checkers._factories import (
+from tests.checkers._factories_no_try_import import (
     _NO_TRY_DETECT_CASES,
     _NO_TRY_DO_NOT_DETECT_CASES,
 )
 
 pytestmark = pytest.mark.no_external_api
+
+
+def test_sentence_transformers_is_no_longer_an_optional_import_pattern() -> None:
+    """The reranker dependency was removed from the shipped package."""
+    patterns: frozenset[str] = getattr(no_try_import_checker, "_OPTIONAL_IMPORT_PATTERNS", frozenset())
+    assert "sentence_transformers" not in patterns
+
+
+def test_try_import_of_sentence_transformers_is_flagged() -> None:
+    """A try/except guard for the removed dependency is now a violation."""
+    code = "try:\n    import sentence_transformers\nexcept ImportError:\n    pass\n"
+
+    msgs = _walk_and_release(code, NoTryImportChecker)
+
+    assert len(msgs) == 1
+    assert msgs[0].msg_id == "no-try-import"
 
 
 @pytest.mark.parametrize(

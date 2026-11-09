@@ -3,6 +3,7 @@ from __future__ import annotations
 import fnmatch
 import logging
 import os
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -10,6 +11,8 @@ import structlog
 from astroid import nodes  # astroid is a pylint dependency, only used for type checking in this module
 from beartype import beartype
 from pylint.typing import MessageDefinitionTuple
+
+from python_setup_lint.checkers._decision_backend import DecisionBackend
 
 # Configure structlog at import time to suppress debug/info noise from all checkers.
 # This runs when pylint loads the first checker plugin (pylint subprocess).
@@ -139,6 +142,20 @@ class FunctionVisitMixin(SourceRootMixin):
         self._check_function(node)  # type: ignore[reportAttributeAccessIssue]  # mixin: _check_function defined in subclass
 
 
+_DIRECTIVE_PREFIX = re.compile(r"^\s*(?:(?:type|ty)\s*:\s*ignore|noqa|pylint\s*:\s*disable)\b")
+
+
+@beartype
+def normalize_suppressed_codes(raw: str) -> str:
+    match = _DIRECTIVE_PREFIX.match(raw)
+    if match is None:
+        return raw.strip()
+    codes, _, reason = raw[match.end() :].partition("#")
+    tokens = {token.lower() for token in re.split(r"[\s,]+", codes.strip(" []:=")) if token}
+    reason_tokens = {token.lower() for token in re.split(r"[\s,]+", reason) if token}
+    return raw.strip() if not reason_tokens else "" if reason_tokens <= tokens else reason.strip()
+
+
 @beartype
 def check_if_meaningful(
     text: str,
@@ -146,19 +163,9 @@ def check_if_meaningful(
     rule: str | None = None,
     code_context: str | None = None,
     comment: str | None = None,
+    backend: DecisionBackend | None = None,
 ) -> bool:
-    # Try the semantic NLP pipeline when enabled.
-    if os.environ.get("PYTHON_SETUP_LINT_SEMANTIC", "1") == "1":
-        from python_setup_lint.checkers._semantic import (
-            semantic_check_if_meaningful as _semantic_check,
-        )
-
-        result = _semantic_check(text, rule=rule, code_context=code_context, comment=comment)
-        if result is not None:
-            return result
-
-    # Heuristic fallback.
-    primary = (comment or text).strip()
+    primary = normalize_suppressed_codes(comment or text).strip()
     if not primary or len(primary) < 5:
         return False
     primary_lower = primary.lower()
@@ -235,4 +242,11 @@ def check_if_meaningful(
     if primary_lower in meaningless_phrases:
         return False
     # Reject justification that is just the rule symbol itself.
-    return not (rule and primary_lower == rule.lower())
+    if rule and primary_lower in {code.strip().lower() for code in normalize_suppressed_codes(rule).split(",")}:
+        return False
+
+    if os.environ.get("PYTHON_SETUP_LINT_SEMANTIC", "1") != "1":
+        return True
+    from python_setup_lint.checkers._semantic import semantic_check_if_meaningful as _semantic_check
+
+    return _semantic_check(primary, rule=rule, code_context=code_context, comment=primary, backend=backend) is not False

@@ -1,8 +1,8 @@
 """Unit tests for python_setup_lint.checkers.beartype_checker.
 
 Uses synthetic code strings parsed via astroid, walked over
-``BeartypeCoverageChecker``.  Fixture src / file-path rows live in
-``tests/checkers/_factories.py`` (free LOC, not counted against the gate).
+``BeartypeCoverageChecker``. Parametrize rows (src strings, file paths)
+live in ``tests/checkers/_factories_beartype.py``.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from pylint.testutils import CheckerTestCase
 
 from python_setup_lint.checkers.conformance.beartype_checker import BeartypeCoverageChecker
 from python_setup_lint.testing import _make_tc as _make_tc_factory
-from tests.checkers._factories import (
+from tests.checkers._factories_beartype import (
     _BEARTYPE_MISS_CASES,
     _BEARTYPE_SKIP_CASES,
     _BEARTYPE_SOURCE_ROOT_CASES,

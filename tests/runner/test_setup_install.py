@@ -261,31 +261,33 @@ class TestInstall:
     """Fresh install tests."""
 
     @pytest.mark.parametrize("check_fn", INSTALL_ARTIFACT_CASES)
-    def test_install_given_fresh_project_then_creates_artifacts(self, empty_project: Path, check_fn: object) -> None:
-        assert install(empty_project, dev_path="/home/slava/aiexp/python-setup") == 0
+    def test_install_given_fresh_project_then_creates_artifacts(
+        self, empty_project: Path, python_setup_checkout: Path, check_fn: object
+    ) -> None:
+        assert install(empty_project, dev_path=str(python_setup_checkout)) == 0
         check_fn(empty_project)  # type: ignore[operator]  # parametrized callable; type varies by fixture
 
 
 class TestInstallEdgeCases:
     """Install edge cases: idempotency, existing files, missing pyproject."""
 
-    def test_second_install_skips_dep(self, configured_project: Path) -> None:
+    def test_second_install_skips_dep(self, configured_project: Path, python_setup_checkout: Path) -> None:
         deps_before = _get_dev_deps(_read_pyproject_toml(configured_project))  # type: ignore[arg-type]  # _read_pyproject_toml returns dict|None; fixture ensures valid project
-        assert install(configured_project, dev_path="/home/slava/aiexp/python-setup") == 0
+        assert install(configured_project, dev_path=str(python_setup_checkout)) == 0
         assert _get_dev_deps(_read_pyproject_toml(configured_project)) == deps_before  # type: ignore[arg-type]  # _read_pyproject_toml returns dict|None; fixture ensures valid project
 
     def test_install_given_second_install_then_no_dup(self, configured_project: Path) -> None:
         assert (configured_project / "AGENTS.md").read_text().count(_AGENTS_SENTINEL) == 1
 
-    def test_install_given_existing_precommit_then_skips(self, empty_project: Path) -> None:
+    def test_install_given_existing_precommit_then_skips(self, empty_project: Path, python_setup_checkout: Path) -> None:
         p = empty_project / ".pre-commit-config.yaml"
         p.write_text("# e")
         m = p.stat().st_mtime
-        assert install(empty_project, dev_path="/home/slava/aiexp/python-setup") == 0
+        assert install(empty_project, dev_path=str(python_setup_checkout)) == 0
         assert p.stat().st_mtime == m and p.read_text() == "# e"
 
-    def test_install_given_missing_pyproject_then_returns_error(self, tmp_path: Path) -> None:
-        assert install(tmp_path, dev_path="/home/slava/aiexp/python-setup") == 1
+    def test_install_given_missing_pyproject_then_returns_error(self, tmp_path: Path, python_setup_checkout: Path) -> None:
+        assert install(tmp_path, dev_path=str(python_setup_checkout)) == 1
 
 
 class TestStepErrorPaths:
@@ -311,7 +313,7 @@ class TestDownstreamIntegration:
     """End-to-end install-then-lint integration test."""
 
     @pytest.mark.slow
-    def test_downstream_integration_given_install_then_lint(self) -> None:
+    def test_downstream_integration_given_install_then_lint(self, python_setup_checkout: Path) -> None:
         import shutil
         import subprocess
 
@@ -347,7 +349,7 @@ class TestDownstreamIntegration:
             '{"version":"1.0","plugins_used":[],"filters_used":[],"results":{},"generated_at":"2025-01-01T00:00:00Z"}\n'
         )
         (c / "tach.toml").write_text('[[modules]]\npath = "src/consumer"\ndepends_on = []\n')
-        assert install(c, dev_path="/home/slava/aiexp/python-setup") == 0
+        assert install(c, dev_path=str(python_setup_checkout)) == 0
         assert (c / ".pre-commit-config.yaml").exists()
         assert (c / "CodingRules.md").exists()
         assert "<!-- python-setup:pre-commit -->" in (c / "AGENTS.md").read_text()

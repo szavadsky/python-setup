@@ -5,7 +5,7 @@ Invariant 3 (variable fidelity). Includes T1-pyi-exemption behavior
 preservation tests (init/main/conftest/trivial-data early returns —
 proven invariants per ``/memories/repo/T1-pyi-exemptions.md``).
 
-Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
+Parametrize rows live in ``tests/checkers/_factories_stub.py``.
 """
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ from python_setup_lint.checkers.stub.normalizer import (  # pylint: disable=wron
 from python_setup_lint.testing import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
     _make_tc as _make_tc_factory,
 )
-from tests.checkers._factories import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
+from tests.checkers._factories_stub import (  # pylint: disable=wrong-import-position  # conditional import after module-level check
     _IMPORT_CONTRACT_CASES,
     _IMPORT_USAGE_FIELD_CASES,
     _IN_TYPE_CHECKING_BLOCK_NEGATIVE_CASES,
@@ -366,7 +366,7 @@ def test_emit_import_contract_violations(  # pylint: disable=too-many-positional
     expected_msg_id: str | None,
     expected_count: int,
 ) -> None:
-    from tests.checkers._factories import setup_and_emit_import_contract
+    from tests.checkers._factories_stub import setup_and_emit_import_contract
 
     _tc, msgs = setup_and_emit_import_contract(
         target_module=target_module,
@@ -389,7 +389,7 @@ def test_emit_import_contract_violations(  # pylint: disable=too-many-positional
 
 @pytest.mark.parametrize(("star_policy", "expected_e97a3_count"), _STAR_POLICY_CASES)
 def test_star_import_policy_given_policy_then_expected_count(star_policy: str, expected_e97a3_count: int) -> None:
-    from tests.checkers._factories import (
+    from tests.checkers._factories_stub import (
         _build_star_import_policy_state,
         _star_usage_factory,
     )

@@ -5,7 +5,7 @@ Exercises the private helpers directly (private-complex-unit category):
 ``_is_trivial_test_data``, ``_has_main_block``, ``_is_under_source_root``,
 ``_resolve_stub``, ``_index_stub_declarations``, ``emit_coverage_violations``.
 
-Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
+Parametrize rows live in ``tests/checkers/_factories_stub_coverage.py``.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from python_setup_lint.checkers.stub.coverage import (  # type: ignore[attr-defi
     _resolve_stub,
     emit_coverage_violations,
 )
-from tests.checkers._factories import (
+from tests.checkers._factories_stub_coverage import (
     _EMIT_COVERAGE_CASES,
     _HAS_MAIN_BLOCK_CASES,
     _IS_INIT_EXEMPT_CASES,

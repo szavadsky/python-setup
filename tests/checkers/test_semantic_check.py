@@ -1,506 +1,133 @@
-# pylint: disable=too-many-lines  # 504 lines — test module for semantic NLP pipeline; splitting would lose shared fixture context
-"""Unit tests for python_setup_lint.checkers._semantic.
+"""Unit tests for ``python_setup_lint.checkers._semantic``.
 
-Tests the single-stage NLP ``semantic_check_if_meaningful`` function.
-
-Tests that require network access (model download) are marked ``@pytest.mark.slow``.
-Tests that hit the local model cache are **not** marked slow.
+The semantic pipeline is now a thin backend adapter: it resolves an optional
+``DecisionBackend`` (or uses the injected one), maps its score through the
+pinned ``0.5`` threshold, and memoizes one call per unique input/model pair.
+No model package is imported and nothing is written to disk.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from unittest.mock import patch
+import inspect
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
 
 import pytest
 
-from python_setup_lint.checkers._base import check_if_meaningful
+from python_setup_lint.checkers import _decision_backend, _semantic
+from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private test helper omitted from .pyi
+    _reset_cache,
+    semantic_check_if_meaningful,
+)
 
 
-class TestImportErrorFallback:
-    """When sentence_transformers is not installed, ImportError propagates."""
+class _RecordingBackend:
+    """Test double that records the pairs it is asked to score."""
 
-    def test_import_error_propagates(self) -> None:
-        """check_if_meaningful must propagate ImportError when _semantic unavailable."""
-        with patch(
-            "builtins.__import__",
-            side_effect=self._make_blocking_import(),
-        ):
-            with pytest.raises(ImportError, match="No module named _semantic"):
-                check_if_meaningful("circular import — PyLinter not available")
+    def __init__(self, score: float = 1.0, model_id: str = "recording-backend rev test prompt-v1") -> None:
+        self.score = score
+        self.model_id = model_id
+        self.calls: list[tuple[str, str | None, str | None]] = []
 
-    @staticmethod
-    def _make_blocking_import() -> Callable[..., object]:
-        """Return a side-effect function that blocks _semantic imports."""
-        original_import = __builtins__["__import__"]  # type: ignore[index]  # __builtins__ is a Module
-
-        def _mock_import(name: str, *args: object, **kwargs: object) -> object:
-            if name == "python_setup_lint.checkers._semantic":
-                raise ImportError("No module named _semantic")
-            return original_import(name, *args, **kwargs)
-
-        return _mock_import
+    def decide(self, justification: str, rule: str | None, context: str | None) -> float:
+        """Record the pair and return the configured score."""
+        self.calls.append((justification, rule, context))
+        return self.score
 
 
-# ── Default-user fallback (semantic returns None → heuristic) ────────
+@pytest.fixture(autouse=True)
+def _reset_semantic_state() -> Iterator[None]:
+    """Clear the in-process memo between tests."""
+    _reset_cache()
+    yield
+    _reset_cache()
 
 
-class TestDefaultUserFallback:
-    """Default-user path: semantic returns None → heuristic fallback executes."""
+def test_signature_exposes_backend_keyword_defaulting_to_none() -> None:
+    parameter = inspect.signature(semantic_check_if_meaningful).parameters.get("backend")
 
-    def test_fallback_to_heuristic_when_reranker_unavailable(self) -> None:
-        """When sentence_transformers absent, check_if_meaningful falls through to heuristic."""
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
-            _reset_cache,
-        )
-
-        _reset_cache()
-        with patch(
-            "python_setup_lint.checkers._semantic._load_reranker",
-            return_value=None,
-        ):
-            result = check_if_meaningful("circular import — PyLinter not available at runtime")
-        assert result is True
-
-    def test_fallback_rejects_brushoff_when_reranker_unavailable(self) -> None:
-        """The heuristic fallback must still reject brush-off justifications."""
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
-            _reset_cache,
-        )
-
-        _reset_cache()
-        with patch(
-            "python_setup_lint.checkers._semantic._load_reranker",
-            return_value=None,
-        ):
-            result = check_if_meaningful("pre-existing")
-        assert result is False
+    assert parameter is not None
+    assert parameter.default is None
+    assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
 
 
-# ── Reranker import failure (sentinel prevents retry storm) ──────────
+def test_empty_primary_returns_false_without_calling_backend() -> None:
+    backend = _RecordingBackend()
+
+    assert semantic_check_if_meaningful("", backend=backend) is False
+    assert semantic_check_if_meaningful("   ", backend=backend) is False
+    assert backend.calls == []
 
 
-class TestRerankerImportFallback:
-    """When sentence_transformers module cannot be imported inside _load_reranker.
+def test_loader_none_maps_to_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(_decision_backend, "get_backend", lambda: None)
 
-    The sentinel ``_RERANKER_UNAVAILABLE`` prevents repeated import attempts.
-    """
-
-    def test_import_error_returns_none_and_sets_sentinel(self) -> None:
-        """_load_reranker must return None and set sentinel on ImportError."""
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works
-            _load_reranker,
-            _reset_cache,
-        )
-
-        _reset_cache()
-
-        with patch(
-            "builtins.__import__",
-            side_effect=self._make_blocking_import(),
-        ):
-            result = _load_reranker()
-
-        assert result is None
-
-        # Check sentinel via re-import (global was set by _load_reranker)
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
-            _RERANKER_UNAVAILABLE,
-        )
-
-        assert _RERANKER_UNAVAILABLE is True
-
-        # Second call must skip import entirely
-        with patch(
-            "builtins.__import__",
-            side_effect=RuntimeError("should not be called"),
-        ) as mock_import:
-            result2 = _load_reranker()
-        assert result2 is None
-        mock_import.assert_not_called()
-
-    @staticmethod
-    def _make_blocking_import() -> Callable[..., object]:
-        """Return a side-effect function that blocks sentence_transformers imports."""
-        original_import = __builtins__["__import__"]  # type: ignore[index]  # __builtins__ is a Module
-
-        def _mock_import(name: str, *args: object, **kwargs: object) -> object:
-            if name == "sentence_transformers":
-                raise ImportError("No module named sentence_transformers")
-            return original_import(name, *args, **kwargs)
-
-        return _mock_import
-
-    def test_sentinel_prevents_retry_on_second_call(self) -> None:
-        """After sentinel is set, second _load_reranker call skips import."""
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works
-            _load_reranker,
-            _reset_cache,
-        )
-
-        _reset_cache()
-        with patch(
-            "python_setup_lint.checkers._semantic._RERANKER_UNAVAILABLE",
-            True,
-        ):
-            with patch(
-                "builtins.__import__",
-                side_effect=RuntimeError("should not be called"),
-            ) as mock_import:
-                result = _load_reranker()
-
-        assert result is None
-        mock_import.assert_not_called()
+    assert semantic_check_if_meaningful("guarded by a lock", comment="guarded by a lock") is None
 
 
-# ── Brush-off pattern detection (heuristic) ──────────────────────────
+@pytest.mark.parametrize(("score", "expected"), [(0.0, False), (0.499, False), (0.5, True), (1.0, True)])
+def test_backend_score_maps_at_pinned_threshold(score: float, expected: bool) -> None:
+    backend = _RecordingBackend(score=score)
 
-
-class TestBrushOffPatterns:
-    """Each brush-off / deferral pattern must fail the heuristic check."""
-
-    @pytest.mark.parametrize(
-        "comment",
-        [
-            # Single-word brush-off patterns
-            "pre-existing",
-            "preexisting",
-            "baseline",
-            "base-line",
-            "wip",
-            "tbd",
-            "temp",
-            "temporary",
-            "existing",
-            "as-is",
-            "legacy",
-            "will fix",
-            "later",
-            "eventually",
-            "someday",
-            "placeholder",
-            "stub here",
-            "for now",
-            "to do",
-            "fixme later",
-            "carryover",
-            # Multi-word brush-off phrases
-            "pre existing",
-            "in baseline",
-            "was already",
-            "not my code",
-            "carry over",
-            "from before",
-            "carry from",
-            # Compound brush-off phrases
-            "pre-existing issue",
-            "baseline issue",
-            "todo later",
-            "existing issue",
-            "will fix later",
-            "fix later",
-            "preexisting issue",
-        ],
+    result = semantic_check_if_meaningful(
+        "guarded by a lock",
+        rule="W9704",
+        code_context="lock = Lock()",
+        comment="guarded by a lock",
+        backend=backend,
     )
-    def test_brush_off_rejected(self, comment: str) -> None:
-        """A brush-off justification should fail the heuristic check."""
-        with patch.dict("os.environ", {"PYTHON_SETUP_LINT_SEMANTIC": "0"}):
-            result = check_if_meaningful(comment)
-        assert result is False, f"Expected False for brush-off: {comment!r}"
+
+    assert result is expected
 
 
-class TestMeaningfulPatterns:
-    """Genuinely meaningful justifications must pass the heuristic check."""
+def test_one_backend_call_per_unique_pair() -> None:
+    backend = _RecordingBackend()
+    kwargs: dict[str, Any] = {
+        "rule": "W9704",
+        "code_context": "lock = Lock()",
+        "comment": "guarded by a lock",
+    }
 
-    @pytest.mark.parametrize(
-        "comment",
-        [
-            "circular import — PyLinter not available at runtime",
-            "type stub not yet generated for this module",
-            "third-party library has no type stubs available",
-            "conditional import guarded by TYPE_CHECKING",
-            "runtime attribute set by C extension, not visible to pylint",
-            "this module is generated by protobuf compiler",
-            "import is only used for type checking, not at runtime",
-            "function is overridden in subclass with different signature",
-            "variable assigned in except handler, not defined in all paths",
-            "nested function closure captures variable by reference",
-            "abstract method implemented in concrete subclass",
-            "property setter defined in parent class",
-            "metaclass conflict resolved at runtime",
-            "dynamic attribute set by __getattr__",
-            "module-level __all__ controls public API",
-            "re-export for backwards compatibility",
-            "alias for renamed external dependency",
-            "conditional import for Python version compatibility",
-            "platform-specific code path for Windows",
-            "mock object used in test fixture setup",
-            "fixture parameter injected by pytest",
-            "async generator needs manual cleanup in __aenter__",
-            "context manager wraps low-level resource handle",
-            "descriptor protocol implemented via __set_name__",
-            "singleton pattern uses __new__ override",
-            "dataclass field with default_factory",
-            "enum member with custom __init__ parameters",
-            "mixin class designed for cooperative multiple inheritance",
-            "abstract property defined in ABC base class",
-            "classmethod used as alternative constructor",
-            "carried from external library httpx for type compatibility",
-            "carried from library",
-            "external library carry",
-        ],
-    )
-    def test_meaningful_passes(self, comment: str) -> None:
-        """A genuinely meaningful justification should pass."""
-        with patch.dict("os.environ", {"PYTHON_SETUP_LINT_SEMANTIC": "0"}):
-            result = check_if_meaningful(comment)
-        assert result is True, f"Expected True for meaningful: {comment!r}"
+    first = semantic_check_if_meaningful("guarded by a lock", backend=backend, **kwargs)
+    second = semantic_check_if_meaningful("guarded by a lock", backend=backend, **kwargs)
+
+    assert first is True
+    assert second is True
+    assert backend.calls == [("guarded by a lock", "W9704", "lock = Lock()")]
 
 
-# ── Semantic pipeline (requires sentence_transformers) ───────────────
+def test_distinct_pairs_call_backend_again() -> None:
+    backend = _RecordingBackend()
+
+    semantic_check_if_meaningful("guarded by a lock", comment="guarded by a lock", backend=backend)
+    semantic_check_if_meaningful("retry is idempotent", comment="retry is idempotent", backend=backend)
+
+    assert len(backend.calls) == 2
 
 
-class TestSemanticCheck:
-    """Tests that exercise the NLP pipeline.
+def test_memo_key_includes_backend_model_id() -> None:
+    first = _RecordingBackend(score=1.0, model_id="model-a rev test prompt-v1")
+    second = _RecordingBackend(score=0.0, model_id="model-b rev test prompt-v1")
 
-    These tests require ``sentence_transformers`` to be importable
-    (``uv sync --extra semantic``).  Tests that download models are
-    marked ``@pytest.mark.slow``; cache-hit tests are not.
-    """
-
-    def test_meaningful_justification(self) -> None:
-        """A detailed technical justification should be meaningful."""
-
-        from python_setup_lint.checkers._semantic import (
-            semantic_check_if_meaningful,
-        )
-
-        result = semantic_check_if_meaningful(
-            "circular import — PyLinter not available at runtime",
-            rule="missing-beartype",
-            code_context="def foo():  # pylint: disable=missing-beartype",  # noqa: W9704  # code_context string contains suppression pattern as test data, not a real suppression
-            comment="circular import — PyLinter not available at runtime",
-        )
-        # If models are cached, this returns True/False; if not cached,
-        # model download may fail returning None. Either is acceptable.
-        assert result is None or isinstance(result, bool)
-
-    def test_empty_justification(self) -> None:
-        """Empty justification should return False."""
-
-        from python_setup_lint.checkers._semantic import (
-            semantic_check_if_meaningful,
-        )
-
-        result = semantic_check_if_meaningful("")
-        assert result is False
-
-    def test_whitespace_justification(self) -> None:
-        """Whitespace-only justification should return False."""
-
-        from python_setup_lint.checkers._semantic import (
-            semantic_check_if_meaningful,
-        )
-
-        result = semantic_check_if_meaningful("   ")
-        assert result is False
-
-    def test_returns_none_on_import_error(self) -> None:
-        """When sentence_transformers can't be imported, return None."""
-        with patch(
-            "python_setup_lint.checkers._semantic._load_reranker",
-            return_value=None,
-        ):
-            from python_setup_lint.checkers._semantic import (
-                semantic_check_if_meaningful,
-            )
-
-            result = semantic_check_if_meaningful("some reason")
-            assert result is None
-
-    def test_cache_hit_returns_cached_result(self) -> None:
-        """A cached result is returned without calling _load_reranker."""
-        import hashlib
-
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private import for white-box testing
-            _RERANKER_MODEL,
-            _reset_cache,
-            semantic_check_if_meaningful,
-        )
-
-        _reset_cache()
-
-        text = "some reason"
-        rule = "E501"
-        code_context = "x = 1"
-        comment = "some reason"
-
-        # Compute the cache key the same way the function does.
-        cache_key = hashlib.sha256(
-            "|".join(str(x) for x in (text, rule, code_context, comment, _RERANKER_MODEL)).encode()
-        ).digest()
-        cache_key_int = int.from_bytes(cache_key[:8], "big")
-
-        # Pre-populate the cache with a known result.
-        with patch(
-            "python_setup_lint.checkers._semantic._RESULT_CACHE",
-            {cache_key_int: True},
-        ):
-            with patch(
-                "python_setup_lint.checkers._semantic._load_reranker",
-            ) as mock_load:
-                result = semantic_check_if_meaningful(
-                    text,
-                    rule=rule,
-                    code_context=code_context,
-                    comment=comment,
-                )
-                assert result is True
-                mock_load.assert_not_called()
-
-    @pytest.mark.slow
-    def test_semantic_with_model_download(self) -> None:
-        """End-to-end test that downloads models (slow, network required).
-
-        This test is marked ``slow`` because it downloads model artifacts.
-        On cache hit (models already downloaded), it runs quickly but is
-        still gated by the ``slow`` marker for safety.
-        """
-
-        from python_setup_lint.checkers._semantic import (
-            semantic_check_if_meaningful,
-        )
-
-        result = semantic_check_if_meaningful(
-            "circular import — PyLinter not available at runtime",
-            rule="missing-beartype",
-            code_context="def foo():  # pylint: disable=missing-beartype",  # noqa: W9704  # code_context string contains suppression pattern as test data, not a real suppression
-            comment="circular import — PyLinter not available at runtime",
-        )
-        if result is None:
-            pytest.skip("sentence-transformers model unavailable")
-        assert isinstance(result, bool)
-
-    @pytest.mark.slow
-    def test_semantic_meaningful_justification(self) -> None:
-        """A genuinely meaningful justification should pass the semantic check."""
-
-        from python_setup_lint.checkers._semantic import (
-            semantic_check_if_meaningful,
-        )
-
-        result = semantic_check_if_meaningful(
-            "type stub not yet generated for this module",
-            rule="import-error",
-            code_context="import foo  # type: ignore",  # noqa: W9704  # code_context string contains suppression pattern as test data, not a real suppression
-            comment="type stub not yet generated for this module",
-        )
-        if result is None:
-            pytest.skip("sentence-transformers model unavailable")
-        assert isinstance(result, bool)
-
-    @pytest.mark.slow
-    def test_semantic_weak_justification(self) -> None:
-        """A weak justification should fail the semantic check."""
-
-        from python_setup_lint.checkers._semantic import (
-            semantic_check_if_meaningful,
-        )
-
-        result = semantic_check_if_meaningful(
-            "noqa",
-            rule="E501",
-            code_context="x = 1  # noqa: E501",  # noqa: W9704  # code_context string contains suppression pattern as test data, not a real suppression
-            comment="noqa",
-        )
-        # The heuristic would reject this; the semantic check may also
-        # reject it or return None if models aren't available.
-        assert result is False or result is None
+    assert semantic_check_if_meaningful("guarded by a lock", comment="guarded by a lock", backend=first) is True
+    assert semantic_check_if_meaningful("guarded by a lock", comment="guarded by a lock", backend=second) is False
+    assert len(first.calls) == 1
+    assert len(second.calls) == 1
 
 
-# ── Reranker pairs (requires sentence_transformers) ──────────────────
+def test_module_does_not_reference_sentence_transformers() -> None:
+    source = Path(_semantic.__file__).read_text()
+
+    assert "sentence_transformers" not in source
+    assert "sentence-transformers" not in source
 
 
-class TestRerankerPairs:
-    """Tests that exercise the reranker with paired inputs.
+def test_check_writes_no_disk_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    cache_dir = tmp_path / "semantic"
+    monkeypatch.setattr(_semantic, "_CACHE_DIR", cache_dir, raising=False)
+    monkeypatch.setattr(_semantic, "_RESULT_CACHE_FILE", cache_dir / "results.json", raising=False)
+    backend = _RecordingBackend()
 
-    These tests require ``sentence_transformers`` to be importable.
-    """
-
-    def test_reranker_pairs_meaningful(self) -> None:
-        """A meaningful justification with context should score >= 0.5."""
-        pytest.importorskip("sentence_transformers")
-
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works; private import for white-box testing
-            _reset_cache,
-            semantic_check_if_meaningful,
-        )
-
-        _reset_cache()
-
-        result = semantic_check_if_meaningful(
-            "circular import — PyLinter not available at runtime",
-            rule="missing-beartype",
-            code_context="def foo():  # pylint: disable=missing-beartype",  # noqa: W9704  # code_context string contains suppression pattern as test data, not a real suppression
-            comment="circular import — PyLinter not available at runtime",
-        )
-        # If models are cached, this returns True; if not cached,
-        # model download may fail returning None.
-        assert result is True or result is None
-
-    def test_reranker_pairs_weak(self) -> None:
-        """A weak justification with context should score < 0.5."""
-        pytest.importorskip("sentence_transformers")
-
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works; private import for white-box testing
-            _reset_cache,
-            semantic_check_if_meaningful,
-        )
-
-        _reset_cache()
-
-        result = semantic_check_if_meaningful(
-            "noqa",
-            rule="E501",
-            code_context="x = 1  # noqa: E501",  # noqa: W9704  # code_context string contains suppression pattern as test data, not a real suppression
-            comment="noqa",
-        )
-        # The reranker should reject this or return None if models aren't available.
-        assert result is False or result is None
-
-    def test_reranker_pairs_brush_off(self) -> None:
-        """A brush-off justification with context should score < 0.5."""
-        pytest.importorskip("sentence_transformers")
-
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works; private import for white-box testing
-            _reset_cache,
-            semantic_check_if_meaningful,
-        )
-
-        _reset_cache()
-
-        result = semantic_check_if_meaningful(
-            "pre-existing",
-            rule="E501",
-            code_context="x = 1  # noqa: E501",  # noqa: W9704  # code_context string contains suppression pattern as test data, not a real suppression
-            comment="pre-existing",
-        )
-        # The reranker should reject this or return None if models aren't available.
-        assert result is False or result is None
-
-    def test_reranker_pairs_meaningful_without_context(self) -> None:
-        """A meaningful justification without context should still score >= 0.5."""
-        pytest.importorskip("sentence_transformers")
-
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbols removed from .pyi per M3(b); runtime import still works; private import for white-box testing
-            _reset_cache,
-            semantic_check_if_meaningful,
-        )
-
-        _reset_cache()
-
-        result = semantic_check_if_meaningful(
-            "type stub not yet generated for this module",
-            comment="type stub not yet generated for this module",
-        )
-        assert result is True or result is None
+    assert semantic_check_if_meaningful("guarded by a lock", comment="guarded by a lock", backend=backend) is True
+    assert not cache_dir.exists()

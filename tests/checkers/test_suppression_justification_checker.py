@@ -20,6 +20,13 @@ def _msg_ids(msgs: list[Any]) -> set[str]:
     return {m.msg_id for m in msgs}
 
 
+@pytest.fixture
+def _semantic_disabled(monkeypatch: pytest.MonkeyPatch) -> None:  # pylint: disable=W9728  # test fixture: single place pinning SEMANTIC=0 across heuristic tests
+    """Pin heuristic tests to the deterministic heuristic path (no NLP reranker)."""
+    monkeypatch.setenv("PYTHON_SETUP_LINT_SEMANTIC", "0")
+
+
+@pytest.mark.usefixtures("_semantic_disabled")
 class TestJustifiedSuppressions:
     """Checker must NOT flag suppressions with a technical reason."""
 
@@ -61,6 +68,7 @@ def foo() -> None:
         assert len(msgs) == 0, f"Expected no messages, got {msgs}"
 
 
+@pytest.mark.usefixtures("_semantic_disabled")
 class TestUnjustifiedSuppressions:
     """Checker MUST flag suppressions without a technical reason."""
 
@@ -126,6 +134,7 @@ x = 1  # noqa: E501  # ok
         assert len(msgs) == 1, f"Expected 1 message for real # noqa, got {msgs}"
 
 
+@pytest.mark.usefixtures("_semantic_disabled")
 class TestDataStrings:
     """Checker must NOT flag suppression patterns inside string literals."""
 
@@ -213,6 +222,7 @@ x = 1
         assert len(msgs) == 0, f"Expected 0 messages, got {msgs}"
 
 
+@pytest.mark.usefixtures("_semantic_disabled")
 class TestFunctionParamReturnAny:
     # Checker must flag Any in function params/returns without per-line
     # justification, but only under source roots (src/).  Test files are
@@ -353,38 +363,30 @@ class C:
         assert len(msgs) == 0, f"Expected no messages, got {msgs}"
 
 
-@pytest.mark.slow  # requires sentence-transformers download
-class TestSuppressionRerankerPipeline:
-    """Full-pipeline integration test for reranker path.
+@pytest.mark.usefixtures("_semantic_disabled")
+class TestAnyElementCodeEcho:
+    """A reason that merely echoes the suppressed codes is not a justification."""
 
-    Exercises the SuppressionJustificationChecker through the full pipeline
-    (heuristic + reranker) with brush-off and meaningful justifications.
-    Guarded with importorskip so it only runs when sentence-transformers is available.
-    """
-
-    def test_brush_off_rejected(self) -> None:
-        """Brush-off "pre-existing" must be rejected (W9704 emitted)."""
-        pytest.importorskip("sentence_transformers")
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
-            _reset_cache,
-        )
-
-        _reset_cache()
-
-        code = "x: Any = 1  # type: ignore  # pre-existing\n"
+    def test_code_echo_on_any_element_is_rejected(self) -> None:
+        """A trailing reason equal to the suppressed code is not a justification."""
+        code = "x: Any = 1  # type: ignore[assignment]  # assignment\n"
         msgs = _walk_and_release(code, SuppressionJustificationChecker, file_path="src/mod.py")
-        assert len(msgs) >= 1, f"Expected at least 1 W9704 for brush-off, got {len(msgs)}"
-        assert "unjustified-suppression" in _msg_ids(msgs), f"Expected unjustified-suppression in {_msg_ids(msgs)}"
+        assert len(msgs) == 1, f"Expected exactly one W9704, got {msgs}"
 
-    def test_meaningful_accepted(self) -> None:
-        """Meaningful justification must be accepted (no messages)."""
-        pytest.importorskip("sentence_transformers")
-        from python_setup_lint.checkers._semantic import (  # type: ignore[attr-defined]  # private symbol removed from .pyi per M3(b); runtime import still works
-            _reset_cache,
-        )
-
-        _reset_cache()
-
-        code = "x: Any = 1  # type: ignore  # carried from library httpx for type compatibility\n"
+    @pytest.mark.parametrize(
+        "code",
+        [
+            "x: Any = 1  # type: ignore[assignment]  # assignment\n",
+            "x: dict[str, Any] = {}  # type: ignore[assignment,arg-type]  # arg-type, assignment\n",
+            "x: Any = 1  # noqa: E501, W9704  # W9704,E501\n",
+            "def f(x: Any  # type: ignore[assignment]  # assignment\n) -> None:\n    pass\n",
+        ],
+    )
+    def test_code_echo_is_rejected_on_any_element(self, code: str) -> None:
         msgs = _walk_and_release(code, SuppressionJustificationChecker, file_path="src/mod.py")
-        assert len(msgs) == 0, f"Expected 0 messages for meaningful justification, got {len(msgs)}"
+        assert len(msgs) == 1, f"Expected exactly one W9704 for {code!r}, got {msgs}"
+
+    def test_real_reason_after_directive_is_accepted(self) -> None:
+        code = "x: Any = 1  # type: ignore[assignment]  # carried from library httpx for type compatibility\n"
+        msgs = _walk_and_release(code, SuppressionJustificationChecker, file_path="src/mod.py")
+        assert len(msgs) == 0, f"Expected no messages, got {msgs}"

@@ -3,7 +3,7 @@
 Tests parameter descriptor extraction, callable comparison, and end-to-end
 pylint runs for signature mismatch detection.
 
-Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
+Parametrize rows live in ``tests/checkers/_factories_stub_callable.py``.
 """
 
 from __future__ import annotations
@@ -23,7 +23,8 @@ from python_setup_lint.checkers.stub.fidelity import (  # type: ignore[attr-defi
     _compare_return_annotations,
     _extract_param_descriptors,
 )
-from tests.checkers._factories import (
+from tests.checkers._factories import _run_pylint
+from tests.checkers._factories_stub_callable import (
     _CALLABLE_FIDELITY_INTEGRATION_CASES,
     _COMPARE_ANNOTATION_CASES,
     _COMPARE_DESCRIPTOR_CASES,
@@ -32,7 +33,6 @@ from tests.checkers._factories import (
     _EXTRACT_DEFAULT_CASES,
     _EXTRACT_PARAM_CASES,
     _EXTRACT_STRIP_SELF_CASES,
-    _run_pylint,
 )
 
 pytestmark = pytest.mark.no_external_api
