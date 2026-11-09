@@ -299,11 +299,12 @@ items:
     mergedAt: 2026-11-09T01:20:54-05:00
   coding-rules-audit:
     kind: fact-finder
-    status: pending
+    status: running
     branch: topic/modernize--coding-rules-audit
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.104406
+    currentStep: research
   decision-cache-impl:
     kind: dev
     status: failed
@@ -421,7 +422,7 @@ items:
     fixRounds: 1
     spendUsd: 0
 concerns:
-  open: 4
+  open: 9
   dismissed: 0
   routed: 1
   resolved: 2
@@ -683,12 +684,12 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.275041685999996
+budgetSpentUsd: 12.379447685999997
 spendByRole:
   workhorse:
-    costUsd: 5.552217686
-    inputTokens: 10922000
-    outputTokens: 4028142
+    costUsd: 5.656623686
+    inputTokens: 11109879
+    outputTokens: 4112009
   alt-workhorse:
     costUsd: 1.5378180000000008
     inputTokens: 7319130
@@ -834,6 +835,10 @@ spendByItem:
     costUsd: 0.105401
     inputTokens: 176978
     outputTokens: 87972
+  coding-rules-audit:
+    costUsd: 0.104406
+    inputTokens: 187879
+    outputTokens: 83867
   decision-cache-impl:
     costUsd: 0.393308
     inputTokens: 802730
@@ -854,4 +859,4 @@ spendByItem:
     costUsd: 6.273198999999999
     inputTokens: 24056719
     outputTokens: 2199382
-lastUpdated: 2026-11-09T23:18:43.791Z
+lastUpdated: 2026-11-09T23:33:34.809Z
