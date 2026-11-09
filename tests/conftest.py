@@ -59,7 +59,13 @@ def empty_project(tmp_path: Path) -> Path:
 
 
 @pytest.fixture(scope="session")
-def configured_project(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def python_setup_checkout() -> Path:
+    """Return this repo's checkout root — the ``--dev-path`` target for install tests."""
+    return Path(__file__).resolve().parents[1]
+
+
+@pytest.fixture(scope="session")
+def configured_project(tmp_path_factory: pytest.TempPathFactory, python_setup_checkout: Path) -> Path:
     """Run install once on a session-scoped temp dir, return the configured dir.
 
     Session-scoped — install runs once per test session.
@@ -83,7 +89,7 @@ def configured_project(tmp_path_factory: pytest.TempPathFactory) -> Path:
     agents = d / "AGENTS.md"
     agents.write_text("# Test Project\n\nSome content.\n")
 
-    rc = install(d, dev_path="/home/slava/aiexp/python-setup")
+    rc = install(d, dev_path=str(python_setup_checkout))
     assert rc == 0
     return d
 

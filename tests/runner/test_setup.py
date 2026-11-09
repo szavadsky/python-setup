@@ -241,7 +241,7 @@ class TestUpdate:
 
 
 class TestMainCLI:
-    def test_main_cli_given_install_then_installs(self, empty_project: Path) -> None:
+    def test_main_cli_given_install_then_installs(self, empty_project: Path, python_setup_checkout: Path) -> None:
         assert (
             main(
                 [
@@ -249,14 +249,14 @@ class TestMainCLI:
                     "--path",
                     str(empty_project),
                     "--dev-path",
-                    "/home/slava/aiexp/python-setup",
+                    str(python_setup_checkout),
                 ]
             )
             == 0
         )
         assert (empty_project / ".pre-commit-config.yaml").exists()
 
-    def test_main_cli_given_install_default_cwd_then_installs(self, tmp_path: Path) -> None:
+    def test_main_cli_given_install_default_cwd_then_installs(self, tmp_path: Path, python_setup_checkout: Path) -> None:
         (tmp_path / "pyproject.toml").write_text(
             textwrap.dedent("""\
             [project]
@@ -274,7 +274,7 @@ class TestMainCLI:
                     "--path",
                     str(tmp_path),
                     "--dev-path",
-                    "/home/slava/aiexp/python-setup",
+                    str(python_setup_checkout),
                 ]
             )
             == 0
