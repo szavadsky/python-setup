@@ -2147,3 +2147,6 @@
 {"type":"amend_existing_dropped","iteration":5,"wave":5,"amendment":2,"slugs":["model-candidate-matrix"],"ts":"2026-11-09T22:11:31.705Z"}
 {"type":"step_started","task":"modernize","step":"pm-amend-5-2","attempt":2,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/147-pm-amend-5-2-a2","ts":"2026-11-09T22:11:31.811Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"pm-amend-5-2","timeoutSec":2700,"ts":"2026-11-09T22:11:31.817Z"}
+{"type":"step_finished","task":"modernize","step":"pm-amend-5-2","attempt":2,"status":"ok","sessionId":"01a1c259-f738-728a-a5c3-2a2f86123d3f","usage":{"inputTokens":3980,"outputTokens":13352,"costUsd":0.003205},"ts":"2026-11-09T22:13:27.765Z"}
+{"type":"pm_amend_validation_failed","iteration":5,"wave":5,"amendment":2,"errors":["Total items (51) exceeds maximum items limit of 50"],"ts":"2026-11-09T22:13:27.829Z"}
+{"type":"pm_amend_discarded","iteration":5,"wave":5,"amendment":2,"note":"PM amend output invalid after resumed repair: Total items (51) exceeds maximum items limit of 50","errors":["Total items (51) exceeds maximum items limit of 50"],"ts":"2026-11-09T22:13:27.829Z"}
