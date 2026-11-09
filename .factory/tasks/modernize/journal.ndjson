@@ -2100,3 +2100,7 @@
 {"type":"step_started","task":"modernize","step":"consult-checkers-stream-helper-8","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/137-consult-checkers-stream-helper-8-a1","ts":"2026-11-09T21:45:21.505Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"consult-checkers-stream-helper-8","timeoutSec":7200,"ts":"2026-11-09T21:45:21.509Z"}
 {"type":"step_transcript_size_warning","task":"modernize","step":"consult-checkers-stream-helper-8","attempt":1,"sizeBytes":25537720,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T00-51-56-494Z_01a1b8a3-f9ce-7511-963e-37a3531a2d3a.jsonl","ts":"2026-11-09T21:46:21.079Z"}
+{"type":"step_finished","task":"modernize","step":"consult-checkers-stream-helper-8","attempt":1,"status":"ok","sessionId":"01a1b8a3-f9ce-7511-963e-37a3531a2d3a","usage":{"inputTokens":445118,"outputTokens":3793,"costUsd":0.045292},"ts":"2026-11-09T21:46:21.148Z"}
+{"type":"decision_made","context":"item","item":"checkers-stream-helper","decision":"escalate","decisionPath":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/decisions/025-item-checkers-stream-helper-8.yaml","ts":"2026-11-09T21:46:21.149Z"}
+{"type":"wave_not_complete","wave":4,"iteration":5,"stragglers":["coding-rules-audit","golden-regen-hatch"],"mergeOwned":[],"redrive":1,"ts":"2026-11-09T21:46:26.907Z"}
+{"type":"empty_wave_streak","wave":4,"iteration":5,"streak":0,"ts":"2026-11-09T21:46:26.909Z"}
