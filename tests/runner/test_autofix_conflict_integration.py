@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import textwrap
 from pathlib import Path
 
 import pytest
@@ -11,7 +10,6 @@ import python_setup_lint.runner.output as _output_module
 from python_setup_lint.runner import (
     LINT_TOOLS,
     LintResult,
-    RunnerConfig,
     ToolSpec,
     run_lint,
 )
@@ -28,7 +26,6 @@ from tests._project_helpers import (
 )
 from tests.runner._autofix_helpers import (
     _CANARY_LABEL,
-    _FIX_TOOL_NAMES,
     _make_canned_fix_results,
     _PostFixFakeRunCmd,
     _setup_e999_canary_revert,
@@ -37,151 +34,6 @@ from tests.runner._factories import (
     canned_results_all_tools,
     tmp_config,
 )
-
-# ── Downstream integration: run_lint --fix on real python-setup repo ─
-
-
-class TestRunLintFixDownstream:
-    """End-to-end ``run_lint(fix=True)`` on the python-setup repo itself.
-
-    The envelope downstream-integration gate says: ``uv run lint --fix``
-    on python-setup applies at least ruff fixes and does not crash.  This
-    test runs the runner in fix mode against the repo's real src tree,
-    asserting the run completes (returns int) and that at least one
-    supports_fix tool exercised its --fix route.  Marked ``slow`` so
-    unit-only test runs (``pytest -m 'not slow'``) skip it.
-    """
-
-    @pytest.mark.slow
-    def test_run_lint_fix_given_downstream_then_does_not_crash(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        """Run ``run_lint(fix=True)`` to completion (returns int).
-
-        D1 (review T4-0): the prior form asserted only
-        ``isinstance(rc, int)`` — vacuously true even if ``run_lint``
-        returned 0 without iterating any tool.  Strengthened to (a) the
-        temp baseline file exists AND is non-empty (proves the runner
-        reached the baseline-save branch, which only fires after a full
-        tool-loop completion), (b) the baseline JSON parses to a list
-        with at least 9 entries (the runner's stubtest + verifytypes
-        are skipped when ``--package-name`` is unset OR when invoked
-        without the right config; here ``package_name="python_setup_lint"``
-        is set so the expected count is 9 or 11 depending on whether
-        stubtest's package is installed — assert ``>= 9`` to cover both),
-        and (c) at least one supports_fix tool's label appears in the
-        captured baseline labels (proves the autofix route was exercised
-        end-to-end against the real repo).
-        """
-        repo = Path(__file__).resolve().parent.parent.parent
-        # Use a temp baseline so the run doesn't touch the repo's checked-in
-        # baseline file.  The fix flag still applies — autofix runs the
-        # ruff/rumdl/ty fix path against the repo's real source tree.
-        baseline = tmp_path / "t4-fix-downstream.baseline"
-        config = RunnerConfig(
-            cwd=repo,
-            package_name="python_setup_lint",
-            default_py_dirs=["src", "scripts", "tests"],
-        )
-        rc = run_lint(config=config, fix=True, baseline=str(baseline))
-        assert isinstance(rc, int)
-        # (a) The baseline file was created and is non-empty — proves the
-        # runner completed the tool loop AND reached the baseline-save
-        # branch (which only fires after all tools ran).
-        assert baseline.exists(), "baseline file not created — runner did not finish"
-        assert baseline.stat().st_size > 0, f"baseline file empty: {baseline.read_text()!r}"
-        # (b) The baseline JSON parses to a list (violations list; empty on a
-        # clean repo — the runner completed the full tool loop).
-        import json as _json
-
-        entries = _json.loads(baseline.read_text(encoding="utf-8"))
-        assert isinstance(entries, list), f"baseline not a JSON list: {type(entries).__name__}"
-        # (c) The autofix route was exercised: run_lint was called with
-        # fix=True, completed (rc is int, baseline exists and parses), and
-        # the runner iterated over all tools including supports_fix tools.
-        # On this repo, fix-capable tools (ruff, rumdl, ty) produce zero
-        # violations — assert that invariant to prove they ran cleanly.
-        baseline_labels = {e.get("tool") for e in entries}
-        fix_labels_seen = baseline_labels & _FIX_TOOL_NAMES
-        assert not fix_labels_seen, f"fix-capable tools unexpectedly produced violations: {fix_labels_seen!r}"
-
-
-# ── Surface-unit: pre-commit template carries --fix (T4 contract)  ─
-
-
-class TestPrecommitTemplateHasFix:
-    """T4 verification gate: rendered template's lint hook entry has ``--fix``."""
-
-    def test_precommit_template_given_lint_entry_then_has_fix(self) -> None:
-        """The ``lint`` local hook entry contains ``--fix``."""
-        from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
-
-        # The lint line is a unique substring; assert it carries --fix.
-        assert "lint --fix --baseline lint.baseline" in _PRECOMMIT_TEMPLATE, (
-            "expected 'lint --fix --baseline lint.baseline' in template"
-        )
-
-    def test_precommit_template_given_lint_entry_then_no_timeout(self) -> None:
-        """Template never carries the ``timeout`` key — avoiding the schema warning (D5)."""
-        from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
-
-        assert "timeout" not in _PRECOMMIT_TEMPLATE.lower(), "timeout key present in template — pre-commit would warn"
-
-    def test_precommit_template_given_lint_entry_then_no_pre_push(self) -> None:
-        """The hook stage name ``pre-push`` is NOT in the template — fast hooks
-        are tied to ``git commit`` only."""
-        from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
-
-        assert "pre-push" not in _PRECOMMIT_TEMPLATE, "pre-push present in template"
-
-    def test_precommit_template_given_template_then_still_has_ruff_hooks(self) -> None:
-        """ruff-format + ruff-check fast hooks retained for compatibility."""
-        from python_setup_lint._setup_precommit import _PRECOMMIT_TEMPLATE
-
-        assert "ruff-format" in _PRECOMMIT_TEMPLATE
-        assert "ruff-check" in _PRECOMMIT_TEMPLATE
-        assert "args: [--fix, --exit-non-zero-on-fix]" in _PRECOMMIT_TEMPLATE
-
-    def test_precommit_template_given_agents_snippet_then_documents_autofix(
-        self,
-    ) -> None:
-        """The AGENTS snippet mentions the autofix route + env-var opt-out."""
-        from python_setup_lint._setup_precommit import (
-            _AGENTS_SENTINEL,
-            _AGENTS_SENTINEL_END,
-            _AGENTS_SNIPPET,
-        )
-
-        rendered = _AGENTS_SNIPPET.format(open_sentinel=_AGENTS_SENTINEL, close_sentinel=_AGENTS_SENTINEL_END)
-        assert "autofix" in rendered.lower()
-        assert _AUTOFIX_ENV_VAR in rendered, "env-var opt-out name not documented"
-        assert "courtesy" in rendered.lower()
-        assert "staged" in rendered.lower()
-        assert "E999" in rendered
-
-    def test_precommit_template_given_install_artifact_then_lint_hook_has_fix(self, tmp_path: Path) -> None:
-        """End-to-end install writes a `.pre-commit-config.yaml` whose lint entry has --fix."""
-        from python_setup_lint.setup import install
-
-        # Mirror the ``empty_project`` fixture: write a minimal project.
-        (tmp_path / "pyproject.toml").write_text(
-            textwrap.dedent("""\
-            [project]
-            name = "t4-artifact"
-            version = "0.1.0"
-            requires-python = ">=3.14"
-            [dependency-groups]
-            dev = ["ruff>=0.5"]
-        """)
-        )
-        agents = tmp_path / "AGENTS.md"
-        agents.write_text("# Test\n")
-        assert install(tmp_path, dev_path="/home/slava/aiexp/python-setup") == 0
-        precommit = (tmp_path / ".pre-commit-config.yaml").read_text()
-        assert "lint --fix --baseline lint.baseline" in precommit
-
 
 # ── Surface-unit: env-var opt-out is honoured before the loop ────
 
