@@ -32,8 +32,10 @@ from tests.runner._factories import install_fake_runner, lint_config, runner_reg
 from tests.runner._factories_extras import (
     CLEAN_EXTRAS_PYPROJECT_BODY,
     GROUPED_OUTPUT_CASES,
-    GROUPED_SORT_BY_RULE_COUNTS,
     MALFORMATION_CASES,
+)
+from tests.runner._factories_extras_small import (
+    GROUPED_SORT_BY_RULE_COUNTS,
     SORT_BY_RULE_COUNTS,
     SORT_DEFAULT_COUNTS,
 )

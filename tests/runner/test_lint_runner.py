@@ -30,7 +30,7 @@ from python_setup_lint.runner.cmd_build import (
 from python_setup_lint.runner.output import _print_result
 from python_setup_lint.testing import fake_run_cmd_factory, make_lint_result
 from tests.runner._factories import EXPECTED_BUILTIN_TOOL_NAMES, canned_results_all_tools
-from tests.runner._factories_extras import (
+from tests.runner._factories_extras_small import (
     EXPAND_GLOBS_CASES,
     FIND_PY_FILES_BOUNDARY_CASES,
     PRINT_FORMAT_CASES,
