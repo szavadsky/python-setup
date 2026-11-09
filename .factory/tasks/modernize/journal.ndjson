@@ -1657,3 +1657,11 @@
 {"type":"step_started","task":"modernize","step":"consult-checkers-stream-helper","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/099-consult-checkers-stream-helper-a1","ts":"2026-11-09T05:23:44.161Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"consult-checkers-stream-helper","timeoutSec":7200,"ts":"2026-11-09T05:23:44.165Z"}
 {"type":"step_transcript_size_warning","task":"modernize","step":"consult-checkers-stream-helper","attempt":1,"sizeBytes":14398962,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T00-51-56-494Z_01a1b8a3-f9ce-7511-963e-37a3531a2d3a.jsonl","ts":"2026-11-09T05:24:29.385Z"}
+{"type":"step_finished","task":"modernize","step":"consult-checkers-stream-helper","attempt":1,"status":"ok","sessionId":"01a1b8a3-f9ce-7511-963e-37a3531a2d3a","usage":{"inputTokens":445474,"outputTokens":2094,"costUsd":0.044966},"ts":"2026-11-09T05:24:29.463Z"}
+{"type":"decision_made","context":"item","item":"checkers-stream-helper","decision":"retry-with-guidance","decisionPath":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/decisions/011-item-checkers-stream-helper.yaml","ts":"2026-11-09T05:24:29.463Z"}
+{"type":"item_merge_started","item":"checkers-factories-split","branch":"topic/modernize--checkers-factories-split","ts":"2026-11-09T05:24:29.464Z"}
+{"type":"item_merge_phase","item":"checkers-factories-split","phase":"merge-parent-into-child","ts":"2026-11-09T05:24:29.469Z"}
+{"type":"item_merge_phase","item":"checkers-factories-split","phase":"verify-checks","ts":"2026-11-09T05:24:29.572Z"}
+{"type":"item_merge_phase","item":"checkers-factories-split","phase":"merge-child-into-parent","ts":"2026-11-09T05:27:02.410Z"}
+{"type":"item_merge_phase","item":"checkers-factories-split","phase":"remove-worktree","ts":"2026-11-09T05:27:02.488Z"}
+{"type":"item_merged","item":"checkers-factories-split","sha":"3dafa09c80e299462cb908a27e20b00e5d1dd18d","conflictResolved":false,"ts":"2026-11-09T05:27:02.818Z"}
