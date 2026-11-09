@@ -1665,3 +1665,5 @@
 {"type":"item_merge_phase","item":"checkers-factories-split","phase":"merge-child-into-parent","ts":"2026-11-09T05:27:02.410Z"}
 {"type":"item_merge_phase","item":"checkers-factories-split","phase":"remove-worktree","ts":"2026-11-09T05:27:02.488Z"}
 {"type":"item_merged","item":"checkers-factories-split","sha":"3dafa09c80e299462cb908a27e20b00e5d1dd18d","conflictResolved":false,"ts":"2026-11-09T05:27:02.818Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-4-2","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/100-wave-close-up-4-2-a1","ts":"2026-11-09T05:29:31.723Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-4-2","timeoutSec":2700,"ts":"2026-11-09T05:29:31.727Z"}
