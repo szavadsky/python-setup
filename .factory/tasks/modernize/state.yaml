@@ -419,6 +419,26 @@ items:
     fixRounds: 1
     spendUsd: 0
 debt:
+  - No compliant model proven (215/0 unevaluable, single-author labels, Fastino
+    review open, no CPU bench).
+  - "I4 cache producer gap (awareness: refresh prune-only until producer;
+    decisions/ missing at HEAD so gap is unmerged, not live)."
+  - Pylint-pyi blind spot (42/43 findings on .py, latent private stub symbols,
+    companion stubs unenforced per old probe).
+  - Semantic-on behavior unpinned (golden + integration capture with SEMANTIC=0;
+    model could change W9704/W9738 silently).
+  - Docs/ADR drift (semantic-justification, custom-checks, troubleshooting,
+    tutorials, AGENTS.md counts/scope/pipeline, README, CHANGELOG, ty.toml,
+    ADR-002/009/011/014/016 staleness, ADR index omits 013..016).
+  - Test-harness duplication + dead code (13 _make_tc, 10 _walk_and_release, 8
+    _msg_ids, 3 _RecordingBackend, 2 _UvCallRecorder, 2 extra_block, 2
+    _semantic_disabled, dead helpers, vestigial cache tests, smoke overlap) +
+    source placeholders (globals, per-call sets, rcfile dup, missing docstring).
+  - Pre-existing tracked junk file ':bash' reported in I4 wave 6 (verify at HEAD
+    via git ls-files) + minor version drift (pyproject 1.2.10 vs CHANGELOG
+    v1.2.9).
+  - Legacy .gitignore .cache/python-setup/semantic/ lines (retired machine
+    cache) alongside new root decisions file.
   - "RED-TEST WAIVED (gate inapplicable by design): golden-snapshot-wiring is a
     tests-only M1 contract item — probe verdict was test-side normalization
     sufficient, so the bounded src allowance was correctly NOT used and the diff
@@ -650,7 +670,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 11.141918685999997
+budgetSpentUsd: 11.178894685999996
 spendByRole:
   workhorse:
     costUsd: 5.299290686
@@ -661,9 +681,9 @@ spendByRole:
     inputTokens: 6401521
     outputTokens: 2315654
   architect:
-    costUsd: 4.3763689999999995
-    inputTokens: 14044037
-    outputTokens: 460614
+    costUsd: 4.413345
+    inputTokens: 14282344
+    outputTokens: 502881
   alt-architect:
     costUsd: 0.098282
     inputTokens: 360499
@@ -810,11 +830,11 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 5.451994999999999
-    inputTokens: 17257304
-    outputTokens: 1634293
+    costUsd: 5.488970999999999
+    inputTokens: 17495611
+    outputTokens: 1676560
   never-test-linting-prune:
     costUsd: 0.055946
     inputTokens: 148483
     outputTokens: 85833
-lastUpdated: 2026-11-09T08:53:49.447Z
+lastUpdated: 2026-11-09T09:01:19.719Z
