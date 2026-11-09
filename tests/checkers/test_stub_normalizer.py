@@ -12,7 +12,7 @@ import astroid
 import pytest
 
 from python_setup_lint.checkers.stub.normalizer import AnnotationNormalizer
-from tests.checkers._factories import (
+from tests.checkers._factories_stub_normalizer import (
     _APPLY_REWRITES_CASES,
     _AST_STRING_CASES,
     _NORMALIZER_INFER_CASES,
