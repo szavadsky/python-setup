@@ -207,11 +207,11 @@ items:
     mergedAt: 2026-11-09T00:09:28-05:00
   secrets-triage-spike:
     kind: fact-finder
-    status: running
+    status: ready
     branch: topic/modernize--secrets-triage-spike
     attempts: 1
     fixRounds: 1
-    spendUsd: 0.076996
+    spendUsd: 0.19651400000000002
     currentStep: review
   cache-design-spike:
     kind: poc
@@ -671,20 +671,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 11.354209685999997
+budgetSpentUsd: 11.486934685999998
 spendByRole:
   workhorse:
-    costUsd: 5.320975686
-    inputTokens: 10433645
-    outputTokens: 3858933
+    costUsd: 5.381501686
+    inputTokens: 10609121
+    outputTokens: 3905221
   alt-workhorse:
-    costUsd: 1.3953400000000005
-    inputTokens: 6547500
-    outputTokens: 2378857
+    costUsd: 1.4583350000000008
+    inputTokens: 6901379
+    outputTokens: 2423123
   architect:
-    costUsd: 4.5104109999999995
-    inputTokens: 15105292
-    outputTokens: 553603
+    costUsd: 4.519615
+    inputTokens: 15157517
+    outputTokens: 559246
   alt-architect:
     costUsd: 0.127483
     inputTokens: 457640
@@ -795,9 +795,9 @@ spendByItem:
     inputTokens: 341355
     outputTokens: 174695
   secrets-triage-spike:
-    costUsd: 0.076996
-    inputTokens: 208236
-    outputTokens: 84395
+    costUsd: 0.19651400000000002
+    inputTokens: 713974
+    outputTokens: 167344
   stale-disables-portability-cleanup:
     costUsd: 0.025615000000000002
     inputTokens: 54537
@@ -831,11 +831,11 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 5.642601
-    inputTokens: 18561679
-    outputTokens: 1880568
+    costUsd: 5.6558079999999995
+    inputTokens: 18637521
+    outputTokens: 1893816
   never-test-linting-prune:
     costUsd: 0.055946
     inputTokens: 148483
     outputTokens: 85833
-lastUpdated: 2026-11-09T12:10:16.272Z
+lastUpdated: 2026-11-09T12:50:27.595Z

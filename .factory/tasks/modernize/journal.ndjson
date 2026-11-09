@@ -1982,3 +1982,27 @@
 {"type":"step_started","task":"modernize","step":"architect-wave-report-5-1","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/124-architect-wave-report-5-1-a1","ts":"2026-11-09T12:15:50.092Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"architect-wave-report-5-1","timeoutSec":7200,"ts":"2026-11-09T12:15:50.097Z"}
 {"type":"step_transcript_size_warning","task":"modernize","step":"architect-wave-report-5-1","attempt":1,"sizeBytes":20204761,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T00-51-56-494Z_01a1b8a3-f9ce-7511-963e-37a3531a2d3a.jsonl","ts":"2026-11-09T12:16:54.320Z"}
+{"type":"step_finished","task":"modernize","step":"architect-wave-report-5-1","attempt":1,"status":"ok","sessionId":"01a1b8a3-f9ce-7511-963e-37a3531a2d3a","usage":{"inputTokens":52225,"outputTokens":5643,"costUsd":0.009204},"ts":"2026-11-09T12:16:54.428Z"}
+{"type":"step_started","task":"modernize","item":"secrets-triage-spike","step":"research","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize--secrets-triage-spike/.factory/tasks/modernize/items/secrets-triage-spike/steps/003-research-r2-a1","ts":"2026-11-09T12:17:22.288Z"}
+{"type":"step_timeout_armed","task":"modernize","item":"secrets-triage-spike","step":"research","timeoutSec":3600,"ts":"2026-11-09T12:17:22.296Z"}
+{"type":"step_transcript_size_warning","task":"modernize","item":"secrets-triage-spike","step":"research","attempt":1,"sizeBytes":8693348,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-09T12-17-22-848Z_01a1c03d-dfa0-772d-93a1-36da0099dfad","ts":"2026-11-09T12:26:31.854Z"}
+{"type":"step_tool_call_warning","task":"modernize","item":"secrets-triage-spike","step":"research","attempt":1,"toolCalls":68,"threshold":60,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-09T12-17-22-848Z_01a1c03d-dfa0-772d-93a1-36da0099dfad","ts":"2026-11-09T12:26:31.854Z"}
+{"type":"step_finished","task":"modernize","item":"secrets-triage-spike","step":"research","attempt":1,"status":"ok","sessionId":"01a1c03d-dfa0-772d-93a1-36da0099dfad","usage":{"inputTokens":175476,"outputTokens":46288,"costUsd":0.060526},"ts":"2026-11-09T12:26:31.925Z"}
+{"type":"step_started","task":"modernize","item":"secrets-triage-spike","step":"review","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize--secrets-triage-spike/.factory/tasks/modernize/items/secrets-triage-spike/steps/004-review-r1-a1","ts":"2026-11-09T12:26:52.111Z"}
+{"type":"step_timeout_armed","task":"modernize","item":"secrets-triage-spike","step":"review","timeoutSec":3600,"ts":"2026-11-09T12:26:52.116Z"}
+{"type":"step_transcript_size_warning","task":"modernize","item":"secrets-triage-spike","step":"review","attempt":1,"sizeBytes":7680658,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-09T12-26-52-491Z_01a1c046-90cb-7212-bd79-7cc0c6afee5a.jsonl","ts":"2026-11-09T12:35:54.929Z"}
+{"type":"step_finished","task":"modernize","item":"secrets-triage-spike","step":"review","attempt":1,"status":"ok","sessionId":"01a1c046-90cb-7212-bd79-7cc0c6afee5a","usage":{"inputTokens":330262,"outputTokens":36661,"costUsd":0.058992},"ts":"2026-11-09T12:35:54.999Z"}
+{"type":"wave_tick_cap_hit","wave":2,"iteration":5,"ticks":50,"stragglers":["checkers-stream-helper"],"ts":"2026-11-09T12:38:30.031Z"}
+{"type":"wave_not_complete","wave":2,"iteration":5,"stragglers":["checkers-stream-helper","epic-kickoff-gate"],"redrive":1,"ts":"2026-11-09T12:38:32.578Z"}
+{"type":"wave_tick_cap_hit","wave":2,"iteration":5,"ticks":50,"stragglers":["checkers-stream-helper"],"ts":"2026-11-09T12:40:49.189Z"}
+{"type":"wave_not_complete","wave":2,"iteration":5,"stragglers":["checkers-stream-helper","epic-kickoff-gate"],"redrive":2,"ts":"2026-11-09T12:40:51.637Z"}
+{"type":"wave_tick_cap_hit","wave":2,"iteration":5,"ticks":50,"stragglers":["checkers-stream-helper"],"ts":"2026-11-09T12:43:14.816Z"}
+{"type":"wave_not_complete","wave":2,"iteration":5,"stragglers":["checkers-stream-helper","epic-kickoff-gate"],"redrive":3,"ts":"2026-11-09T12:43:17.242Z"}
+{"type":"wave_tick_cap_hit","wave":2,"iteration":5,"ticks":50,"stragglers":["checkers-stream-helper"],"ts":"2026-11-09T12:45:30.828Z"}
+{"type":"wave_not_complete","wave":2,"iteration":5,"stragglers":["checkers-stream-helper","epic-kickoff-gate"],"redrive":4,"ts":"2026-11-09T12:45:33.318Z"}
+{"type":"wave_tick_cap_hit","wave":2,"iteration":5,"ticks":50,"stragglers":["checkers-stream-helper"],"ts":"2026-11-09T12:47:54.718Z"}
+{"type":"wave_not_complete","wave":2,"iteration":5,"stragglers":["checkers-stream-helper","epic-kickoff-gate"],"redrive":5,"ts":"2026-11-09T12:47:57.005Z"}
+{"type":"wave_tick_cap_hit","wave":2,"iteration":5,"ticks":50,"stragglers":["checkers-stream-helper"],"ts":"2026-11-09T12:50:22.695Z"}
+{"type":"wave_not_complete","wave":2,"iteration":5,"stragglers":["checkers-stream-helper","epic-kickoff-gate"],"redrive":6,"ts":"2026-11-09T12:50:25.337Z"}
+{"type":"wave_stalled","wave":2,"iteration":5,"stragglers":["checkers-stream-helper","epic-kickoff-gate"],"ts":"2026-11-09T12:50:25.338Z"}
+{"type":"task_error","error":"Wave 2 stalled with non-terminal items after 5 re-drives: checkers-stream-helper, epic-kickoff-gate (refusing close-up; fix the stall, then restart)","ts":"2026-11-09T12:50:27.600Z"}
