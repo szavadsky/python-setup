@@ -1868,3 +1868,5 @@
 {"type":"step_finished","task":"modernize","step":"architect-wave-report-4-4","attempt":1,"status":"ok","sessionId":"01a1b8a3-f9ce-7511-963e-37a3531a2d3a","usage":{"inputTokens":206914,"outputTokens":2724,"costUsd":0.022347},"ts":"2026-11-09T08:18:27.857Z"}
 {"type":"wave_started","wave":5,"iteration":4,"ts":"2026-11-09T08:18:31.440Z"}
 {"type":"empty_wave_streak","wave":5,"iteration":4,"streak":1,"blocked":[],"ts":"2026-11-09T08:18:31.446Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-4-5","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/107-wave-close-up-4-5-a1","ts":"2026-11-09T08:21:52.846Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-4-5","timeoutSec":2700,"ts":"2026-11-09T08:21:52.853Z"}
