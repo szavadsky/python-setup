@@ -1860,3 +1860,5 @@
 {"type":"item_merged","item":"never-test-linting-prune","sha":"172f90aa2932e8695f790a26db2414a7703835ee","conflictResolved":false,"ts":"2026-11-09T08:12:19.044Z"}
 {"type":"step_started","task":"modernize","step":"wave-close-up-4-4","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/105-wave-close-up-4-4-a1","ts":"2026-11-09T08:15:31.976Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-4-4","timeoutSec":2700,"ts":"2026-11-09T08:15:31.984Z"}
+{"type":"step_finished","task":"modernize","step":"wave-close-up-4-4","attempt":1,"status":"ok","sessionId":"01a1bf60-765e-749e-9ad2-897444628663","usage":{"inputTokens":22185,"outputTokens":12115,"costUsd":0.004782},"ts":"2026-11-09T08:17:40.286Z"}
+{"type":"scheduler_wait","wave":4,"iteration":4,"reason":"wave-end merge + close-up gates + close-up turn","gapWallMs":698220,"gapActiveMs":698220,"merges":["never-test-linting-prune"],"ts":"2026-11-09T08:17:40.287Z"}
