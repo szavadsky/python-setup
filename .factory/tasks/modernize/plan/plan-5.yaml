@@ -3,23 +3,25 @@ milestones:
   - id: M1
     title: Test infrastructure and decision contracts first
     directionalInterfaces:
-      - "Cache contracts (NEW
-        tests/assumptions/test_decision_cache_contracts.py, no_external_api):
-        round-trip sorted indent=2/sort_keys, no bare hex>=20, detect-secrets
-        clean on tmp file, read-only hash (byte-hash before/after ordinary
-        run_lint unchanged), refresh CI-guard refuses under CI/GITHUB_ACTIONS
-        (golden-guard shape tests/_golden.py:374-392), prune missing-files +
-        stale-model-ids, --path retains unscanned, jobs==1 required else loud
-        fail (reuse writer-first verdict test_pylint_cache_semantics.py:225-355,
-        cite file:line, do not re-derive)."
-      - "Loader contracts (NEW
-        tests/assumptions/test_decision_loader_contracts.py, no_external_api):
-        production ignores PYTHON_SETUP_LINT_DECISION_BACKEND without
-        PYTEST_CURRENT_TEST (both branches pinned, do not weaken
-        _decision_backend.py:37-46), missing [semantic] extra / get_backend()
-        None maps to heuristic bool with exactly-one structlog warning for
-        DECISION_MODEL, PROMPT_VERSION folded into production model_id once
-        wired (shape '... prompt-vN', FakeBackend already complies)."
+      - "Cache file contracts (NEW
+        tests/assumptions/test_decision_cache_contracts.py, no_external_api,
+        passable at M1 via inline tmp JSON without prod imports): round-trip
+        sorted (rule, justification, model) indent=2/sort_keys deterministic
+        (double-write byte-identical), no bare hex>=20, detect-secrets clean on
+        tmp file, last-seen update-only-on-change rule (identical observations
+        preserve bytes). DEFERRED to M3 impl tests, not here: read-only hash,
+        refresh CI-guard, prune, --path, jobs>1 (M3 consumes this file's format
+        pins via dep; M1 never pins unimplemented behavior)."
+      - "Loader delta contracts (NEW
+        tests/assumptions/test_decision_loader_contracts.py, no_external_api; do
+        NOT re-pin honors/ignores/warn-once already at
+        tests/checkers/test_decision_backend.py:117-165 — cite, never
+        duplicate): production model_id shape '<id> rev <short12> prompt-vN'
+        with PROMPT_VERSION constant folded (FakeBackend already complies; M4
+        loader must comply), DECISION_MODEL parse shape '<id> rev <short12>'
+        with malformed mapping to None + exactly-one warning, failure-to-None
+        mapping to heuristic bool (no raise, no retry). Consumed by
+        model-backend-wiring via dep."
       - "Model spikes (report-only, zero committed files): candidate matrix
         {license, params/size, runtime, py3.14 CPU wheels linux/mac/win,
         custom-code/vendoring, pinnable revision, offline}; corpus pilot {N>=100
@@ -27,8 +29,9 @@ milestones:
         adjudication + agreement, per-source/stratum split} or explicit blocker;
         CPU eval {veto-only at 0.5/0.6/0.7, 90/95/85 bars on heuristic-accepted
         stratum, cold-load/warm p50/p95 + RSS, GLIDE_MAX_BATCH=1 determinism,
-        smallest compliant or no-go}; runtime pinning (conditional on go, else
-        report-only skip)."
+        smallest compliant or no-go, steer question on Fastino/unclear +
+        second-rater flag}; runtime pinning (conditional on go, else report-only
+        skip)."
       - "Pyi spike (report-only): {reproduction companion-vs-orphan on tmp,
         golden counts recount at HEAD, latent budget recount (symbols +
         duplicate-code), recommendation fix-with-regen vs orphan-only with I5
@@ -38,12 +41,12 @@ milestones:
         Scenario: Cache and loader contracts pinned before implementation
           Given HEAD with in-process memo only and no tracked cache
           When cache/loader assumption items merge
-          Then new assumption modules pass offline, assert live contracts only (no raising=False vestiges), and M3/M4 implementations consume them via deps without loosening
+          Then new assumption modules pass offline, assert live or inline-format contracts only (no raising=False vestiges, no future-behavior pins), and M3/M4 consume them via deps (cache-impl->cache-contracts, backend-wiring->loader-contracts) without loosening; refresh/prune/jobs/read-only pinned in M3 tests, not M1
       - >-
         Scenario: Model verdict is evidence-based or explicitly blocked
           Given the 215/0 no-go history and Fastino review open
           When matrix + corpus + CPU eval complete
-          Then the report cites license verdict per candidate, CPU latency/RSS per threshold, 90/95/85 compliance on the accepted stratum, and recommends the smallest compliant model+prompt+threshold or a no-go/blocker with evidence; no model code ships on no-go
+          Then the report cites license verdict per candidate, CPU latency/RSS per threshold, 90/95/85 compliance on the accepted stratum, files a steer question on any Fastino/unclear recommendation, flags the second-rater requirement, and recommends the smallest compliant model+prompt+threshold or a no-go/blocker with evidence; no model code ships on no-go
       - >-
         Scenario: Pyi scope decided with budget
           Given 42/43 pyi findings on .py and 205 latent symbols (verify at HEAD)
@@ -72,7 +75,8 @@ milestones:
         frozensets at module level, dispatch pyi/tests rcfile paths via
         _resolve_pylintrc (single implementation), checkers __init__ module
         docstring; FORBIDDEN _decision_backend/PROMPT_VERSION/DECISION_MODEL
-        (M4), decisions/ + CLI threading (M3), tests/data, baseline, docs."
+        (M4), decisions/ + CLI threading + checker observation lines (M3),
+        tests/data, baseline, docs."
     scenarios:
       - >-
         Scenario: Harness deduped without intent loss
@@ -94,8 +98,10 @@ milestones:
         normalized (strip+collapse ws, keep case), rule joined codes, model
         '<id> rev <short12> prompt-vN', score float [0,1] + decision bool
         (re-thresholdable), files sorted unique POSIX} + {version, prompt hash,
-        last-seen}; key (justification, rule, model); context is model input
-        only (NOT in key); PROMPT_VERSION folded into model string."
+        last-seen ISO date updated ONLY when score/decision/files change
+        (identical refresh preserves bytes, double-run byte-identical holds)};
+        key (justification, rule, model); context is model input only (NOT in
+        key); PROMPT_VERSION folded into model string."
       - "Refresh (runner CLI --refresh-decisions [--path ...], RunnerConfig
         threading, help text): explicit only, FAILS under CI/GITHUB_ACTIONS
         (golden-guard shape), PYTHON_SETUP_LINT_DECISIONS_PATH test-only
@@ -103,53 +109,67 @@ milestones:
         with traversal guard, no parent escape), lockfile (O_CREAT|O_EXCL retry
         5s) + merge + atomic replace in target dir, prune automatic (missing
         files + stale model-ids, no --prune flag), --path scoping (unscanned
-        retained), jobs==1 required else loud fail (no sidecars); observation
-        producer owned atomically here (checker-layer file identity via
-        node.root().file during refresh only; semantic_check stays path-free);
-        normal lint read-only (hash-asserted zero writes); tach.toml gains
-        decisions module + two edges (sole owner)."
+        retained), jobs_from_rcfile() reads effective pylint jobs from resolved
+        rcfiles (pylint/pylint-pyi/pylint-tests) and any >1 fails loudly naming
+        file (no sidecars); observation producer owned atomically here via
+        checker-layer emit (suppression_justification_checker.py +
+        bare_except_comment_checker.py observation lines ONLY, refresh-only
+        branch): refresh sets PYTHON_SETUP_LINT_DECISIONS_OBSERVE=1 + sidecar
+        path (tmp *.jsonl, never committed), checker walk appends {file,
+        justification, rule, model, score} per heuristic-accepted observation,
+        runner merges sidecar then deletes it; normal lint (env unset) emits
+        nothing; semantic_check stays path-free; read-only = SHA-256 of cache
+        file bytes (missing=sentinel) unchanged across ordinary run_lint;
+        tach.toml gains decisions module + two edges (sole owner)."
     scenarios:
       - >-
         Scenario: Cache round-trips with cleanup and stays secrets-clean
           Given empty/missing cache on tmp
           When refresh runs with FakeBackend observations then prune
-          Then file round-trips sorted deterministically (double-run byte-identical), missing-file + stale-model entries disappear, live entries survive, detect-secrets passes, no bare hex>=20
+          Then file round-trips sorted deterministically (double-run byte-identical, last-seen stable on identical input), missing-file + stale-model entries disappear, live entries survive, detect-secrets passes, no bare hex>=20, and end-to-end population is proven on tmp (never prune-only)
       - >-
         Scenario: Lint stays read-only while refresh writes explicitly
           Given a committed cache with a persisted False verdict
           When ordinary run_lint runs vs explicit --refresh-decisions
-          Then ordinary lint shows zero writes by byte-hash and emits the persisted verdict with no model load (heuristic-rejected never reaches backend; accepted+hit==persisted; accepted+miss+absent==heuristic True), while refresh merges + prunes + atomic-replaces, refuses under CI, and fails loudly on jobs>1
+          Then ordinary lint shows zero writes by file-bytes SHA-256 hash and emits the persisted verdict with no model load (heuristic-rejected never reaches backend; accepted+hit==persisted; accepted+miss+absent==heuristic True), while refresh merges sidecar observations + prunes + atomic-replaces, refuses under CI, and fails loudly on jobs>1
   - id: M4
     title: CPU decision model wiring (spike-gated)
     directionalInterfaces:
       - "Semantic-on pin (tests-only, no model needed): deterministic
-        fake-backend integration (SEMANTIC=1 + FakeBackend 0.0/1.0 over existing
-        sample project, default-collected, no network) asserting veto extremes
-        (1.0 preserves heuristic accepts, 0.0 vetoes them, brush-off never
-        reaches backend with call-count 0, one call per unique pair); exactly
-        one slow+with_real_api e2e SKELETON (skipped until model ships; on go,
-        wired to real backend with importorskip + CPU budget asserts)."
-      - "Backend wiring (branches on U1 verdict; consumes eval + runtime-pinning
-        + cache-impl): GO maps to [semantic] extra gains pinned runtime only
-        (CPU wheels linux/mac/win verified), get_backend() loads '<id> rev
-        <short12> prompt-vN' via DECISION_MODEL (PROMPT_VERSION folded,
-        GLIDE_MAX_BATCH=1 when caching), failure maps to None maps to heuristic
-        with exactly-one warning (no retry storm), no_try_import patterns +
-        tests updated deliberately, emptiness pins replaced with allowlist pins,
-        uv.lock regenerated (base install stays light); NO-GO maps to zero prod
-        writes, no-op attestation citing verdict section, heuristic-only
-        preserved, docs state no-go (M5)."
+        fake-backend integration (SEMANTIC=1 + FakeBackend 0.0/1.0): in-process
+        _walk_and_release asserts veto extremes + call-counts (1.0 preserves
+        heuristic accepts, 0.0 vetoes them, brush-off never reaches backend with
+        call-count 0, one call per unique pair via memo hit — observable
+        same-process only); subprocess sample-project run asserts verdict deltas
+        only (W9704 present/absent), never call-counts; cache-hit without model
+        emits persisted verdict (tmp cache from M3); exactly one
+        slow+with_real_api e2e SKELETON (skipped until model ships; on go, wired
+        to real backend with importorskip + CPU budget asserts)."
+      - "Backend wiring (branches on U1 verdict + recorded human approvals;
+        consumes eval + runtime-pinning + cache-impl + loader-contracts): GO
+        maps to [semantic] extra gains pinned runtime only (CPU wheels
+        linux/mac/win verified), get_backend() loads '<id> rev <short12>
+        prompt-vN' via DECISION_MODEL (PROMPT_VERSION folded, GLIDE_MAX_BATCH=1
+        when caching), failure maps to None maps to heuristic with exactly-one
+        warning (no retry storm), no_try_import patterns + tests updated
+        deliberately, emptiness pins replaced with allowlist pins, uv.lock
+        regenerated (base install stays light); GO additionally requires
+        recorded human approvals (license verdict + independent-rater corpus
+        sign-off in steer answers, IDs cited) — absent approvals force NO-GO
+        even on technical pass; NO-GO maps to zero prod writes, no-op
+        attestation citing verdict section, heuristic-only preserved, docs state
+        no-go (M5)."
     scenarios:
       - >-
         Scenario: Veto path pinned with and without a model
           Given golden runs with SEMANTIC=0
           When semantic-on pin merges
-          Then fake-backend integration passes deterministically in the default suite, the slow skeleton skips with a clear reason, and SEMANTIC=0 golden stays hash-equal
+          Then in-process veto/call-count asserts plus subprocess verdict-delta asserts pass deterministically in the default suite, the slow skeleton skips with a clear reason, and SEMANTIC=0 golden stays hash-equal
       - >-
-        Scenario: Model ships only on a compliant verdict
-          Given the U1 verdict (go with license+CPU+corpus gates or no-go/blocked)
+        Scenario: Model ships only on a compliant verdict plus human gates
+          Given the U1 verdict (go with license+CPU+corpus gates or no-go/blocked) plus steer approvals
           When backend wiring merges
-          Then GO shows pinned runtime + loader + e2e pass (slow) with no default-suite network and no SEMANTIC=0 drift, or NO-GO shows zero prod diff with an attestation citing the verdict — never a silent swap or an unpinned dependency
+          Then GO shows pinned runtime + loader + e2e pass (slow) with no default-suite network and no SEMANTIC=0 drift, or NO-GO shows zero prod diff with an attestation citing the verdict — never a silent swap, an unpinned dependency, or a merge past missing human approval
   - id: M5
     title: Pyi scope, docs/ADR reconciliation, and gate evidence
     directionalInterfaces:
@@ -202,7 +222,8 @@ uncertainties:
       215/0 corpus defect + single-author labels + Fastino review + no CPU bench
       all open; GLiDE-0.4B is smallest-in-family (0.81GB bf16, CUDA-tested,
       torch 2.14/transformers 5.17, glide/ vendored pkg) so 'or smaller' needs a
-      different family; CC-BY-NC excluded per allowlist.
+      different family; CC-BY-NC excluded per allowlist; go additionally gated
+      on recorded human approvals.
     spikeOutlines:
       - "model-candidate-matrix (fact-finder, report-only): license,
         params/size, runtime, py3.14 CPU wheels, custom-code, pinnable revision;
@@ -214,7 +235,9 @@ uncertainties:
       - "model-eval-poc (poc, CPU-only, no committed files): ALL matrix
         candidates veto-only at 0.5/0.6/0.7 on deduped corpus; 90/95/85
         compliance on heuristic-accepted stratum; cold-load/warm p50/p95 + RSS;
-        GLIDE_MAX_BATCH=1 determinism; smallest compliant or no-go"
+        GLIDE_MAX_BATCH=1 determinism; smallest compliant or no-go; files steer
+        question on Fastino/unclear recommendation and flags second-rater
+        requirement"
       - "decision-runtime-pinning (test-assumptions, conditional on eval go):
         py3.14 CPU wheels + import/device/offline + custom-code pinning for
         chosen runtime; on no-go report-only skip, no file"
@@ -231,37 +254,35 @@ uncertainties:
 itemOutlines:
   - slug: cache-contract-assumptions
     kind: test-assumptions
-    title: Pin tracked-cache file and refresh contracts
+    title: Pin tracked-cache file format contracts
     description: "Tests-only, NEW tests/assumptions/test_decision_cache_contracts.py
       ONLY (append-only; FORBIDDEN root __init__ + astroid/beartype/pylint
       contracts + test_pylint_cache_semantics.py, src, docs, tests/data,
-      baseline). Red-test-exempt (pins future contract; M3 consumes without
-      loosening). pytestmark no_external_api,
-      test_<api>_given_<condition>_then_<expected>, offline, tmp_path only. Pin
-      ADR-019 shape: sorted indent=2/sort_keys round-trip; no bare hex>=20 +
-      detect-secrets clean on tmp cache; read-only hash (byte-hash before/after
-      ordinary run_lint on tmp project unchanged); refresh CI-guard refuses
-      under CI/GITHUB_ACTIONS (golden-guard shape); prune missing-files +
-      stale-model-ids; --path retains unscanned; jobs==1 required else loud fail
-      (reuse writer-first verdict, cite file:line, do not re-derive). Verify:
-      new tests pass; format-clean; no other files."
+      baseline). Passable at M1: build tmp JSON inline WITHOUT prod imports and
+      pin format only — sorted (rule, justification, model) + indent=2/sort_keys
+      round-trip, double-write byte-identical, no bare hex>=20, detect-secrets
+      clean on tmp file, last-seen update-only-on-change rule. Explicitly
+      DEFERRED to M3 impl tests (do not assert here): read-only hash, refresh
+      CI-guard, prune, --path, jobs>1. pytestmark no_external_api,
+      test_<api>_given_<condition>_then_<expected>, offline, tmp_path only.
+      Verify: new tests pass now; format-clean; no other files."
     milestoneId: M1
     deps: []
     prodBudgetHint: 0
   - slug: backend-loading-assumptions
     kind: test-assumptions
-    title: Pin backend loader gating and failure mapping
+    title: Pin backend loader delta contracts
     description: "Tests-only, NEW
       tests/assumptions/test_decision_loader_contracts.py ONLY (same forbiddens
-      as cache-contracts). Red-test-exempt. Pin at HEAD + M4 hook:
-      PYTHON_SETUP_LINT_DECISION_BACKEND honored ONLY under PYTEST_CURRENT_TEST
-      (both branches: honored with marker, ignored without — do not weaken
-      _decision_backend.py:37-46); missing [semantic] extra / get_backend() None
-      maps to check_if_meaningful heuristic bool (never raises, exactly-one
-      structlog warning for DECISION_MODEL); PROMPT_VERSION folded into
-      production model_id once wired (assert shape with prompt-vN suffix,
-      FakeBackend already complies). Verify: new tests pass offline;
-      format-clean."
+      as cache-contracts). DELTA ONLY — honors/ignores/warn-once already pinned
+      at tests/checkers/test_decision_backend.py:117-165 (cite file:line, never
+      duplicate). Pin: production model_id shape '<id> rev <short12> prompt-vN'
+      with PROMPT_VERSION constant folded (regex on shape; FakeBackend
+      'fake-backend rev test prompt-v1' complies; M4 loader must comply);
+      DECISION_MODEL parse shape '<id> rev <short12>' with malformed mapping to
+      None + exactly-one warning; failure-to-None mapping to heuristic bool (no
+      raise, no retry). Consumed by model-backend-wiring via dep. Verify: new
+      tests pass offline; format-clean."
     milestoneId: M1
     deps: []
     prodBudgetHint: 0
@@ -318,7 +339,9 @@ itemOutlines:
       (GLIDE_MAX_BATCH=1 when caching; batching must not shift scores). Bars
       90/95/85 apply to accepted stratum. Recommend smallest compliant
       model+prompt+threshold or no-go with evidence (license/CPU/accuracy
-      blockers separated). Feeds runtime-pinning + M4 branch."
+      blockers separated). On any Fastino/unclear recommendation file a steer
+      question for human approval; always flag the independent second-rater
+      requirement. Feeds runtime-pinning + M4 branch."
     milestoneId: M1
     deps:
       - model-candidate-matrix
@@ -426,14 +449,15 @@ itemOutlines:
       rcfile blocks only) + checkers/__init__.py (docstring only) + .pyi
       fidelity rows for touched symbols ONLY. FORBIDDEN
       _decision_backend.py/PROMPT_VERSION/DECISION_MODEL (M4), decisions/ + CLI
-      threading (M3), testing.py (harness-dedup), no_try_import patterns (M4),
-      tests/data, baseline, docs, tach.toml (M3). Behavior-preserving only (no
-      threshold/key/behavior change): _semantic nullable memo + 2 globals maps
-      to module dict + .clear() in _reset_cache; _base 46-token + 20-phrase sets
-      maps to module-level frozensets (same literals, same membership); dispatch
-      pyi/tests explicit-override-then-autodiscovery maps to shared
-      _resolve_pylintrc path (same resolution order); checkers __init__ module
-      docstring (runner/conformance pattern). Verify: prod <=40 lines; pytest +
+      threading + checker observation lines (M3), testing.py (harness-dedup),
+      no_try_import patterns (M4), tests/data, baseline, docs, tach.toml (M3).
+      Behavior-preserving only (no threshold/key/behavior change): _semantic
+      nullable memo + 2 globals maps to module dict + .clear() in _reset_cache;
+      _base 46-token + 20-phrase sets maps to module-level frozensets (same
+      literals, same membership); dispatch pyi/tests
+      explicit-override-then-autodiscovery maps to shared _resolve_pylintrc path
+      (same resolution order); checkers __init__ module docstring
+      (runner/conformance pattern). Verify: prod <=40 lines; pytest +
       integration no new failures; lint 14/14 incl pylint/mypy/stubtest; golden
       hash-equal."
     milestoneId: M2
@@ -444,34 +468,39 @@ itemOutlines:
     title: Implement tracked decision cache and refresh
     description: "Owns NEW python_setup_lint/decisions/_decision_cache.py + .pyi +
       __init__.py + tach.toml (sole owner: add decisions depends_on=[] +
-      checkers/runner depends_on=[decisions]) + runner CLI threading (cli.py
-      --refresh-decisions branch + help, types.py RunnerConfig.refresh_decisions
-      bool False, _cli_complexity.py parse/build threading; --path reuses
-      existing plumbing) + NEW tests/decisions/test_decision_cache.py + NEW
+      checkers/runner depends_on=[python_setup_lint.decisions], exact TOML) +
+      runner CLI threading (cli.py --refresh-decisions branch + help, types.py
+      RunnerConfig.refresh_decisions bool False, _cli_complexity.py parse/build
+      threading; --path reuses existing plumbing) + checker observation lines
+      (suppression_justification_checker.py + bare_except_comment_checker.py
+      refresh-only emit branch ONLY: when PYTHON_SETUP_LINT_DECISIONS_OBSERVE=1
+      append {file via node.root().file, justification, rule, model, score} to
+      sidecar path from PYTHON_SETUP_LINT_DECISIONS_OBSERVE_PATH; env unset
+      emits nothing) + NEW tests/decisions/test_decision_cache.py + NEW
       tests/runner/test_refresh_decisions.py ONLY. FORBIDDEN
-      _base/_semantic/_decision_backend (zero diff; observation via
-      checker-layer file identity, not semantic API change),
+      _base.py/_semantic.py/_decision_backend.py bodies (zero diff),
       dispatch*/__init__/baseline/parsers (except CLI threading files),
       tests/data, baseline, docs, .gitignore/hatch/.secrets.baseline. Implements
       ADR-019: array sorted (rule, justification, model), indent2 sort_keys,
-      entry + {version, prompt hash, last-seen}, score+decision, secrets-clean
-      (no hex>=20); read-only lint (hash-asserted zero writes); explicit refresh
-      (lockfile + merge + atomic replace in target dir, DECISIONS_PATH test-only
-      under PYTEST_CURRENT_TEST, production root config.cwd with traversal
-      guard, prune auto missing/stale, --path retains unscanned, jobs==1 else
-      loud fail, CI-fail); observation producer ATOMICALLY here (refresh
-      collects file via node.root().file + justification + rule + model + score
-      during checker walk on refresh only — never prune-only; cite producer
-      lines). Must pass all 14 tools incl tach + detect-secrets. Verify: tmp
-      round-trip double-run byte-identical; zero-writes hash; refresh
+      entry + {version, prompt hash, last-seen ISO date updated only on
+      score/decision/files change}, score+decision, secrets-clean (no hex>=20);
+      read-only lint (SHA-256 of cache file bytes, missing=sentinel,
+      hash-asserted zero writes); explicit refresh (sidecar collect + lockfile +
+      merge + atomic replace in target dir + sidecar delete, DECISIONS_PATH
+      test-only under PYTEST_CURRENT_TEST, production root config.cwd with
+      traversal guard, prune auto missing/stale, --path retains unscanned,
+      jobs_from_rcfile()>1 in any resolved pylint rcfile fails loudly naming
+      file, CI-fail). Must pass all 14 tools incl tach + detect-secrets. Verify:
+      tmp round-trip double-run byte-identical (last-seen stable); end-to-end
+      population proven on tmp (observations flow checker->sidecar->cache, never
+      prune-only — cite producer lines); zero-writes hash; refresh
       merges+prunes+sorts; CI-fail + isolation + jobs-guard tests; no new
-      failures; golden hash-equal or shift-reported (expect no-shift: empty
-      cache + no model maps to heuristic preserved)."
+      failures; golden hash-equal or shift-reported (expect no-shift)."
     milestoneId: M3
     deps:
       - cache-contract-assumptions
     escalate: true
-    prodBudgetHint: 200
+    prodBudgetHint: 220
   - slug: semantic-on-golden-pin
     kind: story
     title: Pin semantic-on veto path with fake backend
@@ -480,16 +509,17 @@ itemOutlines:
       — item reports placement; verify no conftest cycle) ONLY. FORBIDDEN src,
       docs, tests/data/golden writes (hatch sole writer), baseline.
       Red-test-exempt (contract pin; veto already at HEAD so tests pass
-      immediately). SEMANTIC=1 + FakeBackend(1.0/0.0) over existing sample
-      project (no fixture change): 1.0 preserves heuristic accepts, 0.0 vetoes
-      them, brush-off never reaches backend (call-count 0 via
-      _RecordingBackend), one call per unique pair (memo hit), cache-hit without
-      model emits persisted verdict (tmp cache from M3); exactly one
-      slow+with_real_api e2e SKELETON (skipped with reason 'no model wired'
-      until M4 go; on go, model-backend-wiring wires it with importorskip + CPU
-      budget). Modules <=500, no suppressions, never test linting. Verify:
-      default suite passes (fake only, no network); skeleton skips; SEMANTIC=0
-      golden hash-equal."
+      immediately). Two layers: (1) IN-PROCESS via _walk_and_release +
+      _RecordingBackend (same process, call-counts observable): 1.0 preserves
+      heuristic accepts, 0.0 vetoes them, brush-off never reaches backend (count
+      0), one call per unique pair (memo hit). (2) SUBPROCESS via sample project
+      run (verdicts only, never call-counts): SEMANTIC=1 + FakeBackend extremes
+      flip W9704 present/absent as predicted; cache-hit without model emits
+      persisted verdict (tmp cache from M3). Exactly one slow+with_real_api e2e
+      SKELETON (skipped 'no model wired' until M4 go; on go,
+      model-backend-wiring wires it with importorskip + CPU budget). Modules
+      <=500, no suppressions, never test linting. Verify: default suite passes
+      (fake only, no network); skeleton skips; SEMANTIC=0 golden hash-equal."
     milestoneId: M4
     deps:
       - decision-cache-impl
@@ -497,25 +527,27 @@ itemOutlines:
   - slug: model-backend-wiring
     kind: story
     title: Wire production decision backend (or no-go attestation)
-    description: "Branches on U1 verdict (consumed, not advisory). GO (eval
-      recommends compliant model + license allowlist pass + CPU bench pass +
-      runtime-pinning merged): owns _decision_backend.py/.pyi (production loader
-      only) + pyproject [semantic] block + uv.lock + no_try_import
-      _OPTIONAL_IMPORT_PATTERNS + tests/checkers/test_decision_backend.py
-      (packaging pins) + test_no_try_import_checker.py (patterns) + slow e2e
-      skeleton wiring ONLY; FORBIDDEN _semantic/_base (zero diff; PROMPT_VERSION
-      folded in loader model_id string, not adapter), decisions/, dispatch/CLI,
-      tests/data, baseline, docs (snippet in report). Implement ADR-020:
-      DECISION_MODEL '<id> rev <short12>' parsed, loader constructs backend with
-      model_id '<id> rev <short12> prompt-vN', GLIDE_MAX_BATCH=1 when caching
-      (if glide), failure maps to None maps to heuristic with exactly-one
-      warning (no retry storm); replace emptiness pins with allowlist pins
-      (chosen runtime only, base install stays light); wire slow e2e to real
-      backend (importorskip, CPU budget asserts per eval). NO-GO/BLOCKED: zero
-      prod writes, merge no-op attestation citing verdict section + blocker + I6
-      plan (heuristic-only preserved). Verify GO: slow e2e passes with model,
-      default suite no network, SEMANTIC=0 golden hash-equal, lint 14/14,
-      uv.lock resolves; NO-GO: attestation + zero-diff proof."
+    description: "Branches on U1 verdict + recorded human approvals (consumed, not
+      advisory). GO (eval recommends compliant model + license allowlist pass +
+      CPU bench pass + runtime-pinning merged + steer approvals recorded for
+      license/Fastino + second-rater sign-off, IDs cited): owns
+      _decision_backend.py/.pyi (production loader only) + pyproject [semantic]
+      block + uv.lock + no_try_import _OPTIONAL_IMPORT_PATTERNS +
+      tests/checkers/test_decision_backend.py (packaging pins) +
+      test_no_try_import_checker.py (patterns) + slow e2e skeleton wiring ONLY;
+      FORBIDDEN _semantic/_base (zero diff; PROMPT_VERSION folded in loader
+      model_id string '<id> rev <short12> prompt-vN', not adapter), decisions/,
+      dispatch/CLI, tests/data, baseline, docs (snippet in report). Implement
+      ADR-020: DECISION_MODEL '<id> rev <short12>' parsed, loader constructs
+      backend with folded model_id, GLIDE_MAX_BATCH=1 when caching (if glide),
+      failure maps to None maps to heuristic with exactly-one warning (no retry
+      storm); replace emptiness pins with allowlist pins (chosen runtime only,
+      base install stays light); wire slow e2e to real backend (importorskip,
+      CPU budget asserts per eval). NO-GO/BLOCKED/MISSING-APPROVAL: zero prod
+      writes, merge no-op attestation citing verdict section + blocker +
+      approvals gap + I6 plan (heuristic-only preserved). Verify GO: slow e2e
+      passes with model, default suite no network, SEMANTIC=0 golden hash-equal,
+      lint 14/14, uv.lock resolves; NO-GO: attestation + zero-diff proof."
     milestoneId: M4
     deps:
       - model-eval-poc
@@ -523,6 +555,7 @@ itemOutlines:
       - decision-cache-impl
       - semantic-on-golden-pin
       - semantic-test-doubles-dedup
+      - backend-loading-assumptions
     escalate: true
     prodBudgetHint: 80
   - slug: pyi-scope-fix
@@ -686,23 +719,31 @@ assumptions:
       gitignore/hatch/consumers/secrets; operator acknowledged root placement in
       I1.
     disposition: confirm with human
+  - assumption: M4 GO requires recorded human approvals (license verdict incl
+      Fastino decision + independent second-rater corpus sign-off, steer answer
+      IDs cited) before merging; absent approvals force a no-go attestation even
+      on technical pass.
+    why: Single-author corpus + copyleft/commercial license risk cannot
+      self-approve; ADR-009/ADR-020 gates are operator decisions, not agent
+      judgments.
+    disposition: confirm with human
 techDebt:
   - id: TD5-B1
     description: No compliant model proven (215/0 unevaluable, single-author labels,
       Fastino review open, no CPU bench).
     category: blocking
     resolution: U1 spikes + M4 branch (go only on license+CPU+corpus gates with
-      human approval; else no-op attestation + heuristic-only docs);
-      backend/cache built against FakeBackend so a compliant model plugs via
-      get_backend().
+      recorded human approvals incl second rater; else no-op attestation +
+      heuristic-only docs); backend/cache built against FakeBackend so a
+      compliant model plugs via get_backend().
   - id: TD5-B2
     description: "I4 cache producer gap (awareness: refresh prune-only until
       producer; decisions/ missing at HEAD so gap is unmerged, not live)."
     category: blocking
-    resolution: ADR-019 + decision-cache-impl owns storage + observation producer
-      atomically (checker-layer file identity during refresh only); M3
-      acceptance requires end-to-end population proof on tmp (not prune-only);
-      no split.
+    resolution: ADR-019 + decision-cache-impl owns storage + checker-layer sidecar
+      producer atomically (suppression/bare-except refresh-only emit + runner
+      merge); M3 acceptance requires end-to-end population proof on tmp
+      (checker->sidecar->cache, cited lines), never prune-only; no split.
   - id: TD5-I1
     description: Pylint-pyi blind spot (42/43 findings on .py, latent private stub
       symbols, companion stubs unenforced per old probe).
@@ -715,9 +756,10 @@ techDebt:
     description: Semantic-on behavior unpinned (golden + integration capture with
       SEMANTIC=0; model could change W9704/W9738 silently).
     category: impacting
-    resolution: semantic-on-golden-pin adds deterministic fake-backend integration
-      (default suite) + slow skeleton (skipped until model); M4 wiring asserts
-      no SEMANTIC=0 drift; golden stays SEMANTIC=0 per ADR-021.
+    resolution: semantic-on-golden-pin adds in-process veto/call-count asserts
+      (default suite) + subprocess verdict-delta asserts + slow skeleton
+      (skipped until model); M4 wiring asserts no SEMANTIC=0 drift; golden stays
+      SEMANTIC=0 per ADR-021.
   - id: TD5-A1
     description: Docs/ADR drift (semantic-justification, custom-checks,
       troubleshooting, tutorials, AGENTS.md counts/scope/pipeline, README,
@@ -760,32 +802,39 @@ adrs:
       no CLI surface exists; secrets baseline enables HexHighEntropyString;
       writer-first verdict pins jobs=1 sequential. I4 ADR-017/018 planned
       lint-flag refresh + decisions-module placement but never merged (files
-      missing at HEAD).
+      missing at HEAD). I4 left a prune-only producer gap (awareness).
     decision: "Re-affirm ADR-017/018 shape with I5 resolutions: (1) semantic_check
-      stays path-free; file identity supplied at checker layer via observation
-      producer during refresh only (node.root().file into decisions API; normal
-      lint path unchanged, zero _base/_semantic diff for identity). (2) Tracked
-      key is (justification normalized [strip+collapse ws, keep case], rule
-      joined codes, model '<id> rev <short12> prompt-vN'); context is model
-      input only, NOT in key. (3) Store score float [0,1] + decision bool
-      (re-thresholdable without re-running model; protocol range enforced by
-      loader clamp + test). (4) Refresh is lint --refresh-decisions [--path ...]
-      (setup-subcommand rejected); FAILS under CI/GITHUB_ACTIONS (golden-guard
-      shape); DECISIONS_PATH test-only under PYTEST_CURRENT_TEST only;
-      production root config.cwd with traversal guard (no parent escape/absolute
-      outside); array sorted (rule, justification, model), indent=2 sort_keys;
-      files sorted unique POSIX, union-merged; prune automatic missing/stale (no
-      --prune flag); --path retains unscanned; jobs==1 required else loud fail
-      (no sidecars). (5) Placement
-      python_setup_lint/decisions/_decision_cache.py + .pyi; checkers/runner
-      depends_on=[decisions]; decisions depends_on=[]; cache-impl sole tach.toml
-      owner. (6) No .gitignore change (root file committed), no hatch entry
-      (consumer-runtime data), no bare hex>=20 (secrets-clean)."
-    consequences: Single refresh contract for M1 assumptions + M3 impl;
-      implementation owns storage + producer atomically (no prune-only gap);
-      normal lint read-only provable by hash; deterministic serialization
-      provable by sort key; secrets + tach scans clean; M3 tests assert all
-      branches on tmp.
+      stays path-free; file identity supplied at checker layer via a
+      refresh-only sidecar producer (suppression/bare-except emit branch when
+      PYTHON_SETUP_LINT_DECISIONS_OBSERVE=1, observations {file via
+      node.root().file, justification, rule, model, score} appended to
+      PYTHON_SETUP_LINT_DECISIONS_OBSERVE_PATH tmp *.jsonl, never committed;
+      normal lint emits nothing; zero _base/_semantic/_decision_backend diff).
+      (2) Tracked key is (justification normalized [strip+collapse ws, keep
+      case], rule joined codes, model '<id> rev <short12> prompt-vN'); context
+      is model input only, NOT in key. (3) Store score float [0,1] + decision
+      bool (re-thresholdable; protocol range enforced by loader clamp + test).
+      (4) Refresh is lint --refresh-decisions [--path ...] (setup-subcommand
+      rejected); FAILS under CI/GITHUB_ACTIONS (golden-guard shape);
+      DECISIONS_PATH test-only under PYTEST_CURRENT_TEST only; production root
+      config.cwd with traversal guard; array sorted (rule, justification,
+      model), indent=2 sort_keys; files sorted unique POSIX, union-merged; prune
+      automatic missing/stale (no --prune flag); --path retains unscanned;
+      jobs_from_rcfile() reads effective jobs from resolved pylint rcfiles and
+      any >1 fails loudly naming file (no sidecars). (5) Placement
+      python_setup_lint/decisions/_decision_cache.py + .pyi; tach exact TOML:
+      [[modules]] decisions depends_on=[], checkers/runner
+      depends_on=[python_setup_lint.decisions]; cache-impl sole tach.toml owner.
+      (6) last-seen is ISO date updated ONLY when score/decision/files change
+      (identical refresh preserves bytes; double-run byte-identical holds). (7)
+      Read-only = SHA-256 of cache file bytes (missing=sentinel) unchanged
+      across ordinary run_lint. (8) No .gitignore change (root file committed),
+      no hatch entry, no bare hex>=20."
+    consequences: Single refresh contract for M1 format assumptions + M3 behavioral
+      impl; storage + producer atomic in one item (checker->sidecar->cache
+      proven on tmp, no prune-only gap); normal lint read-only provable by hash;
+      deterministic serialization provable by sort key + last-seen rule; secrets
+      + tach scans clean; M3 tests assert all branches on tmp.
   - id: ADR-020
     title: Model gating and default-off wiring for I5
     context: Intent names GLiDE-0.4B or smaller; GLiDE is 0.4B/0.81GB
@@ -798,42 +847,46 @@ adrs:
       default-on tightens W9704/W9738 for every consumer installing the extra.
     decision: "Gate wiring on U1 verdict with allowlist (Apache-2.0/MIT/BSD allowed;
       CC-BY-NC excluded; Fastino/unclear flagged for human review; no ship
-      without license verdict + human approval if Fastino recommended) + CPU
-      bench (cold-load/warm p50/p95 + RSS on target class, GLIDE_MAX_BATCH=1
-      determinism when caching) + corpus pilot (N>=100 post-dedup, both strata,
-      rubric + two-pass blinded + adjudication + agreement; human second rater
-      still required for go/no-go). Veto-only evaluation at 0.5/0.6/0.7; bars
-      90/95/85 on heuristic-accepted stratum; smallest compliant or no-go.
-      Wiring (on go only): [semantic] gains pinned runtime (CPU wheels, base
-      stays light), loader via DECISION_MODEL with PROMPT_VERSION folded,
-      failure maps to None maps to heuristic with exactly-one warning (no retry
-      storm), no_try_import + emptiness pins updated deliberately, uv.lock
-      regenerated. Default heuristic-only until M4 go merges; semantic-on pinned
-      by M4 fake-backend integration regardless. On no-go/blocked: zero prod
+      without license verdict) + CPU bench (cold-load/warm p50/p95 + RSS on
+      target class, GLIDE_MAX_BATCH=1 determinism when caching) + corpus pilot
+      (N>=100 post-dedup, both strata, rubric + two-pass blinded + adjudication
+      + agreement) + RECORDED HUMAN APPROVALS (license/Fastino decision +
+      independent second-rater corpus sign-off, steer answer IDs cited in the
+      wiring report; eval-poc files the license steer question). Veto-only
+      evaluation at 0.5/0.6/0.7; bars 90/95/85 on heuristic-accepted stratum;
+      smallest compliant or no-go. Wiring (on go + approvals only): [semantic]
+      gains pinned runtime (CPU wheels, base stays light), loader via
+      DECISION_MODEL with PROMPT_VERSION folded, failure maps to None maps to
+      heuristic with exactly-one warning (no retry storm), no_try_import +
+      emptiness pins updated deliberately, uv.lock regenerated. Default
+      heuristic-only until M4 go merges; semantic-on pinned by M4 fake-backend
+      integration regardless. On no-go/blocked/missing-approval: zero prod
       writes, no-op attestation, heuristic-only docs."
-    consequences: No silent swap; gates stay offline/fast/deterministic; packaging
-      change only on compliant verdict; close-up must not claim swap complete on
-      no-go; I6 triggers explicit (independent rater, Fastino decision, CPU
-      bench).
+    consequences: No silent swap and no self-approved license/corpus gate; gates
+      stay offline/fast/deterministic; packaging change only on compliant +
+      approved verdict; close-up must not claim swap complete on no-go; I6
+      triggers explicit (independent rater, Fastino decision, CPU bench).
   - id: ADR-021
     title: Semantic-on behavior pinning
     context: Golden + integration capture with SEMANTIC=0
       (tests/integration.py:110-115; tests/_golden.py:54), so model-enabled
       W9704/W9738 outcomes unpinned; a model could pass the suite while changing
       consumer behavior; veto extremes (Fake 1.0 preserves, 0.0 vetoes)
-      deterministic without network.
-    decision: "Pin veto path with (1) deterministic fake-backend integration
-      (SEMANTIC=1 + FakeBackend 0.0/1.0 over existing sample, default-collected,
-      no network, no fixture change): 1.0 preserves heuristic accepts, 0.0
-      vetoes them, brush-off never reaches backend (call-count 0), one call per
-      unique pair (memo hit), cache-hit without model emits persisted verdict;
-      (2) exactly one slow+with_real_api e2e SKELETON (skipped 'no model wired'
-      until go; on go wired with importorskip + CPU budgets). Golden stays
-      SEMANTIC=0 (heuristic contract); semantic-on contract lives in new tests,
-      not the golden file."
-    consequences: Veto tightening visible before any model ships; no golden churn
-      for semantic-on; real-model coverage gated behind slow + importorskip; M4
-      wiring asserts no SEMANTIC=0 drift.
+      deterministic without network; but pylint runs in a subprocess, so
+      parent-process backend call-counts are unobservable across run_lint.
+    decision: "Pin veto path in two layers: (1) IN-PROCESS via _walk_and_release +
+      _RecordingBackend (same process, call-counts observable): 1.0 preserves
+      heuristic accepts, 0.0 vetoes them, brush-off never reaches backend (count
+      0), one call per unique pair (memo hit); (2) SUBPROCESS via sample-project
+      run asserting verdict deltas only (W9704 present/absent flips as
+      predicted; cache-hit without model emits persisted verdict), never
+      call-counts; plus exactly one slow+with_real_api e2e SKELETON (skipped 'no
+      model wired' until go; on go wired with importorskip + CPU budgets).
+      Golden stays SEMANTIC=0 (heuristic contract); semantic-on contract lives
+      in new tests, not the golden file."
+    consequences: Veto tightening visible before any model ships with no
+      unobservable asserts; no golden churn for semantic-on; real-model coverage
+      gated behind slow + importorskip; M4 wiring asserts no SEMANTIC=0 drift.
   - id: ADR-022
     title: Test-harness single-sourcing and debloat acceptance
     context: Measured duplication at HEAD (13 _make_tc, 10 _walk_and_release, 8
@@ -865,21 +918,22 @@ adrs:
       file-level single-writer + dep serialization, unblocking M2 verified +
       M3/M4 partials; I4 closeup shows 2 running + 3 pending carried by file
       ownership, not epic close-ups; review requires file-level proof for
-      parallel items.
+      parallel items and consumed (not advisory) spike verdicts.
     decision: I5 ships no child epics; all work as 18 root items with file-level
       single-writer for parallel items plus dep serialization for handoffs
       (harness-dedup into semantic-doubles; matrix+corpus into eval into
       runtime-pinning; cache-contracts into cache-impl into golden-pin into
-      backend-wiring; pyi-spike + source-simplifications into pyi-fix; all
-      behavior + debloat into docs; all behavior into hatch into gate table). No
-      replanAfter gates; spike verdicts consumed via deps with pre-planned
-      go/no-go and fix/orphan branches (no-op attestations on blocked, never
-      invented alternatives). I6 may reintroduce epics or continue root
-      increments.
-    consequences: 9 dep-free wave-1 items avoid empty waves; no epic
-      close-up/handoff bottleneck; M5 hatch consumes item shift declarations
-      directly; parallel same-file forbidden, sequential same-file only via
-      explicit deps.
+      backend-wiring; loader-contracts into backend-wiring; pyi-spike +
+      source-simplifications into pyi-fix; all behavior + debloat into docs; all
+      behavior into hatch into gate table). No replanAfter gates; spike verdicts
+      consumed via deps with pre-planned go/no-go and fix/orphan branches (no-op
+      attestations on blocked, never invented alternatives). I6 may reintroduce
+      epics or continue root increments.
+    consequences: 8 dep-free wave-1 items avoid empty waves (eval + runtime-pinning
+      + downstream dep-gated); no epic close-up/handoff bottleneck; M5 hatch
+      consumes item shift declarations directly; parallel same-file forbidden,
+      sequential same-file only via explicit deps; every assumption file has a
+      consumer dep.
   - id: ADR-024
     title: Pylint-pyi scope resolution process
     context: ADR-015 defers fix to I5; _PylintPyiLintTool passes .pyi paths but
