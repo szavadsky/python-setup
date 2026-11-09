@@ -1725,3 +1725,5 @@
 {"type":"item_merged","item":"stale-disables-portability-cleanup","sha":"960beba0d19fc26be4c8e63d1582e3731aa12caa","conflictResolved":false,"ts":"2026-11-09T06:24:44.272Z"}
 {"type":"step_started","task":"modernize","step":"wave-close-up-4-3","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/102-wave-close-up-4-3-a1","ts":"2026-11-09T06:28:05.348Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-4-3","timeoutSec":2700,"ts":"2026-11-09T06:28:05.354Z"}
+{"type":"step_finished","task":"modernize","step":"wave-close-up-4-3","attempt":1,"status":"ok","sessionId":"01a1befe-1880-7168-809d-22b1111d50d3","usage":{"inputTokens":26053,"outputTokens":15940,"costUsd":0.005993},"ts":"2026-11-09T06:30:49.378Z"}
+{"type":"scheduler_wait","wave":3,"iteration":4,"reason":"wave-end merge + close-up gates + close-up turn","gapWallMs":858103,"gapActiveMs":858103,"merges":["runner-dispatch-split","runner-factories-trim","stale-disables-portability-cleanup"],"ts":"2026-11-09T06:30:49.378Z"}
