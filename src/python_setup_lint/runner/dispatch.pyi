@@ -8,13 +8,9 @@ Seven built-ins override ``build_command`` for tool-specific command shapes
 
 from collections.abc import Callable
 
+from ._tool_specs import TOOLS as TOOLS
+from ._tool_specs import TOOLS_BY_NAME as TOOLS_BY_NAME
 from .types import RunnerConfig, ToolSpec
-
-TOOLS: list[ToolSpec]
-"""All 14 tool specifications in execution order (built-ins)."""
-
-TOOLS_BY_NAME: dict[str, ToolSpec]
-"""Tool specs keyed by name for fast lookup (built-ins only)."""
 
 EXPECTED_TOOL_NAMES: frozenset[str]
 """Names of all 14 built-in tools, derived from :data:`TOOLS`."""
