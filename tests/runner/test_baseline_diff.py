@@ -26,7 +26,7 @@ def _sorted(records: list[Record]) -> list[Record]:  # pylint: disable=trivial-w
 
 
 # ── Surface unit: _compare_sorted pure-fn (merged survivor class) ──
-# Merged from deleted test_baseline_diff_edge.py::TestCompareSortedEdgeCases.
+# Merged from test_baseline_diff_parsers.py::TestCompareSortedEdgeCases (class removed).
 # Survivor: test_compare_sorted_given_current_and_saved_then_expected_additions_and_removals;
 # every moved case below keeps its original parametrized id.
 class TestCompareSorted:
@@ -107,7 +107,7 @@ class TestCompareSorted:
                 0,
                 id="block_insertion_plus_later_reorder_no_spurious_diff",
             ),
-            # Survivors merged from TestCompareSortedEdgeCases (deleted module).
+            # Survivors merged from parsers.py::TestCompareSortedEdgeCases (class removed).
             pytest.param([], [], 0, 0, id="both_empty"),
             pytest.param(
                 [],
@@ -164,6 +164,9 @@ class TestCompareSorted:
 
 
 # ── Performance benchmark: 50k-line baseline ────────────────────
+# Moved from deleted test_baseline_diff_edge.py::TestPerfBenchmark, renamed per given/then:
+#   test_50k_line_baseline_compares_under_200ms -> test_compare_sorted_given_50k_line_baseline_then_under_200ms
+#   test_diff_baseline_50k_end_to_end_under_1s -> test_diff_baseline_given_50k_line_baseline_then_end_to_end_under_1s
 
 
 @pytest.mark.slow
@@ -454,12 +457,13 @@ class TestPeekFallbackTools:
 
 
 class TestFlatRecordRoundTrip:
-    """Survivor of three overlapping flat-record pylint round-trip cases.
+    """Survivor of three overlapping pylint flat-record round-trip cases.
 
-    Survivor: test_flat_record_pylint_given_unchanged_then_round_trips.
-    Merged cases (deleted as duplicates): TestMixedSchemaLoad::
-    test_mixed_schema_given_legacy_pylint_output_then_upgraded_to_records and
-    TestMixedShapeLegacyOutput::test_mixed_shape_legacy_given_parseable_pylint_then_round_trips.
+    All in deleted test_baseline_diff_edge.py. Renamed survivor:
+    TestMixedSchemaLoad::test_mixed_schema_given_legacy_pylint_output_then_upgraded_to_records
+    (two saved records, one still reported -> baseline shrinks). Deleted
+    duplicates: TestMixedShapeLegacyOutput::test_mixed_shape_legacy_given_parseable_pylint_then_round_trips
+    TestFallbackTracking::test_fallback_tracking_given_flat_records_then_no_violations_for_unchanged
     """
 
     def test_flat_record_pylint_given_unchanged_then_round_trips(self, tmp_path: Path) -> None:

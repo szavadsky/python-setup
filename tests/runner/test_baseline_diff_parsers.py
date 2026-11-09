@@ -296,9 +296,6 @@ class TestCaptureBaselineOnDisk:
 # ── _capture_one edge cases ──────────────────────────────────────
 
 
-# ── _capture_one edge cases ──────────────────────────────────────
-
-
 class TestCaptureOneEdgeCases:
     @pytest.mark.parametrize(
         ("tool_name", "stdout", "check"),
