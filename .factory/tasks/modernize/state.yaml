@@ -446,6 +446,11 @@ debt:
     v1.2.9).
   - Legacy .gitignore .cache/python-setup/semantic/ lines (retired machine
     cache) alongside new root decisions file.
+  - "I6 backlog: M1 contracts+spikes, M2 harness/runner/source/legacy-v2 (+ruff
+    verify-only), M3 stream-v2 then storage-v2/refresh-v2, M4 pin-v2/wiring-v2
+    (default NO-GO without U1 verdict + Fastino + second-rater approvals), M5
+    pyi/docs-v2/hatch-v2/gate-v2; merge-path target discipline + fresh-HEAD
+    owned-only diffs."
   - "RED-TEST WAIVED (gate inapplicable by design): golden-snapshot-wiring is a
     tests-only M1 contract item — probe verdict was test-side normalization
     sufficient, so the bounded src allowance was correctly NOT used and the diff
@@ -677,7 +682,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.152791685999997
+budgetSpentUsd: 12.159703685999997
 spendByRole:
   workhorse:
     costUsd: 5.446816686
@@ -688,9 +693,9 @@ spendByRole:
     inputTokens: 7296285
     outputTokens: 2602638
   architect:
-    costUsd: 5.0437439999999985
-    inputTokens: 20078676
-    outputTokens: 672959
+    costUsd: 5.050655999999998
+    inputTokens: 20105689
+    outputTokens: 680930
   alt-architect:
     costUsd: 0.127483
     inputTokens: 457640
@@ -833,9 +838,9 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 6.2563499999999985
-    inputTokens: 23953586
-    outputTokens: 2187044
+    costUsd: 6.263261999999999
+    inputTokens: 23980599
+    outputTokens: 2195015
   never-test-linting-prune:
     costUsd: 0.055946
     inputTokens: 148483
@@ -844,4 +849,4 @@ spendByItem:
     costUsd: 0.19651400000000002
     inputTokens: 713974
     outputTokens: 167344
-lastUpdated: 2026-11-09T22:47:54.364Z
+lastUpdated: 2026-11-09T22:49:35.409Z
