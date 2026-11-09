@@ -9,11 +9,7 @@ from typing import Any
 import pytest
 
 from python_setup_lint.runner import Record
-from python_setup_lint.runner.baseline import (  # private import for white-box testing
-    _capture_baseline,
-    _diff_baseline,
-)
-from python_setup_lint.runner.parsers import (  # type: ignore[attr-defined]  # private import for white-box testing
+from python_setup_lint.runner._record_parsers import (  # private import for white-box testing
     _parse_mypy_records,
     _parse_pylint_records,
     _parse_pyright_records,
@@ -21,6 +17,10 @@ from python_setup_lint.runner.parsers import (  # type: ignore[attr-defined]  # 
     _parse_rumdl_records,
     _parse_ty_records,
     _parse_yamllint_records,
+)
+from python_setup_lint.runner.baseline import (  # private import for white-box testing
+    _capture_baseline,
+    _diff_baseline,
 )
 from python_setup_lint.testing import make_lint_result
 from tests.runner._factories import diff_baseline_with
