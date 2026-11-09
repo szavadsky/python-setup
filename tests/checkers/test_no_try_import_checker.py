@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 
+from python_setup_lint.checkers.conformance import no_try_import_checker
 from python_setup_lint.checkers.conformance.no_try_import_checker import (
     NoTryImportChecker,
 )
@@ -21,6 +22,22 @@ from tests.checkers._factories_no_try_import import (
 )
 
 pytestmark = pytest.mark.no_external_api
+
+
+def test_sentence_transformers_is_no_longer_an_optional_import_pattern() -> None:
+    """The reranker dependency was removed from the shipped package."""
+    patterns: frozenset[str] = getattr(no_try_import_checker, "_OPTIONAL_IMPORT_PATTERNS", frozenset())
+    assert "sentence_transformers" not in patterns
+
+
+def test_try_import_of_sentence_transformers_is_flagged() -> None:
+    """A try/except guard for the removed dependency is now a violation."""
+    code = "try:\n    import sentence_transformers\nexcept ImportError:\n    pass\n"
+
+    msgs = _walk_and_release(code, NoTryImportChecker)
+
+    assert len(msgs) == 1
+    assert msgs[0].msg_id == "no-try-import"
 
 
 @pytest.mark.parametrize(

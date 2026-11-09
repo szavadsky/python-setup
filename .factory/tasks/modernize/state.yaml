@@ -15,20 +15,22 @@ items:
     mergedAt: 2026-11-08T17:38:59-05:00
   baseline-diff-merge:
     kind: test-only
-    status: ready
+    status: merged
     branch: topic/modernize--baseline-diff-merge
     attempts: 1
     fixRounds: 2
     spendUsd: 0.11384300000000001
     currentStep: review
+    mergedAt: 2026-11-08T20:41:25-05:00
   checkers-semantic-guards:
     kind: test-only
-    status: ready
+    status: merged
     branch: topic/modernize--checkers-semantic-guards
     attempts: 1
     fixRounds: 1
     spendUsd: 0.032317
     currentStep: review
+    mergedAt: 2026-11-08T20:47:46-05:00
   consolidate-integration-helpers-i2:
     kind: test-only
     status: merged
@@ -40,12 +42,13 @@ items:
     mergedAt: 2026-11-08T07:59:15-05:00
   decision-cache-design-spike:
     kind: poc
-    status: ready
+    status: merged
     branch: topic/modernize--decision-cache-design-spike
     attempts: 1
     fixRounds: 1
     spendUsd: 0.211512
     currentStep: review
+    mergedAt: 2026-11-08T20:44:48-05:00
   golden-determinism-probe:
     kind: fact-finder
     status: merged
@@ -109,12 +112,13 @@ items:
     mergedAt: 2026-11-08T17:32:58-05:00
   semantic-threshold-consolidation:
     kind: test-only
-    status: ready
+    status: merged
     branch: topic/modernize--semantic-threshold-consolidation
     attempts: 1
     fixRounds: 1
     spendUsd: 0.032682
     currentStep: review
+    mergedAt: 2026-11-08T20:41:29-05:00
   third-party-assumption-tests:
     kind: test-assumptions
     status: merged
@@ -135,25 +139,28 @@ items:
     mergedAt: 2026-11-08T09:50:28-05:00
   checkers-factories-split:
     kind: test-only
-    status: pending
+    status: ready
     branch: topic/modernize--checkers-factories-split
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.09088800000000001
+    currentStep: review
   checkers-stream-helper:
     kind: no-behavior
-    status: pending
+    status: ready
     branch: topic/modernize--checkers-stream-helper
     attempts: 1
-    fixRounds: 1
-    spendUsd: 0
+    fixRounds: 2
+    spendUsd: 0.209252
+    currentStep: review
   decision-backend-impl:
     kind: dev
-    status: pending
+    status: ready
     branch: topic/modernize--decision-backend-impl
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.554482
+    currentStep: review
   epic-kickoff-gate:
     kind: fact-finder
     status: pending
@@ -189,11 +196,12 @@ items:
     mergedAt: 2026-11-08T10:03:05-05:00
   runner-compat-shim-removal:
     kind: no-behavior
-    status: pending
+    status: ready
     branch: topic/modernize--runner-compat-shim-removal
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.056304
+    currentStep: review
   secrets-triage-spike:
     kind: fact-finder
     status: ready
@@ -546,6 +554,16 @@ debt:
     fixture-scoped clearing"
   - "[third-party-assumption-tests] Assert confidence is not None before reading
     .name"
+  - "[checkers-factories-split] _factories_stub.py at 474/500 lines leaves 26
+    lines of C0302 headroom"
+  - "[checkers-stream-helper] Add why-comment for intentional code_context
+    divergence from helper prefix"
+  - "[decision-backend-impl] Pin PYTHON_SETUP_LINT_SEMANTIC=1 explicitly in
+    backend-veto tests"
+  - "[decision-backend-impl] Align empty-string handling for reranker vs
+    decision-model warnings"
+  - "[decision-backend-impl] Expand nested ternary in normalize_suppressed_codes"
+  - "[decision-backend-impl] Add minimal docstrings to decision-backend stub"
   - "[golden-contract-hardening] Add runs guard and messages to byte-identical
     hash asserts"
   - "[golden-contract-hardening] Consider SHA-256 comparison for counts payloads
@@ -625,20 +643,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 8.972082685999995
+budgetSpentUsd: 9.994741685999998
 spendByRole:
   workhorse:
-    costUsd: 3.915029686
-    inputTokens: 7635653
-    outputTokens: 2842296
+    costUsd: 4.568640685999999
+    inputTokens: 8809324
+    outputTokens: 3322066
   alt-workhorse:
-    costUsd: 0.9675500000000007
-    inputTokens: 4521588
-    outputTokens: 1673254
+    costUsd: 1.226652
+    inputTokens: 5696507
+    outputTokens: 2039704
   architect:
-    costUsd: 3.9912210000000004
-    inputTokens: 10327036
-    outputTokens: 422778
+    costUsd: 4.101167
+    inputTokens: 11372374
+    outputTokens: 438611
   alt-architect:
     costUsd: 0.098282
     inputTokens: 360499
@@ -656,6 +674,10 @@ spendByItem:
     costUsd: 0.170578
     inputTokens: 226110
     outputTokens: 148096
+  decision-cache-design-spike:
+    costUsd: 0.211512
+    inputTokens: 419522
+    outputTokens: 197490
   test-debloat-audit-i2:
     costUsd: 0.258385
     inputTokens: 707051
@@ -664,6 +686,10 @@ spendByItem:
     costUsd: 0.016725999999999998
     inputTokens: 57664
     outputTokens: 27228
+  semantic-threshold-consolidation:
+    costUsd: 0.032682
+    inputTokens: 87033
+    outputTokens: 43025
   coding-rules-audit-i2:
     costUsd: 0.133783
     inputTokens: 266809
@@ -692,6 +718,10 @@ spendByItem:
     costUsd: 0.045265
     inputTokens: 116110
     outputTokens: 59317
+  checkers-semantic-guards:
+    costUsd: 0.032317
+    inputTokens: 74694
+    outputTokens: 40738
   secrets-baseline-exclusion:
     costUsd: 0.041534
     inputTokens: 120849
@@ -716,34 +746,38 @@ spendByItem:
     costUsd: 0.091885
     inputTokens: 206331
     outputTokens: 89105
+  runner-compat-shim-removal:
+    costUsd: 0.056304
+    inputTokens: 156193
+    outputTokens: 75024
   golden-snapshot-wiring:
     costUsd: 0.13088
     inputTokens: 218824
     outputTokens: 95126
+  checkers-stream-helper:
+    costUsd: 0.209252
+    inputTokens: 746464
+    outputTokens: 243396
   consolidate-integration-helpers-v3:
     costUsd: 0.19283999999999998
     inputTokens: 341355
     outputTokens: 174695
-  checkers-semantic-guards:
-    costUsd: 0.032317
-    inputTokens: 74694
-    outputTokens: 40738
   secrets-triage-spike:
     costUsd: 0.076996
     inputTokens: 208236
     outputTokens: 84395
-  semantic-threshold-consolidation:
-    costUsd: 0.032682
-    inputTokens: 87033
-    outputTokens: 43025
+  decision-backend-impl:
+    costUsd: 0.554482
+    inputTokens: 1162533
+    outputTokens: 453941
   consolidate-integration-helpers-v2:
     costUsd: 0.19363600000000003
     inputTokens: 413243
     outputTokens: 140910
-  decision-cache-design-spike:
-    costUsd: 0.211512
-    inputTokens: 419522
-    outputTokens: 197490
+  checkers-factories-split:
+    costUsd: 0.09088800000000001
+    inputTokens: 274090
+    outputTokens: 70148
   pylint-cache-assumptions:
     costUsd: 0.210224686
     inputTokens: 334753
@@ -753,7 +787,7 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 4.856599999999999
-    inputTokens: 12757104
-    outputTokens: 1436595
-lastUpdated: 2026-11-09T01:41:29.191Z
+    costUsd: 4.968333
+    inputTokens: 13811752
+    outputTokens: 1456139
+lastUpdated: 2026-11-09T05:09:28.903Z

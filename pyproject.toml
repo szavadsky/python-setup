@@ -26,9 +26,8 @@ python-setup-test-checked = "python_setup_lint.testing:test_checked_main"
 python-setup = "python_setup_lint.setup:main"
 
 [project.optional-dependencies]
-semantic = [
-    "sentence-transformers>=3.0.0",
-]
+# Empty placeholder: no model dependency ships in iteration 4 (ADR-016).
+semantic = []
 
 [build-system]
 requires = [

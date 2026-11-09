@@ -1,4 +1,6 @@
-"""Semantic justification checker using sentence-transformers (Track B)."""
+"""Semantic justification adapter over an optional decision backend."""
+
+from python_setup_lint.checkers._decision_backend import DecisionBackend
 
 def semantic_check_if_meaningful(
     text: str,
@@ -6,12 +8,9 @@ def semantic_check_if_meaningful(
     rule: str | None = None,
     code_context: str | None = None,
     comment: str | None = None,
+    backend: DecisionBackend | None = None,
 ) -> bool | None:
     """Check if a suppression justification is semantically meaningful.
-
-    Single-stage NLP pipeline using a cross-encoder reranker:
-
-    1. Re-score the justification against the rule and code context.
 
     Args:
         text: The raw justification text (used as fallback when *comment*
@@ -19,9 +18,8 @@ def semantic_check_if_meaningful(
         rule: The lint rule identifier being suppressed (e.g. ``"E501"``).
         code_context: Surrounding source code lines.
         comment: The justification comment text (preferred over *text*).
+        backend: A decision backend; ``None`` resolves the registered backend.
 
     Returns:
-        ``True`` if the justification is semantically meaningful,
-        ``False`` otherwise, or ``None`` if the NLP pipeline is unavailable
-        (sentence-transformers not installed or model download failed).
+        The backend verdict, or ``None`` when no backend is available.
     """
