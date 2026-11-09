@@ -2104,3 +2104,5 @@
 {"type":"decision_made","context":"item","item":"checkers-stream-helper","decision":"escalate","decisionPath":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/decisions/025-item-checkers-stream-helper-8.yaml","ts":"2026-11-09T21:46:21.149Z"}
 {"type":"wave_not_complete","wave":4,"iteration":5,"stragglers":["coding-rules-audit","golden-regen-hatch"],"mergeOwned":[],"redrive":1,"ts":"2026-11-09T21:46:26.907Z"}
 {"type":"empty_wave_streak","wave":4,"iteration":5,"streak":0,"ts":"2026-11-09T21:46:26.909Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-5-4","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/138-wave-close-up-5-4-a1","ts":"2026-11-09T21:49:15.296Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-5-4","timeoutSec":2700,"ts":"2026-11-09T21:49:15.301Z"}
