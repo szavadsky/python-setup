@@ -9,7 +9,8 @@ from python_setup_lint.checkers._base import MessageDef, _msgs
 
 # Optional dependency import patterns — try/except ImportError is allowed
 # for imports from these modules (declared in [project.optional-dependencies]).
-_OPTIONAL_IMPORT_PATTERNS: frozenset[str] = frozenset({"sentence_transformers"})
+# The [semantic] extra is an empty placeholder, so no import is optional today.
+_OPTIONAL_IMPORT_PATTERNS: frozenset[str] = frozenset()
 
 
 def _all_imports_optional(stmts: list[nodes.NodeNG]) -> bool:

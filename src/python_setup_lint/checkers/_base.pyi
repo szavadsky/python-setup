@@ -13,6 +13,8 @@ from astroid import nodes
 from pylint.lint import PyLinter
 from pylint.typing import MessageDefinitionTuple
 
+from python_setup_lint.checkers._decision_backend import DecisionBackend
+
 def _msgs(**definitions: MessageDef) -> dict[str, MessageDefinitionTuple]:
     """Build a checker msgs dict with domain-typed keys."""
 
@@ -66,30 +68,31 @@ class FunctionVisitMixin(SourceRootMixin):
     def visit_functiondef(self, node: nodes.FunctionDef) -> None: ...
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None: ...
 
+def normalize_suppressed_codes(raw: str) -> str:  # pylint: disable=generic-return-requires-returns  # the one-line doc states the return
+    """Return the technical reason; raw comment when none is given, ``""`` when it echoes codes."""
+
 def check_if_meaningful(
     text: str,
     *,
     rule: str | None = None,
     code_context: str | None = None,
     comment: str | None = None,
+    backend: DecisionBackend | None = None,
 ) -> bool:
     """Check if a suppression justification is meaningful.
 
-    Uses the NLP semantic pipeline (``_semantic.semantic_check_if_meaningful``)
-    when enabled and available, falling back to a heuristic check.
-
-    The semantic pipeline is enabled by default (``PYTHON_SETUP_LINT_SEMANTIC=1``)
-    and requires the ``[semantic]`` extra (``sentence-transformers``).
+    The heuristic gate runs first; a backend may only veto, never resurrect.
 
     Heuristic: non-empty, non-boilerplate, not equal to the rule symbol.
     Uses *comment* as the primary text if provided; falls back to *text*.
-    *rule* and *code_context* are reserved for future semantic analysis.
+    *rule* and *code_context* are the backend query when one is configured.
 
     Args:
         text: The raw justification text.
         rule: The lint rule identifier being suppressed.
         code_context: Surrounding source code lines.
         comment: The justification comment text (preferred over *text*).
+        backend: A decision backend; ``None`` resolves the registered backend.
 
     Returns:
         True if the justification is meaningful, False otherwise.
