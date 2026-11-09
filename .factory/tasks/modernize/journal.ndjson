@@ -1936,3 +1936,5 @@
 {"type":"step_reused","task":"modernize","step":"plan-review-5-2","recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/117-plan-review-5-2-a1","ts":"2026-11-09T11:55:37.513Z"}
 {"type":"step_reused","task":"modernize","step":"architect-revise-5-2","recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/118-architect-revise-5-2-a1","ts":"2026-11-09T11:55:37.557Z"}
 {"type":"step_reused","task":"modernize","step":"pm-edits-5","recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/120-pm-edits-5-a2","ts":"2026-11-09T11:55:39.662Z"}
+{"type":"step_started","task":"modernize","step":"pm-edits-5","attempt":3,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/121-pm-edits-5-a3","ts":"2026-11-09T11:55:39.768Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"pm-edits-5","timeoutSec":2700,"ts":"2026-11-09T11:55:39.775Z"}
