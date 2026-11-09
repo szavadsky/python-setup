@@ -2022,3 +2022,5 @@
 {"type":"item_merged","item":"secrets-triage-spike","sha":"0864a76aa90444de41cc6d39d45059203f18d4c0","conflictResolved":false,"ts":"2026-11-09T18:59:21.921Z"}
 {"type":"step_started","task":"modernize","step":"wave-close-up-5-2","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/125-wave-close-up-5-2-a1","ts":"2026-11-09T19:02:07.169Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-5-2","timeoutSec":2700,"ts":"2026-11-09T19:02:07.173Z"}
+{"type":"step_finished","task":"modernize","step":"wave-close-up-5-2","attempt":1,"status":"ok","sessionId":"01a1c1b0-6d72-74d8-9fd9-8c4fd102c809","usage":{"inputTokens":16729,"outputTokens":8687,"costUsd":0.003502},"ts":"2026-11-09T19:04:30.648Z"}
+{"type":"scheduler_wait","wave":2,"iteration":5,"reason":"wave-end merge + close-up gates + close-up turn","gapWallMs":487135,"gapActiveMs":487135,"merges":["secrets-triage-spike"],"ts":"2026-11-09T19:04:30.648Z"}
