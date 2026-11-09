@@ -4,31 +4,16 @@ import json
 import re
 from typing import TYPE_CHECKING, Any
 
-from ._record_parsers import (  # re-exported for backward compat; pylint: disable=useless-import-alias  # as-alias needed for mypy strict re-export
-    _parse_mypy_records as _parse_mypy_records,
-)
 from ._record_parsers import (
-    _parse_pylint_records as _parse_pylint_records,
+    _parse_mypy_records,
+    _parse_pylint_records,
+    _parse_pyright_check_records,
+    _parse_ruff_records,
+    _parse_rumdl_records,
+    _parse_ty_records,
+    _parse_yamllint_records,
 )
-from ._record_parsers import (
-    _parse_pyright_check_records as _parse_pyright_check_records,
-)
-from ._record_parsers import (
-    _parse_pyright_records as _parse_pyright_records,
-)
-from ._record_parsers import (
-    _parse_ruff_records as _parse_ruff_records,
-)
-from ._record_parsers import (
-    _parse_rumdl_records as _parse_rumdl_records,
-)
-from ._record_parsers import (
-    _parse_ty_records as _parse_ty_records,
-)
-from ._record_parsers import (
-    _parse_yamllint_records as _parse_yamllint_records,
-)
-from ._record_types import Record  # re-exported for backward compat
+from ._record_types import Record  # re-exported via __all__ for the package surface
 
 if TYPE_CHECKING:
     from collections.abc import Callable

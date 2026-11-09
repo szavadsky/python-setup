@@ -9,12 +9,10 @@ from typing import Any
 
 import pytest
 
-from python_setup_lint.runner import Record, peek_fallback_tools
+from python_setup_lint.runner import Record
+from python_setup_lint.runner._baseline_helpers import _compare_sorted  # private import for white-box testing
 from python_setup_lint.runner._record_types import _compare_records_key
-from python_setup_lint.runner.baseline import (  # private import for white-box testing
-    _compare_sorted,
-    _diff_baseline,
-)
+from python_setup_lint.runner.baseline import _diff_baseline  # private import for white-box testing
 from python_setup_lint.testing import make_lint_result
 from tests.runner._factories import diff_baseline_with
 
@@ -440,20 +438,7 @@ class TestDiffBaselineErrors:
         assert check(violations, reloaded)
 
 
-# ── Fallback/frozen-stub and dedup pinning limbs ────────────────
-
-
-class TestPeekFallbackTools:
-    def test_peek_fallback_tools_given_snapshot_then_frozen_copy(self, tmp_path: Path) -> None:
-        # peek_fallback_tools() now always returns empty frozenset (WS-6 clean break).
-        # Verify diff_baseline_with doesn't crash and the stub returns frozenset().
-        saved: list[dict[str, object]] = []
-        current = [make_lint_result(tool_name="ruff check", stdout="src/a.py:1:3: E501 msg\n")]
-        violations, _ = diff_baseline_with(tmp_path, saved, current)
-        assert any("msg @ src/a.py:1:3" in x for x in violations)
-        snap = peek_fallback_tools()
-        assert isinstance(snap, frozenset)
-        assert snap == frozenset()
+# ── Flat-record round-trip and dedup pinning limbs ──────────────
 
 
 class TestFlatRecordRoundTrip:
