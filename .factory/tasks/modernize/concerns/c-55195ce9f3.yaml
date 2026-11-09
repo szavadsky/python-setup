@@ -8,7 +8,7 @@ detail: Wave report lists no merged items and marks docs-reconciliation as
 affects:
   - docs-reconciliation
 severity: medium
-status: open
+status: resolved
 source:
   record: 149-wave-close-up-5-6-a1
   agent: wave-close-up
@@ -16,4 +16,4 @@ source:
   iteration: 5
   lastSeen: 2026-11-09T22:19:17.543Z
 createdAt: 2026-11-09T22:19:17.543Z
-updatedAt: 2026-11-09T22:19:17.543Z
+updatedAt: 2026-11-09T22:22:55.172Z
