@@ -307,7 +307,7 @@ items:
     kind: dev
     status: running
     branch: topic/modernize--decision-cache-impl
-    attempts: 1
+    attempts: 2
     fixRounds: 1
     spendUsd: 0.393308
     currentStep: qa
@@ -677,7 +677,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 11.692059685999999
+budgetSpentUsd: 11.737325685999998
 spendByRole:
   workhorse:
     costUsd: 5.381501686000001
@@ -688,9 +688,9 @@ spendByRole:
     inputTokens: 6937056
     outputTokens: 2447289
   architect:
-    costUsd: 4.716002
-    inputTokens: 17014829
-    outputTokens: 587373
+    costUsd: 4.7612679999999985
+    inputTokens: 17456712
+    outputTokens: 592657
   alt-architect:
     costUsd: 0.127483
     inputTokens: 457640
@@ -833,9 +833,9 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 5.860932999999999
-    inputTokens: 20530510
-    outputTokens: 1946109
+    costUsd: 5.906198999999999
+    inputTokens: 20972393
+    outputTokens: 1951393
   never-test-linting-prune:
     costUsd: 0.055946
     inputTokens: 148483
@@ -844,4 +844,4 @@ spendByItem:
     costUsd: 0.19651400000000002
     inputTokens: 713974
     outputTokens: 167344
-lastUpdated: 2026-11-09T21:42:18.248Z
+lastUpdated: 2026-11-09T21:44:10.015Z
