@@ -2133,3 +2133,5 @@
 {"type":"decision_made","context":"item","item":"checkers-stream-helper","decision":"escalate","decisionPath":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/decisions/027-item-checkers-stream-helper-10.yaml","ts":"2026-11-09T22:00:02.193Z"}
 {"type":"wave_not_complete","wave":5,"iteration":5,"stragglers":["final-gate-validation","test-debloat-audit"],"mergeOwned":[],"redrive":1,"ts":"2026-11-09T22:00:09.578Z"}
 {"type":"empty_wave_streak","wave":5,"iteration":5,"streak":1,"blocked":["semantic-tests-rewrite"],"ts":"2026-11-09T22:00:09.581Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-5-5","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/144-wave-close-up-5-5-a1","ts":"2026-11-09T22:02:52.233Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-5-5","timeoutSec":2700,"ts":"2026-11-09T22:02:52.239Z"}
