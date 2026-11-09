@@ -143,40 +143,17 @@ class FunctionVisitMixin(SourceRootMixin):
 
 
 _DIRECTIVE_PREFIX = re.compile(r"^\s*(?:(?:type|ty)\s*:\s*ignore|noqa|pylint\s*:\s*disable)\b")
-_CODE_SEPARATOR = re.compile(r"[\s,]+")
-
-
-def _split_suppression_directive(raw: str) -> tuple[str, str] | None:
-    # Split a leading suppression directive into its code list and trailing reason.
-    match = _DIRECTIVE_PREFIX.match(raw)
-    if match is None:
-        return None
-    rest = raw[match.end() :].lstrip()
-    codes = ""
-    if rest.startswith("["):
-        closing = rest.find("]")
-        codes, rest = (rest[1:closing], rest[closing + 1 :]) if closing != -1 else (rest[1:], "")
-    elif rest[:1] in {":", "="}:
-        rest = rest[1:]
-        reason_start = rest.find("#")
-        codes, rest = (rest, "") if reason_start == -1 else (rest[:reason_start], rest[reason_start:])
-    hash_index = rest.find("#")
-    return codes, rest[hash_index + 1 :].strip() if hash_index != -1 else ""
-
-
-def _code_tokens(raw: str) -> set[str]:
-    return {token.lower() for token in _CODE_SEPARATOR.split(raw) if token}
 
 
 @beartype
 def normalize_suppressed_codes(raw: str) -> str:
-    split = _split_suppression_directive(raw)
-    if split is None:
+    match = _DIRECTIVE_PREFIX.match(raw)
+    if match is None:
         return raw.strip()
-    codes, reason = split
-    if reason and not _code_tokens(reason) <= _code_tokens(codes):
-        return reason
-    return ""
+    codes, _, reason = raw[match.end() :].partition("#")
+    tokens = {token.lower() for token in re.split(r"[\s,]+", codes.strip(" []:=")) if token}
+    reason_tokens = {token.lower() for token in re.split(r"[\s,]+", reason) if token}
+    return "" if not reason_tokens or reason_tokens <= tokens else reason.strip()
 
 
 @beartype
@@ -188,7 +165,6 @@ def check_if_meaningful(
     comment: str | None = None,
     backend: DecisionBackend | None = None,
 ) -> bool:
-    # Heuristic-first hard gate: a brush-off never reaches a backend.
     primary = normalize_suppressed_codes(comment or text).strip()
     if not primary or len(primary) < 5:
         return False
@@ -269,12 +245,8 @@ def check_if_meaningful(
     if rule and primary_lower == rule.lower():
         return False
 
-    # The backend may veto a heuristic-meaningful text but never resurrect one.
     if os.environ.get("PYTHON_SETUP_LINT_SEMANTIC", "1") != "1":
         return True
-    from python_setup_lint.checkers._semantic import (
-        semantic_check_if_meaningful as _semantic_check,
-    )
+    from python_setup_lint.checkers._semantic import semantic_check_if_meaningful as _semantic_check
 
-    verdict = _semantic_check(primary, rule=rule, code_context=code_context, comment=primary, backend=backend)
-    return True if verdict is None else verdict
+    return _semantic_check(primary, rule=rule, code_context=code_context, comment=primary, backend=backend) is not False

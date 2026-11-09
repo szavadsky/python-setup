@@ -1,12 +1,6 @@
-# Semantic justification adapter over an optional decision backend.
-#
-# Production lint resolves no backend: the loader returns None and the caller
-# keeps the heuristic verdict. When a backend is available, one call is made
-# per unique (justification, rule, model) triple and the score is mapped
-# through the pinned threshold. Verdicts are memoized in-process only;
-# nothing is written to disk.
-
 from __future__ import annotations
+
+import hashlib
 
 from beartype import beartype
 
@@ -18,11 +12,17 @@ __all__ = [
     "semantic_check_if_meaningful",
 ]
 
-_MEMO: dict[tuple[str, str | None, str], bool] = {}
+# Lazy-loaded on first call to semantic_check_if_meaningful.
+_RESULT_CACHE: dict[int, bool] | None = None
 
 
-def _reset_cache() -> None:  # pylint: disable=trivial-wrapper  # test seam resets the process-wide memo between cases
-    _MEMO.clear()
+def _reset_cache() -> None:
+    """Reset the result cache (test helper).
+
+    Clears the in-process memo.
+    """
+    global _RESULT_CACHE  # pylint: disable=global-statement  # memo reset requires global
+    _RESULT_CACHE = None
 
 
 @beartype
@@ -34,15 +34,32 @@ def semantic_check_if_meaningful(
     comment: str | None = None,
     backend: DecisionBackend | None = None,
 ) -> bool | None:
+    # Use comment as primary text, fall back to raw text.
     primary = (comment or text).strip()
+    global _RESULT_CACHE  # pylint: disable=global-statement  # lazy-init memo requires global
+    if _RESULT_CACHE is None:
+        _RESULT_CACHE = {}
     if not primary:
         return False
     resolved = backend if backend is not None else _decision_backend.get_backend()
     if resolved is None:
         return None
-    memo_key = (primary, rule, resolved.model_id)
-    if memo_key in _MEMO:
-        return _MEMO[memo_key]
-    verdict = resolved.decide(primary, rule, code_context) >= _decision_backend.DECISION_THRESHOLD
-    _MEMO[memo_key] = verdict
-    return verdict
+    # Compute cache key from all inputs + model identifier.
+    cache_key = hashlib.sha256(
+        "|".join(
+            str(x)
+            for x in (
+                primary,
+                rule,
+                code_context,
+                resolved.model_id,
+            )
+        ).encode()
+    ).digest()
+    cache_key_int = int.from_bytes(cache_key[:8], "big")
+    if cache_key_int in _RESULT_CACHE:
+        return _RESULT_CACHE[cache_key_int]
+
+    result = resolved.decide(primary, rule, code_context) >= _decision_backend.DECISION_THRESHOLD
+    _RESULT_CACHE[cache_key_int] = result
+    return result

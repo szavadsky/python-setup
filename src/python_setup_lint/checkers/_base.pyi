@@ -68,21 +68,8 @@ class FunctionVisitMixin(SourceRootMixin):
     def visit_functiondef(self, node: nodes.FunctionDef) -> None: ...
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None: ...
 
-def normalize_suppressed_codes(raw: str) -> str:
-    """Normalize a suppression directive's rule-code list.
-
-    A leading suppression directive (``type:/ty: ignore[...]``, ``noqa: ...``,
-    ``pylint: disable=...``) is stripped. A trailing reason that merely echoes
-    the directive's code list order-insensitively is rejected (empty string);
-    a real reason is returned alone. Bare text without a directive is returned
-    unchanged, minus surrounding whitespace.
-
-    Args:
-        raw: The comment text, possibly a full suppression directive.
-
-    Returns:
-        The technical reason text, or an empty string when there is none.
-    """
+def normalize_suppressed_codes(raw: str) -> str:  # pylint: disable=generic-return-requires-returns  # the one-line doc states the return
+    """Reduce a suppression comment to its technical reason; ``""`` when none."""
 
 def check_if_meaningful(
     text: str,
@@ -94,20 +81,18 @@ def check_if_meaningful(
 ) -> bool:
     """Check if a suppression justification is meaningful.
 
-    Runs the heuristic hard gate first: non-meaningful text (brush-off,
-    boilerplate, code echo) returns ``False`` without contacting a backend.
-    When ``PYTHON_SETUP_LINT_SEMANTIC=1`` and a backend is available, the
-    backend may veto the accepted text; an unavailable backend (``None``)
-    leaves the heuristic verdict in place. The rule code list is normalized
-    by :func:`normalize_suppressed_codes`.
+    The heuristic gate runs first; a backend may only veto, never resurrect.
+
+    Heuristic: non-empty, non-boilerplate, not equal to the rule symbol.
+    Uses *comment* as the primary text if provided; falls back to *text*.
+    *rule* and *code_context* are the backend query when one is configured.
 
     Args:
         text: The raw justification text.
         rule: The lint rule identifier being suppressed.
         code_context: Surrounding source code lines.
         comment: The justification comment text (preferred over *text*).
-        backend: A decision backend; when ``None``, the registered backend is
-            resolved and a missing backend falls through to the heuristic.
+        backend: A decision backend; ``None`` resolves the registered backend.
 
     Returns:
         True if the justification is meaningful, False otherwise.
