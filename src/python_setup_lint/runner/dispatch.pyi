@@ -1,14 +1,17 @@
 """Stub for :mod:`python_setup_lint.runner.dispatch`.
 
-Seven built-ins override ``build_command`` for tool-specific command shapes
-(``ruff format``, ``mypy.stubtest``, ``pyright verify types``,
-``detect-secrets``, ``pylint``); the rest inherit the default delegation to
-:mod:`python_setup_lint.runner.cmd_build`.
+Registry surface for the 14 built-in tools: the frozen ``ToolSpec`` table,
+registry-derived constant sets, the live ``LINT_TOOLS`` registry, and
+``register_lint_tool``.  Strategy classes live in
+:mod:`python_setup_lint.runner._strategies` and are re-exported here for
+compatibility.
 """
 
 from collections.abc import Callable
 
-from .types import RunnerConfig, ToolSpec
+from ._strategies import GenericLintTool as GenericLintTool
+from ._strategies import LintTool as LintTool
+from .types import ToolSpec
 
 TOOLS: list[ToolSpec]
 """All 14 tool specifications in execution order (built-ins)."""
@@ -47,64 +50,6 @@ STRATEGIES: dict[str, LintTool]
 Built-in names are populated at import time from :data:`TOOLS`.
 Extras registered via :func:`register_lint_tool` add entries here.
 """
-
-class LintTool:
-    """Per-tool strategy for command construction + statistics.
-
-    Subclasses override :meth:`build_command` /
-    :meth:`statistics_flags` / :meth:`parse_statistics` to specialise
-    per-tool behaviour.  The default implementations delegate to the
-    module-level helpers (:func:`python_setup_lint.runner.cmd_build._build_command`,
-    :func:`python_setup_lint.runner.cmd_build._build_statistics_flags`,
-    :data:`python_setup_lint.runner.parsers._STATISTICS_PARSERS`) so
-    built-in behaviour stays verbatim.
-
-    Config-agnostic: the ``package_name is None`` skip for
-    ``mypy.stubtest`` / ``pyright verify types`` stays in
-    :func:`python_setup_lint.runner.cli.run_lint`, not here.
-    """
-
-    spec: ToolSpec
-
-    def __init__(self, spec: ToolSpec) -> None: ...
-    @property
-    def name(self) -> str: ...
-    def build_command(
-        self,
-        *,
-        config: RunnerConfig,
-        _fix: bool = False,
-        _path: str | None = None,
-        _exclude: str | None = None,
-    ) -> list[str]: ...
-    def build_format_command(
-        self,
-        *,
-        config: RunnerConfig,
-        _path: str | None = None,
-        _exclude: str | None = None,
-    ) -> list[str]:
-        """Mutating command used only by the ``--fix`` phase-1a format pass."""
-    def statistics_flags(self) -> list[str]: ...
-    def parse_statistics(self, stdout: str, stderr: str) -> list[tuple[str, int]]: ...
-
-class GenericLintTool(LintTool):
-    """Minimal strategy for extras registered via :func:`register_lint_tool`.
-
-    Carries three optional declarative fields supplied at registration
-    (``statistics_flag``, ``parser``, ``config_flag``).  Unset fields
-    fall back to the generic module-level lookups.  Built-ins keep their
-    own strategies; extras land here.
-    """
-
-    def __init__(
-        self,
-        spec: ToolSpec,
-        *,
-        statistics_flag: list[str] | None = None,
-        parser: Callable[..., list[tuple[str, int]]] | None = None,
-        config_flag: list[str] | None = None,
-    ) -> None: ...
 
 def register_lint_tool(
     tool: ToolSpec,
