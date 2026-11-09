@@ -384,22 +384,22 @@ items:
     mergedAt: 2026-11-08T00:54:17-05:00
   consolidate-integration-helpers-v2:
     kind: test-only
-    status: ready
+    status: failed
     branch: topic/modernize--consolidate-integration-helpers-v2
     attempts: 2
     fixRounds: 1
-    spendUsd: 0.19363600000000003
-    currentStep: review
+    spendUsd: 0.258951
+    currentStep: integrate
   coding-rules-audit-v2:
     kind: fact-finder
-    status: pending
+    status: blocked
     branch: topic/modernize--coding-rules-audit-v2
     attempts: 1
     fixRounds: 1
     spendUsd: 0
   test-debloat-audit-v2:
     kind: fact-finder
-    status: pending
+    status: blocked
     branch: topic/modernize--test-debloat-audit-v2
     attempts: 1
     fixRounds: 1
@@ -420,7 +420,7 @@ items:
     fixRounds: 1
     spendUsd: 0
 concerns:
-  open: 0
+  open: 1
   dismissed: 0
   routed: 0
   resolved: 2
@@ -677,20 +677,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.054405685999997
+budgetSpentUsd: 12.152791685999997
 spendByRole:
   workhorse:
-    costUsd: 5.381501686000001
-    inputTokens: 10609121
-    outputTokens: 3905221
+    costUsd: 5.446816686
+    inputTokens: 10745022
+    outputTokens: 3940170
   alt-workhorse:
     costUsd: 1.5347480000000002
     inputTokens: 7296285
     outputTokens: 2602638
   architect:
-    costUsd: 5.010672999999998
-    inputTokens: 19766239
-    outputTokens: 668919
+    costUsd: 5.0437439999999985
+    inputTokens: 20078676
+    outputTokens: 672959
   alt-architect:
     costUsd: 0.127483
     inputTokens: 457640
@@ -821,9 +821,9 @@ spendByItem:
     inputTokens: 95491
     outputTokens: 43569
   consolidate-integration-helpers-v2:
-    costUsd: 0.19363600000000003
-    inputTokens: 413243
-    outputTokens: 140910
+    costUsd: 0.258951
+    inputTokens: 549144
+    outputTokens: 175859
   pylint-cache-assumptions:
     costUsd: 0.23190968599999998
     inputTokens: 455233
@@ -833,9 +833,9 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 6.223278999999999
-    inputTokens: 23641149
-    outputTokens: 2183004
+    costUsd: 6.2563499999999985
+    inputTokens: 23953586
+    outputTokens: 2187044
   never-test-linting-prune:
     costUsd: 0.055946
     inputTokens: 148483
@@ -844,4 +844,4 @@ spendByItem:
     costUsd: 0.19651400000000002
     inputTokens: 713974
     outputTokens: 167344
-lastUpdated: 2026-11-09T22:29:17.953Z
+lastUpdated: 2026-11-09T22:47:54.364Z
