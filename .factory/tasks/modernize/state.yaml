@@ -139,28 +139,30 @@ items:
     mergedAt: 2026-11-08T09:50:28-05:00
   checkers-factories-split:
     kind: test-only
-    status: ready
+    status: merged
     branch: topic/modernize--checkers-factories-split
     attempts: 1
     fixRounds: 1
     spendUsd: 0.09088800000000001
     currentStep: review
+    mergedAt: 2026-11-09T00:24:29-05:00
   checkers-stream-helper:
     kind: no-behavior
-    status: ready
+    status: running
     branch: topic/modernize--checkers-stream-helper
     attempts: 1
-    fixRounds: 2
-    spendUsd: 0.209252
-    currentStep: review
+    fixRounds: 1
+    spendUsd: 0.227775
+    currentStep: integrate
   decision-backend-impl:
     kind: dev
-    status: ready
+    status: merged
     branch: topic/modernize--decision-backend-impl
     attempts: 1
     fixRounds: 1
     spendUsd: 0.554482
     currentStep: review
+    mergedAt: 2026-11-09T00:11:56-05:00
   epic-kickoff-gate:
     kind: fact-finder
     status: pending
@@ -196,12 +198,13 @@ items:
     mergedAt: 2026-11-08T10:03:05-05:00
   runner-compat-shim-removal:
     kind: no-behavior
-    status: ready
+    status: merged
     branch: topic/modernize--runner-compat-shim-removal
     attempts: 1
     fixRounds: 1
     spendUsd: 0.056304
     currentStep: review
+    mergedAt: 2026-11-09T00:09:28-05:00
   secrets-triage-spike:
     kind: fact-finder
     status: ready
@@ -267,25 +270,28 @@ items:
     mergedAt: 2026-11-08T11:04:13-05:00
   runner-dispatch-split:
     kind: no-behavior
-    status: pending
+    status: ready
     branch: topic/modernize--runner-dispatch-split
-    attempts: 1
+    attempts: 2
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.128832
+    currentStep: review
   runner-factories-trim:
     kind: test-only
-    status: pending
+    status: ready
     branch: topic/modernize--runner-factories-trim
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.041291
+    currentStep: review
   stale-disables-portability-cleanup:
     kind: test-only
-    status: pending
+    status: ready
     branch: topic/modernize--stale-disables-portability-cleanup
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.025615000000000002
+    currentStep: review
   coding-rules-audit:
     kind: fact-finder
     status: pending
@@ -609,6 +615,12 @@ debt:
     only"
   - "[remaining-lint-violations-fix] Reranker score>=0.5 not machine-validated
     (semantic extra absent); heuristic + pylint green only"
+  - "[runner-dispatch-split] Stale section header implies TOOLS defined in
+    dispatch.py"
+  - "[runner-dispatch-split] ty comment cites stale 'line 105' for pylint-pyi"
+  - "[runner-dispatch-split] dispatch.py at 449/500 leaves 51 lines headroom"
+  - "[stale-disables-portability-cleanup] Slow downstream test still uses fixed
+    Path.home()/.tmp scratch dir"
   - "[test-debloat-audit-i2] Clarify LoC counting method; wc -l differs slightly"
   - "[test-debloat-audit-i2] Clarify whether per-module N is default-collected
     or total incl slow"
@@ -643,20 +655,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 9.994741685999998
+budgetSpentUsd: 10.282858685999997
 spendByRole:
   workhorse:
-    costUsd: 4.568640685999999
-    inputTokens: 8809324
-    outputTokens: 3322066
+    costUsd: 4.746408686
+    inputTokens: 9141846
+    outputTokens: 3469730
   alt-workhorse:
-    costUsd: 1.226652
-    inputTokens: 5696507
-    outputTokens: 2039704
+    costUsd: 1.267789
+    inputTokens: 5870607
+    outputTokens: 2133754
   architect:
-    costUsd: 4.101167
-    inputTokens: 11372374
-    outputTokens: 438611
+    costUsd: 4.1703790000000005
+    inputTokens: 12052791
+    outputTokens: 441840
   alt-architect:
     costUsd: 0.098282
     inputTokens: 360499
@@ -714,6 +726,10 @@ spendByItem:
     costUsd: 0.06715600000000001
     inputTokens: 164765
     outputTokens: 116111
+  decision-backend-impl:
+    costUsd: 0.554482
+    inputTokens: 1162533
+    outputTokens: 453941
   model-candidate-matrix:
     costUsd: 0.045265
     inputTokens: 116110
@@ -746,6 +762,10 @@ spendByItem:
     costUsd: 0.091885
     inputTokens: 206331
     outputTokens: 89105
+  checkers-stream-helper:
+    costUsd: 0.227775
+    inputTokens: 785745
+    outputTokens: 259441
   runner-compat-shim-removal:
     costUsd: 0.056304
     inputTokens: 156193
@@ -754,10 +774,6 @@ spendByItem:
     costUsd: 0.13088
     inputTokens: 218824
     outputTokens: 95126
-  checkers-stream-helper:
-    costUsd: 0.209252
-    inputTokens: 746464
-    outputTokens: 243396
   consolidate-integration-helpers-v3:
     costUsd: 0.19283999999999998
     inputTokens: 341355
@@ -766,18 +782,26 @@ spendByItem:
     costUsd: 0.076996
     inputTokens: 208236
     outputTokens: 84395
-  decision-backend-impl:
-    costUsd: 0.554482
-    inputTokens: 1162533
-    outputTokens: 453941
-  consolidate-integration-helpers-v2:
-    costUsd: 0.19363600000000003
-    inputTokens: 413243
-    outputTokens: 140910
   checkers-factories-split:
     costUsd: 0.09088800000000001
     inputTokens: 274090
     outputTokens: 70148
+  runner-factories-trim:
+    costUsd: 0.041291
+    inputTokens: 95491
+    outputTokens: 43569
+  runner-dispatch-split:
+    costUsd: 0.128832
+    inputTokens: 294444
+    outputTokens: 136499
+  consolidate-integration-helpers-v2:
+    costUsd: 0.19363600000000003
+    inputTokens: 413243
+    outputTokens: 140910
+  stale-disables-portability-cleanup:
+    costUsd: 0.025615000000000002
+    inputTokens: 54537
+    outputTokens: 34612
   pylint-cache-assumptions:
     costUsd: 0.210224686
     inputTokens: 334753
@@ -787,7 +811,7 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 4.968333
-    inputTokens: 13811752
-    outputTokens: 1456139
-lastUpdated: 2026-11-09T05:09:28.903Z
+    costUsd: 5.042189
+    inputTokens: 14515038
+    outputTokens: 1470357
+lastUpdated: 2026-11-09T06:16:31.264Z
