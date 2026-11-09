@@ -1667,3 +1667,5 @@
 {"type":"item_merged","item":"checkers-factories-split","sha":"3dafa09c80e299462cb908a27e20b00e5d1dd18d","conflictResolved":false,"ts":"2026-11-09T05:27:02.818Z"}
 {"type":"step_started","task":"modernize","step":"wave-close-up-4-2","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/100-wave-close-up-4-2-a1","ts":"2026-11-09T05:29:31.723Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-4-2","timeoutSec":2700,"ts":"2026-11-09T05:29:31.727Z"}
+{"type":"step_finished","task":"modernize","step":"wave-close-up-4-2","attempt":1,"status":"ok","sessionId":"01a1bec8-7a6c-705f-9529-154e6afb6cdd","usage":{"inputTokens":22869,"outputTokens":10989,"costUsd":0.004644},"ts":"2026-11-09T05:31:37.910Z"}
+{"type":"scheduler_wait","wave":2,"iteration":4,"reason":"wave-end merge + close-up gates + close-up turn","gapWallMs":1329002,"gapActiveMs":1329002,"merges":["runner-compat-shim-removal","decision-backend-impl","checkers-stream-helper","checkers-factories-split"],"ts":"2026-11-09T05:31:37.911Z"}
