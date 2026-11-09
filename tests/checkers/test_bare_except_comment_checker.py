@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from python_setup_lint.checkers.conformance.bare_except_comment_checker import (
     BareExceptCommentChecker,
 )
@@ -32,6 +34,13 @@ def _msg_ids(msgs: list[Any]) -> set[str]:
     return {m.msg_id for m in msgs}
 
 
+@pytest.fixture
+def _semantic_disabled(monkeypatch: pytest.MonkeyPatch) -> None:  # pylint: disable=W9728  # test fixture: single place pinning SEMANTIC=0 across heuristic tests
+    """Pin heuristic tests to the deterministic heuristic path (no NLP reranker)."""
+    monkeypatch.setenv("PYTHON_SETUP_LINT_SEMANTIC", "0")
+
+
+@pytest.mark.usefixtures("_semantic_disabled")
 class TestDetectsBareExceptWithoutComment:
     """Checker must emit W9738 for bare except without justification."""
 
@@ -72,6 +81,7 @@ except:
         assert msgs[0].msg_id == "bare-except-comment"
 
 
+@pytest.mark.usefixtures("_semantic_disabled")
 class TestSkipsBareExceptWithComment:
     """Checker must NOT flag bare except with justifying comment."""
 
@@ -110,6 +120,7 @@ except Exception:  # expected during shutdown
         assert len(msgs) == 0
 
 
+@pytest.mark.usefixtures("_semantic_disabled")
 class TestSkipsBareExceptWithReraise:
     """Checker must NOT flag bare except that re-raises."""
 
@@ -149,6 +160,7 @@ except:
         assert len(msgs) == 0
 
 
+@pytest.mark.usefixtures("_semantic_disabled")
 class TestSkipsNamedExcept:
     """Checker must NOT flag named except handlers (not bare)."""
 

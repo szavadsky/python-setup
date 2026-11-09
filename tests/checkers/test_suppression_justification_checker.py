@@ -20,6 +20,13 @@ def _msg_ids(msgs: list[Any]) -> set[str]:
     return {m.msg_id for m in msgs}
 
 
+@pytest.fixture
+def _semantic_disabled(monkeypatch: pytest.MonkeyPatch) -> None:  # pylint: disable=W9728  # test fixture: single place pinning SEMANTIC=0 across heuristic tests
+    """Pin heuristic tests to the deterministic heuristic path (no NLP reranker)."""
+    monkeypatch.setenv("PYTHON_SETUP_LINT_SEMANTIC", "0")
+
+
+@pytest.mark.usefixtures("_semantic_disabled")
 class TestJustifiedSuppressions:
     """Checker must NOT flag suppressions with a technical reason."""
 
@@ -61,6 +68,7 @@ def foo() -> None:
         assert len(msgs) == 0, f"Expected no messages, got {msgs}"
 
 
+@pytest.mark.usefixtures("_semantic_disabled")
 class TestUnjustifiedSuppressions:
     """Checker MUST flag suppressions without a technical reason."""
 
@@ -126,6 +134,7 @@ x = 1  # noqa: E501  # ok
         assert len(msgs) == 1, f"Expected 1 message for real # noqa, got {msgs}"
 
 
+@pytest.mark.usefixtures("_semantic_disabled")
 class TestDataStrings:
     """Checker must NOT flag suppression patterns inside string literals."""
 
@@ -213,6 +222,7 @@ x = 1
         assert len(msgs) == 0, f"Expected 0 messages, got {msgs}"
 
 
+@pytest.mark.usefixtures("_semantic_disabled")
 class TestFunctionParamReturnAny:
     # Checker must flag Any in function params/returns without per-line
     # justification, but only under source roots (src/).  Test files are
