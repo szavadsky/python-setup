@@ -207,12 +207,13 @@ items:
     mergedAt: 2026-11-09T00:09:28-05:00
   secrets-triage-spike:
     kind: fact-finder
-    status: ready
+    status: merged
     branch: topic/modernize--secrets-triage-spike
     attempts: 1
     fixRounds: 1
     spendUsd: 0.19651400000000002
     currentStep: review
+    mergedAt: 2026-11-09T13:56:23-05:00
   cache-design-spike:
     kind: poc
     status: blocked
@@ -676,20 +677,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 11.486934685999998
+budgetSpentUsd: 11.569503686
 spendByRole:
   workhorse:
-    costUsd: 5.381501686
+    costUsd: 5.381501686000001
     inputTokens: 10609121
     outputTokens: 3905221
   alt-workhorse:
-    costUsd: 1.4583350000000008
-    inputTokens: 6901379
-    outputTokens: 2423123
+    costUsd: 1.461837
+    inputTokens: 6918108
+    outputTokens: 2431810
   architect:
-    costUsd: 4.519615
-    inputTokens: 15157517
-    outputTokens: 559246
+    costUsd: 4.598681999999999
+    inputTokens: 15944972
+    outputTokens: 560853
   alt-architect:
     costUsd: 0.127483
     inputTokens: 457640
@@ -799,10 +800,6 @@ spendByItem:
     costUsd: 0.19283999999999998
     inputTokens: 341355
     outputTokens: 174695
-  secrets-triage-spike:
-    costUsd: 0.19651400000000002
-    inputTokens: 713974
-    outputTokens: 167344
   stale-disables-portability-cleanup:
     costUsd: 0.025615000000000002
     inputTokens: 54537
@@ -836,11 +833,15 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 5.6558079999999995
-    inputTokens: 18637521
-    outputTokens: 1893816
+    costUsd: 5.738376999999999
+    inputTokens: 19441705
+    outputTokens: 1904110
   never-test-linting-prune:
     costUsd: 0.055946
     inputTokens: 148483
     outputTokens: 85833
-lastUpdated: 2026-11-09T18:56:23.501Z
+  secrets-triage-spike:
+    costUsd: 0.19651400000000002
+    inputTokens: 713974
+    outputTokens: 167344
+lastUpdated: 2026-11-09T19:06:20.658Z
