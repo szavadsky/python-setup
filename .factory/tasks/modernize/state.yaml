@@ -319,12 +319,13 @@ items:
     spendUsd: 0
   never-test-linting-prune:
     kind: test-only
-    status: ready
+    status: merged
     branch: topic/modernize--never-test-linting-prune
     attempts: 1
     fixRounds: 1
     spendUsd: 0.055946
     currentStep: review
+    mergedAt: 2026-11-09T03:06:02-05:00
   test-debloat-audit-i2:
     kind: fact-finder
     status: merged
@@ -664,20 +665,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 10.857204685999998
+budgetSpentUsd: 10.884333685999996
 spendByRole:
   workhorse:
     costUsd: 5.129319686
     inputTokens: 9724987
     outputTokens: 3783424
   alt-workhorse:
-    costUsd: 1.3401250000000002
-    inputTokens: 6264732
-    outputTokens: 2259189
+    costUsd: 1.3449070000000003
+    inputTokens: 6286917
+    outputTokens: 2271304
   architect:
-    costUsd: 4.289477999999999
-    inputTokens: 13224608
-    outputTokens: 451427
+    costUsd: 4.311824999999999
+    inputTokens: 13431522
+    outputTokens: 454151
   alt-architect:
     costUsd: 0.098282
     inputTokens: 360499
@@ -799,10 +800,10 @@ spendByItem:
     costUsd: 0.09088800000000001
     inputTokens: 274090
     outputTokens: 70148
-  never-test-linting-prune:
-    costUsd: 0.055946
-    inputTokens: 148483
-    outputTokens: 85833
+  decision-cache-impl:
+    costUsd: 0.393308
+    inputTokens: 802730
+    outputTokens: 337356
   runner-dispatch-split:
     costUsd: 0.128832
     inputTokens: 294444
@@ -811,10 +812,6 @@ spendByItem:
     costUsd: 0.041291
     inputTokens: 95491
     outputTokens: 43569
-  decision-cache-impl:
-    costUsd: 0.393308
-    inputTokens: 802730
-    outputTokens: 337356
   consolidate-integration-helpers-v2:
     costUsd: 0.19363600000000003
     inputTokens: 413243
@@ -828,7 +825,11 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 5.167280999999999
-    inputTokens: 15712908
-    outputTokens: 1495884
-lastUpdated: 2026-11-09T08:06:02.061Z
+    costUsd: 5.194409999999999
+    inputTokens: 15942007
+    outputTokens: 1510723
+  never-test-linting-prune:
+    costUsd: 0.055946
+    inputTokens: 148483
+    outputTokens: 85833
+lastUpdated: 2026-11-09T08:18:31.147Z
