@@ -7,5 +7,11 @@ models:
   - opencode-go/muse-spark-1.3-contributor
 session: 01a1b8a3-f9ce-7511-963e-37a3531a2d3a
 timeoutSec: 7200
-status: started
+status: ok
 startedAt: 2026-11-09T08:38:23.554Z
+endedAt: 2026-11-09T08:38:46.454Z
+usage:
+  inputTokens: 49973
+  outputTokens: 1677
+  costUsd: 0.006874
+traceRef: /home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T00-51-56-494Z_01a1b8a3-f9ce-7511-963e-37a3531a2d3a.jsonl
