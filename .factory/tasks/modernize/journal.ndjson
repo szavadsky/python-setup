@@ -1938,3 +1938,5 @@
 {"type":"step_reused","task":"modernize","step":"pm-edits-5","recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/120-pm-edits-5-a2","ts":"2026-11-09T11:55:39.662Z"}
 {"type":"step_started","task":"modernize","step":"pm-edits-5","attempt":3,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/121-pm-edits-5-a3","ts":"2026-11-09T11:55:39.768Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"pm-edits-5","timeoutSec":2700,"ts":"2026-11-09T11:55:39.775Z"}
+{"type":"step_finished","task":"modernize","step":"pm-edits-5","attempt":3,"status":"ok","sessionId":"01a1bfb5-ad50-70f0-82c3-6ce64a1c6d4e","usage":{"inputTokens":76669,"outputTokens":19468,"costUsd":0.011561},"ts":"2026-11-09T11:58:42.926Z"}
+{"type":"pm_edits_repaired","errors":[],"ts":"2026-11-09T11:58:42.928Z"}
