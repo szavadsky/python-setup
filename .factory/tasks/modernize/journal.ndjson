@@ -2198,3 +2198,5 @@
 {"type":"step_finished","task":"modernize","step":"consult-empty-waves-5-1","attempt":1,"status":"ok","sessionId":"01a1b8a3-f9ce-7511-963e-37a3531a2d3a","usage":{"inputTokens":27013,"outputTokens":7971,"costUsd":0.006912},"ts":"2026-11-09T22:49:32.621Z"}
 {"type":"decision_made","context":"non-item","seam":"empty-waves-5","decision":"accept-with-debt","decisionPath":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/decisions/030-nonitem-empty-waves-5-1.yaml","ts":"2026-11-09T22:49:32.621Z"}
 {"type":"empty_wave_exit_pending","wave":8,"iteration":5,"decision":"accept-with-debt","ts":"2026-11-09T22:49:35.416Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-5-8","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/155-wave-close-up-5-8-a1","ts":"2026-11-09T22:52:19.840Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-5-8","timeoutSec":2700,"ts":"2026-11-09T22:52:19.845Z"}

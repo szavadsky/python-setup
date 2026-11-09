@@ -6,7 +6,7 @@ detail: Working-tree contents are final, marker-free, formatted, and fully
   verified; staging/committing the resolution is left to the engine as
   specified.
 severity: low
-status: open
+status: routed
 source:
   record: 004-integrate-r1-a1
   agent: developer
@@ -14,4 +14,5 @@ source:
   item: consolidate-integration-helpers-v2
   lastSeen: 2026-11-09T22:46:16.556Z
 createdAt: 2026-11-09T22:46:16.556Z
-updatedAt: 2026-11-09T22:46:16.556Z
+updatedAt: 2026-11-09T22:53:17.406Z
+disposition: architect
