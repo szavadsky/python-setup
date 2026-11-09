@@ -2055,3 +2055,5 @@
 {"type":"decision_made","context":"item","item":"checkers-stream-helper","decision":"retry-with-guidance","decisionPath":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/decisions/017-item-checkers-stream-helper-2.yaml","ts":"2026-11-09T21:29:18.799Z"}
 {"type":"wave_not_complete","wave":3,"iteration":5,"stragglers":["cache-design-spike","checkers-legacy-dead-cleanup","epic-shift-report-collection"],"mergeOwned":[],"redrive":1,"ts":"2026-11-09T21:29:24.157Z"}
 {"type":"empty_wave_streak","wave":3,"iteration":5,"streak":2,"blocked":[],"ts":"2026-11-09T21:29:24.159Z"}
+{"type":"step_started","task":"modernize","step":"wave-close-up-5-3","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/129-wave-close-up-5-3-a1","ts":"2026-11-09T21:32:26.840Z"}
+{"type":"step_timeout_armed","task":"modernize","step":"wave-close-up-5-3","timeoutSec":2700,"ts":"2026-11-09T21:32:26.844Z"}
