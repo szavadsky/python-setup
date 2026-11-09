@@ -292,12 +292,12 @@ debt:
   - Pylint-pyi blind spot (42/43 findings on .py, 205 latent private symbols,
     companion stubs unenforced).
   - Docs/version drift (AGENTS stale counts/scope/pipeline, CHANGELOG 1.2.9 vs
-    1.2.10, README v1.2.5 pin, ty.toml sentence_transformers, ADR-013..016
+    1.2.10, README v1.2.5 pin, ty.toml sentence_transformers, ADR-013..018
     stubs, legacy .gitignore .cache lines retained intentionally).
   - Over-limit modules/shims/duplicates/hardcoded paths (dispatch 542,
     _factories 1393, _factories_extras 511 + dup disables, test_semantic 506,
     baseline shims, stream blocks, mixin misc, trivial-wrapper disables,
-    /home/slava paths).
+    /home/slava paths) + _base/_source_stream _is_under_source_root coexistence.
   - "RED-TEST WAIVED (gate inapplicable by design): golden-snapshot-wiring is a
     tests-only M1 contract item — probe verdict was test-side normalization
     sufficient, so the bounded src allowance was correctly NOT used and the diff
@@ -486,7 +486,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 8.546772685999994
+budgetSpentUsd: 8.565585685999993
 spendByRole:
   workhorse:
     costUsd: 3.6386346860000005
@@ -497,13 +497,13 @@ spendByRole:
     inputTokens: 4009627
     outputTokens: 1413951
   architect:
-    costUsd: 3.983096
-    inputTokens: 10323442
-    outputTokens: 397052
+    costUsd: 3.9912210000000004
+    inputTokens: 10327036
+    outputTokens: 422778
   alt-architect:
-    costUsd: 0.087594
-    inputTokens: 319087
-    outputTokens: 257469
+    costUsd: 0.098282
+    inputTokens: 360499
+    outputTokens: 287094
 spendByItem:
   golden-determinism-probe:
     costUsd: 0.16489800000000002
@@ -586,9 +586,9 @@ spendByItem:
     inputTokens: 206331
     outputTokens: 89105
   (orchestration):
-    costUsd: 4.821644
-    inputTokens: 12647553
-    outputTokens: 1333367
+    costUsd: 4.840457
+    inputTokens: 12692559
+    outputTokens: 1388718
   adr-formalization:
     costUsd: 0.051655
     inputTokens: 168426
@@ -601,4 +601,4 @@ spendByItem:
     costUsd: 0.18856
     inputTokens: 439297
     outputTokens: 213083
-lastUpdated: 2026-11-09T00:01:01.061Z
+lastUpdated: 2026-11-09T00:26:14.447Z
