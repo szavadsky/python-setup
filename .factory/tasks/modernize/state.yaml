@@ -165,7 +165,7 @@ items:
     mergedAt: 2026-11-09T00:11:56-05:00
   epic-kickoff-gate:
     kind: fact-finder
-    status: pending
+    status: blocked
     branch: topic/modernize--epic-kickoff-gate
     attempts: 1
     fixRounds: 1
@@ -215,7 +215,7 @@ items:
     currentStep: review
   cache-design-spike:
     kind: poc
-    status: pending
+    status: blocked
     branch: topic/modernize--cache-design-spike
     attempts: 1
     fixRounds: 1
@@ -254,7 +254,7 @@ items:
     mergedAt: 2026-11-08T10:47:48-05:00
   epic-shift-report-collection:
     kind: fact-finder
-    status: pending
+    status: blocked
     branch: topic/modernize--epic-shift-report-collection
     attempts: 1
     fixRounds: 1
@@ -312,7 +312,7 @@ items:
     currentStep: qa
   golden-regen-hatch:
     kind: test-only
-    status: pending
+    status: blocked
     branch: topic/modernize--golden-regen-hatch
     attempts: 1
     fixRounds: 1
@@ -337,7 +337,7 @@ items:
     mergedAt: 2026-11-08T12:55:17-05:00
   final-gate-validation:
     kind: fact-finder
-    status: pending
+    status: blocked
     branch: topic/modernize--final-gate-validation
     attempts: 1
     fixRounds: 1
@@ -418,6 +418,11 @@ items:
     attempts: 1
     fixRounds: 1
     spendUsd: 0
+concerns:
+  open: 0
+  dismissed: 0
+  routed: 0
+  resolved: 0
 debt:
   - No compliant model proven (215/0 unevaluable, single-author labels, Fastino
     review open, no CPU bench).
@@ -838,4 +843,4 @@ spendByItem:
     costUsd: 0.055946
     inputTokens: 148483
     outputTokens: 85833
-lastUpdated: 2026-11-09T12:50:27.595Z
+lastUpdated: 2026-11-09T17:52:01.524Z

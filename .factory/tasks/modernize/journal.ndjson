@@ -2006,3 +2006,5 @@
 {"type":"wave_not_complete","wave":2,"iteration":5,"stragglers":["checkers-stream-helper","epic-kickoff-gate"],"redrive":6,"ts":"2026-11-09T12:50:25.337Z"}
 {"type":"wave_stalled","wave":2,"iteration":5,"stragglers":["checkers-stream-helper","epic-kickoff-gate"],"ts":"2026-11-09T12:50:25.338Z"}
 {"type":"task_error","error":"Wave 2 stalled with non-terminal items after 5 re-drives: checkers-stream-helper, epic-kickoff-gate (refusing close-up; fix the stall, then restart)","ts":"2026-11-09T12:50:27.600Z"}
+{"type":"task_started","task":"modernize","branch":"topic/modernize","ts":"2026-11-09T17:51:58.809Z"}
+{"type":"task_failed","task":"modernize","ts":"2026-11-09T17:52:01.539Z"}
