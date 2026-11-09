@@ -270,28 +270,31 @@ items:
     mergedAt: 2026-11-08T11:04:13-05:00
   runner-dispatch-split:
     kind: no-behavior
-    status: ready
+    status: merged
     branch: topic/modernize--runner-dispatch-split
     attempts: 2
     fixRounds: 1
     spendUsd: 0.128832
     currentStep: review
+    mergedAt: 2026-11-09T01:16:27-05:00
   runner-factories-trim:
     kind: test-only
-    status: ready
+    status: merged
     branch: topic/modernize--runner-factories-trim
     attempts: 1
     fixRounds: 1
     spendUsd: 0.041291
     currentStep: review
+    mergedAt: 2026-11-09T01:16:31-05:00
   stale-disables-portability-cleanup:
     kind: test-only
-    status: ready
+    status: merged
     branch: topic/modernize--stale-disables-portability-cleanup
     attempts: 1
     fixRounds: 1
     spendUsd: 0.025615000000000002
     currentStep: review
+    mergedAt: 2026-11-09T01:20:54-05:00
   coding-rules-audit:
     kind: fact-finder
     status: pending
@@ -301,11 +304,12 @@ items:
     spendUsd: 0
   decision-cache-impl:
     kind: dev
-    status: pending
+    status: running
     branch: topic/modernize--decision-cache-impl
-    attempts: 1
-    fixRounds: 1
-    spendUsd: 0
+    attempts: 2
+    fixRounds: 2
+    spendUsd: 0.393308
+    currentStep: qa
   golden-regen-hatch:
     kind: test-only
     status: pending
@@ -315,11 +319,12 @@ items:
     spendUsd: 0
   never-test-linting-prune:
     kind: test-only
-    status: pending
+    status: ready
     branch: topic/modernize--never-test-linting-prune
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.055946
+    currentStep: review
   test-debloat-audit-i2:
     kind: fact-finder
     status: merged
@@ -621,6 +626,10 @@ debt:
   - "[runner-dispatch-split] dispatch.py at 449/500 leaves 51 lines headroom"
   - "[stale-disables-portability-cleanup] Slow downstream test still uses fixed
     Path.home()/.tmp scratch dir"
+  - "[decision-cache-impl] decisions/ lacks __init__.py while checkers/ and
+    runner/ have one"
+  - "[never-test-linting-prune] Stale docstring references deleted live test
+    file; owner cleanup deferred"
   - "[test-debloat-audit-i2] Clarify LoC counting method; wc -l differs slightly"
   - "[test-debloat-audit-i2] Clarify whether per-module N is default-collected
     or total incl slow"
@@ -655,20 +664,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 10.282858685999997
+budgetSpentUsd: 10.800045685999997
 spendByRole:
   workhorse:
-    costUsd: 4.746408686
-    inputTokens: 9141846
-    outputTokens: 3469730
+    costUsd: 5.129319686
+    inputTokens: 9724987
+    outputTokens: 3783424
   alt-workhorse:
-    costUsd: 1.267789
-    inputTokens: 5870607
-    outputTokens: 2133754
+    costUsd: 1.3401250000000002
+    inputTokens: 6264732
+    outputTokens: 2259189
   architect:
-    costUsd: 4.1703790000000005
-    inputTokens: 12052791
-    outputTokens: 441840
+    costUsd: 4.232319
+    inputTokens: 12669083
+    outputTokens: 443393
   alt-architect:
     costUsd: 0.098282
     inputTokens: 360499
@@ -782,26 +791,34 @@ spendByItem:
     costUsd: 0.076996
     inputTokens: 208236
     outputTokens: 84395
-  checkers-factories-split:
-    costUsd: 0.09088800000000001
-    inputTokens: 274090
-    outputTokens: 70148
-  runner-factories-trim:
-    costUsd: 0.041291
-    inputTokens: 95491
-    outputTokens: 43569
-  runner-dispatch-split:
-    costUsd: 0.128832
-    inputTokens: 294444
-    outputTokens: 136499
-  consolidate-integration-helpers-v2:
-    costUsd: 0.19363600000000003
-    inputTokens: 413243
-    outputTokens: 140910
   stale-disables-portability-cleanup:
     costUsd: 0.025615000000000002
     inputTokens: 54537
     outputTokens: 34612
+  checkers-factories-split:
+    costUsd: 0.09088800000000001
+    inputTokens: 274090
+    outputTokens: 70148
+  never-test-linting-prune:
+    costUsd: 0.055946
+    inputTokens: 148483
+    outputTokens: 85833
+  runner-dispatch-split:
+    costUsd: 0.128832
+    inputTokens: 294444
+    outputTokens: 136499
+  runner-factories-trim:
+    costUsd: 0.041291
+    inputTokens: 95491
+    outputTokens: 43569
+  decision-cache-impl:
+    costUsd: 0.393308
+    inputTokens: 802730
+    outputTokens: 337356
+  consolidate-integration-helpers-v2:
+    costUsd: 0.19363600000000003
+    inputTokens: 413243
+    outputTokens: 140910
   pylint-cache-assumptions:
     costUsd: 0.210224686
     inputTokens: 334753
@@ -811,7 +828,7 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 5.042189
-    inputTokens: 14515038
-    outputTokens: 1470357
-lastUpdated: 2026-11-09T06:16:31.264Z
+    costUsd: 5.110122
+    inputTokens: 15157383
+    outputTokens: 1487850
+lastUpdated: 2026-11-09T08:01:01.793Z
