@@ -1,7 +1,7 @@
 """Unit tests for python_setup_lint.checkers.stub_docstring_checker.
 
 Tests docstring detection logic and full pipeline with stub_checker.
-Fixture src rows live in ``tests/checkers/_factories.py`` (free LOC).
+Parametrize rows (src strings) live in ``tests/checkers/_factories_stub_docstring.py``.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ import pytest
 
 from python_setup_lint.checkers.stub.docstring_checker import StubDocstringChecker
 from python_setup_lint.testing import _make_tc as _make_tc_factory
-from tests.checkers._factories import (
+from tests.checkers._factories_stub_docstring import (
     _DOCSTRING_DETECT_CASES,
     _DOCSTRING_DOES_NOT_DETECT_CASES,
     _DOCSTRING_NO_COMPANION_CASES,

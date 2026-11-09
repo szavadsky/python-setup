@@ -1,8 +1,8 @@
 """Unit tests for python_setup_lint.checkers.no_try_import_checker.
 
 Verifies the AST checker detects (and does not detect) the correct
-try/except+import patterns. All fixture src strings live in
-``tests/checkers/_factories.py`` (free LOC, not counted against the gate).
+try/except+import patterns. Parametrize rows (src strings) live in
+``tests/checkers/_factories_no_try_import.py``.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from python_setup_lint.checkers.conformance.no_try_import_checker import (
     NoTryImportChecker,
 )
 from python_setup_lint.testing import _walk_and_release
-from tests.checkers._factories import (
+from tests.checkers._factories_no_try_import import (
     _NO_TRY_DETECT_CASES,
     _NO_TRY_DO_NOT_DETECT_CASES,
 )

@@ -4,7 +4,7 @@ Tests class base comparison, public method delegation, class attribute
 comparison, ClassVar skip in class bodies, E97B1 (stub symbol missing from
 impl), and E97B2 (kind mismatch).
 
-Fixture-row data lives in ``tests/checkers/_factories.py`` (free LOC).
+Parametrize rows live in ``tests/checkers/_factories_stub_class.py``.
 """
 
 from __future__ import annotations
@@ -22,13 +22,13 @@ from python_setup_lint.checkers.stub.fidelity import (  # type: ignore[attr-defi
     _normalize_bases,
 )
 from python_setup_lint.testing import _make_tc as _make_tc_factory
-from tests.checkers._factories import (
+from tests.checkers._factories import _run_pylint
+from tests.checkers._factories_stub_class import (
     _CLASS_FIDELITY_INTEGRATION_CASES,
     _IS_PUBLIC_METHOD_CASES,
     _KIND_MISMATCH_CASES,
     _NORMALIZE_BASES_CASES,
     _STUB_SYMBOL_MISSING_CASES,
-    _run_pylint,
     walk_stub_checker_with_pair,
 )
 
