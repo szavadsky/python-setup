@@ -429,7 +429,8 @@ debt:
     model could change W9704/W9738 silently).
   - Docs/ADR drift (semantic-justification, custom-checks, troubleshooting,
     tutorials, AGENTS.md counts/scope/pipeline, README, CHANGELOG, ty.toml,
-    ADR-002/009/011/014/016 staleness, ADR index omits 013..016).
+    ADR-002/009/011/013/014/015/016 staleness, ADR index omits 013..016, 017/018
+    never merged).
   - Test-harness duplication + dead code (13 _make_tc, 10 _walk_and_release, 8
     _msg_ids, 3 _RecordingBackend, 2 _UvCallRecorder, 2 extra_block, 2
     _semantic_disabled, dead helpers, vestigial cache tests, smoke overlap) +
@@ -670,7 +671,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 11.206090685999996
+budgetSpentUsd: 11.235554685999997
 spendByRole:
   workhorse:
     costUsd: 5.299290686
@@ -681,13 +682,13 @@ spendByRole:
     inputTokens: 6401521
     outputTokens: 2315654
   architect:
-    costUsd: 4.427058999999999
-    inputTokens: 14357293
-    outputTokens: 523083
+    costUsd: 4.440803999999999
+    inputTokens: 14417555
+    outputTokens: 549438
   alt-architect:
-    costUsd: 0.111764
-    inputTokens: 406441
-    outputTokens: 329374
+    costUsd: 0.127483
+    inputTokens: 457640
+    outputTokens: 377177
 spendByItem:
   golden-determinism-probe:
     costUsd: 0.16489800000000002
@@ -830,11 +831,11 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 5.516166999999999
-    inputTokens: 17616502
-    outputTokens: 1739042
+    costUsd: 5.545630999999999
+    inputTokens: 17727963
+    outputTokens: 1813200
   never-test-linting-prune:
     costUsd: 0.055946
     inputTokens: 148483
     outputTokens: 85833
-lastUpdated: 2026-11-09T09:22:12.446Z
+lastUpdated: 2026-11-09T09:48:36.682Z

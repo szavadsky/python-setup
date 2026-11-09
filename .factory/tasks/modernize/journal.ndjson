@@ -1922,3 +1922,4 @@
 {"type":"step_started","task":"modernize","step":"architect-revise-5-2","attempt":1,"recordDir":"/home/slava/aiexp/python-setup.factory-wt/topic_modernize/.factory/tasks/modernize/runs/118-architect-revise-5-2-a1","ts":"2026-11-09T09:40:55.078Z"}
 {"type":"step_timeout_armed","task":"modernize","step":"architect-revise-5-2","timeoutSec":7200,"ts":"2026-11-09T09:40:55.083Z"}
 {"type":"step_transcript_size_warning","task":"modernize","step":"architect-revise-5-2","attempt":1,"sizeBytes":19771287,"thresholdBytes":5242880,"traceRef":"/home/slava/aiexp/python-setup.factory-wt/.factory-runtime/sessions/2026-11-08T00-51-56-494Z_01a1b8a3-f9ce-7511-963e-37a3531a2d3a.jsonl","ts":"2026-11-09T09:48:34.413Z"}
+{"type":"step_finished","task":"modernize","step":"architect-revise-5-2","attempt":1,"status":"ok","sessionId":"01a1b8a3-f9ce-7511-963e-37a3531a2d3a","usage":{"inputTokens":60262,"outputTokens":26355,"costUsd":0.013745},"ts":"2026-11-09T09:48:34.515Z"}
