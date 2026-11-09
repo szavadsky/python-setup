@@ -207,7 +207,7 @@ items:
     mergedAt: 2026-11-09T00:09:28-05:00
   secrets-triage-spike:
     kind: fact-finder
-    status: ready
+    status: running
     branch: topic/modernize--secrets-triage-spike
     attempts: 1
     fixRounds: 1
@@ -671,16 +671,16 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 11.235554685999997
+budgetSpentUsd: 11.251356685999998
 spendByRole:
   workhorse:
     costUsd: 5.299290686
     inputTokens: 10313165
     outputTokens: 3856181
   alt-workhorse:
-    costUsd: 1.3679770000000004
-    inputTokens: 6401521
-    outputTokens: 2315654
+    costUsd: 1.3837790000000005
+    inputTokens: 6470831
+    outputTokens: 2359389
   architect:
     costUsd: 4.440803999999999
     inputTokens: 14417555
@@ -831,11 +831,11 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 5.545630999999999
-    inputTokens: 17727963
-    outputTokens: 1813200
+    costUsd: 5.561432999999999
+    inputTokens: 17797273
+    outputTokens: 1856935
   never-test-linting-prune:
     costUsd: 0.055946
     inputTokens: 148483
     outputTokens: 85833
-lastUpdated: 2026-11-09T09:48:36.682Z
+lastUpdated: 2026-11-09T11:55:39.631Z
