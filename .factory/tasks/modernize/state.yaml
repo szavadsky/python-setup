@@ -301,12 +301,12 @@ items:
     mergedAt: 2026-11-09T01:20:54-05:00
   coding-rules-audit:
     kind: fact-finder
-    status: running
+    status: ready
     branch: topic/modernize--coding-rules-audit
     attempts: 1
     fixRounds: 1
-    spendUsd: 0.104406
-    currentStep: research
+    spendUsd: 0.117057
+    currentStep: review
   decision-cache-impl:
     kind: dev
     status: failed
@@ -428,9 +428,9 @@ items:
     spendUsd: 0.033694
     currentStep: test-first
 concerns:
-  open: 30
+  open: 22
   dismissed: 0
-  routed: 5
+  routed: 13
   resolved: 2
 debt:
   - No compliant model proven (215/0 unevaluable, single-author labels, Fastino
@@ -478,6 +478,25 @@ debt:
     in-process semantic memo"
   - "[cache-design-spike] Lockfile needs a gitignore entry and the retired
     machine-cache entry should be replaced"
+  - "[coding-rules-audit] Production-dead _baseline_helpers module is pinned
+    only by tests"
+  - "[coding-rules-audit] peek_fallback_tools debt comment names a completed
+    owner"
+  - "[coding-rules-audit] Semantic docs still describe the removed cross-encoder
+    while the decision cache does not exist"
+  - "[coding-rules-audit] LoC deltas are gross estimates; public renames offset
+    stub deletion"
+  - "[coding-rules-audit] W9707 .pyi enforcement is blind, so 203 private stub
+    declarations are unguarded"
+  - "[consolidate-integration-helpers-v3] Accepted deletion of the two slow
+    self-lint guard tests instead of resurrecting them with item-side import
+    fixes."
+  - "[consolidate-integration-helpers-v3] Merge result is byte-identical to the
+    parent tip for every non-.factory path, so the item branch contributes no
+    code deltas of its own."
+  - "[consolidate-integration-helpers-v3] Stale doc references: _project_helpers
+    docstring still names 'the self-lint guards' (now pruned) and AGENTS.md test
+    counts are outdated."
   - "[adr-formalization] ADR-012 examples could include conformance/ path prefix"
   - "[adr-formalization] H1 heading prefix inconsistent between new and legacy
     ADRs"
@@ -668,6 +687,16 @@ debt:
   - "[runner-dispatch-split] dispatch.py at 449/500 leaves 51 lines headroom"
   - "[stale-disables-portability-cleanup] Slow downstream test still uses fixed
     Path.home()/.tmp scratch dir"
+  - "[coding-rules-audit] Dead _baseline_helpers pinned only by tests"
+  - "[coding-rules-audit] peek_fallback_tools shim names completed owner"
+  - "[coding-rules-audit] Semantic docs describe removed cross-encoder, cache
+    absent"
+  - "[coding-rules-audit] LoC deltas gross; renames offset stub deletion"
+  - "[coding-rules-audit] W9707 blind; 203 private stubs unguarded"
+  - "[coding-rules-audit] Accepted deletion of two slow self-lint guard tests"
+  - "[coding-rules-audit] Merge byte-identical to parent tip, no item deltas"
+  - "[coding-rules-audit] Stale helpers docstring plus AGENTS counts"
+  - "[coding-rules-audit] PYI-1 cites missing IMP-1 row"
   - "[decision-cache-impl] decisions/ lacks __init__.py while checkers/ and
     runner/ have one"
   - "[never-test-linting-prune] Stale docstring references deleted live test
@@ -706,16 +735,16 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.839725685999996
+budgetSpentUsd: 12.852376685999996
 spendByRole:
   workhorse:
     costUsd: 6.112707685999999
     inputTokens: 12342006
     outputTokens: 4463702
   alt-workhorse:
-    costUsd: 1.5420120000000008
-    inputTokens: 7334275
-    outputTokens: 2617179
+    costUsd: 1.5546630000000008
+    inputTokens: 7396330
+    outputTokens: 2645303
   architect:
     costUsd: 5.057522999999998
     inputTokens: 20158964
@@ -866,9 +895,9 @@ spendByItem:
     inputTokens: 192123
     outputTokens: 99164
   coding-rules-audit:
-    costUsd: 0.104406
-    inputTokens: 187879
-    outputTokens: 83867
+    costUsd: 0.117057
+    inputTokens: 249934
+    outputTokens: 111991
   epic-shift-report-collection:
     costUsd: 0.040594
     inputTokens: 88261
@@ -905,4 +934,4 @@ spendByItem:
     costUsd: 6.273198999999999
     inputTokens: 24056719
     outputTokens: 2199382
-lastUpdated: 2026-11-10T01:14:38.759Z
+lastUpdated: 2026-11-10T01:22:07.124Z
