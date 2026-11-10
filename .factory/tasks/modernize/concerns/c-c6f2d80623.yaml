@@ -17,7 +17,7 @@ affects:
   - final-gate-validation
   - golden-regen-hatch
 severity: high
-status: open
+status: routed
 source:
   record: 001-research-r1-a1
   agent: fact-finder
@@ -25,4 +25,5 @@ source:
   item: epic-shift-report-collection
   lastSeen: 2026-11-10T00:14:51.554Z
 createdAt: 2026-11-10T00:14:51.554Z
-updatedAt: 2026-11-10T00:14:51.554Z
+updatedAt: 2026-11-10T01:56:20.258Z
+disposition: architect

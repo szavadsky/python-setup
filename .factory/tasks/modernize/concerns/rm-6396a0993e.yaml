@@ -5,7 +5,7 @@ alternatives:
   - Abort task despite green gates and clean tree
 why: Cap overflow and stale bases are iteration-scoped; only a new iteration
   resets both while preserving green HEAD and v2 plan
-status: open
+status: routed
 source:
   record: 154-consult-empty-waves-5-1-a1
   agent: architect
@@ -13,4 +13,5 @@ source:
   iteration: 5
   lastSeen: 2026-11-09T22:49:32.521Z
 createdAt: 2026-11-09T22:49:32.521Z
-updatedAt: 2026-11-09T22:49:32.521Z
+updatedAt: 2026-11-10T02:58:56.108Z
+disposition: optional

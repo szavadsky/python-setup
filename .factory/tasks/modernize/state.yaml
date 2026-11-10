@@ -2,7 +2,7 @@ task: modernize
 kind: saga
 status: active
 iteration: 5
-currentWave: 2
+currentWave: 3
 items:
   adr-formalization:
     kind: no-behavior
@@ -165,12 +165,12 @@ items:
     mergedAt: 2026-11-09T00:11:56-05:00
   epic-kickoff-gate:
     kind: fact-finder
-    status: running
+    status: failed
     branch: topic/modernize--epic-kickoff-gate
     attempts: 1
     fixRounds: 1
-    spendUsd: 0.057369
-    currentStep: research
+    spendUsd: 0.073828
+    currentStep: review
   golden-contract-hardening:
     kind: test-only
     status: merged
@@ -217,12 +217,12 @@ items:
     mergedAt: 2026-11-09T13:56:23-05:00
   cache-design-spike:
     kind: poc
-    status: running
+    status: ready
     branch: topic/modernize--cache-design-spike
     attempts: 1
     fixRounds: 1
-    spendUsd: 0.105401
-    currentStep: develop
+    spendUsd: 0.109595
+    currentStep: review
   checkers-legacy-dead-cleanup:
     kind: no-behavior
     status: blocked
@@ -257,11 +257,13 @@ items:
     mergedAt: 2026-11-08T10:47:48-05:00
   epic-shift-report-collection:
     kind: fact-finder
-    status: pending
+    status: merged
     branch: topic/modernize--epic-shift-report-collection
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.04926
+    currentStep: review
+    mergedAt: 2026-11-09T22:05:57-05:00
   remaining-lint-violations-fix:
     kind: no-behavior
     status: merged
@@ -300,12 +302,13 @@ items:
     mergedAt: 2026-11-09T01:20:54-05:00
   coding-rules-audit:
     kind: fact-finder
-    status: running
+    status: merged
     branch: topic/modernize--coding-rules-audit
     attempts: 1
     fixRounds: 1
-    spendUsd: 0.104406
-    currentStep: research
+    spendUsd: 0.117057
+    currentStep: review
+    mergedAt: 2026-11-09T22:02:16-05:00
   decision-cache-impl:
     kind: dev
     status: failed
@@ -316,11 +319,12 @@ items:
     currentStep: qa
   golden-regen-hatch:
     kind: test-only
-    status: pending
+    status: ready
     branch: topic/modernize--golden-regen-hatch
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.043046
+    currentStep: review
   never-test-linting-prune:
     kind: test-only
     status: merged
@@ -341,11 +345,12 @@ items:
     mergedAt: 2026-11-08T12:55:17-05:00
   final-gate-validation:
     kind: fact-finder
-    status: pending
+    status: ready
     branch: topic/modernize--final-gate-validation
     attempts: 1
-    fixRounds: 1
-    spendUsd: 0
+    fixRounds: 2
+    spendUsd: 0.160775
+    currentStep: review
   semantic-tests-rewrite:
     kind: test-only
     status: blocked
@@ -355,11 +360,13 @@ items:
     spendUsd: 0
   test-debloat-audit:
     kind: fact-finder
-    status: pending
+    status: merged
     branch: topic/modernize--test-debloat-audit
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.209342
+    currentStep: review
+    mergedAt: 2026-11-09T22:22:16-05:00
   docs-reconciliation:
     kind: no-behavior
     status: blocked
@@ -419,14 +426,14 @@ items:
     kind: dev
     status: running
     branch: topic/modernize--docs-counts-sync
-    attempts: 1
+    attempts: 2
     fixRounds: 1
-    spendUsd: 0.033694
-    currentStep: test-first
+    spendUsd: 0.051479
+    currentStep: qa
 concerns:
-  open: 16
+  open: 0
   dismissed: 0
-  routed: 1
+  routed: 41
   resolved: 2
 debt:
   - No compliant model proven (215/0 unevaluable, single-author labels, Fastino
@@ -450,6 +457,10 @@ debt:
     v1.2.9).
   - Legacy .gitignore .cache/python-setup/semantic/ lines (retired machine
     cache) alongside new root decisions file.
+  - "M3 docs close-out RED: DecisionBackend/DECISION_MODEL/[semantic]/no-go
+    absent; stale reranker/7-pass/v1.2.5/v1.2.9/ADR-016:3/ADR-009:31 present.
+    Route to new root/epic follow-ups per ADR-011 map, never baseline edits;
+    carry to next iteration."
   - "I6 backlog: M1 contracts+spikes, M2 harness/runner/source/legacy-v2 (+ruff
     verify-only), M3 stream-v2 then storage-v2/refresh-v2, M4 pin-v2/wiring-v2
     (default NO-GO without U1 verdict + Fastino + second-rater approvals), M5
@@ -467,6 +478,77 @@ debt:
     determinism; oracle + per-tool coverage + tool-qualified brush-off/carry
     lookups prove sensitivity. QA rejected 2/2 solely on red-test; all other
     checks passed. No src follow-up required."
+  - "[cache-design-spike] PoC lock is POSIX-only fcntl.flock"
+  - "[cache-design-spike] Production call site passes a constant rule symbol,
+    collapsing the cache rule component"
+  - "[cache-design-spike] Tracked key excludes code_context, unlike the current
+    in-process semantic memo"
+  - "[cache-design-spike] Lockfile needs a gitignore entry and the retired
+    machine-cache entry should be replaced"
+  - "[coding-rules-audit] Production-dead _baseline_helpers module is pinned
+    only by tests"
+  - "[coding-rules-audit] peek_fallback_tools debt comment names a completed
+    owner"
+  - "[coding-rules-audit] Semantic docs still describe the removed cross-encoder
+    while the decision cache does not exist"
+  - "[coding-rules-audit] LoC deltas are gross estimates; public renames offset
+    stub deletion"
+  - "[coding-rules-audit] W9707 .pyi enforcement is blind, so 203 private stub
+    declarations are unguarded"
+  - "[consolidate-integration-helpers-v3] Accepted deletion of the two slow
+    self-lint guard tests instead of resurrecting them with item-side import
+    fixes."
+  - "[consolidate-integration-helpers-v3] Merge result is byte-identical to the
+    parent tip for every non-.factory path, so the item branch contributes no
+    code deltas of its own."
+  - "[consolidate-integration-helpers-v3] Stale doc references: _project_helpers
+    docstring still names 'the self-lint guards' (now pruned) and AGENTS.md test
+    counts are outdated."
+  - "[epic-kickoff-gate] ADR-011 names a test class that no longer exists and
+    carries stale line references"
+  - "[epic-kickoff-gate] Checkers owner count exceeds the ADR-011 ±5 drift
+    budget by 3"
+  - "[epic-shift-report-collection] ADR-011 shift-handoff contract remains
+    'Accepted' after epic decomposition was abandoned"
+  - "[epic-shift-report-collection] Legacy golden-regen-hatch could misread a
+    missing handoff as all-no-shift"
+  - "[final-gate-validation] Production call sites pass constant rule symbols,
+    collapsing the cache-key rule component"
+  - "[final-gate-validation] 1.72 GiB of .factory model artifacts are tracked;
+    detect-secrets safety depends on a prefix-anchored baseline filter"
+  - "[final-gate-validation] golden-regen-hatch report is absent from HEAD"
+  - "[final-gate-validation] PoC lock is POSIX-only fcntl.flock; no production
+    lock code exists at HEAD"
+  - "[golden-regen-hatch] Legacy golden-regen-hatch ran with a fail-open 0/3
+    handoff; this attestation is a no-regen byte-identity proof, not an
+    all-no-shift declaration"
+  - "[test-debloat-audit] coding-rules-audit UNIFIED ownership map was
+    unavailable in the prompt/inter-dep"
+  - "[test-debloat-audit] test_testing_fakes.py must not be removed as
+    test-infra-only coverage"
+  - "[test-debloat-audit] Shipped rcfile parity is unguarded after
+    test_config_consistency.py deletion"
+  - "[test-debloat-audit] Benchmark test has zero assertions and cannot gate
+    regressions"
+  - "[test-debloat-audit] Real-pipeline smoke test runs 14 real tools in the
+    default suite (not slow)"
+  - "[test-debloat-audit] Removing test_runner_private_imports.py broadens the
+    never-linting definition"
+  - "[test-debloat-audit] Fixture data test file is collected and leaks a temp
+    directory"
+  - "[test-debloat-audit] Marker taxonomy is effectively unenforced"
+  - "[test-debloat-audit] Assignment citation for semantic_check.py is stale/out
+    of range"
+  - "[final-gate-validation] detect-secrets scan --baseline rewrites the tracked
+    baseline in place during lint"
+  - "[final-gate-validation] detect-secrets relies on the baseline
+    `^\\.factory/` filter for 1.84GB of tracked safetensors"
+  - "[final-gate-validation] AGENTS.md unit-test counts are stale in addition to
+    the integration row"
+  - "[final-gate-validation] ADR-016 and ADR-009 contain HEAD-contradicted
+    claims without staleness notes"
+  - "[final-gate-validation] The 7-passed+2-skipped integration split is
+    environment-dependent"
   - "[adr-formalization] ADR-012 examples could include conformance/ path prefix"
   - "[adr-formalization] H1 heading prefix inconsistent between new and legacy
     ADRs"
@@ -597,6 +679,11 @@ debt:
     decision-model warnings"
   - "[decision-backend-impl] Expand nested ternary in normalize_suppressed_codes"
   - "[decision-backend-impl] Add minimal docstrings to decision-backend stub"
+  - "[epic-kickoff-gate] ADR-011 stale test class and line refs"
+  - "[epic-kickoff-gate] Checkers +8 exceeds +-5 budget, enumerated and amended"
+  - "[epic-kickoff-gate] ADR-011 Accepted handoff contract stale"
+  - "[epic-kickoff-gate] Legacy hatch fail-open on missing handoff"
+  - "[epic-kickoff-gate] Drift row 21 cites regex def :27 as stream site"
   - "[golden-contract-hardening] Add runs guard and messages to byte-identical
     hash asserts"
   - "[golden-contract-hardening] Consider SHA-256 comparison for counts payloads
@@ -625,6 +712,15 @@ debt:
     excludes it (6/336)"
   - "[secrets-triage-spike] Scope the --baseline masking claim to
     detect-secrets-scoped runs"
+  - "[cache-design-spike] Constant rule symbol collapses cache rule component"
+  - "[cache-design-spike] Tracked key excludes code_context"
+  - "[cache-design-spike] Lockfile gitignore plus retired cache entry"
+  - "[cache-design-spike] Heuristic docstring claims exactly as production"
+  - "[cache-design-spike] backend-failed marked contacted but skipped as
+    observation"
+  - "[cache-design-spike] Root escape guards triplicated"
+  - "[cache-design-spike] production_untouched fails post-commit on tracked out/"
+  - "[cache-design-spike] Docstrings say RefreshRefused vs RefreshRefusedError"
   - "[coding-rules-audit-i2] Reconcile beartype taxonomy: true total is 26
     sites, A22 undercounts by 2"
   - "[coding-rules-audit-i2] A33 counts drift: measured 45 W9740 in src+scripts,
@@ -648,8 +744,32 @@ debt:
   - "[runner-dispatch-split] dispatch.py at 449/500 leaves 51 lines headroom"
   - "[stale-disables-portability-cleanup] Slow downstream test still uses fixed
     Path.home()/.tmp scratch dir"
+  - "[coding-rules-audit] Dead _baseline_helpers pinned only by tests"
+  - "[coding-rules-audit] peek_fallback_tools shim names completed owner"
+  - "[coding-rules-audit] Semantic docs describe removed cross-encoder, cache
+    absent"
+  - "[coding-rules-audit] LoC deltas gross; renames offset stub deletion"
+  - "[coding-rules-audit] W9707 blind; 203 private stubs unguarded"
+  - "[coding-rules-audit] Accepted deletion of two slow self-lint guard tests"
+  - "[coding-rules-audit] Merge byte-identical to parent tip, no item deltas"
+  - "[coding-rules-audit] Stale helpers docstring plus AGENTS counts"
+  - "[coding-rules-audit] PYI-1 cites missing IMP-1 row"
   - "[decision-cache-impl] decisions/ lacks __init__.py while checkers/ and
     runner/ have one"
+  - "[golden-regen-hatch] Benchmark test has zero assertions and cannot gate
+    regressions"
+  - "[golden-regen-hatch] Real-pipeline smoke runs 14 tools in default suite"
+  - "[golden-regen-hatch] Removing private-imports guard broadens never-linting
+    definition"
+  - "[golden-regen-hatch] Fixture data test collected and leaks temp dir"
+  - "[golden-regen-hatch] Marker taxonomy effectively unenforced"
+  - "[golden-regen-hatch] Semantic_check citation stale/out of range"
+  - "[golden-regen-hatch] Check-only ruff format ToolSpec with phase-1a-only
+    mutation"
+  - "[golden-regen-hatch] Judged gates from Gate Diff table; lint/test fixed"
+  - "[golden-regen-hatch] Prune 13 I4 pendings, add 2 gap outlines"
+  - "[golden-regen-hatch] Lint/test IMPROVED, no regressions"
+  - "[golden-regen-hatch] Prune pendings, add stream-helper-v2 deps"
   - "[never-test-linting-prune] Stale docstring references deleted live test
     file; owner cleanup deferred"
   - "[test-debloat-audit-i2] Clarify LoC counting method; wc -l differs slightly"
@@ -665,6 +785,46 @@ debt:
     and conflates core"
   - "[test-debloat-audit-i2] Sources typo: baseline-diff-edge cited under
     tests/checkers/"
+  - "[final-gate-validation] Constant rule symbols collapse cache-key rule
+    component"
+  - "[final-gate-validation] Tracked 1.72GiB safetensors; detect-secrets relies
+    on prefix filter"
+  - "[final-gate-validation] Golden-regen-hatch report absent from HEAD"
+  - "[final-gate-validation] No production lock; PoC fcntl concern deferred"
+  - "[final-gate-validation] Legacy hatch fail-open; this gate is no-regen
+    byte-identity only"
+  - "[final-gate-validation] UNIFIED ownership map unavailable; ADR-011 labels
+    provisional"
+  - "[final-gate-validation] Keep test_testing_fakes.py; testing.py is shipped
+    API"
+  - "[final-gate-validation] Rcfile parity unguarded after consistency-test
+    deletion"
+  - "[final-gate-validation] Transient baseline rewrite; normalized back, tree
+    clean"
+  - "[final-gate-validation] 1.84GB safetensors rely on prefix filter; HEAD
+    green"
+  - "[final-gate-validation] AGENTS unit counts stale alongside integration row"
+  - "[final-gate-validation] ADR-009/016 stale claims contradict HEAD"
+  - "[final-gate-validation] 7+2 integration split env-dependent via conftest
+    PATH"
+  - "[final-gate-validation] Deletion-wins for pruned self-lint guards verified"
+  - "[final-gate-validation] Runtime-derived docs counts; no hardcoded drift"
+  - "[final-gate-validation] Semantic block retarget to TestAnyElementCodeEcho
+    verified"
+  - "[final-gate-validation] Semantic reclassification 65/91/15/7/16 keeps
+    single-writer"
+  - "[test-debloat-audit] Unrelated merge tradeoff; retain as digest"
+  - "[test-debloat-audit] Consistent premise for audit §6; no action"
+  - "[test-debloat-audit] Unrelated iteration decision; retain as digest"
+  - "[test-debloat-audit] Unrelated cache decision; retain as digest"
+  - "[test-debloat-audit] Unrelated item decision; retain as digest"
+  - "[test-debloat-audit] Unrelated reporting decision; no conflict"
+  - "[test-debloat-audit] Unrelated gate decision; no interaction"
+  - "[test-debloat-audit] Unrelated merge decision; retain as digest"
+  - "[test-debloat-audit] Consistent with conftest row; no action"
+  - "[test-debloat-audit] Minor line-range errors in two rewrite dispositions"
+  - "[test-debloat-audit] Cosmetic count/label inconsistencies; LoC verified
+    exact"
   - "[golden-helpers-unit] tool_minimums imports TOOLS via package root, pulling
     CLI structlog side effects"
   - "[golden-helpers-unit] Public FindingKey alias missing from __all__"
@@ -686,20 +846,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.537494685999997
+budgetSpentUsd: 13.206530685999997
 spendByRole:
   workhorse:
-    costUsd: 5.8146706859999995
-    inputTokens: 11423858
-    outputTokens: 4246801
+    costUsd: 6.174068685999998
+    inputTokens: 12473704
+    outputTokens: 4521559
   alt-workhorse:
-    costUsd: 1.5378180000000008
-    inputTokens: 7319130
-    outputTokens: 2605987
+    costUsd: 1.6919320000000007
+    inputTokens: 8088134
+    outputTokens: 2867414
   architect:
-    costUsd: 5.057522999999998
-    inputTokens: 20158964
-    outputTokens: 681948
+    costUsd: 5.213046999999998
+    inputTokens: 21674385
+    outputTokens: 686714
   alt-architect:
     costUsd: 0.127483
     inputTokens: 457640
@@ -829,22 +989,34 @@ spendByItem:
     costUsd: 0.19651400000000002
     inputTokens: 713974
     outputTokens: 167344
+  final-gate-validation:
+    costUsd: 0.160775
+    inputTokens: 547224
+    outputTokens: 171808
   consolidate-integration-helpers-v3:
     costUsd: 0.259824
     inputTokens: 463214
     outputTokens: 227545
   epic-kickoff-gate:
-    costUsd: 0.057369
-    inputTokens: 121841
-    outputTokens: 49513
-  cache-design-spike:
-    costUsd: 0.105401
-    inputTokens: 176978
-    outputTokens: 87972
+    costUsd: 0.073828
+    inputTokens: 188519
+    outputTokens: 87729
+  test-debloat-audit:
+    costUsd: 0.209342
+    inputTokens: 792518
+    outputTokens: 167470
+  epic-shift-report-collection:
+    costUsd: 0.04926
+    inputTokens: 160531
+    outputTokens: 43523
   coding-rules-audit:
-    costUsd: 0.104406
-    inputTokens: 187879
-    outputTokens: 83867
+    costUsd: 0.117057
+    inputTokens: 249934
+    outputTokens: 111991
+  cache-design-spike:
+    costUsd: 0.109595
+    inputTokens: 192123
+    outputTokens: 99164
   decision-cache-impl:
     costUsd: 0.393308
     inputTokens: 802730
@@ -854,9 +1026,13 @@ spendByItem:
     inputTokens: 549144
     outputTokens: 175859
   docs-counts-sync:
-    costUsd: 0.033694
-    inputTokens: 70279
-    outputTokens: 32429
+    costUsd: 0.051479
+    inputTokens: 116644
+    outputTokens: 46244
+  golden-regen-hatch:
+    costUsd: 0.043046
+    inputTokens: 128334
+    outputTokens: 62037
   pylint-cache-assumptions:
     costUsd: 0.23190968599999998
     inputTokens: 455233
@@ -866,7 +1042,7 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 6.273198999999999
-    inputTokens: 24056719
-    outputTokens: 2199382
-lastUpdated: 2026-11-10T00:08:53.351Z
+    costUsd: 6.428722999999999
+    inputTokens: 25572140
+    outputTokens: 2204148
+lastUpdated: 2026-11-10T03:34:09.267Z

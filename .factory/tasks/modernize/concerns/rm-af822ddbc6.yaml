@@ -12,7 +12,7 @@ why: The deletion is deliberate on the parent side (commit 644774e,
   them, and neither file is referenced by any remaining code or config.
   Resurrecting them would re-introduce tests the parent branch explicitly
   pruned.
-status: open
+status: routed
 source:
   record: 005-integrate-r1-a1
   agent: developer
@@ -20,4 +20,5 @@ source:
   item: consolidate-integration-helpers-v3
   lastSeen: 2026-11-09T23:49:50.606Z
 createdAt: 2026-11-09T23:49:50.606Z
-updatedAt: 2026-11-09T23:49:50.606Z
+updatedAt: 2026-11-10T03:32:47.723Z
+disposition: optional

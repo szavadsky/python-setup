@@ -11,7 +11,7 @@ why: Reconciles the writer-first verdict (sequential pylint, jobs==1, no write
   surface during lint) with ADR-010's mandate for crash-safe explicit refresh.
   Contention fails without writing, atomic failure preserves the old cache, and
   CI/jobs guards fire before any write.
-status: open
+status: routed
 source:
   record: 001-develop-r1-a1
   agent: developer
@@ -19,4 +19,5 @@ source:
   item: cache-design-spike
   lastSeen: 2026-11-09T23:18:39.934Z
 createdAt: 2026-11-09T23:18:39.934Z
-updatedAt: 2026-11-09T23:18:39.934Z
+updatedAt: 2026-11-10T02:58:56.108Z
+disposition: optional

@@ -9,7 +9,7 @@ why: No ADR defines a TTL, and a default would silently discard still-valid
   decisions in rarely refreshed projects. Empty-file, missing-file, stale-model
   and stale-prompt pruning already bound growth; the optional mechanism is
   proven with a 30-day horizon.
-status: open
+status: routed
 source:
   record: 001-develop-r1-a1
   agent: developer
@@ -17,4 +17,5 @@ source:
   item: cache-design-spike
   lastSeen: 2026-11-09T23:18:39.934Z
 createdAt: 2026-11-09T23:18:39.934Z
-updatedAt: 2026-11-09T23:18:39.934Z
+updatedAt: 2026-11-10T02:58:56.108Z
+disposition: optional
