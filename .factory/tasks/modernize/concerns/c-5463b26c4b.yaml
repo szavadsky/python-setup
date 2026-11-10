@@ -14,7 +14,7 @@ affects:
   - cache-design-spike
   - decision-cache-impl
 severity: medium
-status: open
+status: routed
 source:
   record: 001-develop-r1-a1
   agent: developer
@@ -22,4 +22,5 @@ source:
   item: cache-design-spike
   lastSeen: 2026-11-09T23:18:39.934Z
 createdAt: 2026-11-09T23:18:39.934Z
-updatedAt: 2026-11-09T23:18:39.934Z
+updatedAt: 2026-11-10T01:14:34.111Z
+disposition: optional

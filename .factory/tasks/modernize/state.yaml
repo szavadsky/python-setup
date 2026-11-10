@@ -358,11 +358,12 @@ items:
     spendUsd: 0
   test-debloat-audit:
     kind: fact-finder
-    status: pending
+    status: running
     branch: topic/modernize--test-debloat-audit
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.179749
+    currentStep: research
   docs-reconciliation:
     kind: no-behavior
     status: blocked
@@ -427,7 +428,7 @@ items:
     spendUsd: 0.033694
     currentStep: test-first
 concerns:
-  open: 25
+  open: 34
   dismissed: 0
   routed: 1
   resolved: 2
@@ -689,12 +690,12 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.655782685999997
+budgetSpentUsd: 12.835531685999996
 spendByRole:
   workhorse:
-    costUsd: 5.932958685999999
-    inputTokens: 11657503
-    outputTokens: 4360246
+    costUsd: 6.112707685999999
+    inputTokens: 12342006
+    outputTokens: 4463702
   alt-workhorse:
     costUsd: 1.5378180000000008
     inputTokens: 7319130
@@ -864,6 +865,10 @@ spendByItem:
     costUsd: 0.258951
     inputTokens: 549144
     outputTokens: 175859
+  test-debloat-audit:
+    costUsd: 0.179749
+    inputTokens: 684503
+    outputTokens: 103456
   docs-counts-sync:
     costUsd: 0.033694
     inputTokens: 70279
@@ -884,4 +889,4 @@ spendByItem:
     costUsd: 6.273198999999999
     inputTokens: 24056719
     outputTokens: 2199382
-lastUpdated: 2026-11-10T00:36:27.700Z
+lastUpdated: 2026-11-10T00:53:25.706Z
