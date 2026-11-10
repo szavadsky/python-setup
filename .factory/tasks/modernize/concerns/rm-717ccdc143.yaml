@@ -7,7 +7,7 @@ alternatives:
   - Drop ruff format from TOOLS
 why: Matches operator action request in infra notes; allows future gate
   simplification while keeping current split gates green
-status: open
+status: routed
 source:
   record: 129-wave-close-up-5-3-a1
   agent: wave-close-up
@@ -15,4 +15,5 @@ source:
   iteration: 5
   lastSeen: 2026-11-09T21:35:07.950Z
 createdAt: 2026-11-09T21:35:07.950Z
-updatedAt: 2026-11-09T21:35:07.950Z
+updatedAt: 2026-11-10T02:32:36.259Z
+disposition: optional

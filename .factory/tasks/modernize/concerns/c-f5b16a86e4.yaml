@@ -11,7 +11,7 @@ affects:
   - semantic items
   - test-debloat-audit
 severity: low
-status: open
+status: routed
 source:
   record: 001-research-r1-a1
   agent: fact-finder
@@ -19,4 +19,5 @@ source:
   item: test-debloat-audit
   lastSeen: 2026-11-10T00:53:21.467Z
 createdAt: 2026-11-10T00:53:21.467Z
-updatedAt: 2026-11-10T00:53:21.467Z
+updatedAt: 2026-11-10T02:32:36.259Z
+disposition: optional

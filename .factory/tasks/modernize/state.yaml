@@ -346,9 +346,9 @@ items:
     status: running
     branch: topic/modernize--final-gate-validation
     attempts: 1
-    fixRounds: 1
-    spendUsd: 0.052455
-    currentStep: research
+    fixRounds: 2
+    spendUsd: 0.069515
+    currentStep: review
   semantic-tests-rewrite:
     kind: test-only
     status: blocked
@@ -428,9 +428,9 @@ items:
     spendUsd: 0.051479
     currentStep: develop
 concerns:
-  open: 15
+  open: 6
   dismissed: 0
-  routed: 20
+  routed: 29
   resolved: 2
 debt:
   - No compliant model proven (215/0 unevaluable, single-author labels, Fastino
@@ -505,6 +505,22 @@ debt:
     'Accepted' after epic decomposition was abandoned"
   - "[epic-shift-report-collection] Legacy golden-regen-hatch could misread a
     missing handoff as all-no-shift"
+  - "[final-gate-validation] Production call sites pass constant rule symbols,
+    collapsing the cache-key rule component"
+  - "[final-gate-validation] 1.72 GiB of .factory model artifacts are tracked;
+    detect-secrets safety depends on a prefix-anchored baseline filter"
+  - "[final-gate-validation] golden-regen-hatch report is absent from HEAD"
+  - "[final-gate-validation] PoC lock is POSIX-only fcntl.flock; no production
+    lock code exists at HEAD"
+  - "[golden-regen-hatch] Legacy golden-regen-hatch ran with a fail-open 0/3
+    handoff; this attestation is a no-regen byte-identity proof, not an
+    all-no-shift declaration"
+  - "[test-debloat-audit] coding-rules-audit UNIFIED ownership map was
+    unavailable in the prompt/inter-dep"
+  - "[test-debloat-audit] test_testing_fakes.py must not be removed as
+    test-infra-only coverage"
+  - "[test-debloat-audit] Shipped rcfile parity is unguarded after
+    test_config_consistency.py deletion"
   - "[adr-formalization] ADR-012 examples could include conformance/ path prefix"
   - "[adr-formalization] H1 heading prefix inconsistent between new and legacy
     ADRs"
@@ -727,6 +743,20 @@ debt:
     and conflates core"
   - "[test-debloat-audit-i2] Sources typo: baseline-diff-edge cited under
     tests/checkers/"
+  - "[final-gate-validation] Constant rule symbols collapse cache-key rule
+    component"
+  - "[final-gate-validation] Tracked 1.72GiB safetensors; detect-secrets relies
+    on prefix filter"
+  - "[final-gate-validation] Golden-regen-hatch report absent from HEAD"
+  - "[final-gate-validation] No production lock; PoC fcntl concern deferred"
+  - "[final-gate-validation] Legacy hatch fail-open; this gate is no-regen
+    byte-identity only"
+  - "[final-gate-validation] UNIFIED ownership map unavailable; ADR-011 labels
+    provisional"
+  - "[final-gate-validation] Keep test_testing_fakes.py; testing.py is shipped
+    API"
+  - "[final-gate-validation] Rcfile parity unguarded after consistency-test
+    deletion"
   - "[golden-helpers-unit] tool_minimums imports TOOLS via package root, pulling
     CLI structlog side effects"
   - "[golden-helpers-unit] Public FindingKey alias missing from __all__"
@@ -748,16 +778,16 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.971763685999996
+budgetSpentUsd: 12.988823685999996
 spendByRole:
   workhorse:
     costUsd: 6.130492685999999
     inputTokens: 12388371
     outputTokens: 4477517
   alt-workhorse:
-    costUsd: 1.5797880000000004
-    inputTokens: 7535278
-    outputTokens: 2690714
+    costUsd: 1.5968480000000007
+    inputTokens: 7615104
+    outputTokens: 2728957
   architect:
     costUsd: 5.133999999999998
     inputTokens: 20904590
@@ -892,9 +922,9 @@ spendByItem:
     inputTokens: 713974
     outputTokens: 167344
   final-gate-validation:
-    costUsd: 0.052455
-    inputTokens: 95165
-    outputTokens: 54227
+    costUsd: 0.069515
+    inputTokens: 174991
+    outputTokens: 92470
   consolidate-integration-helpers-v3:
     costUsd: 0.259824
     inputTokens: 463214
@@ -947,4 +977,4 @@ spendByItem:
     costUsd: 6.349675999999999
     inputTokens: 24802345
     outputTokens: 2201503
-lastUpdated: 2026-11-10T02:01:29.926Z
+lastUpdated: 2026-11-10T02:23:12.305Z
