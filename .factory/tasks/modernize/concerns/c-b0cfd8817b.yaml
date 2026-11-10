@@ -19,7 +19,7 @@ affects:
   - golden-regen-hatch
   - golden-regen-hatch-v2
 severity: medium
-status: open
+status: routed
 source:
   record: 001-develop-r1-a1
   agent: developer
@@ -27,4 +27,5 @@ source:
   item: golden-regen-hatch
   lastSeen: 2026-11-10T00:36:23.179Z
 createdAt: 2026-11-10T00:36:23.179Z
-updatedAt: 2026-11-10T00:36:23.179Z
+updatedAt: 2026-11-10T02:23:05.623Z
+disposition: optional

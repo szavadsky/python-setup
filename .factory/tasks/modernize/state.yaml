@@ -2,7 +2,7 @@ task: modernize
 kind: saga
 status: active
 iteration: 5
-currentWave: 2
+currentWave: 3
 items:
   adr-formalization:
     kind: no-behavior
@@ -165,7 +165,7 @@ items:
     mergedAt: 2026-11-09T00:11:56-05:00
   epic-kickoff-gate:
     kind: fact-finder
-    status: ready
+    status: failed
     branch: topic/modernize--epic-kickoff-gate
     attempts: 1
     fixRounds: 1
@@ -257,12 +257,12 @@ items:
     mergedAt: 2026-11-08T10:47:48-05:00
   epic-shift-report-collection:
     kind: fact-finder
-    status: running
+    status: ready
     branch: topic/modernize--epic-shift-report-collection
     attempts: 1
     fixRounds: 1
-    spendUsd: 0.040594
-    currentStep: research
+    spendUsd: 0.04926
+    currentStep: review
   remaining-lint-violations-fix:
     kind: no-behavior
     status: merged
@@ -748,20 +748,20 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.886620685999995
+budgetSpentUsd: 12.971763685999996
 spendByRole:
   workhorse:
     costUsd: 6.130492685999999
     inputTokens: 12388371
     outputTokens: 4477517
   alt-workhorse:
-    costUsd: 1.5711220000000006
-    inputTokens: 7463008
-    outputTokens: 2683519
+    costUsd: 1.5797880000000004
+    inputTokens: 7535278
+    outputTokens: 2690714
   architect:
-    costUsd: 5.057522999999998
-    inputTokens: 20158964
-    outputTokens: 681948
+    costUsd: 5.133999999999998
+    inputTokens: 20904590
+    outputTokens: 684069
   alt-architect:
     costUsd: 0.127483
     inputTokens: 457640
@@ -912,9 +912,9 @@ spendByItem:
     inputTokens: 249934
     outputTokens: 111991
   epic-shift-report-collection:
-    costUsd: 0.040594
-    inputTokens: 88261
-    outputTokens: 36328
+    costUsd: 0.04926
+    inputTokens: 160531
+    outputTokens: 43523
   decision-cache-impl:
     costUsd: 0.393308
     inputTokens: 802730
@@ -944,7 +944,7 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 6.273198999999999
-    inputTokens: 24056719
-    outputTokens: 2199382
-lastUpdated: 2026-11-10T01:56:24.655Z
+    costUsd: 6.349675999999999
+    inputTokens: 24802345
+    outputTokens: 2201503
+lastUpdated: 2026-11-10T02:01:29.926Z
