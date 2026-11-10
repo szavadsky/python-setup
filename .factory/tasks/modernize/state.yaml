@@ -342,11 +342,12 @@ items:
     mergedAt: 2026-11-08T12:55:17-05:00
   final-gate-validation:
     kind: fact-finder
-    status: pending
+    status: running
     branch: topic/modernize--final-gate-validation
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.052455
+    currentStep: research
   semantic-tests-rewrite:
     kind: test-only
     status: blocked
@@ -425,7 +426,7 @@ items:
     spendUsd: 0.033694
     currentStep: test-first
 concerns:
-  open: 19
+  open: 24
   dismissed: 0
   routed: 1
   resolved: 2
@@ -687,12 +688,12 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.578088685999996
+budgetSpentUsd: 12.630543685999996
 spendByRole:
   workhorse:
-    costUsd: 5.855264685999999
-    inputTokens: 11512119
-    outputTokens: 4283129
+    costUsd: 5.907719685999999
+    inputTokens: 11607284
+    outputTokens: 4337356
   alt-workhorse:
     costUsd: 1.5378180000000008
     inputTokens: 7319130
@@ -830,6 +831,10 @@ spendByItem:
     costUsd: 0.19651400000000002
     inputTokens: 713974
     outputTokens: 167344
+  final-gate-validation:
+    costUsd: 0.052455
+    inputTokens: 95165
+    outputTokens: 54227
   consolidate-integration-helpers-v3:
     costUsd: 0.259824
     inputTokens: 463214
@@ -874,4 +879,4 @@ spendByItem:
     costUsd: 6.273198999999999
     inputTokens: 24056719
     outputTokens: 2199382
-lastUpdated: 2026-11-10T00:14:55.676Z
+lastUpdated: 2026-11-10T00:28:02.172Z
