@@ -2,7 +2,7 @@ task: modernize
 kind: saga
 status: active
 iteration: 5
-currentWave: 3
+currentWave: 2
 items:
   adr-formalization:
     kind: no-behavior
@@ -165,11 +165,12 @@ items:
     mergedAt: 2026-11-09T00:11:56-05:00
   epic-kickoff-gate:
     kind: fact-finder
-    status: blocked
+    status: running
     branch: topic/modernize--epic-kickoff-gate
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.057369
+    currentStep: research
   golden-contract-hardening:
     kind: test-only
     status: merged
@@ -256,7 +257,7 @@ items:
     mergedAt: 2026-11-08T10:47:48-05:00
   epic-shift-report-collection:
     kind: fact-finder
-    status: blocked
+    status: pending
     branch: topic/modernize--epic-shift-report-collection
     attempts: 1
     fixRounds: 1
@@ -315,7 +316,7 @@ items:
     currentStep: qa
   golden-regen-hatch:
     kind: test-only
-    status: blocked
+    status: pending
     branch: topic/modernize--golden-regen-hatch
     attempts: 1
     fixRounds: 1
@@ -340,7 +341,7 @@ items:
     mergedAt: 2026-11-08T12:55:17-05:00
   final-gate-validation:
     kind: fact-finder
-    status: blocked
+    status: pending
     branch: topic/modernize--final-gate-validation
     attempts: 1
     fixRounds: 1
@@ -423,7 +424,7 @@ items:
     spendUsd: 0.033694
     currentStep: test-first
 concerns:
-  open: 12
+  open: 16
   dismissed: 0
   routed: 1
   resolved: 2
@@ -685,12 +686,12 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.480125685999996
+budgetSpentUsd: 12.537494685999997
 spendByRole:
   workhorse:
-    costUsd: 5.757301685999999
-    inputTokens: 11302017
-    outputTokens: 4197288
+    costUsd: 5.8146706859999995
+    inputTokens: 11423858
+    outputTokens: 4246801
   alt-workhorse:
     costUsd: 1.5378180000000008
     inputTokens: 7319130
@@ -832,6 +833,10 @@ spendByItem:
     costUsd: 0.259824
     inputTokens: 463214
     outputTokens: 227545
+  epic-kickoff-gate:
+    costUsd: 0.057369
+    inputTokens: 121841
+    outputTokens: 49513
   cache-design-spike:
     costUsd: 0.105401
     inputTokens: 176978
@@ -864,4 +869,4 @@ spendByItem:
     costUsd: 6.273198999999999
     inputTokens: 24056719
     outputTokens: 2199382
-lastUpdated: 2026-11-09T23:58:57.375Z
+lastUpdated: 2026-11-10T00:08:53.351Z
