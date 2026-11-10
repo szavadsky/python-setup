@@ -317,11 +317,12 @@ items:
     currentStep: qa
   golden-regen-hatch:
     kind: test-only
-    status: pending
+    status: running
     branch: topic/modernize--golden-regen-hatch
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.025239
+    currentStep: develop
   never-test-linting-prune:
     kind: test-only
     status: merged
@@ -426,7 +427,7 @@ items:
     spendUsd: 0.033694
     currentStep: test-first
 concerns:
-  open: 24
+  open: 25
   dismissed: 0
   routed: 1
   resolved: 2
@@ -688,12 +689,12 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.630543685999996
+budgetSpentUsd: 12.655782685999997
 spendByRole:
   workhorse:
-    costUsd: 5.907719685999999
-    inputTokens: 11607284
-    outputTokens: 4337356
+    costUsd: 5.932958685999999
+    inputTokens: 11657503
+    outputTokens: 4360246
   alt-workhorse:
     costUsd: 1.5378180000000008
     inputTokens: 7319130
@@ -867,6 +868,10 @@ spendByItem:
     costUsd: 0.033694
     inputTokens: 70279
     outputTokens: 32429
+  golden-regen-hatch:
+    costUsd: 0.025239
+    inputTokens: 50219
+    outputTokens: 22890
   pylint-cache-assumptions:
     costUsd: 0.23190968599999998
     inputTokens: 455233
@@ -879,4 +884,4 @@ spendByItem:
     costUsd: 6.273198999999999
     inputTokens: 24056719
     outputTokens: 2199382
-lastUpdated: 2026-11-10T00:28:02.172Z
+lastUpdated: 2026-11-10T00:36:27.700Z
