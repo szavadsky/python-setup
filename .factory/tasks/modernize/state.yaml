@@ -257,11 +257,12 @@ items:
     mergedAt: 2026-11-08T10:47:48-05:00
   epic-shift-report-collection:
     kind: fact-finder
-    status: pending
+    status: running
     branch: topic/modernize--epic-shift-report-collection
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.040594
+    currentStep: research
   remaining-lint-violations-fix:
     kind: no-behavior
     status: merged
@@ -424,7 +425,7 @@ items:
     spendUsd: 0.033694
     currentStep: test-first
 concerns:
-  open: 16
+  open: 19
   dismissed: 0
   routed: 1
   resolved: 2
@@ -686,12 +687,12 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.537494685999997
+budgetSpentUsd: 12.578088685999996
 spendByRole:
   workhorse:
-    costUsd: 5.8146706859999995
-    inputTokens: 11423858
-    outputTokens: 4246801
+    costUsd: 5.855264685999999
+    inputTokens: 11512119
+    outputTokens: 4283129
   alt-workhorse:
     costUsd: 1.5378180000000008
     inputTokens: 7319130
@@ -845,6 +846,10 @@ spendByItem:
     costUsd: 0.104406
     inputTokens: 187879
     outputTokens: 83867
+  epic-shift-report-collection:
+    costUsd: 0.040594
+    inputTokens: 88261
+    outputTokens: 36328
   decision-cache-impl:
     costUsd: 0.393308
     inputTokens: 802730
@@ -869,4 +874,4 @@ spendByItem:
     costUsd: 6.273198999999999
     inputTokens: 24056719
     outputTokens: 2199382
-lastUpdated: 2026-11-10T00:08:53.351Z
+lastUpdated: 2026-11-10T00:14:55.676Z
