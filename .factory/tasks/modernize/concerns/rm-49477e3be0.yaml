@@ -7,7 +7,7 @@ why: The only tests/data exclusion is config/rumdl.toml:3, consistent with ruff,
   pylint, and pyright config excludes; dispatch.py:300 only contains a
   path-scanning comment. Recording a false runner-side TD-11 would misassign
   work to runner.
-status: open
+status: routed
 source:
   record: 001-research-r1-a1
   agent: fact-finder
@@ -15,4 +15,5 @@ source:
   item: coding-rules-audit
   lastSeen: 2026-11-09T23:33:30.977Z
 createdAt: 2026-11-09T23:33:30.977Z
-updatedAt: 2026-11-09T23:33:30.977Z
+updatedAt: 2026-11-10T02:58:56.108Z
+disposition: optional

@@ -8,7 +8,7 @@ alternatives:
 why: The fix is one mechanical stub-surface cleanup per owner, and per-owner
   totals make the inter-dep ownership map actionable; individual rows would
   obscure that PYI-4 is a prerequisite and that 127 imports block deletion.
-status: open
+status: routed
 source:
   record: 001-research-r1-a1
   agent: fact-finder
@@ -16,4 +16,5 @@ source:
   item: coding-rules-audit
   lastSeen: 2026-11-09T23:33:30.977Z
 createdAt: 2026-11-09T23:33:30.977Z
-updatedAt: 2026-11-09T23:33:30.977Z
+updatedAt: 2026-11-10T02:58:56.108Z
+disposition: optional

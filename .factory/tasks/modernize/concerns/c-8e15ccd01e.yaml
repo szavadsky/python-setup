@@ -15,7 +15,7 @@ affects:
   - decision-cache-impl
   - semantic-docs
 severity: medium
-status: open
+status: routed
 source:
   record: 001-research-r1-a1
   agent: fact-finder
@@ -23,4 +23,5 @@ source:
   item: coding-rules-audit
   lastSeen: 2026-11-09T23:33:30.977Z
 createdAt: 2026-11-09T23:33:30.977Z
-updatedAt: 2026-11-09T23:33:30.977Z
+updatedAt: 2026-11-10T01:22:03.274Z
+disposition: optional
