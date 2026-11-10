@@ -8,7 +8,7 @@ alternatives:
 why: The item's consolidation intent is a single owner for shared fixtures; the
   parent independently added consumer-project/golden helpers. The symlink guards
   prevent `install`-created symlinks from writing through to shipped configs.
-status: open
+status: routed
 source:
   record: 004-integrate-r1-a1
   agent: developer
@@ -16,4 +16,5 @@ source:
   item: consolidate-integration-helpers-v2
   lastSeen: 2026-11-09T22:46:16.556Z
 createdAt: 2026-11-09T22:46:16.556Z
-updatedAt: 2026-11-09T22:46:16.556Z
+updatedAt: 2026-11-10T02:58:56.108Z
+disposition: optional

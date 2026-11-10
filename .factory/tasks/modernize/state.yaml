@@ -317,12 +317,12 @@ items:
     currentStep: qa
   golden-regen-hatch:
     kind: test-only
-    status: running
+    status: ready
     branch: topic/modernize--golden-regen-hatch
     attempts: 1
     fixRounds: 1
-    spendUsd: 0.025239
-    currentStep: develop
+    spendUsd: 0.043046
+    currentStep: review
   never-test-linting-prune:
     kind: test-only
     status: merged
@@ -428,9 +428,9 @@ items:
     spendUsd: 0.051479
     currentStep: develop
 concerns:
-  open: 6
+  open: 0
   dismissed: 0
-  routed: 29
+  routed: 35
   resolved: 2
 debt:
   - No compliant model proven (215/0 unevaluable, single-author labels, Fastino
@@ -521,6 +521,17 @@ debt:
     test-infra-only coverage"
   - "[test-debloat-audit] Shipped rcfile parity is unguarded after
     test_config_consistency.py deletion"
+  - "[test-debloat-audit] Benchmark test has zero assertions and cannot gate
+    regressions"
+  - "[test-debloat-audit] Real-pipeline smoke test runs 14 real tools in the
+    default suite (not slow)"
+  - "[test-debloat-audit] Removing test_runner_private_imports.py broadens the
+    never-linting definition"
+  - "[test-debloat-audit] Fixture data test file is collected and leaks a temp
+    directory"
+  - "[test-debloat-audit] Marker taxonomy is effectively unenforced"
+  - "[test-debloat-audit] Assignment citation for semantic_check.py is stale/out
+    of range"
   - "[adr-formalization] ADR-012 examples could include conformance/ path prefix"
   - "[adr-formalization] H1 heading prefix inconsistent between new and legacy
     ADRs"
@@ -728,6 +739,20 @@ debt:
   - "[coding-rules-audit] PYI-1 cites missing IMP-1 row"
   - "[decision-cache-impl] decisions/ lacks __init__.py while checkers/ and
     runner/ have one"
+  - "[golden-regen-hatch] Benchmark test has zero assertions and cannot gate
+    regressions"
+  - "[golden-regen-hatch] Real-pipeline smoke runs 14 tools in default suite"
+  - "[golden-regen-hatch] Removing private-imports guard broadens never-linting
+    definition"
+  - "[golden-regen-hatch] Fixture data test collected and leaks temp dir"
+  - "[golden-regen-hatch] Marker taxonomy effectively unenforced"
+  - "[golden-regen-hatch] Semantic_check citation stale/out of range"
+  - "[golden-regen-hatch] Check-only ruff format ToolSpec with phase-1a-only
+    mutation"
+  - "[golden-regen-hatch] Judged gates from Gate Diff table; lint/test fixed"
+  - "[golden-regen-hatch] Prune 13 I4 pendings, add 2 gap outlines"
+  - "[golden-regen-hatch] Lint/test IMPROVED, no regressions"
+  - "[golden-regen-hatch] Prune pendings, add stream-helper-v2 deps"
   - "[never-test-linting-prune] Stale docstring references deleted live test
     file; owner cleanup deferred"
   - "[test-debloat-audit-i2] Clarify LoC counting method; wc -l differs slightly"
@@ -778,16 +803,16 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.988823685999996
+budgetSpentUsd: 13.006630685999998
 spendByRole:
   workhorse:
     costUsd: 6.130492685999999
     inputTokens: 12388371
     outputTokens: 4477517
   alt-workhorse:
-    costUsd: 1.5968480000000007
-    inputTokens: 7615104
-    outputTokens: 2728957
+    costUsd: 1.6146550000000006
+    inputTokens: 7693219
+    outputTokens: 2768104
   architect:
     costUsd: 5.133999999999998
     inputTokens: 20904590
@@ -962,9 +987,9 @@ spendByItem:
     inputTokens: 116644
     outputTokens: 46244
   golden-regen-hatch:
-    costUsd: 0.025239
-    inputTokens: 50219
-    outputTokens: 22890
+    costUsd: 0.043046
+    inputTokens: 128334
+    outputTokens: 62037
   pylint-cache-assumptions:
     costUsd: 0.23190968599999998
     inputTokens: 455233
@@ -977,4 +1002,4 @@ spendByItem:
     costUsd: 6.349675999999999
     inputTokens: 24802345
     outputTokens: 2201503
-lastUpdated: 2026-11-10T02:23:12.305Z
+lastUpdated: 2026-11-10T02:32:41.332Z
