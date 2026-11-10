@@ -217,12 +217,12 @@ items:
     mergedAt: 2026-11-09T13:56:23-05:00
   cache-design-spike:
     kind: poc
-    status: running
+    status: ready
     branch: topic/modernize--cache-design-spike
     attempts: 1
     fixRounds: 1
-    spendUsd: 0.105401
-    currentStep: develop
+    spendUsd: 0.109595
+    currentStep: review
   checkers-legacy-dead-cleanup:
     kind: no-behavior
     status: blocked
@@ -428,9 +428,9 @@ items:
     spendUsd: 0.033694
     currentStep: test-first
 concerns:
-  open: 34
+  open: 30
   dismissed: 0
-  routed: 1
+  routed: 5
   resolved: 2
 debt:
   - No compliant model proven (215/0 unevaluable, single-author labels, Fastino
@@ -471,6 +471,13 @@ debt:
     determinism; oracle + per-tool coverage + tool-qualified brush-off/carry
     lookups prove sensitivity. QA rejected 2/2 solely on red-test; all other
     checks passed. No src follow-up required."
+  - "[cache-design-spike] PoC lock is POSIX-only fcntl.flock"
+  - "[cache-design-spike] Production call site passes a constant rule symbol,
+    collapsing the cache rule component"
+  - "[cache-design-spike] Tracked key excludes code_context, unlike the current
+    in-process semantic memo"
+  - "[cache-design-spike] Lockfile needs a gitignore entry and the retired
+    machine-cache entry should be replaced"
   - "[adr-formalization] ADR-012 examples could include conformance/ path prefix"
   - "[adr-formalization] H1 heading prefix inconsistent between new and legacy
     ADRs"
@@ -629,6 +636,15 @@ debt:
     excludes it (6/336)"
   - "[secrets-triage-spike] Scope the --baseline masking claim to
     detect-secrets-scoped runs"
+  - "[cache-design-spike] Constant rule symbol collapses cache rule component"
+  - "[cache-design-spike] Tracked key excludes code_context"
+  - "[cache-design-spike] Lockfile gitignore plus retired cache entry"
+  - "[cache-design-spike] Heuristic docstring claims exactly as production"
+  - "[cache-design-spike] backend-failed marked contacted but skipped as
+    observation"
+  - "[cache-design-spike] Root escape guards triplicated"
+  - "[cache-design-spike] production_untouched fails post-commit on tracked out/"
+  - "[cache-design-spike] Docstrings say RefreshRefused vs RefreshRefusedError"
   - "[coding-rules-audit-i2] Reconcile beartype taxonomy: true total is 26
     sites, A22 undercounts by 2"
   - "[coding-rules-audit-i2] A33 counts drift: measured 45 W9740 in src+scripts,
@@ -690,16 +706,16 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.835531685999996
+budgetSpentUsd: 12.839725685999996
 spendByRole:
   workhorse:
     costUsd: 6.112707685999999
     inputTokens: 12342006
     outputTokens: 4463702
   alt-workhorse:
-    costUsd: 1.5378180000000008
-    inputTokens: 7319130
-    outputTokens: 2605987
+    costUsd: 1.5420120000000008
+    inputTokens: 7334275
+    outputTokens: 2617179
   architect:
     costUsd: 5.057522999999998
     inputTokens: 20158964
@@ -846,9 +862,9 @@ spendByItem:
     inputTokens: 121841
     outputTokens: 49513
   cache-design-spike:
-    costUsd: 0.105401
-    inputTokens: 176978
-    outputTokens: 87972
+    costUsd: 0.109595
+    inputTokens: 192123
+    outputTokens: 99164
   coding-rules-audit:
     costUsd: 0.104406
     inputTokens: 187879
@@ -889,4 +905,4 @@ spendByItem:
     costUsd: 6.273198999999999
     inputTokens: 24056719
     outputTokens: 2199382
-lastUpdated: 2026-11-10T00:53:25.706Z
+lastUpdated: 2026-11-10T01:14:38.759Z
