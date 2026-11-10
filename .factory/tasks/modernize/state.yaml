@@ -408,21 +408,22 @@ items:
     spendUsd: 0
   consolidate-integration-helpers-v3:
     kind: test-only
-    status: ready
+    status: running
     branch: topic/modernize--consolidate-integration-helpers-v3
     attempts: 1
     fixRounds: 1
-    spendUsd: 0.19283999999999998
-    currentStep: review
+    spendUsd: 0.259824
+    currentStep: integrate
   docs-counts-sync:
     kind: dev
-    status: pending
+    status: running
     branch: topic/modernize--docs-counts-sync
     attempts: 1
     fixRounds: 1
-    spendUsd: 0
+    spendUsd: 0.033694
+    currentStep: test-first
 concerns:
-  open: 9
+  open: 12
   dismissed: 0
   routed: 1
   resolved: 2
@@ -684,12 +685,12 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.379447685999997
+budgetSpentUsd: 12.480125685999996
 spendByRole:
   workhorse:
-    costUsd: 5.656623686
-    inputTokens: 11109879
-    outputTokens: 4112009
+    costUsd: 5.757301685999999
+    inputTokens: 11302017
+    outputTokens: 4197288
   alt-workhorse:
     costUsd: 1.5378180000000008
     inputTokens: 7319130
@@ -803,10 +804,6 @@ spendByItem:
     costUsd: 0.13088
     inputTokens: 218824
     outputTokens: 95126
-  consolidate-integration-helpers-v3:
-    costUsd: 0.19283999999999998
-    inputTokens: 341355
-    outputTokens: 174695
   stale-disables-portability-cleanup:
     costUsd: 0.025615000000000002
     inputTokens: 54537
@@ -831,6 +828,10 @@ spendByItem:
     costUsd: 0.19651400000000002
     inputTokens: 713974
     outputTokens: 167344
+  consolidate-integration-helpers-v3:
+    costUsd: 0.259824
+    inputTokens: 463214
+    outputTokens: 227545
   cache-design-spike:
     costUsd: 0.105401
     inputTokens: 176978
@@ -847,6 +848,10 @@ spendByItem:
     costUsd: 0.258951
     inputTokens: 549144
     outputTokens: 175859
+  docs-counts-sync:
+    costUsd: 0.033694
+    inputTokens: 70279
+    outputTokens: 32429
   pylint-cache-assumptions:
     costUsd: 0.23190968599999998
     inputTokens: 455233
@@ -859,4 +864,4 @@ spendByItem:
     costUsd: 6.273198999999999
     inputTokens: 24056719
     outputTokens: 2199382
-lastUpdated: 2026-11-09T23:33:34.809Z
+lastUpdated: 2026-11-09T23:58:57.375Z
