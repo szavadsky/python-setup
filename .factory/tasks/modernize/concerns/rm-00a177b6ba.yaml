@@ -11,7 +11,7 @@ why: "This is both secrets-clean and collision-safe: commit hashes in
   only by a hash still get distinct keys. Trade-off: the key is not recomputable
   from the stored fields, so schema validation checks the encoding rather than
   re-deriving it."
-status: open
+status: routed
 source:
   record: 001-develop-r1-a1
   agent: developer
@@ -19,4 +19,5 @@ source:
   item: cache-design-spike
   lastSeen: 2026-11-09T23:18:39.934Z
 createdAt: 2026-11-09T23:18:39.934Z
-updatedAt: 2026-11-09T23:18:39.934Z
+updatedAt: 2026-11-10T02:58:56.108Z
+disposition: optional

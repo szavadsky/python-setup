@@ -16,7 +16,7 @@ affects:
   - epic-shift-report-collection
   - final-gate-validation
 severity: high
-status: open
+status: routed
 source:
   record: 001-research-r1-a1
   agent: fact-finder
@@ -24,4 +24,5 @@ source:
   item: epic-kickoff-gate
   lastSeen: 2026-11-10T00:08:48.409Z
 createdAt: 2026-11-10T00:08:48.409Z
-updatedAt: 2026-11-10T00:08:48.409Z
+updatedAt: 2026-11-10T01:56:20.258Z
+disposition: human-awareness

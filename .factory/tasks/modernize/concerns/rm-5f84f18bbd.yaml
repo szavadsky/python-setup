@@ -17,7 +17,7 @@ why: "The parent-side module is a strict superset of the item-side
   collect_sample_findings / make_clean_consumer_project / SAMPLE_PROJECT.
   Hand-merging both vocabularies would reintroduce duplicate scaffolding helpers
   (_write_file vs write_project_file), defeating the item's single-source goal."
-status: open
+status: routed
 source:
   record: 005-integrate-r1-a1
   agent: developer
@@ -25,4 +25,5 @@ source:
   item: consolidate-integration-helpers-v3
   lastSeen: 2026-11-09T23:49:50.606Z
 createdAt: 2026-11-09T23:49:50.606Z
-updatedAt: 2026-11-09T23:49:50.606Z
+updatedAt: 2026-11-10T02:58:56.108Z
+disposition: optional
