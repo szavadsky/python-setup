@@ -345,12 +345,12 @@ items:
     mergedAt: 2026-11-08T12:55:17-05:00
   final-gate-validation:
     kind: fact-finder
-    status: running
+    status: ready
     branch: topic/modernize--final-gate-validation
     attempts: 1
     fixRounds: 2
-    spendUsd: 0.113091
-    currentStep: research
+    spendUsd: 0.160775
+    currentStep: review
   semantic-tests-rewrite:
     kind: test-only
     status: blocked
@@ -431,9 +431,9 @@ items:
     spendUsd: 0.051479
     currentStep: qa
 concerns:
-  open: 6
+  open: 0
   dismissed: 0
-  routed: 35
+  routed: 41
   resolved: 2
 debt:
   - No compliant model proven (215/0 unevaluable, single-author labels, Fastino
@@ -535,6 +535,16 @@ debt:
   - "[test-debloat-audit] Marker taxonomy is effectively unenforced"
   - "[test-debloat-audit] Assignment citation for semantic_check.py is stale/out
     of range"
+  - "[final-gate-validation] detect-secrets scan --baseline rewrites the tracked
+    baseline in place during lint"
+  - "[final-gate-validation] detect-secrets relies on the baseline
+    `^\\.factory/` filter for 1.84GB of tracked safetensors"
+  - "[final-gate-validation] AGENTS.md unit-test counts are stale in addition to
+    the integration row"
+  - "[final-gate-validation] ADR-016 and ADR-009 contain HEAD-contradicted
+    claims without staleness notes"
+  - "[final-gate-validation] The 7-passed+2-skipped integration split is
+    environment-dependent"
   - "[adr-formalization] ADR-012 examples could include conformance/ path prefix"
   - "[adr-formalization] H1 heading prefix inconsistent between new and legacy
     ADRs"
@@ -785,6 +795,20 @@ debt:
     API"
   - "[final-gate-validation] Rcfile parity unguarded after consistency-test
     deletion"
+  - "[final-gate-validation] Transient baseline rewrite; normalized back, tree
+    clean"
+  - "[final-gate-validation] 1.84GB safetensors rely on prefix filter; HEAD
+    green"
+  - "[final-gate-validation] AGENTS unit counts stale alongside integration row"
+  - "[final-gate-validation] ADR-009/016 stale claims contradict HEAD"
+  - "[final-gate-validation] 7+2 integration split env-dependent via conftest
+    PATH"
+  - "[final-gate-validation] Deletion-wins for pruned self-lint guards verified"
+  - "[final-gate-validation] Runtime-derived docs counts; no hardcoded drift"
+  - "[final-gate-validation] Semantic block retarget to TestAnyElementCodeEcho
+    verified"
+  - "[final-gate-validation] Semantic reclassification 65/91/15/7/16 keeps
+    single-writer"
   - "[test-debloat-audit] Unrelated merge tradeoff; retain as digest"
   - "[test-debloat-audit] Consistent premise for audit §6; no action"
   - "[test-debloat-audit] Unrelated iteration decision; retain as digest"
@@ -818,16 +842,16 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 13.079799685999998
+budgetSpentUsd: 13.127483685999998
 spendByRole:
   workhorse:
     costUsd: 6.174068685999998
     inputTokens: 12473704
     outputTokens: 4521559
   alt-workhorse:
-    costUsd: 1.6442480000000004
-    inputTokens: 7801234
-    outputTokens: 2832118
+    costUsd: 1.6919320000000007
+    inputTokens: 8088134
+    outputTokens: 2867414
   architect:
     costUsd: 5.133999999999998
     inputTokens: 20904590
@@ -962,9 +986,9 @@ spendByItem:
     inputTokens: 713974
     outputTokens: 167344
   final-gate-validation:
-    costUsd: 0.113091
-    inputTokens: 260324
-    outputTokens: 136512
+    costUsd: 0.160775
+    inputTokens: 547224
+    outputTokens: 171808
   consolidate-integration-helpers-v3:
     costUsd: 0.259824
     inputTokens: 463214
@@ -1017,4 +1041,4 @@ spendByItem:
     costUsd: 6.349675999999999
     inputTokens: 24802345
     outputTokens: 2201503
-lastUpdated: 2026-11-10T03:27:55.981Z
+lastUpdated: 2026-11-10T03:32:53.480Z
