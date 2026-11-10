@@ -165,12 +165,12 @@ items:
     mergedAt: 2026-11-09T00:11:56-05:00
   epic-kickoff-gate:
     kind: fact-finder
-    status: running
+    status: ready
     branch: topic/modernize--epic-kickoff-gate
     attempts: 1
     fixRounds: 1
-    spendUsd: 0.057369
-    currentStep: research
+    spendUsd: 0.073828
+    currentStep: review
   golden-contract-hardening:
     kind: test-only
     status: merged
@@ -428,9 +428,9 @@ items:
     spendUsd: 0.051479
     currentStep: develop
 concerns:
-  open: 22
+  open: 15
   dismissed: 0
-  routed: 13
+  routed: 20
   resolved: 2
 debt:
   - No compliant model proven (215/0 unevaluable, single-author labels, Fastino
@@ -497,6 +497,14 @@ debt:
   - "[consolidate-integration-helpers-v3] Stale doc references: _project_helpers
     docstring still names 'the self-lint guards' (now pruned) and AGENTS.md test
     counts are outdated."
+  - "[epic-kickoff-gate] ADR-011 names a test class that no longer exists and
+    carries stale line references"
+  - "[epic-kickoff-gate] Checkers owner count exceeds the ADR-011 ±5 drift
+    budget by 3"
+  - "[epic-shift-report-collection] ADR-011 shift-handoff contract remains
+    'Accepted' after epic decomposition was abandoned"
+  - "[epic-shift-report-collection] Legacy golden-regen-hatch could misread a
+    missing handoff as all-no-shift"
   - "[adr-formalization] ADR-012 examples could include conformance/ path prefix"
   - "[adr-formalization] H1 heading prefix inconsistent between new and legacy
     ADRs"
@@ -627,6 +635,11 @@ debt:
     decision-model warnings"
   - "[decision-backend-impl] Expand nested ternary in normalize_suppressed_codes"
   - "[decision-backend-impl] Add minimal docstrings to decision-backend stub"
+  - "[epic-kickoff-gate] ADR-011 stale test class and line refs"
+  - "[epic-kickoff-gate] Checkers +8 exceeds +-5 budget, enumerated and amended"
+  - "[epic-kickoff-gate] ADR-011 Accepted handoff contract stale"
+  - "[epic-kickoff-gate] Legacy hatch fail-open on missing handoff"
+  - "[epic-kickoff-gate] Drift row 21 cites regex def :27 as stream site"
   - "[golden-contract-hardening] Add runs guard and messages to byte-identical
     hash asserts"
   - "[golden-contract-hardening] Consider SHA-256 comparison for counts payloads
@@ -735,16 +748,16 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.870161685999996
+budgetSpentUsd: 12.886620685999995
 spendByRole:
   workhorse:
     costUsd: 6.130492685999999
     inputTokens: 12388371
     outputTokens: 4477517
   alt-workhorse:
-    costUsd: 1.5546630000000008
-    inputTokens: 7396330
-    outputTokens: 2645303
+    costUsd: 1.5711220000000006
+    inputTokens: 7463008
+    outputTokens: 2683519
   architect:
     costUsd: 5.057522999999998
     inputTokens: 20158964
@@ -887,9 +900,9 @@ spendByItem:
     inputTokens: 463214
     outputTokens: 227545
   epic-kickoff-gate:
-    costUsd: 0.057369
-    inputTokens: 121841
-    outputTokens: 49513
+    costUsd: 0.073828
+    inputTokens: 188519
+    outputTokens: 87729
   cache-design-spike:
     costUsd: 0.109595
     inputTokens: 192123
@@ -934,4 +947,4 @@ spendByItem:
     costUsd: 6.273198999999999
     inputTokens: 24056719
     outputTokens: 2199382
-lastUpdated: 2026-11-10T01:34:02.764Z
+lastUpdated: 2026-11-10T01:56:24.655Z
