@@ -11,7 +11,7 @@ location:
 affects:
   - docs reconciliation
 severity: low
-status: open
+status: routed
 source:
   record: 003-research-r2-a1
   agent: fact-finder
@@ -19,4 +19,5 @@ source:
   item: final-gate-validation
   lastSeen: 2026-11-10T03:19:38.948Z
 createdAt: 2026-11-10T03:19:38.948Z
-updatedAt: 2026-11-10T03:19:38.948Z
+updatedAt: 2026-11-10T03:32:47.723Z
+disposition: optional

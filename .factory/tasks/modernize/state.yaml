@@ -257,12 +257,13 @@ items:
     mergedAt: 2026-11-08T10:47:48-05:00
   epic-shift-report-collection:
     kind: fact-finder
-    status: ready
+    status: merged
     branch: topic/modernize--epic-shift-report-collection
     attempts: 1
     fixRounds: 1
     spendUsd: 0.04926
     currentStep: review
+    mergedAt: 2026-11-09T22:05:57-05:00
   remaining-lint-violations-fix:
     kind: no-behavior
     status: merged
@@ -348,8 +349,8 @@ items:
     branch: topic/modernize--final-gate-validation
     attempts: 1
     fixRounds: 2
-    spendUsd: 0.069515
-    currentStep: review
+    spendUsd: 0.113091
+    currentStep: research
   semantic-tests-rewrite:
     kind: test-only
     status: blocked
@@ -359,12 +360,13 @@ items:
     spendUsd: 0
   test-debloat-audit:
     kind: fact-finder
-    status: ready
+    status: merged
     branch: topic/modernize--test-debloat-audit
     attempts: 1
     fixRounds: 1
     spendUsd: 0.209342
     currentStep: review
+    mergedAt: 2026-11-09T22:22:16-05:00
   docs-reconciliation:
     kind: no-behavior
     status: blocked
@@ -424,12 +426,12 @@ items:
     kind: dev
     status: running
     branch: topic/modernize--docs-counts-sync
-    attempts: 1
+    attempts: 2
     fixRounds: 1
     spendUsd: 0.051479
     currentStep: qa
 concerns:
-  open: 0
+  open: 6
   dismissed: 0
   routed: 35
   resolved: 2
@@ -816,12 +818,12 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 13.036223685999996
+budgetSpentUsd: 13.079799685999998
 spendByRole:
   workhorse:
-    costUsd: 6.130492685999999
-    inputTokens: 12388371
-    outputTokens: 4477517
+    costUsd: 6.174068685999998
+    inputTokens: 12473704
+    outputTokens: 4521559
   alt-workhorse:
     costUsd: 1.6442480000000004
     inputTokens: 7801234
@@ -960,9 +962,9 @@ spendByItem:
     inputTokens: 713974
     outputTokens: 167344
   final-gate-validation:
-    costUsd: 0.069515
-    inputTokens: 174991
-    outputTokens: 92470
+    costUsd: 0.113091
+    inputTokens: 260324
+    outputTokens: 136512
   consolidate-integration-helpers-v3:
     costUsd: 0.259824
     inputTokens: 463214
@@ -971,14 +973,22 @@ spendByItem:
     costUsd: 0.073828
     inputTokens: 188519
     outputTokens: 87729
-  cache-design-spike:
-    costUsd: 0.109595
-    inputTokens: 192123
-    outputTokens: 99164
+  test-debloat-audit:
+    costUsd: 0.209342
+    inputTokens: 792518
+    outputTokens: 167470
   epic-shift-report-collection:
     costUsd: 0.04926
     inputTokens: 160531
     outputTokens: 43523
+  coding-rules-audit:
+    costUsd: 0.117057
+    inputTokens: 249934
+    outputTokens: 111991
+  cache-design-spike:
+    costUsd: 0.109595
+    inputTokens: 192123
+    outputTokens: 99164
   decision-cache-impl:
     costUsd: 0.393308
     inputTokens: 802730
@@ -987,10 +997,6 @@ spendByItem:
     costUsd: 0.258951
     inputTokens: 549144
     outputTokens: 175859
-  test-debloat-audit:
-    costUsd: 0.209342
-    inputTokens: 792518
-    outputTokens: 167470
   docs-counts-sync:
     costUsd: 0.051479
     inputTokens: 116644
@@ -1011,8 +1017,4 @@ spendByItem:
     costUsd: 6.349675999999999
     inputTokens: 24802345
     outputTokens: 2201503
-  coding-rules-audit:
-    costUsd: 0.117057
-    inputTokens: 249934
-    outputTokens: 111991
-lastUpdated: 2026-11-10T03:05:57.248Z
+lastUpdated: 2026-11-10T03:27:55.981Z
