@@ -425,8 +425,8 @@ items:
     branch: topic/modernize--docs-counts-sync
     attempts: 1
     fixRounds: 1
-    spendUsd: 0.033694
-    currentStep: test-first
+    spendUsd: 0.051479
+    currentStep: develop
 concerns:
   open: 22
   dismissed: 0
@@ -735,12 +735,12 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 12.852376685999996
+budgetSpentUsd: 12.870161685999996
 spendByRole:
   workhorse:
-    costUsd: 6.112707685999999
-    inputTokens: 12342006
-    outputTokens: 4463702
+    costUsd: 6.130492685999999
+    inputTokens: 12388371
+    outputTokens: 4477517
   alt-workhorse:
     costUsd: 1.5546630000000008
     inputTokens: 7396330
@@ -915,9 +915,9 @@ spendByItem:
     inputTokens: 684503
     outputTokens: 103456
   docs-counts-sync:
-    costUsd: 0.033694
-    inputTokens: 70279
-    outputTokens: 32429
+    costUsd: 0.051479
+    inputTokens: 116644
+    outputTokens: 46244
   golden-regen-hatch:
     costUsd: 0.025239
     inputTokens: 50219
@@ -934,4 +934,4 @@ spendByItem:
     costUsd: 6.273198999999999
     inputTokens: 24056719
     outputTokens: 2199382
-lastUpdated: 2026-11-10T01:22:07.124Z
+lastUpdated: 2026-11-10T01:34:02.764Z
