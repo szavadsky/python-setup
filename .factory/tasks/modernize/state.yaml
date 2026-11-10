@@ -457,6 +457,10 @@ debt:
     v1.2.9).
   - Legacy .gitignore .cache/python-setup/semantic/ lines (retired machine
     cache) alongside new root decisions file.
+  - "M3 docs close-out RED: DecisionBackend/DECISION_MODEL/[semantic]/no-go
+    absent; stale reranker/7-pass/v1.2.5/v1.2.9/ADR-016:3/ADR-009:31 present.
+    Route to new root/epic follow-ups per ADR-011 map, never baseline edits;
+    carry to next iteration."
   - "I6 backlog: M1 contracts+spikes, M2 harness/runner/source/legacy-v2 (+ruff
     verify-only), M3 stream-v2 then storage-v2/refresh-v2, M4 pin-v2/wiring-v2
     (default NO-GO without U1 verdict + Fastino + second-rater approvals), M5
@@ -842,7 +846,7 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 13.127483685999998
+budgetSpentUsd: 13.206530685999997
 spendByRole:
   workhorse:
     costUsd: 6.174068685999998
@@ -853,9 +857,9 @@ spendByRole:
     inputTokens: 8088134
     outputTokens: 2867414
   architect:
-    costUsd: 5.133999999999998
-    inputTokens: 20904590
-    outputTokens: 684069
+    costUsd: 5.213046999999998
+    inputTokens: 21674385
+    outputTokens: 686714
   alt-architect:
     costUsd: 0.127483
     inputTokens: 457640
@@ -1038,7 +1042,7 @@ spendByItem:
     inputTokens: 1215172
     outputTokens: 444746
   (orchestration):
-    costUsd: 6.349675999999999
-    inputTokens: 24802345
-    outputTokens: 2201503
-lastUpdated: 2026-11-10T03:32:53.480Z
+    costUsd: 6.428722999999999
+    inputTokens: 25572140
+    outputTokens: 2204148
+lastUpdated: 2026-11-10T03:34:09.267Z
