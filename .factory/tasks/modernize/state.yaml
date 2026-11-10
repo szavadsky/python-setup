@@ -301,12 +301,13 @@ items:
     mergedAt: 2026-11-09T01:20:54-05:00
   coding-rules-audit:
     kind: fact-finder
-    status: ready
+    status: merged
     branch: topic/modernize--coding-rules-audit
     attempts: 1
     fixRounds: 1
     spendUsd: 0.117057
     currentStep: review
+    mergedAt: 2026-11-09T22:02:16-05:00
   decision-cache-impl:
     kind: dev
     status: failed
@@ -358,12 +359,12 @@ items:
     spendUsd: 0
   test-debloat-audit:
     kind: fact-finder
-    status: running
+    status: ready
     branch: topic/modernize--test-debloat-audit
     attempts: 1
     fixRounds: 1
-    spendUsd: 0.179749
-    currentStep: research
+    spendUsd: 0.209342
+    currentStep: review
   docs-reconciliation:
     kind: no-behavior
     status: blocked
@@ -426,7 +427,7 @@ items:
     attempts: 1
     fixRounds: 1
     spendUsd: 0.051479
-    currentStep: develop
+    currentStep: qa
 concerns:
   open: 0
   dismissed: 0
@@ -782,6 +783,18 @@ debt:
     API"
   - "[final-gate-validation] Rcfile parity unguarded after consistency-test
     deletion"
+  - "[test-debloat-audit] Unrelated merge tradeoff; retain as digest"
+  - "[test-debloat-audit] Consistent premise for audit §6; no action"
+  - "[test-debloat-audit] Unrelated iteration decision; retain as digest"
+  - "[test-debloat-audit] Unrelated cache decision; retain as digest"
+  - "[test-debloat-audit] Unrelated item decision; retain as digest"
+  - "[test-debloat-audit] Unrelated reporting decision; no conflict"
+  - "[test-debloat-audit] Unrelated gate decision; no interaction"
+  - "[test-debloat-audit] Unrelated merge decision; retain as digest"
+  - "[test-debloat-audit] Consistent with conftest row; no action"
+  - "[test-debloat-audit] Minor line-range errors in two rewrite dispositions"
+  - "[test-debloat-audit] Cosmetic count/label inconsistencies; LoC verified
+    exact"
   - "[golden-helpers-unit] tool_minimums imports TOOLS via package root, pulling
     CLI structlog side effects"
   - "[golden-helpers-unit] Public FindingKey alias missing from __all__"
@@ -803,16 +816,16 @@ debt:
     obscure"
   - '[consolidate-integration-helpers-v3] make_consumer_project hardcodes
     "consumer" dirname for hooks test'
-budgetSpentUsd: 13.006630685999998
+budgetSpentUsd: 13.036223685999996
 spendByRole:
   workhorse:
     costUsd: 6.130492685999999
     inputTokens: 12388371
     outputTokens: 4477517
   alt-workhorse:
-    costUsd: 1.6146550000000006
-    inputTokens: 7693219
-    outputTokens: 2768104
+    costUsd: 1.6442480000000004
+    inputTokens: 7801234
+    outputTokens: 2832118
   architect:
     costUsd: 5.133999999999998
     inputTokens: 20904590
@@ -962,10 +975,6 @@ spendByItem:
     costUsd: 0.109595
     inputTokens: 192123
     outputTokens: 99164
-  coding-rules-audit:
-    costUsd: 0.117057
-    inputTokens: 249934
-    outputTokens: 111991
   epic-shift-report-collection:
     costUsd: 0.04926
     inputTokens: 160531
@@ -979,9 +988,9 @@ spendByItem:
     inputTokens: 549144
     outputTokens: 175859
   test-debloat-audit:
-    costUsd: 0.179749
-    inputTokens: 684503
-    outputTokens: 103456
+    costUsd: 0.209342
+    inputTokens: 792518
+    outputTokens: 167470
   docs-counts-sync:
     costUsd: 0.051479
     inputTokens: 116644
@@ -1002,4 +1011,8 @@ spendByItem:
     costUsd: 6.349675999999999
     inputTokens: 24802345
     outputTokens: 2201503
-lastUpdated: 2026-11-10T02:32:41.332Z
+  coding-rules-audit:
+    costUsd: 0.117057
+    inputTokens: 249934
+    outputTokens: 111991
+lastUpdated: 2026-11-10T03:05:57.248Z
